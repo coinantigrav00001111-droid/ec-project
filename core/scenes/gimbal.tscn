@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://jwoxul3ecvua"]
+
+[ext_resource type="Script" uid="uid://db5b61jgxpcam" path="res://core/scenes/gimbal.gd" id="1_qjih2"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_5lg0j"]
+radius = 0.05
+
+[node name="Gimbal" type="Node3D" unique_id=1102985730 groups=["game_events"]]
+script = ExtResource("1_qjih2")
+
+[node name="Elevation" type="Node3D" parent="." unique_id=1289677272]
+transform = Transform3D(1, 0, 0, 0, 0.95105594, 0.30901682, 0, -0.30901682, 0.95105594, 0, 0, 0)
+
+[node name="Camera" type="Camera3D" parent="Elevation" unique_id=592187562]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 30)
+current = true
+
+[node name="MeshCenter" type="MeshInstance3D" parent="Elevation" unique_id=1478225213]
+unique_name_in_owner = true
+mesh = SubResource("SphereMesh_5lg0j")

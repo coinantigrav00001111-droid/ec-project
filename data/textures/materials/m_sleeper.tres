@@ -1,0 +1,21 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://d1asig1hcw3ys"]
+
+[ext_resource type="Texture2D" uid="uid://bb04qlt73byb7" path="res://data/textures/in_one/Ballast_01_Color.webp" id="1_qeitf"]
+[ext_resource type="Texture2D" uid="uid://dp2j60fxtwsog" path="res://data/textures/in_one/Ballast_01_Metallic_Roughness.webp" id="2_n5blw"]
+[ext_resource type="Texture2D" uid="uid://k7rmt2mgvwfe" path="res://data/textures/in_one/Ballast_01_Normal.webp" id="3_bdmrk"]
+
+[resource]
+resource_name = "M_Sleeper_01v2"
+transparency = 2
+alpha_scissor_threshold = 0.317
+alpha_antialiasing_mode = 0
+albedo_texture = ExtResource("1_qeitf")
+metallic = 1.0
+metallic_texture = ExtResource("2_n5blw")
+metallic_texture_channel = 2
+roughness_texture = ExtResource("2_n5blw")
+roughness_texture_channel = 1
+normal_enabled = true
+normal_scale = 1.2
+normal_texture = ExtResource("3_bdmrk")
+grow_amount = -0.533

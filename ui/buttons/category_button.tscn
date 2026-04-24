@@ -1,0 +1,16 @@
+[gd_scene format=3 uid="uid://b4k6aif71vb5d"]
+
+[ext_resource type="Script" uid="uid://c45yi7moalxei" path="res://ui/buttons/category_button.gd" id="1_7tuca"]
+
+[sub_resource type="ButtonGroup" id="ButtonGroup_ayupi"]
+resource_local_to_scene = false
+resource_name = "BuildLvl2Button"
+allow_unpress = true
+
+[node name="CatButton" type="Button" unique_id=1258070761 groups=["category_buttons"]]
+offset_right = 77.0
+offset_bottom = 36.0
+theme_type_variation = &"ModeButton"
+toggle_mode = true
+button_group = SubResource("ButtonGroup_ayupi")
+script = ExtResource("1_7tuca")

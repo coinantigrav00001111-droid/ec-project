@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="EntitySetting" format=3 uid="uid://d3b4vauddnyc4"]
+
+[ext_resource type="Script" uid="uid://m4g5jbfwmaa0" path="res://core/component_setting.gd" id="1_80gnq"]
+[ext_resource type="Texture2D" uid="uid://ccglkaaxdcb5b" path="res://ui/icons/transport/steam-locomotive.svg" id="2_80gnq"]
+[ext_resource type="Script" uid="uid://do5hjkm3r2pdg" path="res://core/entity_setting.gd" id="2_ykoog"]
+
+[resource]
+script = ExtResource("2_ykoog")
+id = 5
+name = "loco 2"
+description = "локо 2"
+category = &"train"
+tag = &"loco"
+icon = ExtResource("2_80gnq")
+metadata/_custom_type_script = "uid://do5hjkm3r2pdg"

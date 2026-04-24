@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="GUIDEAction" format=3 uid="uid://dgfton32rq832"]
+
+[ext_resource type="Script" uid="uid://cluhc11vixkf1" path="res://addons/guide/guide_action.gd" id="1_g575w"]
+
+[resource]
+script = ExtResource("1_g575w")
+metadata/_custom_type_script = "uid://cluhc11vixkf1"

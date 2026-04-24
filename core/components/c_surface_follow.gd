@@ -1,0 +1,1 @@
+class_name C_SurfaceFollow extends IPlaceable

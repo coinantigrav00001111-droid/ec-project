@@ -1,0 +1,20 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://cwwxa3im7tmgy"]
+
+[ext_resource type="Texture2D" uid="uid://bb04qlt73byb7" path="res://data/textures/in_one/Ballast_01_Color.webp" id="1_asnck"]
+[ext_resource type="Texture2D" uid="uid://dp2j60fxtwsog" path="res://data/textures/in_one/Ballast_01_Metallic_Roughness.webp" id="2_534xo"]
+[ext_resource type="Material" uid="uid://d1asig1hcw3ys" path="res://data/textures/materials/m_sleeper.tres" id="3_io6hb"]
+[ext_resource type="Texture2D" uid="uid://k7rmt2mgvwfe" path="res://data/textures/in_one/Ballast_01_Normal.webp" id="4_phm4h"]
+
+[resource]
+resource_name = "M_ballast_01v2"
+next_pass = ExtResource("3_io6hb")
+albedo_texture = ExtResource("1_asnck")
+metallic = 1.0
+metallic_texture = ExtResource("2_534xo")
+metallic_texture_channel = 2
+roughness_texture = ExtResource("2_534xo")
+roughness_texture_channel = 1
+normal_enabled = true
+normal_scale = 1.2
+normal_texture = ExtResource("4_phm4h")
+uv1_offset = Vector3(-0.25, 0, 0)

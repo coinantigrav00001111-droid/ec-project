@@ -1,0 +1,446 @@
+[gd_scene format=3 uid="uid://u8csukoorfqk"]
+
+[sub_resource type="Curve3D" id="Curve3D_u20iq"]
+bake_interval = 0.05
+_data = {
+"points": PackedVector3Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -10),
+"tilts": PackedFloat32Array(0, 0)
+}
+point_count = 2
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kxdfo"]
+albedo_color = Color(0, 0.753906, 0.170807, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_d46x8"]
+top_radius = 0.0
+radial_segments = 32
+
+[sub_resource type="Shader" id="Shader_e3hyu"]
+code = "shader_type spatial;
+render_mode unshaded;
+
+/*  Object Outline Shader https://godotshaders.com/shader/object-outline-shader/
+	Normal/Depth outline shader. Apply to nodes as a next pass shader texture.
+	Inspired by Yui Kinomoto @arlez80, lukky_nl (YT), Robin Seibold (YT)
+	Uses Sobel Edge detection on a normal and depth texture
+	Written by William Li (LoudFlameLava)
+
+	MIT License
+*/
+
+// Might create an outline at the edge of the viewport
+
+uniform sampler2D SCREEN_TEXTURE : hint_screen_texture, filter_linear_mipmap;
+uniform sampler2D DEPTH_TEXTURE : hint_depth_texture, filter_linear_mipmap;
+uniform sampler2D NORMAL_TEXTURE : hint_normal_roughness_texture, filter_linear_mipmap;
+
+uniform float normal_threshold = 0.1;
+uniform float depth_threshold = 0.05;
+uniform float depth_artifact_correction_coef = 2;
+uniform vec3 outline_color: source_color;
+
+const mat3 sobel_y = mat3(
+	vec3(1.0, 0.0, -1.0),
+	vec3(2.0, 0.0, -2.0),
+	vec3(1.0, 0.0, -1.0)
+);
+
+const mat3 sobel_x = mat3(
+	vec3(1.0, 2.0, 1.0),
+	vec3(0.0, 0.0, 0.0),
+	vec3(-1.0, -2.0, -1.0)
+);
+
+float edge_value_normal(sampler2D normal_tex, vec2 uv, vec2 pixel_size, mat3 sobel) {
+	float output = 0.0;
+	vec3 normal = texture(normal_tex, uv).rgb;
+	vec3 n = texture(NORMAL_TEXTURE, uv + vec2(0.0, -pixel_size.y)).rgb;
+	vec3 s = texture(NORMAL_TEXTURE, uv + vec2(0.0, pixel_size.y)).rgb;
+	vec3 e = texture(NORMAL_TEXTURE, uv + vec2(pixel_size.x, 0.0)).rgb;
+	vec3 w = texture(NORMAL_TEXTURE, uv + vec2(-pixel_size.x, 0.0)).rgb;
+	vec3 nw = texture(NORMAL_TEXTURE, uv + vec2(-pixel_size.x, -pixel_size.y)).rgb;
+	vec3 ne = texture(NORMAL_TEXTURE, uv + vec2(pixel_size.x, -pixel_size.y)).rgb;
+	vec3 sw = texture(NORMAL_TEXTURE, uv + vec2(-pixel_size.x, pixel_size.y)).rgb;
+	vec3 se = texture(NORMAL_TEXTURE, uv + vec2(pixel_size.x, pixel_size.y)).rgb;
+
+	mat3 error_mat = mat3(
+		vec3(length(normal - nw), length(normal - n), length(normal - ne)),
+		vec3(length(normal - w), 0.0, length(normal - e)),
+		vec3(length(normal - sw), length(normal - s), length(normal - se))
+	);
+
+	output += dot(sobel[0], error_mat[0]);
+	output += dot(sobel[1], error_mat[1]);
+	output += dot(sobel[2], error_mat[2]);
+	return abs(output);
+}
+
+float get_depth(sampler2D depth_tex, vec2 uv, mat4 inv_projection_matrix) {
+	float depth_raw = texture(depth_tex, uv).x;
+	vec3 ndc = vec3(uv * 2.0 - 1.0, depth_raw);
+	vec4 view = inv_projection_matrix * vec4(ndc, 1.0);
+	view.xyz /= view.w;
+	float depth_linear = -view.z;
+	return depth_linear;
+}
+
+float edge_value_depth(sampler2D depth_tex, vec2 uv, vec2 pixel_size, mat3 sobel, mat4 inv_projection_matrix){
+	float output = 0.0;
+	float depth = get_depth(depth_tex, uv, inv_projection_matrix);
+	float n = get_depth(depth_tex, uv + vec2(0.0, -pixel_size.y), inv_projection_matrix);
+	float s = get_depth(depth_tex, uv + vec2(0.0, pixel_size.y), inv_projection_matrix);
+	float e = get_depth(depth_tex, uv + vec2(pixel_size.x, 0.0), inv_projection_matrix);
+	float w = get_depth(depth_tex, uv + vec2(-pixel_size.x, 0.0), inv_projection_matrix);
+	float ne = get_depth(depth_tex, uv + vec2(pixel_size.x, -pixel_size.y), inv_projection_matrix);
+	float nw = get_depth(depth_tex, uv + vec2(-pixel_size.x, -pixel_size.y), inv_projection_matrix);
+	float se = get_depth(depth_tex, uv + vec2(pixel_size.x, pixel_size.y), inv_projection_matrix);
+	float sw = get_depth(depth_tex, uv + vec2(-pixel_size.x, pixel_size.y), inv_projection_matrix);
+
+	mat3 error_mat = mat3(
+		vec3((depth - nw)/depth, (depth - n)/depth, (depth - ne)/depth),
+		vec3((depth - w)/depth, 0.0, (depth - e)/depth),
+		vec3((depth - sw)/depth, (depth - s)/depth, (depth - se)/depth)
+	);
+
+	output += dot(sobel[0], error_mat[0]);
+	output += dot(sobel[1], error_mat[1]);
+	output += dot(sobel[2], error_mat[2]);
+	return abs(output);
+}
+
+
+void fragment() {
+	float has_outline = 0.0;
+	vec2 pixel_size = vec2(1.0) / VIEWPORT_SIZE;
+	ALBEDO = texture(SCREEN_TEXTURE, SCREEN_UV).xyz;
+	//ALBEDO = vec3(get_depth(DEPTH_TEXTURE, SCREEN_UV, INV_PROJECTION_MATRIX));
+	if (edge_value_normal(NORMAL_TEXTURE, SCREEN_UV, pixel_size, sobel_x) + edge_value_normal(NORMAL_TEXTURE, SCREEN_UV, pixel_size, sobel_y) > normal_threshold){
+		ALBEDO = outline_color;
+		has_outline += 1.0;
+	}
+	vec3 normal = texture(NORMAL_TEXTURE, SCREEN_UV).rgb;
+	float angle = 1.0 - dot(normalize(normal-vec3(0.5)),  vec3(0.0,0.0,1.0));
+	if (edge_value_depth(DEPTH_TEXTURE, SCREEN_UV, pixel_size, sobel_x, INV_PROJECTION_MATRIX) + edge_value_depth(DEPTH_TEXTURE, SCREEN_UV, pixel_size, sobel_y, INV_PROJECTION_MATRIX) > depth_threshold + angle * depth_artifact_correction_coef){
+		ALBEDO = outline_color;
+		has_outline += 1.0;
+	}
+	if (has_outline < 0.1){
+		ALPHA = 0.0;
+	}
+}"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_kxw8j"]
+render_priority = 0
+shader = SubResource("Shader_e3hyu")
+shader_parameter/normal_threshold = 0.1
+shader_parameter/depth_threshold = 0.05
+shader_parameter/depth_artifact_correction_coef = 2.0
+shader_parameter/outline_color = Color(0, 0, 0, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_oqrxn"]
+next_pass = SubResource("ShaderMaterial_kxw8j")
+albedo_color = Color(0.862745, 0.490196, 1, 0.611765)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ysd1q"]
+material = SubResource("StandardMaterial3D_oqrxn")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_riawx"]
+top_radius = 0.0
+bottom_radius = 0.1
+height = 5.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tviw4"]
+albedo_color = Color(0.00546265, 0.699219, 0, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_t48xi"]
+size = Vector3(10, 0.1, 0.1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_541k5"]
+albedo_color = Color(1, 0, 0, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_e6lse"]
+top_radius = 0.0
+bottom_radius = 0.1
+height = 10.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_w1m8e"]
+albedo_color = Color(0, 0.203125, 1, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5hgld"]
+albedo_color = Color(0.992188, 0.0271301, 0.977108, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_0a8in"]
+top_radius = 0.0
+bottom_radius = 0.3
+height = 2.5
+radial_segments = 32
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_h6fq7"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_7murx"]
+top_radius = 0.0
+bottom_radius = 0.1
+height = 6.042
+radial_segments = 32
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_ucgg7"]
+top_radius = 0.0
+bottom_radius = 0.161
+height = 1.905
+radial_segments = 32
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ydaad"]
+albedo_color = Color(0.027451, 0.368627, 0.611765, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_g0e8a"]
+top_radius = 0.0
+bottom_radius = 0.1
+height = 1.0
+radial_segments = 32
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ss0k1"]
+albedo_color = Color(0.827451, 0.564706, 0.117647, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_5a01p"]
+top_radius = 0.0
+bottom_radius = 0.1
+height = 6.042
+radial_segments = 32
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_k0n6w"]
+albedo_color = Color(0.825895, 0.563054, 0.118863, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_xhiwl"]
+albedo_color = Color(0.87451, 0.772549, 0.192157, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_biq6v"]
+top_radius = 0.0
+bottom_radius = 0.1
+height = 5.0
+radial_segments = 32
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_wgmcd"]
+resource_local_to_scene = true
+size = Vector2(0.5, 11.57)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1pdaq"]
+albedo_color = Color(0, 0.682465, 0.816406, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_e0d2r"]
+top_radius = 0.0
+radial_segments = 32
+
+[node name="ATrack" type="Node3D" unique_id=1733711656 groups=["game_events", "track"]]
+
+[node name="APowerPWM" type="Node" parent="." unique_id=419278996]
+
+[node name="StateChartTr" parent="." unique_id=2077713256]
+unique_name_in_owner = true
+
+[node name="Marker3D" type="Marker3D" parent="." unique_id=1084824517]
+
+[node name="Corrector_0" parent="Marker3D" unique_id=1607291808]
+
+[node name="Corrector_1" parent="Marker3D" unique_id=1511265504]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -10.7)
+
+[node name="Path3D" type="Path3D" parent="Marker3D" unique_id=600082958]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
+curve = SubResource("Curve3D_u20iq")
+
+[node name="MeshGreen0" type="MeshInstance3D" parent="Marker3D" unique_id=1624508478]
+unique_name_in_owner = true
+visible = false
+material_override = SubResource("StandardMaterial3D_kxdfo")
+mesh = SubResource("CylinderMesh_d46x8")
+skeleton = NodePath("../../..")
+
+[node name="Label_m" type="Label3D" parent="Marker3D/MeshGreen0" unique_id=753891451]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0.42, 0, 0.695)
+modulate = Color(0.195313, 1, 0, 1)
+text = "marker3D"
+font_size = 200
+
+[node name="Helpers" type="Node3D" parent="Marker3D" unique_id=263555336]
+visible = false
+
+[node name="cube00" type="MeshInstance3D" parent="Marker3D/Helpers" unique_id=1737377730]
+unique_name_in_owner = true
+visible = false
+mesh = SubResource("BoxMesh_ysd1q")
+skeleton = NodePath("../../..")
+
+[node name="Ay" type="MeshInstance3D" parent="Marker3D/Helpers/cube00" unique_id=532998106]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+mesh = SubResource("CylinderMesh_riawx")
+surface_material_override/0 = SubResource("StandardMaterial3D_tviw4")
+
+[node name="y" type="Label3D" parent="Marker3D/Helpers/cube00/Ay" unique_id=1964516581]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+modulate = Color(0.0552368, 0.707031, 0, 1)
+text = "Y"
+font_size = 122
+
+[node name="Ax" type="MeshInstance3D" parent="Marker3D/Helpers/cube00" unique_id=2099009365]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 0)
+mesh = SubResource("BoxMesh_t48xi")
+surface_material_override/0 = SubResource("StandardMaterial3D_541k5")
+
+[node name="x" type="Label3D" parent="Marker3D/Helpers/cube00/Ax" unique_id=1332987508]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.66, 0)
+modulate = Color(0.707031, 0, 0, 1)
+text = "X"
+font_size = 122
+
+[node name="Az" type="MeshInstance3D" parent="Marker3D/Helpers/cube00" unique_id=394516798]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, -5)
+mesh = SubResource("CylinderMesh_e6lse")
+surface_material_override/0 = SubResource("StandardMaterial3D_w1m8e")
+
+[node name="z" type="Label3D" parent="Marker3D/Helpers/cube00/Az" unique_id=498999820]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.47, 1.01, 0)
+modulate = Color(0, 0.132813, 1, 1)
+text = "--Z"
+font_size = 122
+
+[node name="Center_curve_violet" type="MeshInstance3D" parent="Marker3D/Helpers" unique_id=1363310919]
+visible = false
+material_override = SubResource("StandardMaterial3D_5hgld")
+mesh = SubResource("CylinderMesh_0a8in")
+skeleton = NodePath("../../../..")
+
+[node name="Label_cp" type="Label3D" parent="Marker3D/Helpers/Center_curve_violet" unique_id=274621263]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0.565, 1, -1)
+modulate = Color(0.710938, 0, 1, 1)
+text = "Path"
+font_size = 200
+
+[node name="p0" type="MeshInstance3D" parent="Marker3D/Helpers" unique_id=1774843633]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.23881, 0, 3.8268)
+visible = false
+material_override = SubResource("StandardMaterial3D_h6fq7")
+mesh = SubResource("CylinderMesh_7murx")
+skeleton = NodePath("../../../..")
+
+[node name="p_0" type="Label3D" parent="Marker3D/Helpers/p0" unique_id=278814738]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0.42, 0, 0.695)
+render_priority = 1
+text = "p0
+"
+font_size = 200
+
+[node name="p0a" type="MeshInstance3D" parent="Marker3D/Helpers" unique_id=1132829114]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2695, 0)
+material_override = SubResource("StandardMaterial3D_h6fq7")
+mesh = SubResource("CylinderMesh_ucgg7")
+skeleton = NodePath("../../../..")
+
+[node name="p_0" type="Label3D" parent="Marker3D/Helpers/p0a" unique_id=706067410]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0.42, 0, 0.695)
+render_priority = 1
+text = "p0a
+"
+font_size = 200
+
+[node name="p1" type="MeshInstance3D" parent="Marker3D/Helpers" unique_id=488171021]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.252, 0)
+visible = false
+material_overlay = SubResource("StandardMaterial3D_ydaad")
+mesh = SubResource("CylinderMesh_g0e8a")
+skeleton = NodePath("../../../..")
+
+[node name="p_1" type="Label3D" parent="Marker3D/Helpers/p1" unique_id=663849832]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0.42, 0, 0.695)
+visible = false
+render_priority = 1
+modulate = Color(0.027451, 0.368627, 0.611765, 1)
+text = "p1
+"
+font_size = 200
+
+[node name="p2" type="MeshInstance3D" parent="Marker3D/Helpers" unique_id=1629363758]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.23881, 0, -0.1732)
+visible = false
+material_override = SubResource("StandardMaterial3D_ss0k1")
+mesh = SubResource("CylinderMesh_5a01p")
+skeleton = NodePath("../../../..")
+
+[node name="p_2" type="Label3D" parent="Marker3D/Helpers/p2" unique_id=482055502]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0.42, 0, 0.695)
+render_priority = 1
+modulate = Color(0.827451, 0.564706, 0.117647, 1)
+text = "p2"
+font_size = 200
+
+[node name="p3" type="MeshInstance3D" parent="Marker3D/Helpers" unique_id=1706574784]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.2388, 0, -10.1732)
+material_override = SubResource("StandardMaterial3D_k0n6w")
+mesh = SubResource("CylinderMesh_5a01p")
+skeleton = NodePath("../../../..")
+
+[node name="p_2" type="Label3D" parent="Marker3D/Helpers/p3" unique_id=450134304]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0.97, 0, 0.695)
+render_priority = 1
+modulate = Color(0.827451, 0.564706, 0.117647, 1)
+text = "p3"
+font_size = 200
+
+[node name="p3a" type="MeshInstance3D" parent="Marker3D/Helpers" unique_id=1927829278]
+unique_name_in_owner = true
+material_override = SubResource("StandardMaterial3D_xhiwl")
+mesh = SubResource("CylinderMesh_biq6v")
+skeleton = NodePath("../../../..")
+
+[node name="p_1t" type="Label3D" parent="Marker3D/Helpers/p3a" unique_id=402669988]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0.97, 0.33, 0.695)
+render_priority = 1
+outline_render_priority = 2
+modulate = Color(0.874032, 0.773635, 0.191552, 1)
+text = "p3a
+"
+font_size = 200
+
+[node name="p4" type="MeshInstance3D" parent="Marker3D/Helpers" unique_id=181409923]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.23881, 0, 3.8268)
+visible = false
+material_override = SubResource("StandardMaterial3D_xhiwl")
+mesh = SubResource("CylinderMesh_biq6v")
+skeleton = NodePath("../../../..")
+
+[node name="p_1t" type="Label3D" parent="Marker3D/Helpers/p4" unique_id=1754412882]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0.97, 0, 0.695)
+render_priority = 1
+modulate = Color(0.874032, 0.773635, 0.191552, 1)
+text = "p4
+"
+font_size = 200
+
+[node name="PowerSchema" type="MeshInstance3D" parent="Marker3D" unique_id=2040452340]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, -5.35)
+visible = false
+layers = 4
+mesh = SubResource("PlaneMesh_wgmcd")
+
+[node name="Mesh_blue" type="MeshInstance3D" parent="." unique_id=1209113108]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, 0)
+rotation_edit_mode = 2
+visible = false
+material_override = SubResource("StandardMaterial3D_1pdaq")
+mesh = SubResource("CylinderMesh_e0d2r")
+skeleton = NodePath("../..")
+
+[node name="Label_tb" type="Label3D" parent="Mesh_blue" unique_id=787706521]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 4.738, 1, 0)
+modulate = Color(0, 0.22352941, 0.9098039, 1)
+text = "[b]Track[/b]"
+font_size = 155

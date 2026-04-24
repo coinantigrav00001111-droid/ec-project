@@ -1,0 +1,229 @@
+{
+	"categories": [
+		{
+			"uuid": "4e1e522f-ed31-43ef-82dc-7958b5551b97",
+			"title": "UI",
+			"color": "7d0fb4"
+		},
+		{
+			"uuid": "4955492f-6975-405e-9279-f3acd164cf1f",
+			"title": "SC",
+			"color": "8e7112"
+		},
+		{
+			"uuid": "91f41b95-cfcd-4026-a09a-48fb304f9a00",
+			"title": "EC",
+			"color": "fffc20"
+		},
+		{
+			"uuid": "af31571d-f162-41be-9c9c-7b15a2004d2c",
+			"title": "Global",
+			"color": "17f8ff"
+		},
+		{
+			"uuid": "31a5ac59-e2b4-4e46-a327-067210b7ca4b",
+			"title": "Bug",
+			"color": "f67129"
+		},
+		{
+			"uuid": "0ffa7dd6-ba00-4ce1-8c80-372d212e469e",
+			"title": "FixMe immediatly",
+			"color": "f92b2b"
+		},
+		{
+			"uuid": "bfe07748-730a-4469-a662-08c8f873a722",
+			"title": "Actual now",
+			"color": "f7f7ea"
+		},
+		{
+			"uuid": "50f9c949-da71-4afd-beb9-f08415f2f066",
+			"title": "Track",
+			"color": "0c9601"
+		},
+		{
+			"uuid": "eb217580-82d1-4df7-a8ff-ff0c35c057e3",
+			"title": "Input",
+			"color": "ec67ff"
+		}
+	],
+	"stages": [
+		{
+			"uuid": "bdc41b96-1a08-4d37-b97f-45851f002c7a",
+			"title": "Todo",
+			"tasks": [
+				"51331081-7353-4afa-a247-5a2271c893a4",
+				"1bdea74b-2ef0-48de-94c3-43f45b91a67d",
+				"8c7f0278-b1be-4210-8c77-8dad0dbd805d",
+				"4e347f4b-c83c-4c93-9675-ea46295ea911"
+			]
+		},
+		{
+			"uuid": "1424c4a8-638b-4f40-9d72-5d4d3845437b",
+			"title": "Doing",
+			"tasks": [
+				"f51d1019-7eb1-4254-930c-c4b71991970f",
+				"ea5b32a0-dae8-48d7-a738-fcc26ed81e7b",
+				"4a8b24d0-55b2-45f6-8838-1f9f348e8de4",
+				"6cc465b2-fc5f-44de-a221-574418588905",
+				"ccb486f3-f15e-4a84-a488-1bd7a4d7c894",
+				"431f567b-072c-47f6-824b-d6ebdd1cae44"
+			]
+		},
+		{
+			"uuid": "db100579-5dbe-4f27-b3f6-7f30ca413116",
+			"title": "Patch",
+			"tasks": [
+				"c3d65b49-5533-46e9-b6ef-dce81c18deb6",
+				"e93d0435-fc2b-42cc-8673-038d55a8cac4",
+				"cb3dd73c-6c8f-4073-866f-bdf0aa4954b4"
+			]
+		}
+	],
+	"tasks": [
+		{
+			"uuid": "054f0311-eac7-414f-a186-2dd81a1d527e",
+			"title": "Раскидать UI по сценам",
+			"description": "",
+			"category": "4e1e522f-ed31-43ef-82dc-7958b5551b97",
+			"steps": []
+		},
+		{
+			"uuid": "ff9f5519-9ac4-49bb-8974-ef17b7bdb283",
+			"title": "Other филтр проблемы",
+			"description": "",
+			"category": "4e1e522f-ed31-43ef-82dc-7958b5551b97",
+			"steps": []
+		},
+		{
+			"uuid": "51331081-7353-4afa-a247-5a2271c893a4",
+			"title": "Тема",
+			"description": "",
+			"category": "4e1e522f-ed31-43ef-82dc-7958b5551b97",
+			"steps": [
+				{
+					"details": "кнопки всех лвл размеры, бордеры, стиль состояний",
+					"done": false
+				},
+				{
+					"details": "размеры контейнеров - фиксация ",
+					"done": false
+				},
+				{
+					"details": "варианты кастомных - названия и лишние",
+					"done": false
+				}
+			]
+		},
+		{
+			"uuid": "8c7f0278-b1be-4210-8c77-8dad0dbd805d",
+			"title": "тэг не становится в фокус при открытии катег.",
+			"description": "",
+			"category": "4e1e522f-ed31-43ef-82dc-7958b5551b97",
+			"steps": []
+		},
+		{
+			"uuid": "5fd8b0bc-d313-4081-978b-afa52502fc14",
+			"title": "коллизии и рулетки починить",
+			"description": "",
+			"category": "31a5ac59-e2b4-4e46-a327-067210b7ca4b",
+			"steps": []
+		},
+		{
+			"uuid": "4e347f4b-c83c-4c93-9675-ea46295ea911",
+			"title": "unpress кнопку объекта после пкм",
+			"description": "",
+			"category": "4e1e522f-ed31-43ef-82dc-7958b5551b97",
+			"steps": []
+		},
+		{
+			"uuid": "1bdea74b-2ef0-48de-94c3-43f45b91a67d",
+			"title": "Корректный выход из билд. Тиск на категорию или режим должен убирать гост если есть.",
+			"description": "",
+			"category": "4e1e522f-ed31-43ef-82dc-7958b5551b97",
+			"steps": []
+		},
+		{
+			"uuid": "c3d65b49-5533-46e9-b6ef-dce81c18deb6",
+			"title": "А если убрать низ и крышки у трака? ",
+			"description": "",
+			"category": "50f9c949-da71-4afd-beb9-f08415f2f066",
+			"steps": []
+		},
+		{
+			"uuid": "e93d0435-fc2b-42cc-8673-038d55a8cac4",
+			"title": "Создать меш подсветки",
+			"description": "",
+			"category": "50f9c949-da71-4afd-beb9-f08415f2f066",
+			"steps": []
+		},
+		{
+			"uuid": "f51d1019-7eb1-4254-930c-c4b71991970f",
+			"title": "_align_to_surface правильно ставит если как в драгтулзе. Есть в компе драггабле, зачем?",
+			"description": "",
+			"category": "31a5ac59-e2b4-4e46-a327-067210b7ca4b",
+			"steps": []
+		},
+		{
+			"uuid": "4a8b24d0-55b2-45f6-8838-1f9f348e8de4",
+			"title": "Blocked пройти по скриптам, где он не всплывает.",
+			"description": "",
+			"category": "91f41b95-cfcd-4026-a09a-48fb304f9a00",
+			"steps": []
+		},
+		{
+			"uuid": "ea5b32a0-dae8-48d7-a738-fcc26ed81e7b",
+			"title": "_align_to_surface есть много где. Он везде нужен?",
+			"description": "",
+			"category": "31a5ac59-e2b4-4e46-a327-067210b7ca4b",
+			"steps": []
+		},
+		{
+			"uuid": "3d4d271e-04ca-4a72-83f7-ae54306c5a70",
+			"title": "прыгает на себя селектед- слои опять",
+			"description": "",
+			"category": "31a5ac59-e2b4-4e46-a327-067210b7ca4b",
+			"steps": []
+		},
+		{
+			"uuid": "6cc465b2-fc5f-44de-a221-574418588905",
+			"title": "длятеста отключить запрыг на трак",
+			"description": "",
+			"category": "91f41b95-cfcd-4026-a09a-48fb304f9a00",
+			"steps": []
+		},
+		{
+			"uuid": "ccb486f3-f15e-4a84-a488-1bd7a4d7c894",
+			"title": "Возможно надо сделать в рейкасте не выбор слоев для каста, а выбор исключений из каста.",
+			"description": "",
+			"category": "91f41b95-cfcd-4026-a09a-48fb304f9a00",
+			"steps": []
+		},
+		{
+			"uuid": "431f567b-072c-47f6-824b-d6ebdd1cae44",
+			"title": "Переименовать гетмаусе в рейкаст как было",
+			"description": "",
+			"category": "91f41b95-cfcd-4026-a09a-48fb304f9a00",
+			"steps": []
+		},
+		{
+			"uuid": "cb3dd73c-6c8f-4073-866f-bdf0aa4954b4",
+			"title": "Проверить процессы, нет ли там лишних ",
+			"description": "",
+			"category": "91f41b95-cfcd-4026-a09a-48fb304f9a00",
+			"steps": []
+		}
+	],
+	"layout": {
+		"columns": [
+			[
+				"bdc41b96-1a08-4d37-b97f-45851f002c7a"
+			],
+			[
+				"1424c4a8-638b-4f40-9d72-5d4d3845437b"
+			],
+			[
+				"db100579-5dbe-4f27-b3f6-7f30ca413116"
+			]
+		]
+	}
+}

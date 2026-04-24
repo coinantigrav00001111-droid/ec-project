@@ -1,0 +1,71 @@
+[gd_scene format=3 uid="uid://b5a0jw0b12rtr"]
+
+[ext_resource type="Texture2D" uid="uid://k5tr8qqqtada" path="res://world/objects/tools/Lineal2.png" id="1_c0kq4"]
+[ext_resource type="Texture2D" uid="uid://dx4coyf3yeyj7" path="res://world/objects/tools/Lineal1.png" id="2_aw1sy"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_mxmbm"]
+size = Vector3(1, 0.1, 32)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yhxt1"]
+transparency = 1
+albedo_color = Color(0, 0, 0.752941, 0.913725)
+
+[sub_resource type="BoxMesh" id="BoxMesh_fdl57"]
+material = SubResource("StandardMaterial3D_yhxt1")
+size = Vector3(1, 0.1, 1)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_3c4tu"]
+size = Vector2(31, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_q263l"]
+cull_mode = 2
+albedo_texture = ExtResource("1_c0kq4")
+uv1_offset = Vector3(0, 0.2, 0)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6gimd"]
+cull_mode = 2
+albedo_texture = ExtResource("2_aw1sy")
+uv1_offset = Vector3(0, -0.2, 0)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_ksa3h"]
+lightmap_size_hint = Vector2i(157, 7)
+size = Vector2(31, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_06sm4"]
+cull_mode = 2
+no_depth_test = true
+albedo_texture = ExtResource("2_aw1sy")
+
+[node name="rulette" type="StaticBody3D" unique_id=1234101903 groups=["moveable"]]
+collision_layer = 32768
+collision_mask = 32768
+
+[node name="CollisionShape3Dz" type="CollisionShape3D" parent="." unique_id=86522809]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0.05, -15)
+shape = SubResource("BoxShape3D_mxmbm")
+
+[node name="CollisionShape3Dx" type="CollisionShape3D" parent="." unique_id=1006050890]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 16, 0.05, 0.5)
+shape = SubResource("BoxShape3D_mxmbm")
+
+[node name="Mesh_box" type="MeshInstance3D" parent="." unique_id=1540338829]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0.05, 0.5)
+mesh = SubResource("BoxMesh_fdl57")
+
+[node name="MeshInstance_x" type="MeshInstance3D" parent="Mesh_box" unique_id=1035886355]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, -0.04, 0)
+mesh = SubResource("PlaneMesh_3c4tu")
+skeleton = NodePath("../../..")
+surface_material_override/0 = SubResource("StandardMaterial3D_q263l")
+
+[node name="MeshInstance_z" type="MeshInstance3D" parent="Mesh_box" unique_id=40778325]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 0, -0.04, -16)
+mesh = SubResource("PlaneMesh_3c4tu")
+skeleton = NodePath("../../..")
+surface_material_override/0 = SubResource("StandardMaterial3D_6gimd")
+
+[node name="MeshInstance_y" type="MeshInstance3D" parent="Mesh_box" unique_id=1067406338]
+transform = Transform3D(4.37114e-08, 1, -8.74228e-08, 1, -4.37114e-08, 0, -3.82138e-15, -8.74228e-08, -1, 0.5, 15.46, 0)
+mesh = SubResource("PlaneMesh_ksa3h")
+skeleton = NodePath("../../..")
+surface_material_override/0 = SubResource("StandardMaterial3D_06sm4")

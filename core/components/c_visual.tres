@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="VisualSettings" format=3 uid="uid://dpxk7u5vblsdp"]
+
+[ext_resource type="Script" uid="uid://bulwl3x2rykxk" path="res://core/components/c_visual_setting.gd" id="1_4cwua"]
+[ext_resource type="PackedScene" uid="uid://tg5culu05h0r" path="res://data/tracks/default_track.tscn" id="1_c0k7x"]
+[ext_resource type="Resource" uid="uid://bqss7rh1mwv41" path="res://core/components/visual/materials/visual_state.tres" id="3_hkcg4"]
+
+[resource]
+script = ExtResource("1_4cwua")
+metadata/_custom_type_script = "uid://bulwl3x2rykxk"

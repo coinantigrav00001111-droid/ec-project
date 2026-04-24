@@ -1,0 +1,47 @@
+[gd_scene format=3 uid="uid://cat5fos845tog"]
+
+[ext_resource type="Script" uid="uid://sohpuxiwyq72" path="res://ui/lvl2_wagon_button.gd" id="1_fm36r"]
+
+[sub_resource type="ButtonGroup" id="ButtonGroup_sgwu6"]
+resource_local_to_scene = false
+resource_name = "buttons_2lvl"
+allow_unpress = true
+
+[node name="TrainButton" type="Button" unique_id=1213302774]
+custom_minimum_size = Vector2(120, 80)
+toggle_mode = true
+button_group = SubResource("ButtonGroup_sgwu6")
+icon_alignment = 1
+script = ExtResource("1_fm36r")
+
+[node name="NameLabel" type="Label" parent="." unique_id=1348475949]
+layout_mode = 0
+offset_left = 5.0
+offset_top = 2.0
+offset_right = 54.0
+offset_bottom = 43.0
+text = "Ghost Node"
+autowrap_mode = 2
+
+[node name="IndexLabel" type="Label" parent="." unique_id=375762665]
+layout_mode = 0
+offset_left = 84.0
+offset_right = 117.0
+offset_bottom = 23.0
+text = "333"
+horizontal_alignment = 2
+
+[node name="TagLabel" type="Label" parent="." unique_id=1513674467]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -116.0
+offset_top = 58.0
+offset_right = -3.0
+offset_bottom = 77.0
+grow_horizontal = 0
+text = "spline"
+horizontal_alignment = 1
+
+[connection signal="pressed" from="." to="." method="_on_pressed"]

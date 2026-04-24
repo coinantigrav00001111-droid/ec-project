@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://rjsk2fyqpkaw"]
+
+[ext_resource type="Texture2D" uid="uid://c8tndy1lksot8" path="res://ui/icons/transport/rail-road.svg" id="1_b77or"]
+[ext_resource type="Script" uid="uid://c6un34gb7ler6" path="res://ui/buttons/tag_button.gd" id="2_y6ra0"]
+
+[sub_resource type="ButtonGroup" id="ButtonGroup_g2x2r"]
+resource_local_to_scene = false
+resource_name = "tag_btn"
+
+[node name="TagButton" type="Button" unique_id=589134725 groups=["tag_buttons"]]
+offset_right = 32.0
+offset_bottom = 32.0
+size_flags_horizontal = 0
+size_flags_vertical = 0
+theme_type_variation = &"TagButton"
+toggle_mode = true
+button_group = SubResource("ButtonGroup_g2x2r")
+icon = ExtResource("1_b77or")
+script = ExtResource("2_y6ra0")

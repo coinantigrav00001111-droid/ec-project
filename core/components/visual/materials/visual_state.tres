@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="VisualStateSettings" format=3 uid="uid://bqss7rh1mwv41"]
+
+[ext_resource type="Material" uid="uid://cg513d3qmipyn" path="res://core/components/visual/materials/blocked_material.res" id="1_l2akk"]
+[ext_resource type="Material" uid="uid://b884a1vtrqlrx" path="res://core/components/visual/materials/ghost_material.res" id="2_n23pq"]
+[ext_resource type="Material" uid="uid://v5f23utian05" path="res://core/components/visual/materials/shader_ghost_material.tres" id="3_xtfy3"]
+[ext_resource type="Material" uid="uid://bq3euyw84s54s" path="res://core/components/visual/materials/hovered_material.res" id="4_j3q5s"]
+[ext_resource type="Script" uid="uid://dyjri63w7c0cb" path="res://core/components/visual/materials/visual_state_settings.gd" id="5_ngbl8"]
+[ext_resource type="Material" uid="uid://bqgir5a1kos3d" path="res://core/components/visual/materials/selected_material.res" id="6_n23pq"]
+[ext_resource type="Material" uid="uid://di32k46peaduu" path="res://core/components/visual/materials/selected_outline_mat.tres" id="6_oifuv"]
+
+[resource]
+script = ExtResource("5_ngbl8")
+ghost_material = ExtResource("2_n23pq")
+selected_material = ExtResource("6_n23pq")
+blocked_material = ExtResource("1_l2akk")
+hover_material = ExtResource("4_j3q5s")
+ghost_shader_material = ExtResource("3_xtfy3")
+selected_shader_material = ExtResource("6_oifuv")
+selected_color = Color(0.27116957, 0.4940508, 0.91261333, 1)
+metadata/_custom_type_script = "uid://dyjri63w7c0cb"

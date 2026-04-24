@@ -1,0 +1,18 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://y8047mllsgqr"]
+
+[ext_resource type="Texture2D" uid="uid://bb04qlt73byb7" path="res://data/textures/in_one/Ballast_01_Color.webp" id="1_mgeh3"]
+[ext_resource type="Texture2D" uid="uid://dp2j60fxtwsog" path="res://data/textures/in_one/Ballast_01_Metallic_Roughness.webp" id="2_7leny"]
+[ext_resource type="Texture2D" uid="uid://k7rmt2mgvwfe" path="res://data/textures/in_one/Ballast_01_Normal.webp" id="3_mxsvh"]
+
+[resource]
+resource_name = "M_rail_10v2"
+cull_mode = 2
+depth_draw_mode = 1
+albedo_texture = ExtResource("1_mgeh3")
+metallic = 1.0
+metallic_texture = ExtResource("2_7leny")
+metallic_texture_channel = 2
+roughness_texture = ExtResource("2_7leny")
+roughness_texture_channel = 1
+normal_enabled = true
+normal_texture = ExtResource("3_mxsvh")

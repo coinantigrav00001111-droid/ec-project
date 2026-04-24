@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="EntitySetting" format=3 uid="uid://dwmmwrp1uxyjb"]
+
+[ext_resource type="Script" uid="uid://m4g5jbfwmaa0" path="res://core/component_setting.gd" id="1_8yhku"]
+[ext_resource type="Texture2D" uid="uid://c6wuj73tf1123" path="res://ui/icons/transport/subway-train.svg" id="1_wwfl8"]
+[ext_resource type="Script" uid="uid://do5hjkm3r2pdg" path="res://core/entity_setting.gd" id="2_t5pxf"]
+
+[resource]
+script = ExtResource("2_t5pxf")
+id = 6
+name = "wagon 1"
+description = "Вагон пасс"
+category = &"train"
+tag = &"wagon_p"
+icon = ExtResource("1_wwfl8")
+metadata/_custom_type_script = "uid://do5hjkm3r2pdg"
