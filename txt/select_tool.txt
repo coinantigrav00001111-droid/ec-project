@@ -83,8 +83,8 @@ func _set_selection(entity_to_select: Entity):
 	selected_entity = entity_to_select
 	selected_entity.add_component(C_Selected.new())
 	
-	if controller.entity_debugger:
-		controller.entity_debugger.set_target(selected_entity)
+	#инспектор
+	controller.entity_debugger.set_target(selected_entity)
 
 
 
@@ -124,7 +124,6 @@ func _clear_selection():
 	selected_entity = null
 
 	#инспектор
-	#await get_tree().process_frame # ждем кадр до удаления
 	controller.entity_debugger.set_target(selected_entity)
 
 

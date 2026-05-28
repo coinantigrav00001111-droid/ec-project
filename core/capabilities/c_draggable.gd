@@ -51,3 +51,19 @@ func on_drag_ended(_data: Dictionary):
 	# Если мы заблокированы при отпускании — компонент сам себя возвращает на место
 	if entity.has_comp(C_Blocked):
 		entity.global_transform = initial_transform
+		
+# --- Блок синхронизации состояния (Клонирование) ---
+
+# Вызывается у Госта (отдаем данные)
+func on_clone_state_to(data: Dictionary) -> void:
+	var target_entity: Entity = data.target
+	
+	# Гост кричит в новую сущность: "Прими мои настройки драга!"
+	target_entity.send_event("on_receive_draggable_state", {
+		"rotation_euler": rotation_euler
+		})
+
+# Вызывается у Реального объекта (принимаем данные)
+func on_receive_draggable_state(data: Dictionary) -> void:
+	if data.has("rotation_euler"):
+		rotation_euler = data.rotation_euler

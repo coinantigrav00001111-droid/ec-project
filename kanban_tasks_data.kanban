@@ -62,6 +62,7 @@
 			"uuid": "1424c4a8-638b-4f40-9d72-5d4d3845437b",
 			"title": "Doing",
 			"tasks": [
+				"046ad09f-d7d4-442b-8112-44c12d37b39c",
 				"f51d1019-7eb1-4254-930c-c4b71991970f",
 				"ea5b32a0-dae8-48d7-a738-fcc26ed81e7b",
 				"d0bc8594-7356-459a-a29e-5236c7b973d9",
@@ -287,6 +288,13 @@
 		{
 			"uuid": "4dffbfe2-08ce-4a0d-87a0-6d22f8ec9d05",
 			"title": "get_mouse_ray и его слои доделать",
+			"description": "",
+			"category": "bfe07748-730a-4469-a662-08c8f873a722",
+			"steps": []
+		},
+		{
+			"uuid": "046ad09f-d7d4-442b-8112-44c12d37b39c",
+			"title": "!!!подготовить к четвергу запрос для диздока!!",
 			"description": "",
 			"category": "bfe07748-730a-4469-a662-08c8f873a722",
 			"steps": []
