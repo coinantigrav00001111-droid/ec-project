@@ -1,135 +1,143 @@
-# GECS
+# Дизайн-документ: Event-Driven EC-Архитектура Симулятора
 
-> **Entity Component System for Godot 4.x**
+## 1. Фундаментальная парадигма (Event-Driven EC)
 
-Build scalable, maintainable games with clean separation of data and logic. GECS integrates seamlessly with Godot's node system while providing powerful query-based entity filtering.
+Проект построен на классической архитектуре Entity-Component (EC), ориентированной на узлы (Nodes) в Godot. Отличительная черта нашей системы — **полная автономность компонентов через внутреннюю шину событий (Event Bus)**.
 
-## Key Features
+* 
+**Отказ от Systems:** Вся логика поведения инкапсулирована внутри самих компонентов.
 
-- 🎯 **Godot Integration** - Works with nodes, scenes, and editor
-- 🚀 **High Performance** - Optimized queries with automatic caching
-- 🔧 **Flexible Queries** - Find entities by components, relationships, or properties
-- 🔍 **Debug Viewer** - Real-time inspection and performance monitoring
-- 📦 **Editor Support** - Visual component editing and scene integration
-- 🎮 **Battle Tested** - Used in games being actively developed
-- 🌐 **Multiplayer** - GECS goes Multiplayer! Check out the [GECS Network Module](addons/gecs/network/README.md)
 
-## Requirements
+* 
+**Маршрутизация через События:** Инструменты (Tools) больше не ищут конкретные компоненты (например, `get_comp(C_Draggable)`). Они полностью "слепы" и работают как костыли для передачи ввода. Тул просто транслирует приказ в сущность через `send_event`.
 
-Godot 4.x (tested with 4.6+)
 
-## Installation
+* 
+**Реактивность:** Умный компонент сам решает, как реагировать на события. Добавление нового компонента автоматически наделяет объект новым поведением без переписывания контроллеров.
 
-### Option A: Godot Asset Library
 
-Search for **"GECS"** in the Godot editor AssetLib tab and click Install.
 
-### Option B: Manual Copy
+## 2. Структура Ядра (Core)
 
-Download the release zip, copy `addons/gecs/` into your project, then enable the plugin in **Project Settings > Plugins**.
+* 
+**Entity (`class_name Entity extends Node3D`)**: Логический контейнер и локальный Event Bus. Управляет жизненным циклом компонентов. При получении вызова `send_event(event_name, data)` сущность транслирует его всем своим дочерним компонентам.
 
-### Option C: Git Submodule
 
-```bash
-git submodule add -b release-v6.8.1 https://github.com/csprance/gecs.git addons/gecs
-```
+* 
+**Component (`class_name Component extends Node`)**: Базовый класс для всех компонентов. Живет в дереве как дочерний узел Entity и слушает её события. При вызове `queue_free()` Godot безопасно отключает все связи.
 
-Then enable the plugin in **Project Settings > Plugins**.
 
-## Quick Start
+* 
+**EntityFactory & Settings**: Фабрика собирает живые Entity на основе ресурса-шаблона (`EntitySetting`), который содержит список чертежей компонентов (`ComponentSettings`).
 
-```gdscript
-# All component properties need a default value or Godot will error on export
 
-# Pattern 1: @export var with default (no constructor needed)
-class_name C_Health extends Component
-@export var max_health: int = 100
-@export var current_health: int = 100
 
-# Pattern 2: _init() with parameter AND a default on the property
-class_name C_Velocity extends Component
-@export var direction: Vector3 = Vector3.ZERO
-func _init(v: Vector3 = Vector3.ZERO) -> void:
-    direction = v
+## 3. Классификация компонентов
 
-# Create entities and add components
-var player = Entity.new()
-player.add_component(C_Health.new())
-player.add_component(C_Velocity.new(Vector3(5, 0, 0)))
+Компоненты жестко разделены на три типа:
 
-var target = Entity.new()
-target.add_component(C_Health.new())
-target.add_component(C_Velocity.new(Vector3(-5, 0, 0)))
+1. **Capabilities (Способности / "Умные" компоненты):**
+* Определяют, что объект умеет делать.
 
-# Add entities to the world
-ECS.world.add_entity(player)
-ECS.world.add_entity(target)
 
-# Add relationships between entities
-player.add_relationship(Relationship.new(C_AllyTo.new(), target))
+* Присутствуют на объекте всегда.
 
-# Systems define which entities to process
-class_name VelocitySystem extends System
 
-func query() -> QueryBuilder:
-    return q.with_all([C_Velocity])
+* Содержат логику и слушают события сущности. Например, `C_Draggable` не ждет, пока его вызовут, а реагирует на абстрактный приказ `on_drag_moved`.
 
-func process(entities: Array[Entity], components: Array, delta: float) -> void:
-    for entity in entities:
-        var vel := entity.get_component(C_Velocity) as C_Velocity
-        entity.position += vel.direction * delta
 
-# Register the system and start processing
-ECS.world.add_system(VelocitySystem.new())
+* `C_Blockable`: Сенсор коллизий. Подключается ко всем `Area3D` сущности, считает `overlaps` и вешает/снимает метку `C_Blocked`.
 
-func _process(delta: float) -> void:
-    ECS.process(delta)
-```
 
-## Quick Start Steps
 
-1. **Install**: Download to `addons/gecs/` and enable in Project Settings
-2. **Follow Guide**: [Get your first ECS project running in 5 minutes →](addons/gecs/docs/GETTING_STARTED.md)
-3. **Learn More**: [Understand core ECS concepts →](addons/gecs/docs/CORE_CONCEPTS.md)
 
-## Complete Documentation
+2. **States (Состояния / "Глупые" метки):**
+* Временные флаги, которые вешают инструменты.
 
-**All documentation is located in the addon folder:**
 
-**→ [Complete Documentation Index](addons/gecs/README.md)**
+* Не имеют свойств (например, у `C_Blocked` нет `is_blocked`).
 
-### Quick Navigation
 
-- **[Getting Started](addons/gecs/docs/GETTING_STARTED.md)** - Build your first ECS project (5 min)
-- **[Core Concepts](addons/gecs/docs/CORE_CONCEPTS.md)** - Understand Entities, Components, Systems, Relationships (20 min)
-- **[Best Practices](addons/gecs/docs/BEST_PRACTICES.md)** - Write maintainable ECS code (15 min)
-- **[Troubleshooting](addons/gecs/docs/TROUBLESHOOTING.md)** - Solve common issues quickly
+* При добавлении/удалении могут рассылать события (например, требование сменить цвет).
 
-### Advanced Features
 
-- **[Component Queries](addons/gecs/docs/COMPONENT_QUERIES.md)** - Advanced property-based filtering
-- **[Relationships](addons/gecs/docs/RELATIONSHIPS.md)** - Entity linking and associations
-- **[Observers](addons/gecs/docs/OBSERVERS.md)** - Reactive systems for component changes
-- **[Performance Optimization](addons/gecs/docs/PERFORMANCE_OPTIMIZATION.md)** - Make your games run fast
 
-## Example Games
 
-- **[GECS-101](https://github.com/csprance/gecs-101)** - A simple example
-- **[Zombies Ate My Neighbors](https://github.com/csprance/gecs/tree/zombies-ate-my-neighbors/game)** - Action arcade game
-- **[Breakout Clone](https://github.com/csprance/gecs/tree/breakout/game)** - Classic brick breaker
+3. **Visual / Data (Абстрактный рендерер):**
+* 
+`C_Visual`: Полностью "тупой рендерер". Он больше не проверяет компоненты по именам (`if has_comp(C_Ghost)`). Он рисует только то, что ему приказали другие компоненты через события с самым высоким приоритетом.
 
-## Community
 
-- **Discord**: [Join our community](https://discord.gg/eB43XU2tmn)
-- **Issues**: [Report bugs or request features](https://github.com/csprance/gecs/issues)
-- **Discussions**: [Ask questions and share projects](https://github.com/csprance/gecs/discussions)
 
-## License
 
-MIT - See [LICENSE](LICENSE) for details.
 
----
+## 4. Паттерн Инструментов (Tools)
 
-_GECS is provided as-is. If it breaks, you get to keep both pieces._
+`ToolController` выступает дирижером и переключает активные Инструменты. Инструменты ничего не вычисляют для объектов, они лишь маршрутизируют данные.
 
-[![Star History Chart](https://api.star-history.com/svg?repos=csprance/gecs&type=Date)](https://star-history.com/#csprance/gecs&Date)
+* 
+**BuildTool**: Спавн призрака (`ghost`). Отправляет события инициализации и перемещения.
+
+
+* 
+**SelectTool**: Отвечает за ховер, клик (Select) и инициацию драга существующих объектов. Работает с конкретными событиями мыши.
+
+
+* **DragTool**: Перемещение объекта. Посылает события движения (`on_drag_moved`) в `target_entity`. При отмене возвращает объект на `initial_transform`.
+
+
+
+## 5. Физика, Слои и Коллизии
+
+Вместо `StaticBody3D` для детекции блокировок используются `Area3D` для точной реакции на пересечения.
+
+**Маски и Слои (Layers):**
+
+* 
+**Слой 1**: Земля (Ground).
+
+
+* 
+**Слой 3**: Рабочие объекты (Траки, Вагоны).
+
+
+* **Слой 10**: Гост (Ghost). Рейкасты инструментов игнорируют этот слой.
+
+
+* **Слой 11**: Селектед/Драг. При выборе объекта его коллизии переносятся сюда.
+
+
+
+## 6. Визуальный Водопад (Event-Driven C_Visual)
+
+`C_Visual` больше не содержит жестких проверок (`has_comp`). Компоненты сами отправляют событие `set_visual_state` (с передачей материала и приоритета). `C_Visual` просто применяет материал с наивысшим приоритетом.
+
+## 7. Важные технические решения и Анти-Паттерны
+
+* 
+**Угроза пересборки физики (Infinite Rebuild Loop):** Переназначение `collision_layer` вызывает сброс физических пересечений. Слои меняются *только* если новое значение отличается от текущего.
+
+
+* 
+**Дроп заблокированного объекта:** При отмене DragTool возвращает объект на исходную позицию и *вручную* удаляет метку `C_Blocked`, но никогда не удаляет способность `C_Blockable`.
+
+
+* 
+**Отвязка дебагера:** UI-дебагер обновляется через внутренний таймер (троттлинг) для предотвращения утечек памяти от `queue_free()` тысяч `Label`.
+
+
+* 
+**Pivot вместо AABB:** Для выравнивания объектов используются настроенные пивоты моделей или `drag_offset`.
+
+
+
+## 8. Ближайший Roadmap (План развития)
+
+1. 
+**InfoPanel:** паенль для отображения инфы об объекте.Она будет видна при селекте объекта и содержать всю инфу о нем. В заголовке имя объекта. Имеет несколько закладок для разных данных - основная(описание , длина, радиус...), электрика, позиция и поворот, внешний вид(дада, его можно будет изменить когда нибудь) и закладка для дебага(там можно и компоненты писать и соседей и так далее) - замена теперешнему инспектору с его жрущим память фукционалом. Возможно и больше.
+
+2. 
+**Магнитный снаппинг (C_Socket):** Создание компонента для логических точек стыковки и хелпера для подмены координат `target_pos` рейкаста при перетаскивании.
+
+3. 
+**Flex Tracks (Гибкие рельсы):** Сборка новой сущности с `C_Curve` (математика точек), `C_Visual_Flex` (генерация меша через PathMesh3D) и `C_Handle` (управление изгибом).
