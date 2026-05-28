@@ -38,11 +38,16 @@ size = Vector3(28.534546, 5.362793, 10.261719)
 [sub_resource type="BoxShape3D" id="BoxShape3D_4pdep"]
 size = Vector3(28.546906, 5.4319763, 10.043091)
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_4pdep"]
+transparency = 1
+albedo_color = Color(0.6509804, 0.43137255, 0.1882353, 0.34509805)
+
 [sub_resource type="PrismMesh" id="PrismMesh_bc160"]
+material = SubResource("StandardMaterial3D_4pdep")
 size = Vector3(50, 4, 20)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_wekbu"]
-size = Vector3(26.013464, 1, 19.82579)
+size = Vector3(25.96474, 1.2593689, 19.82579)
 
 [node name="GameRoot" type="Node3D" unique_id=1065014004]
 script = ExtResource("1_6mh03")
@@ -87,14 +92,10 @@ script = ExtResource("7_jy1t0")
 [node name="Debug" type="CanvasLayer" parent="." unique_id=1812429807]
 
 [node name="EntityDebugger" parent="Debug" unique_id=2068043770 instance=ExtResource("10_4pdep")]
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -1573.0
-offset_top = 321.0
-offset_right = -1452.0
-offset_bottom = 582.0
-grow_horizontal = 0
+offset_left = 14.0
+offset_top = 277.0
+offset_right = 135.0
+offset_bottom = 576.0
 size_flags_vertical = 0
 mouse_filter = 0
 
@@ -163,9 +164,11 @@ mesh = SubResource("PrismMesh_bc160")
 [node name="StaticBody3D" type="StaticBody3D" parent="World/EntitiesRoot/Props/PrismMeshInstance3D" unique_id=395990527]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="World/EntitiesRoot/Props/PrismMeshInstance3D/StaticBody3D" unique_id=1132558667]
-transform = Transform3D(0.9886041, -0.15053914, 0, 0.15053914, 0.9886041, 0, 0, 0, 1, -12.173166, -0.50140226, 0.04610443)
+transform = Transform3D(0.9886041, -0.15053914, 0, 0.15053914, 0.9886041, 0, 0, 0, 1, -12.201029, -0.48023987, 0.04610443)
 shape = SubResource("BoxShape3D_wekbu")
+debug_color = Color(0, 0.98, 1.145, 1)
 
 [node name="CollisionShape3D2" type="CollisionShape3D" parent="World/EntitiesRoot/Props/PrismMeshInstance3D/StaticBody3D" unique_id=777788026]
-transform = Transform3D(0.986233, 0.16536203, 0, -0.16536203, 0.986233, 0, 0, 0, 1, 12.781781, -0.78366876, 0.04610443)
+transform = Transform3D(0.986233, 0.16536203, 0, -0.16536203, 0.986233, 0, 0, 0, 1, 12.799073, -0.68053985, 0.04610443)
 shape = SubResource("BoxShape3D_wekbu")
+debug_color = Color(0, 0.98, 1.145, 1)

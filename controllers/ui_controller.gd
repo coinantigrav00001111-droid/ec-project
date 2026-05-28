@@ -57,7 +57,8 @@ var hit_pos = Vector3.ZERO # лкм нажата здесь
 func _ready() -> void:
 	# ⚡Сигнал из моде контроллера
 	mode_controller.current_mode_changed.connect(on_current_mode_changed)
-	build_controller.object_selected.connect(btn_object_selected)
+	# ‼️(old)⚡Сигнал выбота объекта по кнопке
+	#build_controller.object_selected.connect(btn_object_selected)
 
 
 	
@@ -120,9 +121,10 @@ func move_entity(_entity) :
 
 
 ## 💡💡 =============OBJECT SELECTED=====================
-
+# FIXME ‼️ (old) устарела функция??
 ## Функция передачи инструкций в логику игры из UI. Запускается в билдконтроллере по кнопке
 func btn_object_selected(_setting: EntitySetting):
+	printt('_btn',_setting)
 	clear_selection()
 	current_setting = _setting
 

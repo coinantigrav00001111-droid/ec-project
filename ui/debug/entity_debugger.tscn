@@ -12,6 +12,16 @@ size_flags_vertical = 3
 mouse_filter = 1
 script = ExtResource("1_vudpq")
 
+[node name="ToolLabel" type="Label" parent="." unique_id=852654054]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+offset_transform_enabled = true
+offset_transform_position = Vector2(0, -19.876)
+theme_override_colors/font_color = Color(0.023529412, 0, 1, 1)
+text = "tool"
+
 [node name="CompListContainer" type="VBoxContainer" parent="." unique_id=189144916]
 unique_name_in_owner = true
 layout_mode = 2

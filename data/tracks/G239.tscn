@@ -58,24 +58,26 @@ shape = SubResource("BoxShape3D_vung0")
 
 [node name="HeadL" type="StaticBody3D" parent="." unique_id=24989364]
 unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
-collision_layer = 1028
-collision_mask = 1028
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+collision_layer = 4
+collision_mask = 4
 physics_material_override = SubResource("PhysicsMaterial_3wfh7")
 
 [node name="CollisionShapeBox" type="CollisionShape3D" parent="HeadL" unique_id=528456314]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.865, 0.125, -12)
 shape = SubResource("BoxShape3D_kxll1")
+disabled = true
 debug_color = Color(0, 1, 0.701961, 1)
 
 [node name="HeadR" type="StaticBody3D" parent="." unique_id=2029240522]
 unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
-collision_layer = 1028
-collision_mask = 1028
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+collision_layer = 4
+collision_mask = 4
 physics_material_override = SubResource("PhysicsMaterial_3wfh7")
 
 [node name="CollisionShapeBox" type="CollisionShape3D" parent="HeadR" unique_id=16282706]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.865, 0.125, -11.95)
 shape = SubResource("BoxShape3D_kxll1")
+disabled = true
 debug_color = Color(0, 1, 0.701961, 1)

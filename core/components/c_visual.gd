@@ -4,51 +4,67 @@ var instance: Node3D
 var scene: PackedScene
 var settings: VisualStateSettings
 
+# Массив состояний, которые реально влияют на графику
+#var VISUAL_STATES = [C_Ghost, C_Blocked, C_Selected, C_Hovered]
+
 var mesh_nodes: Array[MeshInstance3D] 
 
 ## Массив статикбоди сцены и их collision layers
-var static_nodes: Dictionary [CollisionObject3D, int] 
+var area_nodes: Dictionary [CollisionObject3D, int] 
 
-var blocked_material #  врем
+#var blocked_material #  врем
+
+
 
 
 ## Вызов из ентити при создании комп
 func on_added():
 	instance = scene.instantiate() # Создаем сцену
 	entity.add_child(instance)
-	update_visual() #- лишний при создании сущн, а при добавлении комп нужен
+
 	# Осталось пока
 	_collect_meshes()
-	_collect_statics()
+	_collect_collision_nodes()
+
 
 
 func on_component_added(_type: Script):
-	# Если на сущность "нацепили" состояние призрака или блокировки
-	#if type == C_Ghost or type == C_Blocked or type == C_Selected or type == C_Hovered:
-		update_visual()
-		
-func on_component_removed(type):
+	#if _type in VISUAL_STATES:
+		update_visual()  # нужный
+
+
+
+func on_component_removed(_type):
 	# Смотрит удаляемый комп, если увидит, то сбросит в нормальный вид
-	update_visual(type)
+	#if _type in VISUAL_STATES:
+	update_visual(_type)  # нужный
 
 
-"""  Остановка на блокед. Сам комп сделан, но когда сработка - нет. см также Таски.
-	вот тут и проверяем!! """
-func _on_component_changed():
-	print('cha')
-	var blocked = entity.get_comp(C_Blocked)
-	if blocked and blocked.is_blocked:
+
+###############################
+## Смотрит удаляемый комп, если увидит, то сбросит в нормальный вид
+
+func update_visual(_removing_type: Script = null): 
+	if has_comp(C_Blocked) and _removing_type != C_Blocked:
 		_set_blocked() 
-	else:
+	elif has_comp(C_Ghost) and _removing_type != C_Ghost:
+		_set_ghost()
+	elif has_comp(C_Selected) and _removing_type != C_Selected:
+		_set_selected() 
+	elif has_comp(C_Hovered) and _removing_type != C_Hovered:
+		_set_hovered() 
+	else: 
 		_reset()
-		
-		
-## ========= OLD =====================
+
+
+
 
 func get_visual_offset() -> Vector3:
 	# Вместо математики AABB, лучше просто возвращать Vector3.ZERO, 
 	# если мы хотим держать рельс за его начало (Socket 0).
 	return Vector3.ZERO
+
+
 
 ## Центр ентити по первому мешу
 func get_center_world() -> Vector3:
@@ -59,6 +75,7 @@ func get_center_world() -> Vector3:
 	local_center.x = 0 
 	local_center.y = 0 
 	return instance.to_global(local_center)	
+
 
 
 ## -----MESH-------
@@ -77,45 +94,28 @@ func _find_meshes(node):
 
 
 
-## -----STATICS-------
+## -----Сбор нод с коллизиями (Area3D и StaticBody3D)-------
 
-func _collect_statics():
-	static_nodes = {}
-	_find_statics(instance)
+func _collect_collision_nodes():
+	area_nodes = {}
+	_find_collisions(instance)
 
 
 
 ## Заполняем словарь {статик, его лэйер}
-func _find_statics(node): 
+func _find_collisions(node): 
 	if node is CollisionObject3D: 
-		static_nodes[node] = node.collision_layer 
+		area_nodes[node] = node.collision_layer 
 
 	for child in node.get_children(): 
-		_find_statics(child)
+		_find_collisions(child)
 
 
-
-###############################
-# Смотрит удаляемый комп, если увидит, то сбросит в нормальный вид
-func update_visual(_removing_type: Script = null): 
-	#print('c-visual update_visual')
-	if entity.has_comp(C_Ghost):
-		_set_ghost()
-	elif entity.has_comp(C_Blocked): 
-		_set_blocked() 
-	elif entity.has_comp(C_Selected) and _removing_type != C_Selected:
-		_set_selected() 
-	elif entity.has_comp(C_Hovered) and _removing_type != C_Hovered:
-		_set_hovered() 
-	else: 
-		_reset()
-
-
+## ---- SET по СТЕЙТАМ ----
 
 func _set_ghost():
 	for mesh in mesh_nodes:
 		mesh.set_material_overlay( settings.ghost_material)
-
 
 
 
@@ -125,8 +125,11 @@ func _set_selected():
 		mesh.set_material_overlay( settings.selected_material)
 	
 	# статик в слой 11 (selected)
-	for coll in static_nodes:
-		coll.collision_layer = 1 << 10
+	for coll in area_nodes:
+	# ВАЖНО: Меняем слой ТОЛЬКО если он реально отличается!
+	# Это спасает от перезапуска физики и спама body_exited
+		if coll.collision_layer != (1 << 10):
+			coll.collision_layer = 1 << 10
 
 
 
@@ -135,19 +138,26 @@ func _set_hovered():
 		mesh.set_material_overlay( settings.hover_material)
 
 
+
 func _set_blocked():
 	for mesh in mesh_nodes: 
 		mesh.set_material_overlay(settings.blocked_material) 
+
+
 
 func _reset(): 
 	for mesh in mesh_nodes: 
 		mesh.set_material_overlay( null)
 		
 	# статик в родной слой (трак, вагон и тд)
-	for coll in static_nodes:
-		coll.collision_layer = static_nodes[coll] 
+	for coll in area_nodes:
+		var original_layer = area_nodes[coll]
+		if coll.collision_layer != original_layer:
+			coll.collision_layer = original_layer
 
 
+
+## ----  МАТЕРИАЛЫ ----
 
 ## Вставляет материал в последний next_pass 
 func apply_material(mesh_instance: MeshInstance3D, _material: Material):
@@ -169,6 +179,7 @@ func apply_material(mesh_instance: MeshInstance3D, _material: Material):
 	#new_mat = _material
 	# 4. Прикрепляем его в самый конец цепочки
 	current_mat.next_pass = _material
+
 
 
 

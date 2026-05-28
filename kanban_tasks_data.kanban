@@ -54,7 +54,8 @@
 				"51331081-7353-4afa-a247-5a2271c893a4",
 				"1bdea74b-2ef0-48de-94c3-43f45b91a67d",
 				"8c7f0278-b1be-4210-8c77-8dad0dbd805d",
-				"4e347f4b-c83c-4c93-9675-ea46295ea911"
+				"4e347f4b-c83c-4c93-9675-ea46295ea911",
+				"696f3605-24ee-4aae-80fc-4fab7f26e758"
 			]
 		},
 		{
@@ -63,10 +64,17 @@
 			"tasks": [
 				"f51d1019-7eb1-4254-930c-c4b71991970f",
 				"ea5b32a0-dae8-48d7-a738-fcc26ed81e7b",
+				"d0bc8594-7356-459a-a29e-5236c7b973d9",
+				"48358397-2831-4f6d-8fc4-56c860899ffd",
 				"4a8b24d0-55b2-45f6-8838-1f9f348e8de4",
 				"6cc465b2-fc5f-44de-a221-574418588905",
 				"ccb486f3-f15e-4a84-a488-1bd7a4d7c894",
-				"431f567b-072c-47f6-824b-d6ebdd1cae44"
+				"431f567b-072c-47f6-824b-d6ebdd1cae44",
+				"4dffbfe2-08ce-4a0d-87a0-6d22f8ec9d05",
+				"e3af19a7-77e9-4062-b775-0a295b551f5b",
+				"34e8e18f-ee70-42e8-b05a-7843bc2cc2ad",
+				"e033b1b0-704f-4bc7-9765-5e7feb435c5d",
+				"873f5ac5-18fa-45cf-be57-3376dc8d98cd"
 			]
 		},
 		{
@@ -75,7 +83,8 @@
 			"tasks": [
 				"c3d65b49-5533-46e9-b6ef-dce81c18deb6",
 				"e93d0435-fc2b-42cc-8673-038d55a8cac4",
-				"cb3dd73c-6c8f-4073-866f-bdf0aa4954b4"
+				"cb3dd73c-6c8f-4073-866f-bdf0aa4954b4",
+				"f6982df0-c908-46ce-a8f4-5c88be1c8446"
 			]
 		}
 	],
@@ -210,6 +219,76 @@
 			"title": "Проверить процессы, нет ли там лишних ",
 			"description": "",
 			"category": "91f41b95-cfcd-4026-a09a-48fb304f9a00",
+			"steps": []
+		},
+		{
+			"uuid": "f6982df0-c908-46ce-a8f4-5c88be1c8446",
+			"title": "Можно сделать отдельный ховер для селект-трака",
+			"description": "",
+			"category": "50f9c949-da71-4afd-beb9-f08415f2f066",
+			"steps": []
+		},
+		{
+			"uuid": "6baae0dd-296a-4152-87e6-39f73eacb830",
+			"title": " update_visual обновляет каждый тик при ховере",
+			"description": "",
+			"category": "50f9c949-da71-4afd-beb9-f08415f2f066",
+			"steps": []
+		},
+		{
+			"uuid": "d0bc8594-7356-459a-a29e-5236c7b973d9",
+			"title": "при драге бьет ошибку на скосах",
+			"description": "",
+			"category": "31a5ac59-e2b4-4e46-a327-067210b7ca4b",
+			"steps": []
+		},
+		{
+			"uuid": "48358397-2831-4f6d-8fc4-56c860899ffd",
+			"title": "Неверная высота устновки в драге",
+			"description": "",
+			"category": "31a5ac59-e2b4-4e46-a327-067210b7ca4b",
+			"steps": []
+		},
+		{
+			"uuid": "34e8e18f-ee70-42e8-b05a-7843bc2cc2ad",
+			"title": "UI controller содержит object_setting функцию - устарела. Проверить остальные функции - на нужность",
+			"description": "",
+			"category": "4e1e522f-ed31-43ef-82dc-7958b5551b97",
+			"steps": []
+		},
+		{
+			"uuid": "e033b1b0-704f-4bc7-9765-5e7feb435c5d",
+			"title": "Обсудить передачу инпута в драг",
+			"description": "",
+			"category": "91f41b95-cfcd-4026-a09a-48fb304f9a00",
+			"steps": []
+		},
+		{
+			"uuid": "873f5ac5-18fa-45cf-be57-3376dc8d98cd",
+			"title": "Обсудить архитектуру визуалов и автономности компов",
+			"description": "",
+			"category": "91f41b95-cfcd-4026-a09a-48fb304f9a00",
+			"steps": []
+		},
+		{
+			"uuid": "e3af19a7-77e9-4062-b775-0a295b551f5b",
+			"title": "прибить ошибки в логе",
+			"description": "",
+			"category": "50f9c949-da71-4afd-beb9-f08415f2f066",
+			"steps": []
+		},
+		{
+			"uuid": "696f3605-24ee-4aae-80fc-4fab7f26e758",
+			"title": "Делаем Инфопанель",
+			"description": "",
+			"category": "4e1e522f-ed31-43ef-82dc-7958b5551b97",
+			"steps": []
+		},
+		{
+			"uuid": "4dffbfe2-08ce-4a0d-87a0-6d22f8ec9d05",
+			"title": "get_mouse_ray и его слои доделать",
+			"description": "",
+			"category": "bfe07748-730a-4469-a662-08c8f873a722",
 			"steps": []
 		}
 	],

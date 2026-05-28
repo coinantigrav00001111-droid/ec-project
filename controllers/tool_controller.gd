@@ -3,6 +3,7 @@ class_name ToolController extends Node3D
 ##########################
 ##  Главный инструмент 
 ##########################
+## Переключает текущий инструмент - билд, селект, драг
 
 @onready var GR : GameRoot = $".."
 @onready var world: World = $"../World"
@@ -59,7 +60,7 @@ func switch_tool(new_tool: Node):
 
 
 
-# ⚡выбран объект для билда - в билд-тул в бывшую btn_object_selected(_setting: EntitySetting)
+# ⚡выбран объект для билда - в билд-тул в бывшую  ‼️(old) btn_object_selected(_setting: EntitySetting)
 func _on_build_selected(setting: EntitySetting):
 	build_tool.ghost_setting = setting
 	# переключение в build_tool
@@ -79,7 +80,7 @@ func get_mouse_ray(mask: int = -1) -> Dictionary:
 	query.collide_with_areas = true
 	
 	#TODO Нужен не только 3 леер
-	query.collision_mask = (1 | 4) if mask == -1 else mask # Земля (1) и Траки (3-й слой -> маска 4)
+	query.collision_mask = (1) if mask == -1 else mask # Земля (1) и Траки (3-й слой -> маска 4)
 	
 	return get_world_3d().direct_space_state.intersect_ray(query)
 

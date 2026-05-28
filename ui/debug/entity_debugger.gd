@@ -6,7 +6,8 @@ class_name EntityController extends PanelContainer
 
 
 var target: Entity
-
+var _refresh_timer := 0.0
+const REFRESH_RATE := 0.5 # Обновление каждые 0.2 секунды (5 раз в сек)
 
 
 func _ready() -> void:
@@ -14,22 +15,24 @@ func _ready() -> void:
 
 
 
+#### +++++++++++#############
 
 ##  Выбираем объект для дебага
 func set_target(entity: Entity):
-	
-	#if target and target.components_changed.has_connections():
-		#printt(target , target.components_changed.has_connections())
-		#target.disconnect('components_changed',set_target)
 	target = entity
-	
-	#if target:
-		#if !target.components_changed.has_connections():
-			#target.components_changed.connect(set_target)
-		#pass
+	# Принудительно обновляем UI сразу при клике на новый таргет
+	_refresh_timer = REFRESH_RATE 
 	on_update_debug_info(target)
-	#printt('target = ', entity)
 
+
+func _process(delta: float):
+	if not target or not is_visible_in_tree(): return
+	
+	_refresh_timer -= delta
+	if _refresh_timer <= 0:
+		_refresh_timer = REFRESH_RATE
+		on_update_debug_info(target)
+	
 
 # ⚡Сигнал обработка из госта, подключен в ui контроллере
 func on_update_debug_info(_entity):
@@ -48,6 +51,7 @@ func on_update_debug_info(_entity):
 		if comp is Component:
 			add_component_block(comp)	
 
+	%ToolLabel.text = str(tool_controller.active_tool.name)
 
 
 func add_component_block(comp):
@@ -67,6 +71,7 @@ func add_component_block(comp):
 		if str(value) != '' and with_props:
 			row.text = str(p) + ": " + str(value)
 			%CompListContainer.add_child(row)
+
 
 
 func get_component_properties(comp):

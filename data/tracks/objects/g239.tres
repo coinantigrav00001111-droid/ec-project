@@ -6,10 +6,11 @@
 [ext_resource type="Script" uid="uid://do5hjkm3r2pdg" path="res://core/entity_setting.gd" id="3_7vxw7"]
 [ext_resource type="Script" uid="uid://bulwl3x2rykxk" path="res://core/components/c_visual_setting.gd" id="3_r42n5"]
 [ext_resource type="Resource" uid="uid://bqss7rh1mwv41" path="res://core/components/visual/materials/visual_state.tres" id="4_iqocg"]
-[ext_resource type="Script" uid="uid://b1jwuxb32so7e" path="res://core/components/c_draggable_setting.gd" id="5_qqtt6"]
+[ext_resource type="Script" uid="uid://b1jwuxb32so7e" path="res://core/capabilities/c_draggable_setting.gd" id="5_qqtt6"]
 [ext_resource type="Script" uid="uid://djbifkyei01t7" path="res://core/components/c_pivot_setting.gd" id="7_o7fpk"]
-[ext_resource type="Script" uid="uid://cuumo0qj7r7gb" path="res://core/components/c_hoverable_setting.gd" id="7_r42n5"]
-[ext_resource type="Script" uid="uid://deljgsmo4bpow" path="res://core/components/c_selectable_setting.gd" id="8_iqocg"]
+[ext_resource type="Script" uid="uid://cuumo0qj7r7gb" path="res://core/capabilities/c_hoverable_setting.gd" id="7_r42n5"]
+[ext_resource type="Script" uid="uid://deljgsmo4bpow" path="res://core/capabilities/c_selectable_setting.gd" id="8_iqocg"]
+[ext_resource type="Script" uid="uid://chprgtlxn3aub" path="res://core/capabilities/c_blockable_setting.gd" id="9_qqtt6"]
 
 [sub_resource type="Resource" id="Resource_yfcut"]
 script = ExtResource("3_r42n5")
@@ -33,6 +34,10 @@ metadata/_custom_type_script = "uid://cuumo0qj7r7gb"
 script = ExtResource("8_iqocg")
 metadata/_custom_type_script = "uid://deljgsmo4bpow"
 
+[sub_resource type="Resource" id="Resource_t8too"]
+script = ExtResource("9_qqtt6")
+metadata/_custom_type_script = "uid://chprgtlxn3aub"
+
 [resource]
 script = ExtResource("3_7vxw7")
 id = 10
@@ -40,5 +45,5 @@ name = "G239 раб тест"
 description = "Прямой трак 23.9см"
 icon = ExtResource("1_qs62h")
 pivot_offset = Vector3(0, 0, 11.95)
-components = Array[ExtResource("1_k7o5x")]([SubResource("Resource_yfcut"), SubResource("Resource_iqocg"), SubResource("Resource_0xkto"), SubResource("Resource_qqtt6"), SubResource("Resource_o7fpk")])
+components = Array[ExtResource("1_k7o5x")]([SubResource("Resource_yfcut"), SubResource("Resource_iqocg"), SubResource("Resource_0xkto"), SubResource("Resource_qqtt6"), SubResource("Resource_o7fpk"), SubResource("Resource_t8too")])
 metadata/_custom_type_script = "uid://do5hjkm3r2pdg"

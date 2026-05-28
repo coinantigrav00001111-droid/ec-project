@@ -1,0 +1,81 @@
+class_name DragTool extends Node
+
+var controller: ToolController
+var target_entity: Entity
+
+var initial_transform: Transform3D # Для возврата
+const ROT_STEP := 15.0 # Градусы
+
+
+
+#################################################
+
+
+func enter():
+	if not target_entity: 
+		controller.switch_tool(controller.select_tool)
+		return
+	
+	# Запоминаем "где взяли"
+	initial_transform = target_entity.global_transform 
+	target_entity.add_component(C_Drag.new())
+
+	
+	# Комп обработчик
+	var dragger = target_entity.get_comp(C_Draggable)
+	var hit = controller.get_mouse_ray(1 | 4) 	# куда тыкнули
+	
+	# Запоминаем смещение мыши
+	if hit:
+		dragger.drag_offset = target_entity.global_position - hit.position
+
+	#инспектор
+	controller.entity_debugger.set_target(target_entity)
+
+
+
+## Каждый тик драггер-C_Draggable меняет позицию ентити
+func process_tick(_delta):
+	var hit = controller.get_mouse_ray(1 | 4)
+	if hit:
+		var dragger = target_entity.get_comp(C_Draggable)
+		dragger.update_drag(hit.position, hit.normal)
+
+
+
+## Передача инпутов в драгер, tool_controller следит
+func handle_input(_event: InputEvent):
+	var dragger = target_entity.get_comp(C_Draggable)
+	if Input.is_action_just_pressed("key_q"): dragger.add_rotation("y", ROT_STEP)
+	if Input.is_action_just_pressed("key_e"): dragger.add_rotation("y", -ROT_STEP)
+	if Input.is_action_just_pressed("key_r"): dragger.add_rotation("x", ROT_STEP)
+	if Input.is_action_just_pressed("key_f"): dragger.add_rotation("x", -ROT_STEP)
+	
+	# Дроп и переход в селекттул
+	if Input.is_action_just_released("lmb"):
+		_drop_object()
+
+
+
+func _drop_object():
+	# 1. Проверяем наличие самой метки (без обращения к несуществующим свойствам)
+	if target_entity.has_comp(C_Blocked):
+		# Возвращаем в исходную позицию
+		target_entity.global_transform = initial_transform
+		# Сбрасываем углы в C_Draggable
+		target_entity.get_comp(C_Draggable).rotation_euler = initial_transform.basis.get_euler()
+		
+		target_entity.remove_component(C_Blocked)
+		
+	# 3. Снимаем визуальное состояние драга
+	target_entity.remove_component(C_Drag)
+	
+	controller.switch_tool(controller.select_tool)
+
+
+
+func exit():
+	if target_entity:
+		target_entity.remove_component(C_Drag)
+	
+	target_entity = null

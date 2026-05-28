@@ -28,26 +28,32 @@ func on_entity_ready():
 
 # === СОБЫТИЯ ENTITY ===
 
-# ⚡Сигнал
+##--- Внутренний ---
+## принимает ⚡Сигнал
+
 func _on_component_added(type: Script):
 	on_component_added(type)
-	
-	
-# ⚡Сигнал
+
 func _on_component_removed(type: Script):
 	on_component_removed(type)
 
+#--- Внутренний end---
 
-## Переопределяй это в наследниках, чтобы реагировать на появление соседей
+
+
+##--- Внешний---
+## Пока просто прокси— переопределяется в наследниках, чтобы реагировать на появление соседей
+
 func on_component_added(_type: Script):
 	pass
 
-
-## Переопределяй это, чтобы реагировать на исчезновение соседей
 func on_component_removed(_type: Script):
 	pass
 
-# --- Хелперы ---
+#--- Внешний end---
+
+
+## --- Хелперы ---
 
 func get_comp(type: Script) -> Component:
 	return entity.get_comp(type)

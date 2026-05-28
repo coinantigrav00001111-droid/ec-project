@@ -21,6 +21,7 @@ class_name GameRoot
 # Памятка 
 #await get_tree().process_frame
 #await get_tree().create_timer(0.3).timeout 
+#call_deferred(result)
 ###################################################
 
 # Подключение карты контекста. Для камеры по умолчанию

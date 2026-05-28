@@ -64,35 +64,6 @@ func handle_input(event: InputEvent):
 			if lmb_start_pos.distance_to(event.position) > 10:
 				_start_drag(clicked_entity)
 				clicked_entity = null
-
-#func handle_input(event: InputEvent):
-	#var drag = event.accumulate(event)
-	#if Input.is_action_just_pressed("rmb"):
-		#_clear_selection()
-		#return
-		#
-	## ЛКМ нажата
-	#if Input.is_action_just_pressed("lmb"):
-		##mouse_start_pos = get_viewport().get_mouse_position()
-		#clicked_entity = _get_entity_under_mouse()
-		#if clicked_entity:
-			#_set_selection(clicked_entity)
-			#
-	## ЛКМ держим
-	#if event is InputEventMouseMotion and Input.is_action_pressed("lmb"):
-		#if clicked_entity and clicked_entity == selected_entity:
-			#
-			##if mouse_start_pos.distance_to(event.position) > 10:
-			#if drag:
-				#_start_drag(clicked_entity)
-				#clicked_entity = null # Чтобы не заходить сюда в каждом кадре движения
-	#
-	## ЛКМ отпустили
-	#if Input.is_action_just_released("lmb"):
-		#if not clicked_entity and  !drag: #mouse_start_pos.distance_to(get_viewport().get_mouse_position()) < 5:
-			#_clear_selection()
-		#clicked_entity = null
-#
 #
 
 func _get_entity_under_mouse() -> Entity:
@@ -125,7 +96,7 @@ func _start_drag(target: Entity):
 
 # ---- HOVER ---
 func _update_hover():
-	var result = controller.get_mouse_ray(1 | 4) # Слои мира и объектов
+	var result = controller.get_mouse_ray(1 | 4) # Слои земля и трак
 	var new_hover = null
 	
 	# Наехали на сущность?
@@ -152,6 +123,9 @@ func _clear_selection():
 		selected_entity.remove_component(C_Selected)
 	selected_entity = null
 
+	#инспектор
+	#await get_tree().process_frame # ждем кадр до удаления
+	controller.entity_debugger.set_target(selected_entity)
 
 
 
