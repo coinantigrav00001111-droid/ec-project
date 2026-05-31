@@ -26,6 +26,8 @@ func enter():
 	controller.entities_root.add_child(ghost)
 	ghost.add_component(C_Ghost.new())
 
+	# ДЕРГАЕМ ПАНЕЛЬ!
+	controller.info_panel.set_target(ghost)
 
 
 func handle_input(event: InputEvent):
@@ -89,7 +91,10 @@ func exit():
 	if ghost:
 		ghost.queue_free()
 		ghost = null
-
+		
+	# ОЧИЩАЕМ ПАНЕЛЬ!
+	controller.info_panel.set_target(null)
+	
 	#инспектор
 	await get_tree().process_frame # ждем кадр до удаления
 	controller.entity_debugger.set_target(ghost)

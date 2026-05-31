@@ -1,5 +1,9 @@
 class_name InfoController extends Node
 
+#########################
+## Выводит инфу в UI. 
+#########################
+## По сути ничего не делает пока, кроме вывода метки режима игры
 
 #@onready var ui_controller: UIController = $"../../UIController"
 @onready var tool_controller: ToolController = $"../../ToolController"

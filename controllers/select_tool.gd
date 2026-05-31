@@ -75,16 +75,32 @@ func _get_entity_under_mouse() -> Entity:
 	return null
 
 
-
 func _set_selection(entity_to_select: Entity):
-	if selected_entity == entity_to_select: return # Уже выбран, ничего не делаем
+	if selected_entity == entity_to_select: return 
 	
-	_clear_selection()
+	if selected_entity: 
+		selected_entity.remove_component(C_Selected)
+		#selected_entity = null # из старого, убрать? 
+	
 	selected_entity = entity_to_select
-	selected_entity.add_component(C_Selected.new())
 	
+	if selected_entity:
+		selected_entity.add_component(C_Selected.new())
+		
+	# ДЕРГАЕМ ПАНЕЛЬ!
+	controller.info_panel.set_target(selected_entity)
 	#инспектор
 	controller.entity_debugger.set_target(selected_entity)
+	
+#func _set_selection(entity_to_select: Entity):
+	#if selected_entity == entity_to_select: return # Уже выбран, ничего не делаем
+	#
+	#_clear_selection()
+	#selected_entity = entity_to_select
+	#selected_entity.add_component(C_Selected.new())
+	#
+	##инспектор
+	#controller.entity_debugger.set_target(selected_entity)
 
 
 
@@ -122,7 +138,10 @@ func _clear_selection():
 	if selected_entity: 
 		selected_entity.remove_component(C_Selected)
 	selected_entity = null
-
+	
+	# ОЧИЩАЕМ ПАНЕЛЬ!
+	controller.info_panel.set_target(null)
+	
 	#инспектор
 	controller.entity_debugger.set_target(selected_entity)
 

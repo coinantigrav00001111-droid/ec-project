@@ -1,9 +1,8 @@
-extends Node
-class_name BuildController
+class_name BuildController extends Node 
 
 ########################
 ##    BuildController 
-## 💡 Занимается обработкой нажатий в режиме BUILD 💡
+## 💡 Занимается обработкой нажатий в режиме игры BUILD 💡
 ########################
 ## Ловит Сигнал из панелей build 
 

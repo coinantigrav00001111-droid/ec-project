@@ -1,7 +1,8 @@
 class_name ToolController extends Node3D
 
 ##########################
-##  Главный инструмент 
+##  Главный инструмент для управления инструментами. 
+##  Связь с UI.
 ##########################
 ## Переключает текущий инструмент - билд, селект, драг
 
@@ -9,13 +10,17 @@ class_name ToolController extends Node3D
 @onready var world: World = $"../World"
 
 @onready var entity_factory: EntityFactory = $"../EntityFactory"
-@onready var entity_debugger = $"../Debug/EntityDebugger"
-@onready var entities_root: Node3D = %EntitiesRoot
+@onready var entities_root: Node3D = %EntitiesRoot # Здесь лежат сущности
 
 # Инструменты
 @onready var build_tool: BuildTool = %BuildTool
 @onready var select_tool = %SelectTool
 @onready var drag_tool: DragTool = %DragTool
+
+# UI 
+@onready var entity_debugger = $"../Debug/EntityDebugger"
+@onready var info_panel: InfoPanel = $"../UI/InfoPanel"
+
 
 # Текущий активный инструмент
 var active_tool: Node 
