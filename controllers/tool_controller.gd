@@ -12,12 +12,19 @@ class_name ToolController extends Node3D
 @onready var entity_factory: EntityFactory = $"../EntityFactory"
 @onready var entities_root: Node3D = %EntitiesRoot # Здесь лежат сущности
 
+
+
+
 # Инструменты
 @onready var build_tool: BuildTool = %BuildTool
 @onready var select_tool = %SelectTool
 @onready var drag_tool: DragTool = %DragTool
+@onready var snap_service: SnapService = %SnapService
+
 
 # UI 
+@onready var build_controller: BuildController = $"../UI/BuildController"
+@onready var info_controller: InfoController =  $"../UI/InfoController"
 @onready var entity_debugger = $"../Debug/EntityDebugger"
 @onready var info_panel: InfoPanel = $"../UI/InfoPanel"
 
@@ -34,7 +41,9 @@ func _ready() -> void:
 	# ⚡Сигнал из моде контроллера
 	$"../UI/ModeController".current_mode_changed.connect(on_current_mode_changed)
 	# ⚡Сигнал из билд контроллера
-	$"../UI/BuildController".object_selected.connect(_on_build_selected)
+	build_controller.object_selected.connect(_on_build_selected)
+	#build_controller.object_deselected.connect(build_controller._on_object_deselected)
+	
 	
 	# Инициализируем инструменты, передав им ссылку на себя
 	for tool in %Tools.get_children():
@@ -65,12 +74,17 @@ func switch_tool(new_tool: Node):
 
 
 
+
 # ⚡выбран объект для билда - в билд-тул в бывшую  ‼️(old) btn_object_selected(_setting: EntitySetting)
 func _on_build_selected(setting: EntitySetting):
+	if setting == null :
+		# Очищаем селекта в UI если null
+		build_controller.object_deselected()
+		return
+
 	build_tool.ghost_setting = setting
 	# переключение в build_tool
 	switch_tool(build_tool)
-
 
 
 
@@ -90,20 +104,20 @@ func get_mouse_ray(mask: int = -1) -> Dictionary:
 	return get_world_3d().direct_space_state.intersect_ray(query)
 
 
-func align_with_normal(xform: Transform3D, normal: Vector3) -> Transform3D:
-	xform.basis.y = normal
-	xform.basis.x = -xform.basis.z.cross(normal).normalized()
-	xform.basis = xform.basis.orthonormalized()
-	return xform
-	
-
-# По поверхности
-func align_to_surface(pos: Vector3, normal: Vector3) -> Transform3D:
-	var up = normal
-	var forward = Vector3.BACK if abs(normal.dot(Vector3.BACK)) < 0.95 else Vector3.RIGHT
-	var right = forward.cross(up).normalized()
-	forward = up.cross(right).normalized()
-	return Transform3D(Basis(right, up, forward), pos)
+#func align_with_normal(xform: Transform3D, normal: Vector3) -> Transform3D:
+	#xform.basis.y = normal
+	#xform.basis.x = -xform.basis.z.cross(normal).normalized()
+	#xform.basis = xform.basis.orthonormalized()
+	#return xform
+	#
+#
+## По поверхности
+#func align_to_surface(pos: Vector3, normal: Vector3) -> Transform3D:
+	#var up = normal
+	#var forward = Vector3.BACK if abs(normal.dot(Vector3.BACK)) < 0.95 else Vector3.RIGHT
+	#var right = forward.cross(up).normalized()
+	#forward = up.cross(right).normalized()
+	#return Transform3D(Basis(right, up, forward), pos)
 
 
 

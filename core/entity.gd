@@ -35,16 +35,14 @@ func add_component(comp: Component):
 	# Если компонент такого типа уже есть — заменяем
 	if has_comp(type):
 		remove_component(type)
-		
+
 	add_child(comp)
 	comp.entity = self
 	
-	# Подписываем новый компонент на события других компонентов
-	component_added.connect(comp._on_component_added)
-	component_removed.connect(comp._on_component_removed)
-	
 	# Вызываем функцию компонента 
 	comp.on_added()
+	# ⚡ Внутреннее общение: кричим всем компонентам через шину
+	send_event("_on_component_added", {"type": type})
 	# ⚡Сигнал всем компонентам что создан
 	component_added.emit(type)
 
@@ -53,18 +51,19 @@ func add_component(comp: Component):
 func remove_component(type: Script): 
 	var comp = get_comp(type) 
 	if comp: 
-		#FIXME нафига  1. Отключаем коннекты внутри самого компонента
-		#comp.on_removed() 
-
+		# ⚡ Предохранитель от крашей при queue_free()
+		if is_queued_for_deletion():
+			return
+		#1. Отключаем внутри самого компонента
+		comp.on_removed() 
 		# 2. Мгновенно отрываем от дерева, чтобы has_comp(type) стал false прямо сейчас
 		remove_child(comp)
-		
-		# 3. Оповещаем визуал (он уже не найдет этот компонент)
-		component_removed.emit(type) 
-		
 		# 4. Освобождаем память
 		comp.queue_free()
-
+		# ⚡ Внешнее общение: дергаем классический сигнал для UI
+		component_removed.emit(type) 
+		# ⚡ Внутреннее общение: кричим всем компонентам через шину
+		send_event("_on_component_removed", {"type": type})
 
 
 ## ----- Helpers--------------

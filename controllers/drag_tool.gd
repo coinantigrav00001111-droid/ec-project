@@ -30,9 +30,15 @@ func enter():
 func process_tick(_delta):
 	var hit = controller.get_mouse_ray(1)
 	if hit:
-		# ⚡Сигнал в сущность 
-		target_entity.send_event("on_drag_moved", {"pos": hit.position, "normal": hit.normal})
-
+		# Проверка снапа
+		var snap_data = controller.snap_service.find_snap(target_entity, hit.position)
+		
+		# Отправляем приказ в сущность. Оттуда C_Draggable сам разберется.
+		target_entity.send_event("on_drag_moved", {
+			"pos": hit.position,
+			"normal": hit.normal,
+			"snap": snap_data
+		})
 
 
 ### Передача инпутов в ентити, tool_controller вызывает

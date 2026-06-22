@@ -1,0 +1,125 @@
+[gd_scene format=3 uid="uid://boj0kanwn0n0e"]
+
+[ext_resource type="Script" uid="uid://6pc4psbi37jk" path="res://ui/panels/info_panel.gd" id="1_lrlkj"]
+[ext_resource type="Texture2D" uid="uid://b2km7i1n673d6" path="res://ui/icons/cancel.svg" id="2_4lulw"]
+
+[node name="InfoPanel" type="PanelContainer" unique_id=1788166654]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -251.0
+offset_right = 251.0
+offset_bottom = 243.0
+grow_horizontal = 2
+script = ExtResource("1_lrlkj")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1662123268]
+layout_mode = 2
+
+[node name="HeaderLabel" type="Label" parent="VBoxContainer" unique_id=1302209384]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HeaderSmall"
+
+[node name="TabContainer" type="TabContainer" parent="VBoxContainer" unique_id=2133864374]
+unique_name_in_owner = true
+layout_mode = 2
+current_tab = 0
+clip_tabs = false
+tab_0/title = "Общее"
+
+[node name="MainTab" type="VBoxContainer" parent="VBoxContainer/TabContainer" unique_id=1696650871]
+layout_mode = 2
+metadata/_tab_index = 0
+metadata/_tab_name = "Общее"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/TabContainer/MainTab" unique_id=522197008]
+layout_mode = 2
+
+[node name="GridContainer" type="GridContainer" parent="VBoxContainer/TabContainer/MainTab/VBoxContainer" unique_id=1982110215]
+layout_mode = 2
+columns = 10
+
+[node name="IconRect" type="TextureRect" parent="VBoxContainer/TabContainer/MainTab/VBoxContainer/GridContainer" unique_id=1861326076]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+texture = ExtResource("2_4lulw")
+expand_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/TabContainer/MainTab/VBoxContainer/GridContainer" unique_id=1881058662]
+layout_mode = 2
+text = "Radius: "
+
+[node name="RadiusLabel" type="Label" parent="VBoxContainer/TabContainer/MainTab/VBoxContainer/GridContainer" unique_id=1695608652]
+unique_name_in_owner = true
+layout_mode = 2
+text = "123"
+
+[node name="Control" type="Control" parent="VBoxContainer/TabContainer/MainTab/VBoxContainer/GridContainer" unique_id=1285579243]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label2" type="Label" parent="VBoxContainer/TabContainer/MainTab/VBoxContainer/GridContainer" unique_id=1777799898]
+layout_mode = 2
+text = "Deg: "
+
+[node name="DegLabel" type="Label" parent="VBoxContainer/TabContainer/MainTab/VBoxContainer/GridContainer" unique_id=1499112486]
+unique_name_in_owner = true
+layout_mode = 2
+text = "90"
+
+[node name="Control2" type="Control" parent="VBoxContainer/TabContainer/MainTab/VBoxContainer/GridContainer" unique_id=392765631]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label3" type="Label" parent="VBoxContainer/TabContainer/MainTab/VBoxContainer/GridContainer" unique_id=684506109]
+layout_mode = 2
+text = "Length: "
+
+[node name="LengthLabel" type="Label" parent="VBoxContainer/TabContainer/MainTab/VBoxContainer/GridContainer" unique_id=33119825]
+unique_name_in_owner = true
+layout_mode = 2
+text = "15"
+
+[node name="Control3" type="Control" parent="VBoxContainer/TabContainer/MainTab/VBoxContainer/GridContainer" unique_id=39997212]
+custom_minimum_size = Vector2(30, 0)
+layout_mode = 2
+size_flags_horizontal = 8
+
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer/TabContainer/MainTab/VBoxContainer" unique_id=985813642]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="DescriptionLabel" type="RichTextLabel" parent="VBoxContainer/TabContainer/MainTab/VBoxContainer" unique_id=223979196]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 55)
+layout_mode = 2
+text = "jkljlпро ап"
+
+[node name="PowerTab" type="VBoxContainer" parent="VBoxContainer/TabContainer" unique_id=1614374328]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 1
+
+[node name="Control4" type="Control" parent="VBoxContainer/TabContainer/PowerTab" unique_id=1577614494]
+custom_minimum_size = Vector2(30, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+
+[node name="TransformTab" type="VBoxContainer" parent="VBoxContainer/TabContainer" unique_id=358071816]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 2
+
+[node name="VisualTab" type="VBoxContainer" parent="VBoxContainer/TabContainer" unique_id=1874121866]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 3
+
+[node name="DebugTab" type="RichTextLabel" parent="VBoxContainer/TabContainer" unique_id=317978278]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+metadata/_tab_index = 4

@@ -1,7 +1,6 @@
 [gd_resource type="Resource" script_class="EntitySetting" format=3 uid="uid://bawbn3duovnbk"]
 
 [ext_resource type="Script" uid="uid://m4g5jbfwmaa0" path="res://core/component_setting.gd" id="1_k7o5x"]
-[ext_resource type="Texture2D" uid="uid://c8tndy1lksot8" path="res://ui/icons/transport/rail-road.svg" id="1_qs62h"]
 [ext_resource type="PackedScene" uid="uid://cu3x43vn1g05u" path="res://data/tracks/G239.tscn" id="2_dj8qy"]
 [ext_resource type="Script" uid="uid://do5hjkm3r2pdg" path="res://core/entity_setting.gd" id="3_7vxw7"]
 [ext_resource type="Script" uid="uid://bulwl3x2rykxk" path="res://core/components/c_visual_setting.gd" id="3_r42n5"]
@@ -11,6 +10,9 @@
 [ext_resource type="Script" uid="uid://cuumo0qj7r7gb" path="res://core/capabilities/c_hoverable_setting.gd" id="7_r42n5"]
 [ext_resource type="Script" uid="uid://deljgsmo4bpow" path="res://core/capabilities/c_selectable_setting.gd" id="8_iqocg"]
 [ext_resource type="Script" uid="uid://chprgtlxn3aub" path="res://core/capabilities/c_blockable_setting.gd" id="9_qqtt6"]
+[ext_resource type="Script" uid="uid://bv065wdiw674c" path="res://core/capabilities/c_socked_setting.gd" id="10_qqtt6"]
+[ext_resource type="Texture2D" uid="uid://c8tndy1lksot8" path="res://ui/icons/transport/rail-road.svg" id="11_0xkto"]
+[ext_resource type="Script" uid="uid://b7f7dka1i3slu" path="res://core/components/c_path_setting.gd" id="11_o7fpk"]
 
 [sub_resource type="Resource" id="Resource_yfcut"]
 script = ExtResource("3_r42n5")
@@ -38,12 +40,21 @@ metadata/_custom_type_script = "uid://deljgsmo4bpow"
 script = ExtResource("9_qqtt6")
 metadata/_custom_type_script = "uid://chprgtlxn3aub"
 
+[sub_resource type="Resource" id="Resource_5an37"]
+script = ExtResource("11_o7fpk")
+metadata/_custom_type_script = "uid://b7f7dka1i3slu"
+
+[sub_resource type="Resource" id="Resource_lnr61"]
+script = ExtResource("10_qqtt6")
+metadata/_custom_type_script = "uid://bv065wdiw674c"
+
 [resource]
 script = ExtResource("3_7vxw7")
 id = 10
 name = "G239 раб тест"
 description = "Прямой трак 23.9см"
-icon = ExtResource("1_qs62h")
-pivot_offset = Vector3(0, 0, 11.95)
-components = Array[ExtResource("1_k7o5x")]([SubResource("Resource_yfcut"), SubResource("Resource_iqocg"), SubResource("Resource_0xkto"), SubResource("Resource_qqtt6"), SubResource("Resource_o7fpk"), SubResource("Resource_t8too")])
+radius = 23.9
+deg = 0.0
+icon = ExtResource("11_0xkto")
+components = Array[ExtResource("1_k7o5x")]([SubResource("Resource_yfcut"), SubResource("Resource_iqocg"), SubResource("Resource_0xkto"), SubResource("Resource_qqtt6"), SubResource("Resource_o7fpk"), SubResource("Resource_t8too"), SubResource("Resource_5an37"), SubResource("Resource_lnr61")])
 metadata/_custom_type_script = "uid://do5hjkm3r2pdg"

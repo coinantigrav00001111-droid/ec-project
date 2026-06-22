@@ -41,7 +41,7 @@ func handle_input(event: InputEvent):
 			# Отменяем билд режим если это был короткий клик (не драг камеры)
 			if rmb_pressed_pos.distance_to(event.position) < 5:
 				controller.switch_tool(controller.select_tool)
-	
+
 	# Транслируем намерение покрутить
 	if Input.is_action_just_pressed("key_q"):
 		ghost.send_event("on_rotate_input", {"axis": "y", "amount": ROT_STEP})
@@ -73,8 +73,14 @@ func _place_real_object():
 func process_tick(_delta):
 	var hit = controller.get_mouse_ray(1)
 	if hit and ghost:
-		ghost.send_event("on_drag_moved", { "pos": hit.position, "normal": hit.normal})
 
+		var snap_data = controller.snap_service.find_snap(ghost, hit.position)
+		# Отправляем приказ в сущность. Оттуда C_Draggable сам разберется
+		ghost.send_event("on_drag_moved", {
+			"pos": hit.position,
+			"normal": hit.normal,
+			"snap": snap_data
+		})
 
 
 ## Выставляет всем дочерним нодам-коллизиям слой
@@ -85,15 +91,18 @@ func _set_collision_layer_recursive(node: Node, layer: int):
 		_set_collision_layer_recursive(child, layer)
 
 
-
 ## Выполняется при выходе из инстр.
 func exit():
 	if ghost:
 		ghost.queue_free()
 		ghost = null
-		
+	# Очищаем селекта в UI (null)
+	controller._on_build_selected(null)
 	# ОЧИЩАЕМ ПАНЕЛЬ!
 	controller.info_panel.set_target(null)
+	
+
+
 	
 	#инспектор
 	await get_tree().process_frame # ждем кадр до удаления

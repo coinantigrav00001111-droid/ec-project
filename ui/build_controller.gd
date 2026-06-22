@@ -9,11 +9,13 @@ class_name BuildController extends Node
 @export var anim_time := 0.4
 
 @onready var mode_controller: ModeController = %ModeController
+@onready var obj_container: GridContainer = %ObjContainer
 
 # ⚡Сигнал обновление инфы
 signal update_info
 # ⚡Сигнал объект выбран
 signal object_selected(setting)
+
 
 var current_cat = &'idle'
 var current_tag = &'idle'
@@ -50,15 +52,22 @@ var category_list = {
 
 
 func _ready() -> void:
-
+	#object_deselected.connect(on_object_deselected)
 	pass
 
 
 
 ## ⚡Сигнал Универсальная функция приема объекта для спавна из кнопок объектов 
 func on_object_selected(_asset :EntitySetting):
-	#ui_controller.object_selected(_asset)
 	object_selected.emit(_asset)
+
+
+
+## Отменяет нажатие кнопок объектов при пкм в режиме билд
+func object_deselected():
+	for _btn in obj_container.get_children():
+		_btn.button_pressed = false
+
 
 
 ## ⚡Сигнал из кнопок тегов

@@ -16,28 +16,49 @@ var initial_transform: Transform3D # Стартпозиция
 func on_drag_started(data: Dictionary):
 	initial_transform = entity.global_transform
 	drag_offset = entity.global_position - data.pos
-
-
-
+	
+	
 func on_drag_moved(data: Dictionary) -> void:
+	var snap = data.get("snap", {"is_snapped": false})
+	
+	if snap.is_snapped:
+		print('заглушка')
+		pass
+		
+	else:
+		on_drag_moved_stanard(data)
+
+
+# Движение без снапа
+func on_drag_moved_stanard(data: Dictionary) -> void:
 	var target_pos: Vector3 = data.pos + drag_offset
 	var normal: Vector3 = data.normal
 
-	# 1. Поворот по Y (Heading)
-	var heading_basis = Basis.from_euler(Vector3(0, rotation_euler.y, 0))
-	
-	# 2. Выравнивание по нормали (чтобы трак лежал на холмах)
-	var y_axis = normal
-	var x_axis = y_axis.cross(heading_basis.z).normalized()
-	var z_axis = x_axis.cross(y_axis).normalized()
-	var aligned_basis = Basis(x_axis, y_axis, z_axis).orthonormalized()
-	
-	# 3. Добавляем наклон по X (поверх выровненного базиса)
-	var final_basis = aligned_basis.rotated(x_axis, rotation_euler.x)
-	
-	# 4. Применяем
-	entity.global_transform = Transform3D(final_basis, target_pos)
+	# 1. Защита от сломанной нормали (иногда бывает на стыках коллизий)
+	if normal.is_zero_approx():
+		normal = Vector3.UP
 
+	# 2. Базовый вектор направления
+	var forward = Vector3.BACK
+
+	# 3. Предохранитель от коллинеарности (Singular Basis)
+	# Если нормаль почти параллельна forward, меняем вектор опоры
+	if abs(normal.dot(forward)) > 0.99:
+		forward = Vector3.RIGHT
+
+	# 4. Вычисляем оси через векторное произведение
+	var right = normal.cross(forward).normalized()
+	forward = right.cross(normal).normalized()
+	
+	var aligned_basis = Basis(right, normal, forward)
+
+	# 5. Применяем вращения игрока (храненные в rotation_euler)
+	aligned_basis = aligned_basis.rotated(aligned_basis.y, rotation_euler.y)
+	aligned_basis = aligned_basis.rotated(aligned_basis.x, rotation_euler.x)
+
+	# 6. Устанавливаем итоговый Transform3D
+	entity.global_transform = Transform3D(aligned_basis, target_pos)
+#
 
 
 func on_rotate_input(data: Dictionary):

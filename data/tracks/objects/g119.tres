@@ -1,0 +1,60 @@
+[gd_resource type="Resource" script_class="EntitySetting" format=3 uid="uid://b43e5hkrfu0xr"]
+
+[ext_resource type="Script" uid="uid://m4g5jbfwmaa0" path="res://core/component_setting.gd" id="1_fwhcn"]
+[ext_resource type="PackedScene" uid="uid://drfbtduq5mgdf" path="res://data/tracks/G119.tscn" id="2_fwhcn"]
+[ext_resource type="Script" uid="uid://bulwl3x2rykxk" path="res://core/components/c_visual_setting.gd" id="3_88m5e"]
+[ext_resource type="Resource" uid="uid://bqss7rh1mwv41" path="res://core/components/visual/materials/visual_state.tres" id="4_5oj1c"]
+[ext_resource type="Script" uid="uid://b1jwuxb32so7e" path="res://core/capabilities/c_draggable_setting.gd" id="5_slk1w"]
+[ext_resource type="Script" uid="uid://djbifkyei01t7" path="res://core/components/c_pivot_setting.gd" id="6_b3num"]
+[ext_resource type="Script" uid="uid://cuumo0qj7r7gb" path="res://core/capabilities/c_hoverable_setting.gd" id="7_iy05w"]
+[ext_resource type="Script" uid="uid://deljgsmo4bpow" path="res://core/capabilities/c_selectable_setting.gd" id="8_5iyjc"]
+[ext_resource type="Script" uid="uid://chprgtlxn3aub" path="res://core/capabilities/c_blockable_setting.gd" id="9_7qpwj"]
+[ext_resource type="Script" uid="uid://b7f7dka1i3slu" path="res://core/components/c_path_setting.gd" id="10_m3nyl"]
+[ext_resource type="Script" uid="uid://bv065wdiw674c" path="res://core/capabilities/c_socked_setting.gd" id="11_4tc35"]
+[ext_resource type="Texture2D" uid="uid://c8tndy1lksot8" path="res://ui/icons/transport/rail-road.svg" id="12_ixre1"]
+[ext_resource type="Script" uid="uid://do5hjkm3r2pdg" path="res://core/entity_setting.gd" id="13_m6m5w"]
+
+[sub_resource type="Resource" id="Resource_yfcut"]
+script = ExtResource("3_88m5e")
+scene = ExtResource("2_fwhcn")
+metadata/_custom_type_script = "uid://bulwl3x2rykxk"
+
+[sub_resource type="Resource" id="Resource_iqocg"]
+script = ExtResource("5_slk1w")
+metadata/_custom_type_script = "uid://b1jwuxb32so7e"
+
+[sub_resource type="Resource" id="Resource_0xkto"]
+script = ExtResource("6_b3num")
+offset = Vector3(0, 0, 5.95)
+metadata/_custom_type_script = "uid://djbifkyei01t7"
+
+[sub_resource type="Resource" id="Resource_qqtt6"]
+script = ExtResource("7_iy05w")
+metadata/_custom_type_script = "uid://cuumo0qj7r7gb"
+
+[sub_resource type="Resource" id="Resource_o7fpk"]
+script = ExtResource("8_5iyjc")
+metadata/_custom_type_script = "uid://deljgsmo4bpow"
+
+[sub_resource type="Resource" id="Resource_t8too"]
+script = ExtResource("9_7qpwj")
+metadata/_custom_type_script = "uid://chprgtlxn3aub"
+
+[sub_resource type="Resource" id="Resource_5an37"]
+script = ExtResource("10_m3nyl")
+metadata/_custom_type_script = "uid://b7f7dka1i3slu"
+
+[sub_resource type="Resource" id="Resource_lnr61"]
+script = ExtResource("11_4tc35")
+metadata/_custom_type_script = "uid://bv065wdiw674c"
+
+[resource]
+script = ExtResource("13_m6m5w")
+id = 12
+name = "G119"
+description = "Прямой трак 11.9см"
+radius = 11.9
+deg = 0.0
+icon = ExtResource("12_ixre1")
+components = Array[ExtResource("1_fwhcn")]([SubResource("Resource_yfcut"), SubResource("Resource_iqocg"), SubResource("Resource_0xkto"), SubResource("Resource_qqtt6"), SubResource("Resource_o7fpk"), SubResource("Resource_t8too"), SubResource("Resource_5an37"), SubResource("Resource_lnr61")])
+metadata/_custom_type_script = "uid://do5hjkm3r2pdg"

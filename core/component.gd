@@ -29,17 +29,16 @@ func on_entity_ready():
 # === СОБЫТИЯ ENTITY ===
 
 ##--- Внутренний ---
-## принимает ⚡Сигнал
+# Принимает событие из шины (Event Bus) в виде словаря
+func _on_component_added(data: Dictionary):
+	if data.has("type"):
+		on_component_added(data.type)
 
-func _on_component_added(type: Script):
-	on_component_added(type)
-
-func _on_component_removed(type: Script):
-	on_component_removed(type)
+func _on_component_removed(data: Dictionary):
+	if data.has("type"):
+		on_component_removed(data.type)
 
 #--- Внутренний end---
-
-
 
 ##--- Внешний---
 ## Пока просто прокси— переопределяется в наследниках, чтобы реагировать на появление соседей

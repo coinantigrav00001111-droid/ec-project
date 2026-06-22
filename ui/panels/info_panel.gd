@@ -1,13 +1,15 @@
 class_name InfoPanel extends PanelContainer
 
-@onready var header_label = %HeaderLabel
+
 @onready var tab_container = %TabContainer
-@onready var debug_text = %DebugTab 
 
 var current_target: Entity
 
+
 func _ready():
 	hide() # Прячем панель на старте
+
+
 
 # Вызывается из SelectTool, когда мы кликаем по объекту
 func set_target(entity: Entity):
@@ -32,17 +34,33 @@ func set_target(entity: Entity):
 
 
 
+func _populate_main_tab():
+	var identity = current_target.get_comp(C_Identity)
+	if identity:
+		%HeaderLabel.text = identity.get_name_e()
+		%DescriptionLabel.text = identity.get_description()
+		%RadiusLabel.text = str(identity.get_radius()) + ' u/sm'
+		%DegLabel.text = str(identity.get_degree()) + '°'
+		%LengthLabel.text = str(identity.get_length()) + ' u/sm'
+		%IconRect.texture = identity.get_icon()
+	else:
+		# Если это какой-то системный объект без паспорта
+		%HeaderLabel.text = "Системный объект"
+
+
+
 func _populate_data():
-	# Заголовок
-	header_label.text = current_target.name # Или current_target.e_name
+	# Вкладка Main
+	_populate_main_tab()
 	
-	# Вкладка Main (Например, ищем C_Track, если он есть)
 	# Вкладка Power (Скрываем, если нет компонента)
 	var _power_tab = tab_container.get_node("PowerTab")
 	#_power_tab.visible = current_target.has_comp(C_Power) # Условный компонент
 	
 	# Обновляем вкладку отладки
 	_update_debug_tab()
+
+
 
 # Вызывается ТОЛЬКО когда компонент добавился/удалился
 func _on_components_changed(_type: Script):
@@ -59,7 +77,8 @@ func _update_debug_tab():
 			text_dump += "- " + child.get_script().get_global_name() + "\n"
 			
 	# Присваиваем текст один раз. Никаких утечек памяти!
-	debug_text.text = text_dump
+	%DebugTab.text = text_dump
+
 
 # Для TransformTab (если нужны живые координаты)
 # Только ЭТУ вкладку имеет смысл обновлять в _process, и только если она открыта!

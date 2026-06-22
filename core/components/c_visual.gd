@@ -34,7 +34,7 @@ func on_component_added(_type: Script):
 
 
 
-func on_component_removed(_type):
+func on_component_removed(_type: Script):
 	# Смотрит удаляемый комп, если увидит, то сбросит в нормальный вид
 	#if _type in VISUAL_STATES:
 	update_visual(_type)  # нужный

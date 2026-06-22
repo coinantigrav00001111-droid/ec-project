@@ -44,6 +44,16 @@
 			"uuid": "eb217580-82d1-4df7-a8ff-ff0c35c057e3",
 			"title": "Input",
 			"color": "ec67ff"
+		},
+		{
+			"uuid": "c60a33ef-b953-40cd-951b-a080048b0093",
+			"title": "Power",
+			"color": "495dff"
+		},
+		{
+			"uuid": "8d041509-442f-4442-9d1d-a60528722dfe",
+			"title": "Wagons",
+			"color": "33fc1d"
 		}
 	],
 	"stages": [
@@ -53,9 +63,8 @@
 			"tasks": [
 				"51331081-7353-4afa-a247-5a2271c893a4",
 				"1bdea74b-2ef0-48de-94c3-43f45b91a67d",
-				"8c7f0278-b1be-4210-8c77-8dad0dbd805d",
-				"4e347f4b-c83c-4c93-9675-ea46295ea911",
-				"696f3605-24ee-4aae-80fc-4fab7f26e758"
+				"837df9b2-6877-4bcc-8612-e9d9d1180ec2",
+				"0c7c66a3-ed32-4045-b2e6-322e4c722831"
 			]
 		},
 		{
@@ -63,19 +72,13 @@
 			"title": "Doing",
 			"tasks": [
 				"046ad09f-d7d4-442b-8112-44c12d37b39c",
-				"f51d1019-7eb1-4254-930c-c4b71991970f",
-				"ea5b32a0-dae8-48d7-a738-fcc26ed81e7b",
-				"d0bc8594-7356-459a-a29e-5236c7b973d9",
-				"48358397-2831-4f6d-8fc4-56c860899ffd",
-				"4a8b24d0-55b2-45f6-8838-1f9f348e8de4",
-				"6cc465b2-fc5f-44de-a221-574418588905",
-				"ccb486f3-f15e-4a84-a488-1bd7a4d7c894",
-				"431f567b-072c-47f6-824b-d6ebdd1cae44",
-				"4dffbfe2-08ce-4a0d-87a0-6d22f8ec9d05",
-				"e3af19a7-77e9-4062-b775-0a295b551f5b",
-				"34e8e18f-ee70-42e8-b05a-7843bc2cc2ad",
-				"e033b1b0-704f-4bc7-9765-5e7feb435c5d",
-				"873f5ac5-18fa-45cf-be57-3376dc8d98cd"
+				"c40a1230-cb39-4c0c-875c-2fb3b5ecd96c",
+				"d4d65282-70d4-4093-b814-1bdb0f485a55",
+				"5891ae87-e9cc-4475-bda2-32b97c590f0a",
+				"37867c2e-830d-4800-922c-744f8bf80ac2",
+				"75eb5ead-e5cc-473e-b5f2-9d1f139b0cb8",
+				"696f3605-24ee-4aae-80fc-4fab7f26e758",
+				"55240fe6-8be3-4dbd-a343-6480993a9460"
 			]
 		},
 		{
@@ -85,7 +88,11 @@
 				"c3d65b49-5533-46e9-b6ef-dce81c18deb6",
 				"e93d0435-fc2b-42cc-8673-038d55a8cac4",
 				"cb3dd73c-6c8f-4073-866f-bdf0aa4954b4",
-				"f6982df0-c908-46ce-a8f4-5c88be1c8446"
+				"f6982df0-c908-46ce-a8f4-5c88be1c8446",
+				"c208a5c0-fdd3-4356-ad14-95e8f8efd8cb",
+				"bab83259-f451-4966-9100-e8007ba046ba",
+				"a5000c49-b31e-41d6-ab52-4d2660910631",
+				"9f90edf4-d314-48c4-bf48-e5cac23ba348"
 			]
 		}
 	],
@@ -125,13 +132,6 @@
 			]
 		},
 		{
-			"uuid": "8c7f0278-b1be-4210-8c77-8dad0dbd805d",
-			"title": "тэг не становится в фокус при открытии катег.",
-			"description": "",
-			"category": "4e1e522f-ed31-43ef-82dc-7958b5551b97",
-			"steps": []
-		},
-		{
 			"uuid": "5fd8b0bc-d313-4081-978b-afa52502fc14",
 			"title": "коллизии и рулетки починить",
 			"description": "",
@@ -167,52 +167,10 @@
 			"steps": []
 		},
 		{
-			"uuid": "f51d1019-7eb1-4254-930c-c4b71991970f",
-			"title": "_align_to_surface правильно ставит если как в драгтулзе. Есть в компе драггабле, зачем?",
-			"description": "",
-			"category": "31a5ac59-e2b4-4e46-a327-067210b7ca4b",
-			"steps": []
-		},
-		{
-			"uuid": "4a8b24d0-55b2-45f6-8838-1f9f348e8de4",
-			"title": "Blocked пройти по скриптам, где он не всплывает.",
-			"description": "",
-			"category": "91f41b95-cfcd-4026-a09a-48fb304f9a00",
-			"steps": []
-		},
-		{
-			"uuid": "ea5b32a0-dae8-48d7-a738-fcc26ed81e7b",
-			"title": "_align_to_surface есть много где. Он везде нужен?",
-			"description": "",
-			"category": "31a5ac59-e2b4-4e46-a327-067210b7ca4b",
-			"steps": []
-		},
-		{
 			"uuid": "3d4d271e-04ca-4a72-83f7-ae54306c5a70",
 			"title": "прыгает на себя селектед- слои опять",
 			"description": "",
 			"category": "31a5ac59-e2b4-4e46-a327-067210b7ca4b",
-			"steps": []
-		},
-		{
-			"uuid": "6cc465b2-fc5f-44de-a221-574418588905",
-			"title": "длятеста отключить запрыг на трак",
-			"description": "",
-			"category": "91f41b95-cfcd-4026-a09a-48fb304f9a00",
-			"steps": []
-		},
-		{
-			"uuid": "ccb486f3-f15e-4a84-a488-1bd7a4d7c894",
-			"title": "Возможно надо сделать в рейкасте не выбор слоев для каста, а выбор исключений из каста.",
-			"description": "",
-			"category": "91f41b95-cfcd-4026-a09a-48fb304f9a00",
-			"steps": []
-		},
-		{
-			"uuid": "431f567b-072c-47f6-824b-d6ebdd1cae44",
-			"title": "Переименовать гетмаусе в рейкаст как было",
-			"description": "",
-			"category": "91f41b95-cfcd-4026-a09a-48fb304f9a00",
 			"steps": []
 		},
 		{
@@ -237,66 +195,122 @@
 			"steps": []
 		},
 		{
-			"uuid": "d0bc8594-7356-459a-a29e-5236c7b973d9",
-			"title": "при драге бьет ошибку на скосах",
-			"description": "",
-			"category": "31a5ac59-e2b4-4e46-a327-067210b7ca4b",
-			"steps": []
-		},
-		{
-			"uuid": "48358397-2831-4f6d-8fc4-56c860899ffd",
-			"title": "Неверная высота устновки в драге",
-			"description": "",
-			"category": "31a5ac59-e2b4-4e46-a327-067210b7ca4b",
-			"steps": []
-		},
-		{
-			"uuid": "34e8e18f-ee70-42e8-b05a-7843bc2cc2ad",
-			"title": "UI controller содержит object_setting функцию - устарела. Проверить остальные функции - на нужность",
-			"description": "",
-			"category": "4e1e522f-ed31-43ef-82dc-7958b5551b97",
-			"steps": []
-		},
-		{
-			"uuid": "e033b1b0-704f-4bc7-9765-5e7feb435c5d",
-			"title": "Обсудить передачу инпута в драг",
-			"description": "",
-			"category": "91f41b95-cfcd-4026-a09a-48fb304f9a00",
-			"steps": []
-		},
-		{
-			"uuid": "873f5ac5-18fa-45cf-be57-3376dc8d98cd",
-			"title": "Обсудить архитектуру визуалов и автономности компов",
-			"description": "",
-			"category": "91f41b95-cfcd-4026-a09a-48fb304f9a00",
-			"steps": []
-		},
-		{
-			"uuid": "e3af19a7-77e9-4062-b775-0a295b551f5b",
-			"title": "прибить ошибки в логе",
-			"description": "",
-			"category": "50f9c949-da71-4afd-beb9-f08415f2f066",
-			"steps": []
-		},
-		{
 			"uuid": "696f3605-24ee-4aae-80fc-4fab7f26e758",
-			"title": "Делаем Инфопанель",
+			"title": "Инфопанель",
 			"description": "",
 			"category": "4e1e522f-ed31-43ef-82dc-7958b5551b97",
-			"steps": []
-		},
-		{
-			"uuid": "4dffbfe2-08ce-4a0d-87a0-6d22f8ec9d05",
-			"title": "get_mouse_ray и его слои доделать",
-			"description": "",
-			"category": "bfe07748-730a-4469-a662-08c8f873a722",
-			"steps": []
+			"steps": [
+				{
+					"details": "Вывод координат, высоты!",
+					"done": false
+				},
+				{
+					"details": "power",
+					"done": false
+				},
+				{
+					"details": "transform",
+					"done": false
+				},
+				{
+					"details": "debug",
+					"done": false
+				},
+				{
+					"details": "visual",
+					"done": false
+				}
+			]
 		},
 		{
 			"uuid": "046ad09f-d7d4-442b-8112-44c12d37b39c",
 			"title": "!!!подготовить к четвергу запрос для диздока!!",
 			"description": "",
 			"category": "bfe07748-730a-4469-a662-08c8f873a722",
+			"steps": []
+		},
+		{
+			"uuid": "c40a1230-cb39-4c0c-875c-2fb3b5ecd96c",
+			"title": "snap",
+			"description": "",
+			"category": "91f41b95-cfcd-4026-a09a-48fb304f9a00",
+			"steps": []
+		},
+		{
+			"uuid": "d4d65282-70d4-4093-b814-1bdb0f485a55",
+			"title": "socked",
+			"description": "",
+			"category": "91f41b95-cfcd-4026-a09a-48fb304f9a00",
+			"steps": []
+		},
+		{
+			"uuid": "c208a5c0-fdd3-4356-ad14-95e8f8efd8cb",
+			"title": "Выпилить GUIDE ??. Сохранен старый гимбал.",
+			"description": "",
+			"category": "eb217580-82d1-4df7-a8ff-ff0c35c057e3",
+			"steps": []
+		},
+		{
+			"uuid": "837df9b2-6877-4bcc-8612-e9d9d1180ec2",
+			"title": "Power реализация",
+			"description": "",
+			"category": "c60a33ef-b953-40cd-951b-a080048b0093",
+			"steps": []
+		},
+		{
+			"uuid": "0c7c66a3-ed32-4045-b2e6-322e4c722831",
+			"title": "нажатие на тег должно отменять объект на мыши",
+			"description": "",
+			"category": "4e1e522f-ed31-43ef-82dc-7958b5551b97",
+			"steps": []
+		},
+		{
+			"uuid": "a5000c49-b31e-41d6-ab52-4d2660910631",
+			"title": "Врежиме ховер выводить окошко с инфой объекта",
+			"description": "",
+			"category": "50f9c949-da71-4afd-beb9-f08415f2f066",
+			"steps": []
+		},
+		{
+			"uuid": "5891ae87-e9cc-4475-bda2-32b97c590f0a",
+			"title": "в фабрике созавать траки с компонетами ,чтобы не заполнять сеттинг",
+			"description": "",
+			"category": "91f41b95-cfcd-4026-a09a-48fb304f9a00",
+			"steps": []
+		},
+		{
+			"uuid": "37867c2e-830d-4800-922c-744f8bf80ac2",
+			"title": "Генерация коллизии балласта по path",
+			"description": "",
+			"category": "50f9c949-da71-4afd-beb9-f08415f2f066",
+			"steps": []
+		},
+		{
+			"uuid": "bab83259-f451-4966-9100-e8007ba046ba",
+			"title": "если двигаем камеру, то объект не должен",
+			"description": "",
+			"category": "eb217580-82d1-4df7-a8ff-ff0c35c057e3",
+			"steps": []
+		},
+		{
+			"uuid": "75eb5ead-e5cc-473e-b5f2-9d1f139b0cb8",
+			"title": "Баг с высотой объекта на склоне.",
+			"description": "",
+			"category": "50f9c949-da71-4afd-beb9-f08415f2f066",
+			"steps": []
+		},
+		{
+			"uuid": "55240fe6-8be3-4dbd-a343-6480993a9460",
+			"title": "дебаг стейтов госта не отражается ",
+			"description": "",
+			"category": "4e1e522f-ed31-43ef-82dc-7958b5551b97",
+			"steps": []
+		},
+		{
+			"uuid": "9f90edf4-d314-48c4-bf48-e5cac23ba348",
+			"title": "анимация снапа",
+			"description": "",
+			"category": "50f9c949-da71-4afd-beb9-f08415f2f066",
 			"steps": []
 		}
 	],

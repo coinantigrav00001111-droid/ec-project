@@ -20,8 +20,16 @@ func on_component_added(type: Script):
 		_apply_to_visual()
 
 
-# Сдвигаем инстанс(сцену) в оффсет
+
+# Сдвигаем инстанс(сцену) в оффсет из сеттинга
 func _apply_to_visual():
 	var visual = get_comp(C_Visual)
 	if visual and visual.instance:
 		visual.instance.position = offset
+
+
+
+# Изменился офсет(в C_Path например), обновляется он и инстанс
+func on_offset_changed(data:Dictionary):
+	offset = data.new_offset
+	_apply_to_visual()

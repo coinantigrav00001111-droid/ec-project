@@ -24,7 +24,6 @@ func _ready() -> void:
 	%BuildController.animate_wrapper(%BuildPanel)# Показывает lvl2 контейнеры
 
 	#DD дебаг Запускаем категорию тракс
-	#if ui_controller.get_debug_mode():
 	if tool_controller.get_debug_mode():
 		%BuildLvl2Container.get_child(0)._on_pressed()
 
@@ -32,7 +31,6 @@ func _ready() -> void:
 
 ##⚡ Сигнал из панели ModePanel. Ставим новый режим
 func on_mode_selected(new_mode: StringName) -> void:
-	#var current_m : = ui_controller.get_current_mode()
 	var current_m : = tool_controller.get_current_mode()
 	
 	if new_mode == current_m:	return

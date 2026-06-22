@@ -27,7 +27,8 @@ func config(_tag) -> void:
 
 func select_as_default() -> void:
 	# 1. Заставляем кнопку визуально выглядеть нажатой (фокус)
-	grab_focus() 
+	button_pressed = true
+	#grab_focus() 
 	
 	# 2. Имитируем нажатие, чтобы сработал ваш скрипт смены контента
 	emit_signal("pressed") 
