@@ -136,7 +136,13 @@ func _add_socked_area(_pos: Vector3, dir: Vector3) -> void:
 ## ⚡Сигнал area вход
 # s_socket - стац трак, d_socket - драг трак
 func _on_socket_area_entered(s_socket: Area3D, d_socket: Area3D) -> void:
+	# Чтобы стейты заехали в ентити
+	await get_tree().process_frame
 	
+	# Из Блокед не может быть снапа
+	if entity.has_comp(C_Blocked):
+		return
+		
 	# Снаппинг обрабатывается только той сущностью, которую СЕЙЧАС ТАЩАТ
 	if not (entity.has_comp(C_Drag) or entity.has_comp(C_Ghost)):
 		return
@@ -144,7 +150,7 @@ func _on_socket_area_entered(s_socket: Area3D, d_socket: Area3D) -> void:
 	# Если мы уже жестко зафиксированы в снапе, игнорируем новые триггеры
 	if entity.has_comp(C_Snapped):
 		return
-	
+
 	# Стац ентити. Проверка стац не есть драг(бред?)
 	var s_entity = _find_entity_from_collider(s_socket)
 	if not s_entity or s_entity == entity:
@@ -161,7 +167,6 @@ func _on_socket_area_entered(s_socket: Area3D, d_socket: Area3D) -> void:
 		
 	#FIXME баг
 	''' Проверка себя  = драгед или гост зачем??
-	Есть баг снапа и коллизий балласта
 	'''
 	#TODO зачем проверять себя??
 	# Если наш собственный уже занят другим рельсом — отмена.
@@ -186,8 +191,8 @@ func _on_socket_area_entered(s_socket: Area3D, d_socket: Area3D) -> void:
 
 
 ## ⚡Сигнал area 
-func _on_socket_area_exited(area: Area3D):
-	print('sock area exit: ', area)
+func _on_socket_area_exited(_area: Area3D):
+	#print('sock area exit: ', area)
 	pass
 
 

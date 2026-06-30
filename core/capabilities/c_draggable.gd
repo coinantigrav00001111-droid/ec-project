@@ -22,7 +22,12 @@ var snapped_entity_transform := Transform3D()
 ## Считает свой оффсет и запоминает стартовую позицию
 func on_drag_started(data: Dictionary):
 	initial_transform = entity.global_transform
-	drag_offset = entity.global_position - data.pos
+	#drag_offset = entity.global_position - data.pos
+	
+# Берем смещение, но обнуляем Y, чтобы не тащить за собой перепады высот
+	var raw_offset = entity.global_position - data.pos
+	drag_offset = Vector3(raw_offset.x, 0.0, raw_offset.z)
+	
 	is_snapped_locked = false
 
 	if entity.has_comp(C_Snapped):
@@ -32,20 +37,26 @@ func on_drag_started(data: Dictionary):
 
 # Движение мышью кждый тик
 func on_drag_moved(data: Dictionary) -> void:
+	# Забираем сырые данные от рейкаста из тулза
 	var mouse_pos: Vector3 = data.pos
 	var normal: Vector3 = data.normal
 	
-	# Виртуальная («честная») позиция, куда мышь ХОЧЕТ поставить рельс без учета снапа
-	var target_pos: Vector3 = mouse_pos + drag_offset
+	# 1. Проецируем drag_offset на плоскость текущей поверхности. Это математический способ отбросить "старую" высоту, сохранив только горизонтальное смещение относительно нормали.
 	
-	#print(is_snapped_locked, entity.has_comp(C_Snapped))
+	# Сначала считаем, сколько Y содержится в офсете относительно нормали
+	var offset_vertical_part = normal * drag_offset.dot(normal)
+	
+	# Вычитаем вертикальную часть из офсета, получаем "горизонтальный" офсет для текущей плоскости
+	var current_plane_offset = drag_offset - offset_vertical_part
+	
+	# 2. Новая позиция = позиция мыши + очищенный офсет
+	var target_pos = mouse_pos + current_plane_offset
 	
 	if is_snapped_locked and entity.has_comp(C_Snapped):
 		# Считаем расстояние от виртуальной позиции мыши до текущей точки снапа
 		var distance_to_mouse = target_pos.distance_to(snapped_entity_transform.origin)
-		#await get_tree().process_frame
+
 		if distance_to_mouse > snap_break_distance:
-			printt('mm',distance_to_mouse,snap_break_distance)
 			# МЫШЬ ОТЪЕХАЛА: срываем снап, убираем компонент-маркер
 			entity.remove_component(C_Snapped)
 			is_snapped_locked = false
@@ -57,8 +68,7 @@ func on_drag_moved(data: Dictionary) -> void:
 		# Снапа нет — обычное движение по поверхности
 		_apply_regular_movement(target_pos, normal)
 
-
-
+	
 ## Обычное движение по поверхности
 func _apply_regular_movement(target_pos: Vector3, normal: Vector3) -> void:
 	# 1. Берем базовый вектор и крутим только Yaw (Y)
@@ -71,7 +81,6 @@ func _apply_regular_movement(target_pos: Vector3, normal: Vector3) -> void:
 	# Защита от коллинеарности
 	if abs(up.dot(base_forward)) > 0.99 or right.is_zero_approx():
 		right = up.cross(Vector3.RIGHT).normalized()
-		
 	var final_forward = right.cross(up).normalized()
 	var new_basis = Basis(right, up, final_forward)
 	

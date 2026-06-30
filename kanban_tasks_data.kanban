@@ -65,14 +65,20 @@
 				"1bdea74b-2ef0-48de-94c3-43f45b91a67d",
 				"837df9b2-6877-4bcc-8612-e9d9d1180ec2",
 				"0c7c66a3-ed32-4045-b2e6-322e4c722831",
-				"696f3605-24ee-4aae-80fc-4fab7f26e758"
+				"696f3605-24ee-4aae-80fc-4fab7f26e758",
+				"63d7ef6f-2e59-4bb2-8ad9-152fb2aaf0e4"
 			]
 		},
 		{
 			"uuid": "1424c4a8-638b-4f40-9d72-5d4d3845437b",
 			"title": "Doing",
 			"tasks": [
-				"75eb5ead-e5cc-473e-b5f2-9d1f139b0cb8"
+				"c9518725-a1fc-4454-884a-26f5c9febb9b",
+				"bed57fd3-488d-462a-be85-ea35c5696d8b",
+				"4d6a3165-e4df-46a0-8036-0c6c96e2bb09",
+				"38dc854d-a8dd-4a1c-88d3-c1206f4023be",
+				"35620d47-046b-4b70-9262-2c0ad3d9fb96",
+				"194bc5d6-e644-48f2-9a6f-9a3fdb223af5"
 			]
 		},
 		{
@@ -87,6 +93,7 @@
 				"bab83259-f451-4966-9100-e8007ba046ba",
 				"a5000c49-b31e-41d6-ab52-4d2660910631",
 				"9f90edf4-d314-48c4-bf48-e5cac23ba348",
+				"3c3e46f9-8063-4296-bc7f-ba1964604faf",
 				"046ad09f-d7d4-442b-8112-44c12d37b39c"
 			]
 		}
@@ -276,6 +283,62 @@
 		{
 			"uuid": "9f90edf4-d314-48c4-bf48-e5cac23ba348",
 			"title": "анимация снапа",
+			"description": "",
+			"category": "50f9c949-da71-4afd-beb9-f08415f2f066",
+			"steps": []
+		},
+		{
+			"uuid": "4d6a3165-e4df-46a0-8036-0c6c96e2bb09",
+			"title": "Система повер",
+			"description": "",
+			"category": "c60a33ef-b953-40cd-951b-a080048b0093",
+			"steps": []
+		},
+		{
+			"uuid": "bed57fd3-488d-462a-be85-ea35c5696d8b",
+			"title": "сейв лоад",
+			"description": "",
+			"category": "af31571d-f162-41be-9c9c-7b15a2004d2c",
+			"steps": []
+		},
+		{
+			"uuid": "38dc854d-a8dd-4a1c-88d3-c1206f4023be",
+			"title": "контроллеры",
+			"description": "",
+			"category": "c60a33ef-b953-40cd-951b-a080048b0093",
+			"steps": []
+		},
+		{
+			"uuid": "35620d47-046b-4b70-9262-2c0ad3d9fb96",
+			"title": "нода поверклип",
+			"description": "",
+			"category": "c60a33ef-b953-40cd-951b-a080048b0093",
+			"steps": []
+		},
+		{
+			"uuid": "194bc5d6-e644-48f2-9a6f-9a3fdb223af5",
+			"title": "ноды напряжения",
+			"description": "",
+			"category": "c60a33ef-b953-40cd-951b-a080048b0093",
+			"steps": []
+		},
+		{
+			"uuid": "3c3e46f9-8063-4296-bc7f-ba1964604faf",
+			"title": "Вращение по вертикали не от центра а от края трака",
+			"description": "",
+			"category": "50f9c949-da71-4afd-beb9-f08415f2f066",
+			"steps": []
+		},
+		{
+			"uuid": "63d7ef6f-2e59-4bb2-8ad9-152fb2aaf0e4",
+			"title": "Готовить описание скриптов и системы понемногу",
+			"description": "",
+			"category": "af31571d-f162-41be-9c9c-7b15a2004d2c",
+			"steps": []
+		},
+		{
+			"uuid": "c9518725-a1fc-4454-884a-26f5c9febb9b",
+			"title": "Допилить рельсы - коллизии",
 			"description": "",
 			"category": "50f9c949-da71-4afd-beb9-f08415f2f066",
 			"steps": []

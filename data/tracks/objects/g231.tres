@@ -5,7 +5,6 @@
 [ext_resource type="Script" uid="uid://bulwl3x2rykxk" path="res://core/components/c_visual_setting.gd" id="3_jm3cm"]
 [ext_resource type="Script" uid="uid://do5hjkm3r2pdg" path="res://core/entity_setting.gd" id="3_yve1u"]
 [ext_resource type="Resource" uid="uid://bqss7rh1mwv41" path="res://core/components/visual/materials/visual_state.tres" id="4_25opj"]
-[ext_resource type="Texture2D" uid="uid://c8tndy1lksot8" path="res://ui/icons/transport/rail-road.svg" id="4_yve1u"]
 [ext_resource type="Script" uid="uid://b1jwuxb32so7e" path="res://core/capabilities/c_draggable_setting.gd" id="5_4jo3a"]
 [ext_resource type="Script" uid="uid://djbifkyei01t7" path="res://core/components/c_pivot_setting.gd" id="6_q5vwd"]
 [ext_resource type="Script" uid="uid://cuumo0qj7r7gb" path="res://core/capabilities/c_hoverable_setting.gd" id="7_hodak"]
@@ -13,6 +12,7 @@
 [ext_resource type="Script" uid="uid://chprgtlxn3aub" path="res://core/capabilities/c_blockable_setting.gd" id="9_154mf"]
 [ext_resource type="Script" uid="uid://bv065wdiw674c" path="res://core/capabilities/c_socked_setting.gd" id="10_w0kfj"]
 [ext_resource type="Script" uid="uid://b7f7dka1i3slu" path="res://core/components/c_path_setting.gd" id="11_om3t3"]
+[ext_resource type="Texture2D" uid="uid://cgo848tk5jyer" path="res://ui/icons/electric/plug.svg" id="12_4jo3a"]
 
 [sub_resource type="Resource" id="Resource_yfcut"]
 script = ExtResource("3_jm3cm")
@@ -56,6 +56,6 @@ description = "Прямой трак 23.1см"
 radius = 23.1
 deg = 0.0
 tag = &"power"
-icon = ExtResource("4_yve1u")
+icon = ExtResource("12_4jo3a")
 components = Array[ExtResource("1_xfkws")]([SubResource("Resource_yfcut"), SubResource("Resource_iqocg"), SubResource("Resource_0xkto"), SubResource("Resource_qqtt6"), SubResource("Resource_o7fpk"), SubResource("Resource_t8too"), SubResource("Resource_5an37"), SubResource("Resource_lnr61")])
 metadata/_custom_type_script = "uid://do5hjkm3r2pdg"
