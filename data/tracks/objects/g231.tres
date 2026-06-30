@@ -55,6 +55,7 @@ name = "G231 p"
 description = "Прямой трак 23.1см"
 radius = 23.1
 deg = 0.0
+tag = &"power"
 icon = ExtResource("4_yve1u")
 components = Array[ExtResource("1_xfkws")]([SubResource("Resource_yfcut"), SubResource("Resource_iqocg"), SubResource("Resource_0xkto"), SubResource("Resource_qqtt6"), SubResource("Resource_o7fpk"), SubResource("Resource_t8too"), SubResource("Resource_5an37"), SubResource("Resource_lnr61")])
 metadata/_custom_type_script = "uid://do5hjkm3r2pdg"

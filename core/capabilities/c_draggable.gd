@@ -6,9 +6,16 @@ class_name C_Draggable extends IDraggable
 ## способность двигать ентити, когда включено C_Drag 
 ## компонент двигает сущность по евенту из ентити
 
+@export var snap_break_distance := 9.6 # Дистанция срыва снапа (в метрах)
+
 var drag_offset := Vector3.ZERO # смещение мыши
 var rotation_euler := Vector3.ZERO # Храним тут, чтобы не терять при смене тулзов
 var initial_transform: Transform3D # Стартпозиция
+
+# Состояние снаппинга
+var is_snapped_locked := false # блокировка мыши в снапе
+var snapped_entity_transform := Transform3D()
+
 
 
 
@@ -16,49 +23,92 @@ var initial_transform: Transform3D # Стартпозиция
 func on_drag_started(data: Dictionary):
 	initial_transform = entity.global_transform
 	drag_offset = entity.global_position - data.pos
-	
-	
+	is_snapped_locked = false
+
+	if entity.has_comp(C_Snapped):
+		entity.remove_component(C_Snapped)
+
+
+
+# Движение мышью кждый тик
 func on_drag_moved(data: Dictionary) -> void:
-	var snap = data.get("snap", {"is_snapped": false})
-	
-	if snap.is_snapped:
-		print('заглушка')
-		pass
-		
-	else:
-		on_drag_moved_stanard(data)
-
-
-# Движение без снапа
-func on_drag_moved_stanard(data: Dictionary) -> void:
-	var target_pos: Vector3 = data.pos + drag_offset
+	var mouse_pos: Vector3 = data.pos
 	var normal: Vector3 = data.normal
-
-	# 1. Защита от сломанной нормали (иногда бывает на стыках коллизий)
-	if normal.is_zero_approx():
-		normal = Vector3.UP
-
-	# 2. Базовый вектор направления
-	var forward = Vector3.BACK
-
-	# 3. Предохранитель от коллинеарности (Singular Basis)
-	# Если нормаль почти параллельна forward, меняем вектор опоры
-	if abs(normal.dot(forward)) > 0.99:
-		forward = Vector3.RIGHT
-
-	# 4. Вычисляем оси через векторное произведение
-	var right = normal.cross(forward).normalized()
-	forward = right.cross(normal).normalized()
 	
-	var aligned_basis = Basis(right, normal, forward)
+	# Виртуальная («честная») позиция, куда мышь ХОЧЕТ поставить рельс без учета снапа
+	var target_pos: Vector3 = mouse_pos + drag_offset
+	
+	#print(is_snapped_locked, entity.has_comp(C_Snapped))
+	
+	if is_snapped_locked and entity.has_comp(C_Snapped):
+		# Считаем расстояние от виртуальной позиции мыши до текущей точки снапа
+		var distance_to_mouse = target_pos.distance_to(snapped_entity_transform.origin)
+		#await get_tree().process_frame
+		if distance_to_mouse > snap_break_distance:
+			printt('mm',distance_to_mouse,snap_break_distance)
+			# МЫШЬ ОТЪЕХАЛА: срываем снап, убираем компонент-маркер
+			entity.remove_component(C_Snapped)
+			is_snapped_locked = false
+			_apply_regular_movement(target_pos, normal)
+		else:
+			# МЫШЬ РЯДОМ: Жестко удерживаем трансформ снапа, полностью игнорируя мелкие движения
+			entity.global_transform = snapped_entity_transform
+	else:
+		# Снапа нет — обычное движение по поверхности
+		_apply_regular_movement(target_pos, normal)
 
-	# 5. Применяем вращения игрока (храненные в rotation_euler)
-	aligned_basis = aligned_basis.rotated(aligned_basis.y, rotation_euler.y)
-	aligned_basis = aligned_basis.rotated(aligned_basis.x, rotation_euler.x)
 
-	# 6. Устанавливаем итоговый Transform3D
-	entity.global_transform = Transform3D(aligned_basis, target_pos)
-#
+
+## Обычное движение по поверхности
+func _apply_regular_movement(target_pos: Vector3, normal: Vector3) -> void:
+	# 1. Берем базовый вектор и крутим только Yaw (Y)
+	var base_forward = Vector3.FORWARD.rotated(Vector3.UP, rotation_euler.y)
+	
+	# 2. Выравниваем по нормали ландшафта
+	var up = normal.normalized()
+	var right = up.cross(base_forward).normalized()
+	
+	# Защита от коллинеарности
+	if abs(up.dot(base_forward)) > 0.99 or right.is_zero_approx():
+		right = up.cross(Vector3.RIGHT).normalized()
+		
+	var final_forward = right.cross(up).normalized()
+	var new_basis = Basis(right, up, final_forward)
+	
+	# 3. Накручиваем Pitch (X) уже на строго выровненный локальный базис
+	if rotation_euler.x != 0.0:
+		new_basis = new_basis.rotated(new_basis.x, rotation_euler.x)
+	
+	# 4. Применяем
+	entity.global_transform.basis = new_basis
+	entity.global_position = target_pos
+
+
+
+## 💡Вызывается из C_Socket при успешной коллизии сокетов
+func start_snap(target_global_transform: Transform3D) -> void:
+	#print('снап старт')
+	snapped_entity_transform = target_global_transform
+	is_snapped_locked = true # Блокируем обычное влияние мыши
+
+
+	
+	if not entity.has_comp(C_Snapped):
+		entity.add_component(C_Snapped.new()) # Вешаем маркер стейта
+
+	# Мгновенно примагничиваем рельс в идеальную позицию
+	entity.global_transform = snapped_entity_transform
+
+
+
+func on_drag_ended(_data: Dictionary):
+	# Если рельс заблокирован коллизией балласта при отпускании — возвращаем назад
+	if entity.has_comp(C_Blocked):
+		entity.global_transform = initial_transform
+	
+	# При дропе объекта отключаем логику срыва, чтобы рельс остался лежать в точке снапа
+	is_snapped_locked = false
+
 
 
 func on_rotate_input(data: Dictionary):
@@ -68,11 +118,6 @@ func on_rotate_input(data: Dictionary):
 
 
 
-func on_drag_ended(_data: Dictionary):
-	# Если мы заблокированы при отпускании — компонент сам себя возвращает на место
-	if entity.has_comp(C_Blocked):
-		entity.global_transform = initial_transform
-		
 # --- Блок синхронизации состояния (Клонирование) ---
 
 # Вызывается у Госта (отдаем данные)

@@ -36,9 +36,9 @@ func add_component(comp: Component):
 	if has_comp(type):
 		remove_component(type)
 
+
 	add_child(comp)
 	comp.entity = self
-	
 	# Вызываем функцию компонента 
 	comp.on_added()
 	# ⚡ Внутреннее общение: кричим всем компонентам через шину

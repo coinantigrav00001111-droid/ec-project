@@ -1,1 +1,0 @@
-class_name C_Snapped extends Component

@@ -3,7 +3,7 @@ class_name DragTool extends Node
 var controller: ToolController
 var target_entity: Entity
 
-const ROT_STEP := 15.0 # Градусы
+const ROT_STEP := 45.0 # Градусы
 
 
 ## Начало драга

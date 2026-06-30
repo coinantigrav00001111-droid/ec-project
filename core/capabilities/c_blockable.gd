@@ -28,6 +28,7 @@ func on_added():
 
 ## ⚡Сигнал что есть вход в area
 func _on_enter(_area):
+
 	if _should_block(_area): # Надо ли делать блок?
 		overlaps += 1
 		_update_state()

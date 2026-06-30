@@ -71,19 +71,27 @@ func _update_debug_tab():
 	if not current_target: return
 	
 	# Вместо создания сотен Label.new(), мы просто собираем ОДНУ строку
-	var text_dump = "[b]Components:[/b]\n"
+	var text_dump = "[color=green]Components:[/color]\n"
 	for child in current_target.get_children():
 		if child is Component:
-			text_dump += "- " + child.get_script().get_global_name() + "\n"
+			if child.is_state:
+				text_dump += "[color=yellow]-" + child.get_script().get_global_name() + " - state[/color]\n"
+			else:
+				text_dump += "- " + child.get_script().get_global_name() + "\n"
 			
 	# Присваиваем текст один раз. Никаких утечек памяти!
 	%DebugTab.text = text_dump
 
 
+
 # Для TransformTab (если нужны живые координаты)
 # Только ЭТУ вкладку имеет смысл обновлять в _process, и только если она открыта!
 func _process(_delta):
-	if visible and current_target and tab_container.current_tab == 2: # Допустим, TransformTab = 2
+	if visible and current_target and tab_container.current_tab == 2: 
+		# Допустим, TransformTab = 2
 		var _pos = current_target.global_position
 		var _rot = current_target.rotation_degrees
-		# Обновляем лейблы координат...
+		%PosLabel.text =  "(%.2f, %.2f, %.2f)" % [_pos.x, _pos.y, _pos.z]
+		%RotLabel.text =  "(%.2f, %.2f, %.2f)" % [_rot.x, _rot.y, _rot.z]
+	if visible and current_target and tab_container.current_tab == 4: 
+		_update_debug_tab()

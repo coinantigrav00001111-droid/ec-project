@@ -25,8 +25,8 @@ class_name GameRoot
 ###################################################
 
 # Подключение карты контекста. Для камеры по умолчанию
-@export var mapping_context:GUIDEMappingContext
-@export var build_mapping_context:GUIDEMappingContext
+#@export var mapping_context:GUIDEMappingContext
+#@export var build_mapping_context:GUIDEMappingContext
 #DD Дебаги вкл
 @export var debug_mode := false
 
@@ -38,8 +38,8 @@ var current_mode :StringName = &'build'
 
 func _ready() -> void:
 	# Подключение карты контекста (управление) для камеры
-	GUIDE.enable_mapping_context(mapping_context)
-
+	#GUIDE.enable_mapping_context(mapping_context)
+	pass
 
 
 func _process(_delta: float) -> void:

@@ -17,35 +17,34 @@ func on_entity_ready():
 	_parse_paths()
 
 
-func get_sockets() -> Array[Dictionary]:
-	return sockets
 
 
-
+# Парсим path , ищем его, а в нем curve 
 func _parse_paths():
 	# Стучимся в логический компонент пути
 	var path_comp = get_comp(C_Path)
-	if path_comp and path_comp.path:
-		_parse_curve(path_comp.curve, path_comp.path)
+	if path_comp and path_comp.path_n:
+		_parse_curve(path_comp.curve, path_comp.path_n)
 
 
 
 # Парсим кривую из path3d для вычисления сокетов
 func _parse_curve(c: Curve3D, p: Path3D):
 	if c.get_point_count() < 2: return
-	
+
 	# Берем точные координаты первой и последней точек
 	var p_first = c.get_point_position(0)
 	var p_last = c.get_point_position(c.get_point_count() - 1)
 
-	printt('====entity        : ',entity.transform.origin, entity.global_position) 
-	printt('====path        : ',p.position) 
+	printt('====SOCKED======') 
+	#printt('====entity        : ',entity.transform.origin, entity.global_position) 
+	#printt('====path        : ',p.position) 
 
 	# Направление на старте — это направление ручки `out`, либо просто вперед, если ручки нет
 	var d_first = -c.get_point_out(0).normalized()
 	if d_first.is_zero_approx(): #true если значения этого вектора приблизительно равны нулю
 		d_first = -(c.get_point_position(1) - p_first).normalized()
-		printt('d_0 loc_pos:',p_first, ' dir: ', d_first) #debug
+		#printt('d_0 loc_pos:',p_first, ' dir: ', d_first) #debug
 	else:
 		d_first = d_first # Смотрит наружу по направлению ручки
 		
@@ -54,20 +53,21 @@ func _parse_curve(c: Curve3D, p: Path3D):
 	
 	if d_last.is_zero_approx():
 		d_last = -(c.get_point_position(c.get_point_count() - 2) - p_last).normalized()
-		printt('d_1 loc_pos:',p_last, ' dir: ', d_last)
+		#printt('d_1 loc_pos:',p_last, ' dir: ', d_last)
 	_add_socket_if_unique(p_first, d_first)
-	add_socked_area( p_first, d_first)
+	_add_socked_area( p_first, d_first)
 	_add_cone(p.transform * p_first, Color.CHARTREUSE)  #debug
 	
 	
 	_add_socket_if_unique(p_last, d_last)
-	add_socked_area(p_last, d_last)
+	_add_socked_area(p_last, d_last)
 	_add_cone(p.transform * p_last, Color.DEEP_PINK)#debug
 
 
 
+
 ##TODO  Сокет можно добавлять через размеры и градусы!!
-# Добавляем сокет, только если в этой точке его еще нет (слияние для стрелок)
+# Добавляем сокет в массив, только если в этой точке его еще нет (слияние для стрелок)
 func _add_socket_if_unique(pos: Vector3, dir: Vector3):
 	for s in sockets:
 		if s.pos.distance_to(pos) < 0.01:
@@ -79,50 +79,168 @@ func _add_socket_if_unique(pos: Vector3, dir: Vector3):
 	})
 
 
-func add_socked_area( _pos, dir):
+
+func _add_socked_area(_pos: Vector3, dir: Vector3) -> void:
+	printt(entity.name)
 	var area = Area3D.new()
-	var collision := CollisionShape3D.new()
-	var capsule := CapsuleShape3D.new()
+	var collision = CollisionShape3D.new()
+	var capsule = CapsuleShape3D.new()
 	
-	area.collision_layer = 1 << 3 	# Слой 4
-	area.collision_mask = 1 << 3
-	area.name = 'Socket_0'
-	
-	var piv = entity.get_comp(C_Pivot).offset
-	area.position = (_pos + piv)
-	printt('node :', area.position)
-		# позиция → локальные Path3D → локальные entity
-		
+	# Настройки формы сокета (размеры подгони под свои нужды)
 	capsule.radius = 0.5
 	capsule.height = 2.0
-
 	collision.shape = capsule
-	collision.rotation.x = -PI/2 # положить вдоль Z капсулу вперед (-Z)
+	collision.rotation.x = PI/2 # положить вдоль Z капсулу вперед (-Z)
+	
+	# Важно: сначала добавляем в дерево сцены, чтобы трансформации работали корректно
+	entity.add_child(area)
 	area.add_child(collision)
 	
-	entity.add_child(area) # В Entity !!
-
-	# Поворот наружу !!! TODO Переделать в трансформ
-	# Направление на лок.поз.   + смещение наружу + глоб смещение ентити  
-	area.look_at( (area.position + dir) + entity.position, Vector3.UP)
+	# 1. Позиция
+	var piv = entity.get_comp(C_Pivot).offset
+	area.position = (_pos + piv)
 	
-	# Коннекты к сигналам сокетов
-	area.area_entered.connect(on_area_entered)
-	area.area_exited.connect(on_area_entered)
+	# 2. ⚡ ВРАЩЕНИЕ (Лечим боковой снап радиусных траков)
+	if not dir.is_zero_approx():
+		# В Godot локальная ось -Z считается направлением "вперед".
+		# Заставляем -Z смотреть строго наружу вдоль вектора dir.
+		var z_axis = -dir.normalized()
+		var x_axis = Vector3.UP.cross(z_axis).normalized()
+		
+		# Защита от коллинеарности (если сокет смотрит ровно в небо)
+		if x_axis.is_zero_approx():
+			x_axis = Vector3.RIGHT.cross(z_axis).normalized()
+			
+		var y_axis = z_axis.cross(x_axis).normalized()
+		
+		# Применяем вычисленный поворот
+		area.transform.basis = Basis(x_axis, y_axis, z_axis)
+		
+	# нужные слои (collision_layer / collision_mask)
+	#area.set_collision_layer_value(4, true) # вкл этот слой 
+	area.collision_layer = 1 << 3 	# Слой 4 # заменяет активный слой этими
+	area.collision_mask = 1 << 3
+	area.name = entity.name + '_Socket_0' 
+	
+	# Подключаем сигнал, передавая саму area как второй аргумент
+	area.area_entered.connect(_on_socket_area_entered.bind(area))
+	area.area_exited.connect(_on_socket_area_exited)
 	
 	# Визуальный маркер
 	_add_marker(collision)
 
 
+
+## СИГНАЛЫ
+
+## ⚡Сигнал area вход
+# s_socket - стац трак, d_socket - драг трак
+func _on_socket_area_entered(s_socket: Area3D, d_socket: Area3D) -> void:
+	# Чтобы стейты заехали в ентити
+	await get_tree().process_frame
+	
+	# Из Блокед не может быть снапа
+	if entity.has_comp(C_Blocked):
+		return
+		
+	# Снаппинг обрабатывается только той сущностью, которую СЕЙЧАС ТАЩАТ
+	if not (entity.has_comp(C_Drag) or entity.has_comp(C_Ghost)):
+		return
+	
+	# Если мы уже жестко зафиксированы в снапе, игнорируем новые триггеры
+	if entity.has_comp(C_Snapped):
+		return
+
+	# Стац ентити. Проверка стац не есть драг(бред?)
+	var s_entity = _find_entity_from_collider(s_socket)
+	if not s_entity or s_entity == entity:
+		return
+
+	# Проверяем, что объект коллизии — это тоже валидный сокет рельса
+	if not s_entity.has_comp(C_Socket):
+		return
+	
+	# ЗАЩИТА "Третьим не будет" и "Объект на объект":
+	# Если стационарный сокет уже занят другим рельсом — отмена.
+	if _is_socket_occupied(s_socket):
+		return
+		
+	#FIXME баг
+	''' Проверка себя  = драгед или гост зачем??
+	'''
+	#TODO зачем проверять себя??
+	# Если наш собственный уже занят другим рельсом — отмена.
+	#if _is_socket_occupied(d_socket):
+		#return
+	#printt('entered',d_socket.name)
+	# --- ВЫЧИСЛЕНИЕ ИДЕАЛЬНОЙ ТОЧКИ СТЫКОВКИ ---
+	var target_socket_global: Transform3D = s_socket.global_transform
+	
+	# Разворачиваем сокеты лицом к лицу (на 180 градусов по Y)
+	var desired_socket_global = target_socket_global.rotated_local(Vector3.UP, PI)
+	
+	# Вычисляем глобальный трансформ для нашей Entity с учетом локального офсета сокета
+	var d_socket_transform: Transform3D = d_socket.transform
+	var target_entity_transform = desired_socket_global * d_socket_transform.inverse()
+	
+	# Передаем управление в C_Draggable
+	var c_draggable = entity.get_comp(C_Draggable)
+	if c_draggable:
+		c_draggable.start_snap(target_entity_transform)
+
+
+
 ## ⚡Сигнал area 
-func on_area_entered(area: Area3D):
-	print('area enter: ', area)
+func _on_socket_area_exited(_area: Area3D):
+	#print('sock area exit: ', area)
+	pass
 
 
-func on_area_exited(area: Area3D):
-	print('area exit: ', area)
+
+## HELPERS
+
+func get_sockets() -> Array[Dictionary]:
+	return sockets
 
 
+
+## Проверка: занят ли сокет стабильно установленным (не таскиваемым) рельсом
+func _is_socket_occupied(socket_area: Area3D) -> bool:
+	var my_entity = _find_entity_from_collider(socket_area)
+	
+	for area in socket_area.get_overlapping_areas():
+		# 1. Игнорируем сам этот же сокет
+		if area == socket_area:
+			continue
+			
+		var other_entity = _find_entity_from_collider(area)
+		
+		# 2. Игнорируем ВСЕ коллизии нашей же сущности (балласт, другие сокеты)
+		if other_entity == my_entity:
+			continue
+			
+		# 3. Игнорируем гостов и объекты, которые сейчас находятся в режиме Drag
+		if other_entity and (other_entity.has_comp(C_Ghost) or other_entity.has_comp(C_Drag)):
+			continue
+			
+		# Если мы дошли сюда, значит в сокете лежит стабильный, чужой рельс!
+		return true
+		
+	return false
+
+
+
+
+
+# Хелпер подъема по дереву до Entity (аналогично c_blockable)
+func _find_entity_from_collider(node: Node) -> Entity:
+	var current = node
+	while current:
+		if current is Entity:
+			return current
+		current = current.get_parent()
+	return null
+	
 
 # Рекурсивный поиск всех Path3D в визуале
 func _find_paths_recursive(node: Node) -> Array[Path3D]:
@@ -170,7 +288,7 @@ func _add_cone(_pos, _color = Color.BURLYWOOD):
 	
 	#marker.position = _p.transform * (_pos) # Если _p закидываем в функцию
 	marker.position = _pos
-	
+	marker.position.y += 0.8
 	# материал
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = _color

@@ -64,21 +64,15 @@
 				"51331081-7353-4afa-a247-5a2271c893a4",
 				"1bdea74b-2ef0-48de-94c3-43f45b91a67d",
 				"837df9b2-6877-4bcc-8612-e9d9d1180ec2",
-				"0c7c66a3-ed32-4045-b2e6-322e4c722831"
+				"0c7c66a3-ed32-4045-b2e6-322e4c722831",
+				"696f3605-24ee-4aae-80fc-4fab7f26e758"
 			]
 		},
 		{
 			"uuid": "1424c4a8-638b-4f40-9d72-5d4d3845437b",
 			"title": "Doing",
 			"tasks": [
-				"046ad09f-d7d4-442b-8112-44c12d37b39c",
-				"c40a1230-cb39-4c0c-875c-2fb3b5ecd96c",
-				"d4d65282-70d4-4093-b814-1bdb0f485a55",
-				"5891ae87-e9cc-4475-bda2-32b97c590f0a",
-				"37867c2e-830d-4800-922c-744f8bf80ac2",
-				"75eb5ead-e5cc-473e-b5f2-9d1f139b0cb8",
-				"696f3605-24ee-4aae-80fc-4fab7f26e758",
-				"55240fe6-8be3-4dbd-a343-6480993a9460"
+				"75eb5ead-e5cc-473e-b5f2-9d1f139b0cb8"
 			]
 		},
 		{
@@ -88,11 +82,12 @@
 				"c3d65b49-5533-46e9-b6ef-dce81c18deb6",
 				"e93d0435-fc2b-42cc-8673-038d55a8cac4",
 				"cb3dd73c-6c8f-4073-866f-bdf0aa4954b4",
+				"5891ae87-e9cc-4475-bda2-32b97c590f0a",
 				"f6982df0-c908-46ce-a8f4-5c88be1c8446",
-				"c208a5c0-fdd3-4356-ad14-95e8f8efd8cb",
 				"bab83259-f451-4966-9100-e8007ba046ba",
 				"a5000c49-b31e-41d6-ab52-4d2660910631",
-				"9f90edf4-d314-48c4-bf48-e5cac23ba348"
+				"9f90edf4-d314-48c4-bf48-e5cac23ba348",
+				"046ad09f-d7d4-442b-8112-44c12d37b39c"
 			]
 		}
 	],
@@ -202,7 +197,7 @@
 			"steps": [
 				{
 					"details": "Вывод координат, высоты!",
-					"done": false
+					"done": true
 				},
 				{
 					"details": "power",
@@ -210,11 +205,11 @@
 				},
 				{
 					"details": "transform",
-					"done": false
+					"done": true
 				},
 				{
 					"details": "debug",
-					"done": false
+					"done": true
 				},
 				{
 					"details": "visual",
@@ -227,27 +222,6 @@
 			"title": "!!!подготовить к четвергу запрос для диздока!!",
 			"description": "",
 			"category": "bfe07748-730a-4469-a662-08c8f873a722",
-			"steps": []
-		},
-		{
-			"uuid": "c40a1230-cb39-4c0c-875c-2fb3b5ecd96c",
-			"title": "snap",
-			"description": "",
-			"category": "91f41b95-cfcd-4026-a09a-48fb304f9a00",
-			"steps": []
-		},
-		{
-			"uuid": "d4d65282-70d4-4093-b814-1bdb0f485a55",
-			"title": "socked",
-			"description": "",
-			"category": "91f41b95-cfcd-4026-a09a-48fb304f9a00",
-			"steps": []
-		},
-		{
-			"uuid": "c208a5c0-fdd3-4356-ad14-95e8f8efd8cb",
-			"title": "Выпилить GUIDE ??. Сохранен старый гимбал.",
-			"description": "",
-			"category": "eb217580-82d1-4df7-a8ff-ff0c35c057e3",
 			"steps": []
 		},
 		{
@@ -276,13 +250,6 @@
 			"title": "в фабрике созавать траки с компонетами ,чтобы не заполнять сеттинг",
 			"description": "",
 			"category": "91f41b95-cfcd-4026-a09a-48fb304f9a00",
-			"steps": []
-		},
-		{
-			"uuid": "37867c2e-830d-4800-922c-744f8bf80ac2",
-			"title": "Генерация коллизии балласта по path",
-			"description": "",
-			"category": "50f9c949-da71-4afd-beb9-f08415f2f066",
 			"steps": []
 		},
 		{

@@ -86,7 +86,7 @@ const GROUND_PLANE = Plane(Vector3.UP, 0)
 #_unhandled_input не работает над UI элементами, поэтому _input как земена при необходимости
 func _unhandled_input(event: InputEvent) -> void: 
 	#rotate and elevate
-	if Input.is_action_pressed("middle_mouse_button"):
+	if Input.is_action_pressed("mmb"):
 		#Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)		# скрыли курсор
 		if event is InputEventMouseMotion:
 			camera_input = event.relative
@@ -110,10 +110,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		zoom_direction = -1	#zoom new 
 	if event.is_action_pressed("mouse_wheel_down"):
 		zoom_direction = 1	#zoom new
-	
+
 	# курсор снова вкл
 	if Input.is_action_just_released("rmb" 
-									) or Input.is_action_just_released("middle_mouse_button"):
+									) or Input.is_action_just_released("mmb"):
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
 
@@ -134,7 +134,7 @@ func _process(delta):
 	camera_input = Vector2.ZERO # Обнуляем ввод с мыши
 	
 	#move camera
-	#move_cam(delta)
+	move_cam(delta)
 	#zoom 
 	if zoom_direction != 0:
 		_zoom(delta) # выполняется только если задан новый зум и был запуск из инпута

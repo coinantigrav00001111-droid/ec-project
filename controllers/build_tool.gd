@@ -14,7 +14,7 @@ var ghost : Entity
 var rmb_pressed_pos := Vector2.ZERO
 
 # Параметры вращения
-const ROT_STEP := 15.0 # Градусы
+const ROT_STEP := 45.0 # Градусы
 
 
 
@@ -23,11 +23,14 @@ func enter():
 	if ghost: ghost.queue_free()
 	
 	ghost = controller.entity_factory.create_from_setting(ghost_setting)
+	ghost.name = 'ghost'
 	controller.entities_root.add_child(ghost)
 	ghost.add_component(C_Ghost.new())
 
+	
 	# ДЕРГАЕМ ПАНЕЛЬ!
 	controller.info_panel.set_target(ghost)
+	controller.entity_debugger.set_target(ghost)
 
 
 func handle_input(event: InputEvent):
@@ -65,6 +68,8 @@ func _place_real_object():
 	real_ent.global_transform = ghost.global_transform
 	controller.entities_root.add_child(real_ent)
 	
+	real_ent.name = ghost_setting.name # имя ентити берется из сеттинга госта
+	
 	# 💥 Тул больше не ищет компоненты. Он приказывает Госту клонировать стейт:
 	ghost.send_event("on_clone_state_to", {"target": real_ent})
 
@@ -81,6 +86,9 @@ func process_tick(_delta):
 			"normal": hit.normal,
 			"snap": snap_data
 		})
+		
+	#INFO ДЕРГАЕМ ПАНЕЛЬ! пока не трогаем, не то место наверное
+	#controller.info_panel.set_target(ghost)
 
 
 ## Выставляет всем дочерним нодам-коллизиям слой
@@ -100,10 +108,7 @@ func exit():
 	controller._on_build_selected(null)
 	# ОЧИЩАЕМ ПАНЕЛЬ!
 	controller.info_panel.set_target(null)
-	
 
-
-	
 	#инспектор
 	await get_tree().process_frame # ждем кадр до удаления
 	controller.entity_debugger.set_target(ghost)

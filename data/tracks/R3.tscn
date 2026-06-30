@@ -44,8 +44,8 @@ mesh = SubResource("ArrayMesh_iv7c5")
 curve = SubResource("Curve3D_vflfn")
 
 [node name="Ballast" type="Area3D" parent="." unique_id=286377867]
-collision_layer = 512
-collision_mask = 512
+collision_layer = 4
+collision_mask = 4
 
 [node name="HeadL" type="StaticBody3D" parent="." unique_id=279470458]
 unique_name_in_owner = true

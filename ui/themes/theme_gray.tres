@@ -65,18 +65,6 @@ content_margin_left = 10.0
 content_margin_right = 10.0
 bg_color = Color(0.699, 0.29, 0.29, 0)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kqxpk"]
-content_margin_left = 8.0
-content_margin_top = 0.0
-content_margin_right = 8.0
-content_margin_bottom = 2.0
-bg_color = Color(0.101960786, 0.101960786, 0.101960786, 0.6)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.36282945, 0.36282948, 0.36282936, 1)
-
 [resource]
 default_font = ExtResource("1_psqb8")
 HeaderSmall/font_sizes/font_size = 18
@@ -101,4 +89,3 @@ TabContainer/styles/tab_selected = SubResource("StyleBoxFlat_v0ka0")
 TabContainer/styles/tab_unselected = SubResource("StyleBoxFlat_sjej7")
 TagButton/base_type = &"Button"
 TagButton/constants/icon_max_width = 25
-TagButton/styles/normal = SubResource("StyleBoxFlat_kqxpk")
