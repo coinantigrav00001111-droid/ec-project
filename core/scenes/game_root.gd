@@ -7,10 +7,10 @@ class_name GameRoot
 ##
 ###########################
 ## 💡 В идеале - ТОЛЬКО связывает системы, больше не синглтон пока!
-#Entity (объект) = контейнер компонентов + ссылка на Node (визуал)
-#Components = данные + минимальная логика (по месту)
+#Entity (объект) = контейнер компонентов
+#Components = данные + логика (по месту)
 #Controllers = orchestration (высокоуровневая логика)
-#Systems = опционально, только для массовых задач
+
 
 ####################################################
 #СПРАВКА  ложится поверх материалов
@@ -24,9 +24,7 @@ class_name GameRoot
 #call_deferred(result)
 ###################################################
 
-# Подключение карты контекста. Для камеры по умолчанию
-#@export var mapping_context:GUIDEMappingContext
-#@export var build_mapping_context:GUIDEMappingContext
+
 #DD Дебаги вкл
 @export var debug_mode := false
 
@@ -37,8 +35,6 @@ var current_mode :StringName = &'build'
 
 
 func _ready() -> void:
-	# Подключение карты контекста (управление) для камеры
-	#GUIDE.enable_mapping_context(mapping_context)
 	pass
 
 

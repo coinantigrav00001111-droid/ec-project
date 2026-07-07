@@ -75,6 +75,8 @@
 			"tasks": [
 				"c9518725-a1fc-4454-884a-26f5c9febb9b",
 				"bed57fd3-488d-462a-be85-ea35c5696d8b",
+				"1b5e50e7-4f65-4821-ac3f-4e6cd59a3422",
+				"68f213c1-57f9-4966-bc40-ab8392085640",
 				"4d6a3165-e4df-46a0-8036-0c6c96e2bb09",
 				"38dc854d-a8dd-4a1c-88d3-c1206f4023be",
 				"35620d47-046b-4b70-9262-2c0ad3d9fb96",
@@ -296,7 +298,7 @@
 		},
 		{
 			"uuid": "bed57fd3-488d-462a-be85-ea35c5696d8b",
-			"title": "сейв лоад",
+			"title": "сейв лоад ентити",
 			"description": "",
 			"category": "af31571d-f162-41be-9c9c-7b15a2004d2c",
 			"steps": []
@@ -341,6 +343,20 @@
 			"title": "Допилить рельсы - коллизии",
 			"description": "",
 			"category": "50f9c949-da71-4afd-beb9-f08415f2f066",
+			"steps": []
+		},
+		{
+			"uuid": "68f213c1-57f9-4966-bc40-ab8392085640",
+			"title": "Как будет выглядеть ентити и компоненты вагона?",
+			"description": "",
+			"category": "af31571d-f162-41be-9c9c-7b15a2004d2c",
+			"steps": []
+		},
+		{
+			"uuid": "1b5e50e7-4f65-4821-ac3f-4e6cd59a3422",
+			"title": "Убрать предметы из папки ентити",
+			"description": "",
+			"category": "af31571d-f162-41be-9c9c-7b15a2004d2c",
 			"steps": []
 		}
 	],

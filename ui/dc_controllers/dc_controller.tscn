@@ -1,0 +1,309 @@
+[gd_scene format=3 uid="uid://dq57r0cxlhgy3"]
+
+[ext_resource type="Texture2D" uid="uid://blkymti7x3kq6" path="res://ui/Controllers/controller_p.webp" id="1_62agx"]
+[ext_resource type="Script" uid="uid://didhk4vjha0uo" path="res://ui/Controllers/dc_controller_p.gd" id="2_370bd"]
+[ext_resource type="Texture2D" uid="uid://daj4ry1qgjkyk" path="res://ui/Controllers/handle_p.webp" id="3_g1xni"]
+[ext_resource type="Texture2D" uid="uid://dsl2w64atgbe7" path="res://ui/Controllers/slider_knob_p.webp" id="4_uabxd"]
+[ext_resource type="Texture2D" uid="uid://5bxxkdufr4lv" path="res://ui/Controllers/slider_back_p.webp" id="5_r6hy1"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_krtm5"]
+texture = ExtResource("1_62agx")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_a5f3y"]
+bg_color = Color(0.16078432, 0.16078432, 0.16078432, 0.6)
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.7607843, 0.7529412, 0.7372549, 1)
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+
+[sub_resource type="LabelSettings" id="LabelSettings_fru3f"]
+font_size = 11
+font_color = Color(0.103743516, 0.10374353, 0.103743516, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_n3g47"]
+content_margin_top = 26.0
+content_margin_bottom = 26.0
+texture = ExtResource("5_r6hy1")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_c73ov"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mhlpg"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_o7aer"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_de3ii"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_n3g47"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_a5f3y"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_34xnu"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_14lua"]
+bg_color = Color(0.23529412, 0.23529412, 0.23529412, 0.36078432)
+border_width_bottom = 1
+border_color = Color(0, 0, 0, 0.54901963)
+border_blend = true
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+expand_margin_top = 6.0
+expand_margin_bottom = 6.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_o7aer"]
+bg_color = Color(0.23529412, 0.23529412, 0.23529412, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_n3g47"]
+bg_color = Color(0.23529412, 0.23529412, 0.23529412, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_de3ii"]
+bg_color = Color(0.3254902, 0.3254902, 0.3254902, 0.38039216)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_34xnu"]
+bg_color = Color(0.2574258, 0.23962331, 0.2659657, 0.5529412)
+
+[sub_resource type="LabelSettings" id="LabelSettings_14lua"]
+line_spacing = 0.0
+font_size = 10
+font_color = Color(0.101960786, 0.101960786, 0.101960786, 1)
+
+[node name="DCСontrollerPanel" type="Panel" unique_id=1088175003]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 5.0
+offset_top = -360.0
+offset_right = 422.0
+offset_bottom = -78.0
+grow_vertical = 0
+size_flags_horizontal = 0
+size_flags_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxTexture_krtm5")
+script = ExtResource("2_370bd")
+handle_max_angle = 270
+rotation_with_direction = true
+metadata/_edit_vertical_guides_ = [91.0, 187.0, 139.0]
+metadata/_edit_horizontal_guides_ = [681.0, 706.0]
+
+[node name="ShowControllerButton" type="Button" parent="." unique_id=1845977110]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 417.0
+offset_top = 11.0
+offset_right = 437.0
+offset_bottom = 61.0
+theme_override_styles/pressed = SubResource("StyleBoxFlat_a5f3y")
+toggle_mode = true
+button_pressed = true
+text = "<"
+
+[node name="ModelLabel" type="Label" parent="." unique_id=1460503713]
+layout_mode = 0
+offset_left = 307.0
+offset_top = 21.0
+offset_right = 407.0
+offset_bottom = 40.0
+size_flags_vertical = 8
+text = "Model DС-2-"
+label_settings = SubResource("LabelSettings_fru3f")
+horizontal_alignment = 2
+
+[node name="HandlePower" type="Control" parent="." unique_id=1599104646]
+unique_name_in_owner = true
+anchors_preset = 0
+offset_left = 295.0
+offset_top = 149.0
+offset_right = 295.0
+offset_bottom = 149.0
+
+[node name="Handle_texture" type="TextureRect" parent="HandlePower" unique_id=534543844]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -84.0
+offset_top = -117.0
+offset_right = 85.0
+offset_bottom = 117.0
+grow_horizontal = 2
+rotation = -1.5707964
+pivot_offset = Vector2(84, 117)
+texture = ExtResource("3_g1xni")
+expand_mode = 1
+
+[node name="DirectionSliderLabels" type="HBoxContainer" parent="." unique_id=128115752]
+layout_mode = 0
+offset_left = 78.0
+offset_top = 195.0
+offset_right = 193.0
+offset_bottom = 209.0
+
+[node name="RewLabel" type="Label" parent="DirectionSliderLabels" unique_id=1389655061]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "REW"
+label_settings = SubResource("LabelSettings_fru3f")
+horizontal_alignment = 1
+
+[node name="OffLabel" type="Label" parent="DirectionSliderLabels" unique_id=1735379996]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "OFF"
+label_settings = SubResource("LabelSettings_fru3f")
+horizontal_alignment = 1
+
+[node name="FWDLabel" type="Label" parent="DirectionSliderLabels" unique_id=1849794393]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "FWD"
+label_settings = SubResource("LabelSettings_fru3f")
+horizontal_alignment = 1
+
+[node name="DirectionSlider" type="HSlider" parent="." unique_id=1003948126]
+layout_mode = 0
+offset_left = 86.0
+offset_top = 214.0
+offset_right = 278.0
+offset_bottom = 295.0
+scale = Vector2(0.5, 0.5)
+theme_override_constants/center_grabber = 0
+theme_override_constants/grabber_offset = 0
+theme_override_icons/grabber = ExtResource("4_uabxd")
+theme_override_icons/grabber_highlight = ExtResource("4_uabxd")
+theme_override_styles/slider = SubResource("StyleBoxTexture_n3g47")
+theme_override_styles/grabber_area = SubResource("StyleBoxFlat_c73ov")
+theme_override_styles/grabber_area_highlight = SubResource("StyleBoxFlat_mhlpg")
+min_value = -1.0
+max_value = 1.0
+value = 1.0
+
+[node name="PowerButton" type="Button" parent="." unique_id=1196352872]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 18.0
+offset_top = 216.0
+offset_right = 54.0
+offset_bottom = 252.0
+theme_override_colors/icon_normal_color = Color(0.028924463, 0.24285966, 0.4472723, 1)
+theme_override_colors/icon_pressed_color = Color(0.23529412, 0.5764706, 0.9411765, 1)
+theme_override_colors/icon_hover_color = Color(0.399268, 0.6691305, 0.97606593, 1)
+theme_override_colors/icon_hover_pressed_color = Color(0.4, 0.67058825, 0.9764706, 1)
+theme_override_font_sizes/font_size = 9
+theme_override_styles/normal = SubResource("StyleBoxEmpty_o7aer")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_de3ii")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_n3g47")
+theme_override_styles/hover_pressed = SubResource("StyleBoxEmpty_a5f3y")
+theme_override_styles/hover_pressed_mirrored = SubResource("StyleBoxEmpty_34xnu")
+toggle_mode = true
+button_pressed = true
+text = "Power"
+icon = ExtResource("4_uabxd")
+icon_alignment = 1
+
+[node name="ContourSlider" type="HSlider" parent="." unique_id=1894012943]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 16.0
+offset_top = 43.0
+offset_right = 229.0
+offset_bottom = 59.0
+theme_override_styles/slider = SubResource("StyleBoxFlat_14lua")
+theme_override_styles/grabber_area = SubResource("StyleBoxFlat_o7aer")
+theme_override_styles/grabber_area_highlight = SubResource("StyleBoxFlat_n3g47")
+max_value = 10.0
+tick_count = 11
+ticks_on_borders = true
+ticks_position = 3
+
+[node name="PowerProgressBar" type="ProgressBar" parent="." unique_id=1041425947]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(106, 0)
+layout_mode = 0
+offset_left = 23.0
+offset_top = 113.0
+offset_right = 172.0
+offset_bottom = 136.0
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_styles/background = SubResource("StyleBoxFlat_de3ii")
+theme_override_styles/fill = SubResource("StyleBoxFlat_34xnu")
+step = 1.0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1376888408]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.040805772
+anchor_top = 0.5070922
+anchor_right = 0.040805772
+anchor_bottom = 0.5070922
+offset_right = 155.984
+offset_bottom = 26.0
+theme_override_constants/separation = 1
+metadata/_edit_use_anchors_ = true
+
+[node name="DirectionLabel" type="Label" parent="HBoxContainer" unique_id=1720653329]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(26, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 8
+text = "🠊"
+label_settings = SubResource("LabelSettings_fru3f")
+horizontal_alignment = 1
+vertical_alignment = 2
+
+[node name="SpdLabel2" type="Label" parent="HBoxContainer" unique_id=1288310996]
+custom_minimum_size = Vector2(37, 0)
+layout_mode = 2
+size_flags_vertical = 8
+text = "spd:"
+label_settings = SubResource("LabelSettings_fru3f")
+horizontal_alignment = 1
+visible_characters = 8
+visible_ratio = 2.0
+
+[node name="SpeedLabel" type="Label" parent="HBoxContainer" unique_id=1853125905]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 8
+text = "00"
+label_settings = SubResource("LabelSettings_fru3f")
+visible_characters = 1
+visible_ratio = 0.5
+
+[node name="SpdUnitLabel" type="Label" parent="HBoxContainer" unique_id=553939540]
+visible = false
+custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
+size_flags_vertical = 8
+text = "kmh"
+label_settings = SubResource("LabelSettings_14lua")
+
+[node name="Control3" type="Control" parent="HBoxContainer" unique_id=1477657444]
+layout_mode = 2
+size_flags_horizontal = 2
+
+[node name="ContourLabel" type="Label" parent="HBoxContainer" unique_id=726288885]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(34, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 8
+text = "c:0"
+label_settings = SubResource("LabelSettings_fru3f")
+visible_characters = 5
+visible_ratio = 1.6666666
+
+[connection signal="pressed" from="ShowControllerButton" to="." method="_on_show_controller_button_pressed"]
+[connection signal="gui_input" from="HandlePower/Handle_texture" to="." method="_on_handle_texture_gui_input"]
+[connection signal="mouse_entered" from="HandlePower/Handle_texture" to="." method="_on_handle_texture_mouse_entered"]
+[connection signal="mouse_exited" from="HandlePower/Handle_texture" to="." method="_on_handle_texture_mouse_exited"]
+[connection signal="value_changed" from="DirectionSlider" to="." method="_on_direction_slider_value_changed"]
+[connection signal="pressed" from="PowerButton" to="." method="_on_power_button_pressed"]
+[connection signal="value_changed" from="ContourSlider" to="." method="_on_contour_slider_value_changed"]

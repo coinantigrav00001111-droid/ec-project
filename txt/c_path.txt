@@ -1,4 +1,4 @@
-class_name C_Path extends Component
+class_name C_Path extends ICapability
 
 ####################
 ## Способность, Библиотека действий. Она живет на объекте всегда.
@@ -13,7 +13,8 @@ class_name C_Path extends Component
 ## Коллизии Балласта генерятся, если в сцене есть нода балласт и у нее нет коллизий,
 ## иначе используется коллизия сцены или игнорируется создание балласта вовсе - нет в 
 ## сцене - нет в объекте.
-
+var radius: float 
+var deg: float 
 var path_n: Path3D
 var curve: Curve3D
 var ballast_n: Area3D
@@ -37,8 +38,8 @@ func on_entity_ready() -> void:
 	var pivot = get_comp(C_Pivot)
 	if pivot: pivot_offset = pivot.offset
 	
-	var radius = identity.get_radius()
-	var deg = identity.get_degree()
+	radius = identity.get_radius()
+	deg = identity.get_degree()
 		
 	# Генерируем математически точную кривую
 	curve = generate_track_curve(radius, deg)

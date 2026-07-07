@@ -1,0 +1,137 @@
+[gd_scene format=3 uid="uid://dcnqkqoa46nif"]
+
+[ext_resource type="Script" uid="uid://cro3p11mkeuf5" path="res://ui/dc_controllers/dc_controller_mini.gd" id="1_nnwyu"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_a5f3y"]
+bg_color = Color(0.16078432, 0.16078432, 0.16078432, 0.6)
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.7607843, 0.7529412, 0.7372549, 1)
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+
+[sub_resource type="LabelSettings" id="LabelSettings_fru3f"]
+font_size = 11
+font_color = Color(0.103743516, 0.10374353, 0.103743516, 1)
+
+[node name="DCСontrollerMinimal" type="Panel" unique_id=1088175003]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 5.0
+offset_top = -397.0
+offset_right = 121.0
+offset_bottom = -78.31702
+grow_vertical = 0
+size_flags_horizontal = 0
+size_flags_vertical = 0
+script = ExtResource("1_nnwyu")
+
+[node name="ShowControllerButton" type="Button" parent="." unique_id=1845977110]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 116.0
+offset_top = 11.0
+offset_right = 136.0
+offset_bottom = 61.0
+theme_override_styles/pressed = SubResource("StyleBoxFlat_a5f3y")
+toggle_mode = true
+button_pressed = true
+text = "<"
+
+[node name="ModelLabel" type="Label" parent="." unique_id=1460503713]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -41.0
+offset_top = -311.0
+offset_right = 41.0
+offset_bottom = -294.0
+grow_horizontal = 2
+grow_vertical = 0
+size_flags_vertical = 8
+text = "PWM-Minimal"
+label_settings = SubResource("LabelSettings_fru3f")
+horizontal_alignment = 1
+
+[node name="ContourLabel" type="Label" parent="." unique_id=726288885]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 11.0
+offset_top = -67.0
+offset_right = 33.0
+offset_bottom = -48.0
+grow_vertical = 0
+size_flags_horizontal = 4
+size_flags_vertical = 8
+text = "c:0"
+
+[node name="ContourSlider" type="VSlider" parent="." unique_id=606675769]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 14.0
+offset_top = -285.0
+offset_right = 30.0
+offset_bottom = -77.0
+grow_vertical = 0
+max_value = 10.0
+tick_count = 11
+ticks_on_borders = true
+ticks_position = 3
+
+[node name="PowerSlider" type="VSlider" parent="." unique_id=1288162785]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 42.0
+offset_top = -283.0
+offset_right = 58.0
+offset_bottom = -12.0
+grow_vertical = 0
+min_value = -100.0
+tick_count = 3
+ticks_on_borders = true
+
+[node name="PowerLabel" type="Label" parent="." unique_id=896331292]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 66.0
+offset_top = 161.0
+offset_right = 114.0
+offset_bottom = 180.0
+text = "0%"
+
+[node name="PowerButton" type="Button" parent="." unique_id=1196352872]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 7.0
+offset_top = -40.0
+offset_right = 35.0
+offset_bottom = -12.0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 9
+toggle_mode = true
+button_pressed = true
+text = "PWR"
+
+[connection signal="gui_input" from="." to="." method="_on_power_slider_gui_input"]
+[connection signal="pressed" from="ShowControllerButton" to="." method="_on_show_controller_button_pressed"]
+[connection signal="value_changed" from="ContourSlider" to="." method="_on_contour_slider_value_changed"]
+[connection signal="gui_input" from="PowerSlider" to="." method="_on_power_slider_gui_input"]
+[connection signal="value_changed" from="PowerSlider" to="." method="_on_power_slider_value_changed"]
+[connection signal="pressed" from="PowerButton" to="." method="_on_power_button_pressed"]

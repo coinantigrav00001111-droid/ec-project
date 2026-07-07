@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://57xnplsftgls"]
 
 [ext_resource type="Script" uid="uid://0ilntl31lfwu" path="res://ui/ui_generator.gd" id="1_ay4pc"]
+[ext_resource type="PackedScene" uid="uid://dcnqkqoa46nif" path="res://ui/dc_controllers/dc_controller_mini.tscn" id="1_bi8hs"]
 [ext_resource type="Script" uid="uid://bb1e4f7q4ak76" path="res://ui/panels/mode_panel.gd" id="1_tf0e0"]
 [ext_resource type="Script" uid="uid://cvw0jh02ub51b" path="res://ui/mode_controller.gd" id="2_bi8hs"]
 [ext_resource type="Texture2D" uid="uid://dm07bxms22v1a" path="res://ui/icons/library/bookshelf.svg" id="2_obcwv"]
@@ -10,6 +11,7 @@
 [ext_resource type="Script" uid="uid://158m73il43vw" path="res://ui/info_controller.gd" id="5_bi8hs"]
 [ext_resource type="Texture2D" uid="uid://djywpcxpy5ypw" path="res://ui/icons/tool/tinker.svg" id="5_pa1oa"]
 [ext_resource type="PackedScene" uid="uid://boj0kanwn0n0e" path="res://ui/panels/info_panel.tscn" id="10_ay4pc"]
+[ext_resource type="PackedScene" uid="uid://d8t1asbj2c3s" path="res://ui/panels/top_panel.tscn" id="12_hrmpd"]
 
 [sub_resource type="ButtonGroup" id="ButtonGroup_adgqd"]
 
@@ -243,6 +245,16 @@ offset_right = 364.0
 offset_bottom = 21.0
 
 [node name="InfoPanel" parent="." unique_id=1788166654 instance=ExtResource("10_ay4pc")]
+
+[node name="DCСontrollerMinimal" parent="." unique_id=1088175003 instance=ExtResource("1_bi8hs")]
+offset_top = -610.0
+offset_bottom = -291.0
+
+[node name="TopPanel" parent="." unique_id=787446189 instance=ExtResource("12_hrmpd")]
+offset_left = 7.0
+offset_top = 41.0
+offset_right = 71.0
+offset_bottom = 74.0
 
 [connection signal="pressed" from="ModePanel/VBoxContainer/LibraryButton" to="ModePanel" method="_on_library_button_pressed"]
 [connection signal="pressed" from="ModePanel/VBoxContainer/ObserveButton" to="ModePanel" method="_on_observe_button_pressed"]

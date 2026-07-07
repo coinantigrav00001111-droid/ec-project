@@ -1,4 +1,4 @@
-extends Node3D
+class_name Gimbal extends Node3D
 
 ########################
 ##  Верхний узел(Gimbal) отвечает за перемещение и вращение камеры
@@ -253,12 +253,19 @@ func _realign_camera(point: Vector3) -> void:
 	position += point - new_position	# смена позиции узла на вектор 
 
 
-## Это сохраняется отдельно пока
-#func _on_save_game(saved_data:Array[SavedData]):
-	#var my_data =SavedData.new()
-	#my_data.gimbal_transform = global_transform
-	#my_data.gimbal_elevation = elevation.transform
-	#my_data.gimbal_camera = camera.transform
-	#my_data.scene_path = "res://scenes/gimbal.tscn"
-	#
-	#saved_data.append(my_data)
+## Данные для сейва вызывает SaveLoad Manager
+func save_global_state() -> Dictionary:
+	return {
+		"transform": global_transform,
+		"elevation":  elevation.transform,
+		"camera":  camera.transform,
+	}
+
+## Данные для лоада вызывает SaveLoad Manager
+func load_global_state(data:Dictionary) -> void:
+	if data.has("transform"): 
+		global_transform = data.transform
+	if data.has("elevation"): 
+		elevation.transform = data.elevation
+	if data.has("camera"): 
+		camera.transform = data.camera

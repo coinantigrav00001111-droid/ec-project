@@ -3,15 +3,16 @@
 [ext_resource type="Material" uid="uid://dtmyvnyxkv0un" path="res://world/objects/terrain/floor_material.tres" id="1_4pdep"]
 [ext_resource type="Script" uid="uid://dbs7x4aakehwa" path="res://core/scenes/game_root.gd" id="1_6mh03"]
 [ext_resource type="PackedScene" uid="uid://jwoxul3ecvua" path="res://core/scenes/gimbal.tscn" id="2_7cj6n"]
-[ext_resource type="Script" uid="uid://bpk2bogjsoe30" path="res://controllers/tool_controller.gd" id="6_4pdep"]
-[ext_resource type="Script" uid="uid://hgj4x5huj448" path="res://controllers/drag_tool.gd" id="7_7cj6n"]
+[ext_resource type="Script" uid="uid://bpk2bogjsoe30" path="res://core/controllers/tool_controller.gd" id="6_4pdep"]
+[ext_resource type="Script" uid="uid://hgj4x5huj448" path="res://core/controllers/drag_tool.gd" id="7_7cj6n"]
 [ext_resource type="Script" uid="uid://dfop7bhf2teoc" path="res://core/entity_factory.gd" id="7_jy1t0"]
-[ext_resource type="Script" uid="uid://ba410qkqq0iok" path="res://controllers/build_tool.gd" id="8_4pdep"]
-[ext_resource type="Script" uid="uid://di5kuetyise5i" path="res://controllers/select_tool.gd" id="9_7cj6n"]
+[ext_resource type="Script" uid="uid://ba410qkqq0iok" path="res://core/controllers/build_tool.gd" id="8_4pdep"]
+[ext_resource type="Script" uid="uid://di5kuetyise5i" path="res://core/controllers/select_tool.gd" id="9_7cj6n"]
 [ext_resource type="PackedScene" uid="uid://57xnplsftgls" path="res://ui/ui.tscn" id="9_jy1t0"]
 [ext_resource type="Script" uid="uid://bnkd3ih6wvat" path="res://core/world.gd" id="9_m5pu1"]
 [ext_resource type="PackedScene" uid="uid://b6bt6i4wh1nk2" path="res://ui/debug/entity_debugger.tscn" id="10_4pdep"]
-[ext_resource type="Script" uid="uid://bsa8y6evha5ud" path="res://controllers/snap_service.gd" id="10_7cj6n"]
+[ext_resource type="Script" uid="uid://bsa8y6evha5ud" path="res://core/controllers/snap_service.gd" id="10_7cj6n"]
+[ext_resource type="Script" uid="uid://dninmf7u7bdkm" path="res://core/controllers/save_controller.gd" id="10_hf67p"]
 [ext_resource type="PackedScene" uid="uid://b5a0jw0b12rtr" path="res://world/objects/tools/rulette.tscn" id="13_bc160"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_igrpr"]
@@ -87,9 +88,14 @@ unique_name_in_owner = true
 script = ExtResource("10_7cj6n")
 entities_root = NodePath("../World/EntitiesRoot")
 
+[node name="SaveController" type="Node" parent="." unique_id=2126699721]
+unique_name_in_owner = true
+script = ExtResource("10_hf67p")
+
 [node name="Debug" type="CanvasLayer" parent="." unique_id=1812429807]
 
 [node name="EntityDebugger" parent="Debug" unique_id=2068043770 instance=ExtResource("10_4pdep")]
+visible = false
 offset_left = 14.0
 offset_top = 277.0
 offset_right = 135.0
@@ -117,7 +123,6 @@ transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 2
 
 [node name="WoodFloor" type="MeshInstance3D" parent="World/WorldEnvironment" unique_id=863018642]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
-visible = false
 mesh = SubResource("BoxMesh_igrpr")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="World/WorldEnvironment/WoodFloor" unique_id=1859659393]

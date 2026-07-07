@@ -3,6 +3,9 @@ class_name Entity extends Node3D
 ######################
 ## (Ядро системы)
 ######################
+## Собирает на себе все компоненты. 
+## Принимает сигналы(не в буквальном смысле, а через функцию) от компонентов и тулзов через send_event и транслирует в другие компоненты
+
 
 ## Сигналы передают Script (тип компонента) для точной идентификации
 signal component_added(type: Script)
@@ -20,6 +23,8 @@ func _ready():
 
 ## ------ BUS --------
 
+## Ключевой способ передачи событий между компонентами. 
+## Вызывается из тулзов или других компонентов
 func send_event(event_name: String, data: Dictionary = {}) -> void:
 	for child in get_children():
 		# Если это компонент и у него есть нужная функция — вызываем её
@@ -35,7 +40,6 @@ func add_component(comp: Component):
 	# Если компонент такого типа уже есть — заменяем
 	if has_comp(type):
 		remove_component(type)
-
 
 	add_child(comp)
 	comp.entity = self

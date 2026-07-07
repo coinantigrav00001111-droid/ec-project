@@ -3,6 +3,7 @@ class_name EntityFactory extends Node
 ##############################
 ## 📦 EntityFactory Factory (создание сущностей)
 ##############################
+## Вызывается в build_tool при создании госта(нажали на кнопку) и реал объекта(клон госта по лкм)
 
 func create_from_setting(_setting: EntitySetting) -> Entity:
 	var entity = Entity.new()

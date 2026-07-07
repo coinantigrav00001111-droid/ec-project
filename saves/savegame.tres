@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="SavedGame" format=3]
+
+[ext_resource type="Script" path="res://saves/saved_game.gd" id="1_5myu3"]
+
+[resource]
+script = ExtResource("1_5myu3")
+gimbal = {
+"camera": Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 7.280242),
+"elevation": Transform3D(1, 0, 0, 0, 0.6340629, 0.7732798, 0, -0.7732798, 0.6340629, 0, 0, 0),
+"transform": Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+}

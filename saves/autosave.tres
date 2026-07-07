@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="SavedGame" format=3]
+
+[ext_resource type="Script" path="res://saves/saved_game.gd" id="1_lmart"]
+
+[resource]
+script = ExtResource("1_lmart")
+gimbal = {
+"camera": Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 7.280242),
+"elevation": Transform3D(1, 0, 0, 0, 0.6340629, 0.7732798, 0, -0.7732798, 0.6340629, 0, 0, 0),
+"transform": Transform3D(0.13884482, 0, -0.9903144, 0, 1, 0, 0.9903144, 0, 0.13884482, -5.4411645, 7.6293945e-06, 1.829542)
+}

@@ -1,0 +1,37 @@
+[gd_scene format=3 uid="uid://d8t1asbj2c3s"]
+
+[ext_resource type="Script" uid="uid://d1mjwntgh1dmy" path="res://ui/panels/top_panel.gd" id="1_cqpwk"]
+[ext_resource type="Texture2D" uid="uid://dq3ymk2gtv8pb" path="res://ui/icons/hamburger-menu.svg" id="2_q3di5"]
+
+[node name="TopPanel" type="PanelContainer" unique_id=640310913]
+offset_left = 6.0
+offset_top = 40.0
+offset_right = 72.0
+offset_bottom = 75.0
+size_flags_vertical = 0
+script = ExtResource("1_cqpwk")
+
+[node name="MenuButton" type="MenuButton" parent="." unique_id=129754976]
+layout_mode = 2
+theme_override_constants/icon_max_width = 23
+action_mode = 1
+icon = ExtResource("2_q3di5")
+item_count = 8
+popup/item_0/text = "save"
+popup/item_0/id = 0
+popup/item_1/text = "load"
+popup/item_1/id = 1
+popup/item_2/text = "++"
+popup/item_2/id = 2
+popup/item_2/separator = true
+popup/item_3/text = "ничего"
+popup/item_3/id = 3
+popup/item_4/text = "jolt profile"
+popup/item_4/id = 4
+popup/item_4/separator = true
+popup/item_5/text = "default"
+popup/item_5/id = 5
+popup/item_6/text = "stable"
+popup/item_6/id = 6
+popup/item_7/text = "extreme"
+popup/item_7/id = 7
