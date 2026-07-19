@@ -6,13 +6,18 @@
 [node name="TopPanel" type="PanelContainer" unique_id=640310913]
 offset_left = 6.0
 offset_top = 40.0
-offset_right = 72.0
+offset_right = 214.0
 offset_bottom = 75.0
 size_flags_vertical = 0
 script = ExtResource("1_cqpwk")
 
-[node name="MenuButton" type="MenuButton" parent="." unique_id=129754976]
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1615043026]
 layout_mode = 2
+
+[node name="MenuButton" type="MenuButton" parent="HBoxContainer" unique_id=129754976]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
 theme_override_constants/icon_max_width = 23
 action_mode = 1
 icon = ExtResource("2_q3di5")
@@ -35,3 +40,14 @@ popup/item_6/text = "stable"
 popup/item_6/id = 6
 popup/item_7/text = "extreme"
 popup/item_7/id = 7
+
+[node name="Control" type="Control" parent="HBoxContainer" unique_id=413883052]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PowerSchemaCheck" type="CheckBox" parent="HBoxContainer" unique_id=881057486]
+layout_mode = 2
+size_flags_horizontal = 0
+text = "Power schema"
+
+[connection signal="toggled" from="HBoxContainer/PowerSchemaCheck" to="." method="_on_power_schema_check_toggled"]

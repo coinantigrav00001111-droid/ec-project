@@ -16,7 +16,7 @@ func create_component(_entity: Entity) -> Component:
 	
 	#TODO реализация теперь в EC?? Материалы. 
 	comp.settings = settings 
-	
+	comp.name = 'C_Visual'
 	_entity.add_component(comp) # Добавили комп к объекту
 	
 	return comp

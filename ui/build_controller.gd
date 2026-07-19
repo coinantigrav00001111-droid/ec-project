@@ -1,7 +1,7 @@
 class_name BuildController extends Node 
 
 ########################
-##    BuildController 
+##    BuildController -  UI
 ## 💡 Занимается обработкой нажатий в режиме игры BUILD 💡
 ########################
 ## Ловит Сигнал из панелей build 

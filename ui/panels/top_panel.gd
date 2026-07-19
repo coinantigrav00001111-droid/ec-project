@@ -6,7 +6,7 @@ class_name TopPanel extends PanelContainer
 ## Сигналы меню принимает ToolController
 
 ## Кнопка меню сейв\лоад
-@onready var menu_button: MenuButton = $MenuButton
+@onready var menu_button: MenuButton = %MenuButton
 # UI не должен знать про тулзы
 #@onready var tool_controller: ToolController = $"../../ToolController"
 
@@ -40,3 +40,23 @@ func _on_menu_button_pressed(_index : int) -> void:
 			#pass
 		#2: # ++
 			#pass
+
+
+## Включение Cлоя power (11) на камере. Режим повер 2лвл
+func _on_power_schema_check_toggled(toggled_on: bool) -> void:
+	$/root/GameRoot/Gimbal/Elevation/Camera.set_cull_mask_value(3, toggled_on)	
+	# Дергаем менеджер питания
+	PowerGridManager.toggle_power_layer(toggled_on)
+	
+	#is_power_layer_active = toggled_on
+	#power_layer_toggled.emit(toggled_on)
+	
+## ⚡Сигнал о включении визуального повер-слоя
+#signal power_layer_toggled(is_active: bool)
+#
+## Флаг  включения визуального повер-слоя
+#var is_power_layer_active: bool = false
+
+#func toggle_power_layer(state: bool):
+	#is_power_layer_active = state
+	#power_layer_toggled.emit(state)

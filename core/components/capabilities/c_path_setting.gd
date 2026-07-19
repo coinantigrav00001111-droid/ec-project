@@ -10,7 +10,7 @@ func create_component(entity) -> Component:
 	
 	comp.radius = radius	
 	comp.deg = deg
-	
+	comp.name = 'C_Path'
 	entity.add_component(comp) # Добавили комп к объекту
 	
 	return comp

@@ -6,7 +6,7 @@ class_name C_Draggable extends IDraggable
 ## способность двигать ентити, когда включено C_Drag 
 ## компонент двигает сущность по евенту из ентити
 
-@export var snap_break_distance := 6.6 # Дистанция срыва снапа (в метрах)
+@export var snap_break_distance := 9.6 # Дистанция срыва снапа (в метрах)
 
 var drag_offset := Vector3.ZERO # смещение мыши
 var rotation_euler := Vector3.ZERO # Храним тут, чтобы не терять при смене тулзов
@@ -22,7 +22,7 @@ var snapped_entity_transform := Transform3D()
 ## Считает свой оффсет и запоминает стартовую позицию
 func on_drag_started(_data: Dictionary) -> void:
 	initial_transform = entity.global_transform
-
+	rotation_euler = entity.global_transform.basis.get_euler() # угол для снапа
 	# Берем смещение, но обнуляем Y, чтобы не тащить за собой перепады высот
 	var raw_offset = entity.global_position - _data.pos
 	drag_offset = Vector3(raw_offset.x, 0.0, raw_offset.z)
@@ -69,7 +69,7 @@ func on_drag_moved(_data: Dictionary) -> void:
 	else:
 		# Снапа нет — обычное движение по поверхности
 		_apply_regular_movement(target_pos, normal)
-
+		pass
 	
 ## Обычное движение по поверхности
 func _apply_regular_movement(target_pos: Vector3, normal: Vector3) -> void:
@@ -78,8 +78,8 @@ func _apply_regular_movement(target_pos: Vector3, normal: Vector3) -> void:
 	
 	# 2. Выравниваем по нормали ландшафта
 	var up = normal.normalized()
-	var right = up.cross(base_forward).normalized()
-	
+	var right = -up.cross(base_forward).normalized()
+
 	# Защита от коллинеарности
 	if abs(up.dot(base_forward)) > 0.99 or right.is_zero_approx():
 		right = up.cross(Vector3.RIGHT).normalized()
@@ -98,9 +98,11 @@ func _apply_regular_movement(target_pos: Vector3, normal: Vector3) -> void:
 
 ## 💡Вызывается из C_Socket при успешной коллизии сокетов
 func start_snap(target_global_transform: Transform3D) -> void:
-	#print('снап старт')
+	print('снап старт')
 	snapped_entity_transform = target_global_transform
 	is_snapped_locked = true # Блокируем обычное влияние мыши
+	# Актуализируем углы сразу при снапе. Тогда после в драге снапа угол не возвращается
+	#rotation_euler = target_global_transform.basis.get_euler()
 
 
 	

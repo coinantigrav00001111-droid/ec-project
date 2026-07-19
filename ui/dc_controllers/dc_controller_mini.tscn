@@ -71,7 +71,7 @@ offset_bottom = -48.0
 grow_vertical = 0
 size_flags_horizontal = 4
 size_flags_vertical = 8
-text = "c:0"
+text = "all"
 
 [node name="ContourSlider" type="VSlider" parent="." unique_id=606675769]
 unique_name_in_owner = true
@@ -84,7 +84,9 @@ offset_top = -285.0
 offset_right = 30.0
 offset_bottom = -77.0
 grow_vertical = 0
+min_value = -1.0
 max_value = 10.0
+value = -1.0
 tick_count = 11
 ticks_on_borders = true
 ticks_position = 3
@@ -107,11 +109,28 @@ ticks_on_borders = true
 [node name="PowerLabel" type="Label" parent="." unique_id=896331292]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 66.0
+offset_left = 63.0
 offset_top = 161.0
 offset_right = 114.0
 offset_bottom = 180.0
 text = "0%"
+horizontal_alignment = 1
+
+[node name="PwrLabel" type="Label" parent="." unique_id=652210268]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 64.0
+offset_top = -174.68298
+offset_right = 113.0
+offset_bottom = -160.68298
+grow_vertical = 0
+size_flags_horizontal = 4
+size_flags_vertical = 8
+theme_override_font_sizes/font_size = 11
+text = "PWR"
+horizontal_alignment = 1
 
 [node name="PowerButton" type="Button" parent="." unique_id=1196352872]
 unique_name_in_owner = true

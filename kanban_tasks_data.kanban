@@ -63,10 +63,13 @@
 			"tasks": [
 				"51331081-7353-4afa-a247-5a2271c893a4",
 				"1bdea74b-2ef0-48de-94c3-43f45b91a67d",
-				"837df9b2-6877-4bcc-8612-e9d9d1180ec2",
+				"046ad09f-d7d4-442b-8112-44c12d37b39c",
 				"0c7c66a3-ed32-4045-b2e6-322e4c722831",
 				"696f3605-24ee-4aae-80fc-4fab7f26e758",
-				"63d7ef6f-2e59-4bb2-8ad9-152fb2aaf0e4"
+				"54cd8419-ce4b-44ce-93c9-e408e1cb7131",
+				"68f213c1-57f9-4966-bc40-ab8392085640",
+				"63d7ef6f-2e59-4bb2-8ad9-152fb2aaf0e4",
+				"0a2f0007-721d-4983-a08a-c0096866cb32"
 			]
 		},
 		{
@@ -74,13 +77,11 @@
 			"title": "Doing",
 			"tasks": [
 				"c9518725-a1fc-4454-884a-26f5c9febb9b",
-				"bed57fd3-488d-462a-be85-ea35c5696d8b",
-				"1b5e50e7-4f65-4821-ac3f-4e6cd59a3422",
-				"68f213c1-57f9-4966-bc40-ab8392085640",
 				"4d6a3165-e4df-46a0-8036-0c6c96e2bb09",
 				"38dc854d-a8dd-4a1c-88d3-c1206f4023be",
-				"35620d47-046b-4b70-9262-2c0ad3d9fb96",
-				"194bc5d6-e644-48f2-9a6f-9a3fdb223af5"
+				"bed7a3ee-9e8e-4e8f-9e60-b5103e9f7e8b",
+				"620f4006-a6b4-4a97-9c42-a5eae75fdb18",
+				"0d997f89-e4f9-4032-b298-317c912c6552"
 			]
 		},
 		{
@@ -96,7 +97,7 @@
 				"a5000c49-b31e-41d6-ab52-4d2660910631",
 				"9f90edf4-d314-48c4-bf48-e5cac23ba348",
 				"3c3e46f9-8063-4296-bc7f-ba1964604faf",
-				"046ad09f-d7d4-442b-8112-44c12d37b39c"
+				"4a76b5e3-8552-4d95-a4b9-541685eff7a9"
 			]
 		}
 	],
@@ -213,6 +214,10 @@
 					"done": false
 				},
 				{
+					"details": "функция длявидимости строк в майн таб  для разных объектов",
+					"done": true
+				},
+				{
 					"details": "transform",
 					"done": true
 				},
@@ -231,14 +236,12 @@
 			"title": "!!!подготовить к четвергу запрос для диздока!!",
 			"description": "",
 			"category": "bfe07748-730a-4469-a662-08c8f873a722",
-			"steps": []
-		},
-		{
-			"uuid": "837df9b2-6877-4bcc-8612-e9d9d1180ec2",
-			"title": "Power реализация",
-			"description": "",
-			"category": "c60a33ef-b953-40cd-951b-a080048b0093",
-			"steps": []
+			"steps": [
+				{
+					"details": "Надо сделать описание игрового процесса и режимов заново",
+					"done": false
+				}
+			]
 		},
 		{
 			"uuid": "0c7c66a3-ed32-4045-b2e6-322e4c722831",
@@ -297,29 +300,8 @@
 			"steps": []
 		},
 		{
-			"uuid": "bed57fd3-488d-462a-be85-ea35c5696d8b",
-			"title": "сейв лоад ентити",
-			"description": "",
-			"category": "af31571d-f162-41be-9c9c-7b15a2004d2c",
-			"steps": []
-		},
-		{
 			"uuid": "38dc854d-a8dd-4a1c-88d3-c1206f4023be",
 			"title": "контроллеры",
-			"description": "",
-			"category": "c60a33ef-b953-40cd-951b-a080048b0093",
-			"steps": []
-		},
-		{
-			"uuid": "35620d47-046b-4b70-9262-2c0ad3d9fb96",
-			"title": "нода поверклип",
-			"description": "",
-			"category": "c60a33ef-b953-40cd-951b-a080048b0093",
-			"steps": []
-		},
-		{
-			"uuid": "194bc5d6-e644-48f2-9a6f-9a3fdb223af5",
-			"title": "ноды напряжения",
 			"description": "",
 			"category": "c60a33ef-b953-40cd-951b-a080048b0093",
 			"steps": []
@@ -353,10 +335,79 @@
 			"steps": []
 		},
 		{
-			"uuid": "1b5e50e7-4f65-4821-ac3f-4e6cd59a3422",
-			"title": "Убрать предметы из папки ентити",
+			"uuid": "54cd8419-ce4b-44ce-93c9-e408e1cb7131",
+			"title": "Инфопанель - довести динамическое создание вкладок",
+			"description": "",
+			"category": "4e1e522f-ed31-43ef-82dc-7958b5551b97",
+			"steps": []
+		},
+		{
+			"uuid": "1958531d-d2ef-445a-abce-35681667776d",
+			"title": "initial_transform - Трак запоминает угол до снапа. При сдергивании снапа восстанавливает этот угол. Надо, чтобы сохранял снап, если он там был зафикировна(отпущена мышь)",
+			"description": "",
+			"category": "50f9c949-da71-4afd-beb9-f08415f2f066",
+			"steps": []
+		},
+		{
+			"uuid": "4a76b5e3-8552-4d95-a4b9-541685eff7a9",
+			"title": "239 трак текстура отличается",
+			"description": "",
+			"category": "31a5ac59-e2b4-4e46-a327-067210b7ca4b",
+			"steps": []
+		},
+		{
+			"uuid": "0a2f0007-721d-4983-a08a-c0096866cb32",
+			"title": "настройки разных переменных в одно место?",
 			"description": "",
 			"category": "af31571d-f162-41be-9c9c-7b15a2004d2c",
+			"steps": [
+				{
+					"details": "расстояние срыва снапа",
+					"done": false
+				},
+				{
+					"details": "размер сокета",
+					"done": false
+				},
+				{
+					"details": "кол- и размер балласта",
+					"done": false
+				}
+			]
+		},
+		{
+			"uuid": "bed7a3ee-9e8e-4e8f-9e60-b5103e9f7e8b",
+			"title": "Удаление ентити",
+			"description": "",
+			"category": "91f41b95-cfcd-4026-a09a-48fb304f9a00",
+			"steps": []
+		},
+		{
+			"uuid": "620f4006-a6b4-4a97-9c42-a5eae75fdb18",
+			"title": "Вынести системные сервисы в синглтон. Power, Save",
+			"description": "",
+			"category": "af31571d-f162-41be-9c9c-7b15a2004d2c",
+			"steps": []
+		},
+		{
+			"uuid": "d7055139-4c22-4474-ba21-5445c552a32f",
+			"title": "смена контура клипа меняет контур трака без клипа",
+			"description": "",
+			"category": "31a5ac59-e2b4-4e46-a327-067210b7ca4b",
+			"steps": []
+		},
+		{
+			"uuid": "2dd230de-b0da-403e-9f78-51d2761b0ecf",
+			"title": "Имена нод ентити записывать правильно",
+			"description": "",
+			"category": "91f41b95-cfcd-4026-a09a-48fb304f9a00",
+			"steps": []
+		},
+		{
+			"uuid": "0d997f89-e4f9-4032-b298-317c912c6552",
+			"title": "Выносим код схемы куда надо. ",
+			"description": "",
+			"category": "c60a33ef-b953-40cd-951b-a080048b0093",
 			"steps": []
 		}
 	],

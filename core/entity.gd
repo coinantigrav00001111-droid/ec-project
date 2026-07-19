@@ -6,8 +6,15 @@ class_name Entity extends Node3D
 ## Собирает на себе все компоненты. 
 ## Принимает сигналы(не в буквальном смысле, а через функцию) от компонентов и тулзов через send_event и транслирует в другие компоненты
 
+## on_added()
+## Когда вызывается?:	Сразу при добавлении компонента (поштучно).
+## Состояние соседей : Неизвестно (могут быть еще не добавлены).
 
-## Сигналы передают Script (тип компонента) для точной идентификации
+## on_entity_ready()
+## Один раз, когда Entity полностью загрузилась.  
+## Полностью загружены и готовы к работе.
+
+## ⚡Сигналы передают Script (тип компонента) для точной идентификации
 signal component_added(type: Script)
 signal component_removed(type: Script)
 
@@ -18,12 +25,15 @@ func _ready():
 	for child in get_children():
 		if child is Component:
 			child.on_entity_ready()
+	
+	var _identity = get_comp(C_Identity)
+	name = _identity.get_name_e() + '_01'
 
-
+	
 
 ## ------ BUS --------
 
-## Ключевой способ передачи событий между компонентами. 
+## 💡 Ключевой способ передачи событий между компонентами. 
 ## Вызывается из тулзов или других компонентов
 func send_event(event_name: String, data: Dictionary = {}) -> void:
 	for child in get_children():
@@ -34,7 +44,7 @@ func send_event(event_name: String, data: Dictionary = {}) -> void:
 
 ## ------ КОМПОНЕНТЫ ---------
 
-## Добавление компонента
+## Добавление компонента в ентити выполняется при его создании, например в PathSetting
 func add_component(comp: Component):
 	var type = comp.get_script()
 	# Если компонент такого типа уже есть — заменяем
@@ -43,11 +53,11 @@ func add_component(comp: Component):
 
 	add_child(comp)
 	comp.entity = self
-	# Вызываем функцию компонента 
-	comp.on_added()
-	# ⚡ Внутреннее общение: кричим всем компонентам через шину
-	send_event("_on_component_added", {"type": type})
-	# ⚡Сигнал всем компонентам что создан
+	
+	comp.on_added() # Отрабатывает свою функцию компонента при создании
+	# ⚡ Сообщение всем компонентам через шину, которое запустит on_component_added(type) в каждом компоненте
+	send_event("_on_component_added", {"type": type}) 
+	# ⚡Сигнал извещает, что этот компонент создан
 	component_added.emit(type)
 
 
@@ -68,6 +78,44 @@ func remove_component(type: Script):
 		component_removed.emit(type) 
 		# ⚡ Внутреннее общение: кричим всем компонентам через шину
 		send_event("_on_component_removed", {"type": type})
+
+
+
+## 💡 Сейв 
+func save_entity() -> Dictionary:
+	# Предохранитель: не сохраняем призраков или удаляемые объекты
+	if has_comp(C_Ghost) or is_queued_for_deletion():
+		return {}
+
+	var identity = get_comp(C_Identity)
+	if not identity or not identity.setting:
+		push_error("Entity без C_Identity или настроек не может быть сохранен: ", name)
+		return {}
+
+	# Список компонентов
+	var components_dict = {}
+	
+	# Опрашиваем все дочерние компоненты
+	for child in get_children():
+		if child is Component and child.has_method("save_data"):
+			
+			var comp_data = child.save_data() # Получили из компонента
+			if not comp_data.is_empty():
+				# Ключ - это тип компонента
+				var comp_type = child.get_script()
+				components_dict[comp_type] = comp_data # добавили в список
+				
+	var save_data = {
+		# Данные от ентити
+		"setting_path": identity.setting.resource_path,
+		"transform": global_transform, 
+		
+		# Список данных от компонентов
+		"components": components_dict 
+	}
+	
+	return save_data
+
 
 
 ## ----- Helpers--------------

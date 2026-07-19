@@ -24,14 +24,16 @@ class_name DCController extends Panel
 var object_setting :DCControllerSetting
 
 ## Подача мощности в 0 - 100% с учетом направления +-. 
+# текущий повер внутри контроллера
 var power_local : int = 0 
-var power_memory : Dictionary[int, int] = {}
+#var power_memory : Dictionary[int, int] = {}
+
 ## Множитель мощности для умножения мощности. Не реализовано. Учитывать float!
 ## В текущем состоянии этот множитель используется в кнопке выключения питания всего
 var power_mult : float = 1.0
 
 ## Активный контур, в который передается питание. 0 - во все
-var active_contour : int = 0
+var active_contour : int = -1
 
 ## Mаксимальный угол поворота ручки, чем меньше, тем надежней блокровка на крайних значениях
 @export var handle_max_angle : int = 330
@@ -54,11 +56,8 @@ var power_max = false #ручка в макс позиции
 var pre_a = 0 #предыдущее значение угла для расчетов
 
 
-########################
-## Сигналы 
-########################
 
-## Сигнал текущей power в обработчик powercontroller
+# ⚡Сигнал текущей power в обработчик powermanager
 signal change_power_pwm(power, contour)
 signal onoff_power_pwm(onoff)
 
@@ -250,8 +249,9 @@ func _on_direction_slider_value_changed(value: float) -> void:
 ##Кнопка вкл\выкл видимости контроллера
 func _on_show_controller_button_pressed() -> void:
 	var contr_size = $".".size
-	var y_offset =$"../Lvl1Panel".size.y + 5 # смещение по вертикали на высоту панели лвл1
-	
+	var y_offset =%CatContainer.size.y + 5 # смещение по вертикали на высоту CatContainer
+
+
 	if %ShowControllerButton.button_pressed:
 		$".".position = Vector2(5, get_viewport().size.y - contr_size.y - y_offset)
 		%ShowControllerButton.text = '<'
@@ -299,13 +299,16 @@ func _on_contour_slider_value_changed(value: float) -> void:
 
 ## Кнопка выключени питания. Импользует множитель power_mult = 0
 func _on_power_button_pressed() -> void:
-	if !%PowerButton.button_pressed:
+	var pwr_on = %PowerButton.button_pressed
+	if !pwr_on: #Выкл
 		power_mult = 0
 		active_contour = 0
-		onoff_power_pwm.emit(false) # Подача сигнала питание выкл в powercontroller
-	else:
+		%PowerSlider.value =0
+		onoff_power_pwm.emit(pwr_on) # Подача сигнала питание выкл в powermanager 
+	else: # Вкл
 		power_mult = 1
 		active_contour = %ContourSlider.value
-		onoff_power_pwm.emit(true) # Подача сигнала питание вкл в powercontroller
-
-	current_power_local() # обновляем состояние контроллера и питания по ручке
+		onoff_power_pwm.emit(pwr_on) # восстановит все из мемори
+		current_power_local() # обновляем питание по ручке
+	
+	

@@ -42,4 +42,27 @@ func _process(_delta: float) -> void:
 	var window_title = get_window().title
 	DisplayServer.window_set_title(window_title + " | fps: " +				str(Engine.get_frames_per_second()))
 
-	pass
+
+#
+#func _exit_tree() -> void:
+	##print('0')
+	##await  get_tree().process_frame
+	###save_game('autosave')
+	##%SaveManager.save_game('autosave')
+	#pass	
+	
+### Завершение работы
+#func _notification(what):
+	### Срабатывает при закрытии окна (крестик, Alt+F4)
+	##if what == NOTIFICATION_WM_CLOSE_REQUEST: 
+		##%SaveManager.save_game('autosave')
+		##await  get_tree().process_frame
+		##print('1')
+		##get_tree().quit() # Разрешаем выход после сохранения
+		### Непонятно зачем, но Срабатывает при штатном выходе через get_tree().quit()
+	##elif what == NOTIFICATION_PREDELETE:
+##
+		###save_game()
+		##print('2')
+		###pass
+	#pass

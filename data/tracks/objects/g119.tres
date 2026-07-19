@@ -42,6 +42,7 @@ metadata/_custom_type_script = "uid://chprgtlxn3aub"
 
 [sub_resource type="Resource" id="Resource_5an37"]
 script = ExtResource("10_m3nyl")
+radius = 11.9
 metadata/_custom_type_script = "uid://b7f7dka1i3slu"
 
 [sub_resource type="Resource" id="Resource_lnr61"]
@@ -53,8 +54,6 @@ script = ExtResource("13_m6m5w")
 id = 12
 name = "G119"
 description = "Прямой трак 11.9см"
-radius = 11.9
-deg = 0.0
 icon = ExtResource("12_ixre1")
 components = Array[ExtResource("1_fwhcn")]([SubResource("Resource_yfcut"), SubResource("Resource_iqocg"), SubResource("Resource_0xkto"), SubResource("Resource_qqtt6"), SubResource("Resource_o7fpk"), SubResource("Resource_t8too"), SubResource("Resource_5an37"), SubResource("Resource_lnr61")])
 metadata/_custom_type_script = "uid://do5hjkm3r2pdg"

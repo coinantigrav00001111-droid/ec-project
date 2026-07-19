@@ -243,6 +243,7 @@ offset_left = 324.0
 offset_top = 2.0
 offset_right = 364.0
 offset_bottom = 21.0
+text = "mode"
 
 [node name="InfoPanel" parent="." unique_id=1788166654 instance=ExtResource("10_ay4pc")]
 
@@ -255,6 +256,14 @@ offset_left = 7.0
 offset_top = 41.0
 offset_right = 71.0
 offset_bottom = 74.0
+
+[node name="Labeltest" type="Label" parent="." unique_id=679488139]
+unique_name_in_owner = true
+offset_left = 17.0
+offset_top = 249.0
+offset_right = 105.0
+offset_bottom = 268.0
+text = "0"
 
 [connection signal="pressed" from="ModePanel/VBoxContainer/LibraryButton" to="ModePanel" method="_on_library_button_pressed"]
 [connection signal="pressed" from="ModePanel/VBoxContainer/ObserveButton" to="ModePanel" method="_on_observe_button_pressed"]

@@ -6,15 +6,16 @@ class_name SavedGame extends Resource
 ########################
 
 ## данные камеры
-@export var gimbal_transform 	:Transform3D
-@export var gimbal_elevation 	:Transform3D 
-@export var gimbal_camera		:Transform3D 
+#@export var gimbal_transform 	:Transform3D
+#@export var gimbal_elevation 	:Transform3D 
+#@export var gimbal_camera		:Transform3D 
 
 @export var gimbal = {
 	"transform": Transform3D.IDENTITY,
 	"elevation": Transform3D.IDENTITY,
 	"camera": Transform3D.IDENTITY,
 }
+@export var entities: Array = []
 
 ### массив в GM контуры питания
 #@export var clip_numbers		:Array[int] = []

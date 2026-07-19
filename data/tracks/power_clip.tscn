@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://otdehlrsowty"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ywy3x"]
+albedo_color = Color(0.8346143, 0.8346143, 0.8346143, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_l8dgr"]
+material = SubResource("StandardMaterial3D_ywy3x")
+size = Vector3(1, 0.6, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_4uks1"]
+albedo_color = Color(0.12955841, 0.1295585, 0.12955844, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_rhuyt"]
+material = SubResource("StandardMaterial3D_4uks1")
+size = Vector3(1, 0.6, 1.9)
+
+[node name="PowerClip" type="MeshInstance3D" unique_id=1787075290]
+mesh = SubResource("BoxMesh_l8dgr")
+skeleton = NodePath("../..")
+
+[node name="ContourLabel" type="Label3D" parent="." unique_id=1955429971]
+transform = Transform3D(-4.371139e-08, -1, -4.371139e-08, 0, -4.371139e-08, 1, -1, 4.371139e-08, 1.9106855e-15, -0.11, 0.901, 0)
+pixel_size = 0.015
+text = "1"
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=2010037787]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.11, 0.6, 0)
+mesh = SubResource("BoxMesh_rhuyt")
+skeleton = NodePath("../..")

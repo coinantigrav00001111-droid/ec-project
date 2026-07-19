@@ -6,20 +6,21 @@ class_name C_Path extends ICapability
 ## Описывает физическое свойство объекта («у меня есть Path3d» «у меня есть Ballast»),
 ## содержит внутри себя логику расчета 
 ##
-## Если Path3d есть в сцене (инстанс), то он переносится в ентити и проверяется на длину. Если длина есть, то 
-## используется эта кривая. Если длина 0 - то генрится новая кривая и оффсет
+## Path3d генерится в ентити
 ## 
 ## Коллизия Балласт в слое 4 по умолчанию
 ## Коллизии Балласта генерятся, если в сцене есть нода балласт и у нее нет коллизий,
 ## иначе используется коллизия сцены или игнорируется создание балласта вовсе - нет в 
 ## сцене - нет в объекте.
+
+# Радиус и угол заполняются в редакторе в pat_setting при создании ентити 
 var radius: float 
 var deg: float 
 
-var path_n: Path3D
+var path_node: Path3D
 var curve: Curve3D
-var ballast_n: Area3D
-var pivot_offset := Vector3.ZERO
+var ballast_node: Area3D
+var pivot_offset := Vector3.ZERO 
 
 # Ballast
 # size: размеры по X (ширина) и Y (высота). Z высчитывается автоматически.
@@ -31,6 +32,9 @@ var b_gap := 0.0
 var b_start_end_padding: float = -0.1
 
 
+func on_added():
+	pass
+
 func on_entity_ready() -> void:
 	var identity = get_comp(C_Identity)
 	if not identity or not identity.setting:
@@ -39,48 +43,36 @@ func on_entity_ready() -> void:
 	var pivot = get_comp(C_Pivot)
 	if pivot: pivot_offset = pivot.offset
 	
-	radius = identity.get_radius()
-	deg = identity.get_degree()
-		
 	# Генерируем математически точную кривую
 	curve = generate_track_curve(radius, deg)
 	
 	# Синхронизируем её с визуальной нодой Path3D, если она есть в сцене
-	path_n = _sync_with_visual_path()
+	path_node = _generate_path()
 	
 	# Синхронизируем коллизии балласта с нодой Ballast, если она есть в сцене
 	_sync_with_visual_ballast()
 
 
-# Синхронизируем ноду Path3D с нодой сцены C_Visual
-func _sync_with_visual_path() -> Path3D:
-	var visual = get_comp(C_Visual)
-	if not visual or not visual.instance: return
 
-	var path_node = _find_path3d_recursive(visual.instance)
+# Генерируем ноду Path3D и новый оффсет в C_Pivot 
+func _generate_path() -> Path3D:
 
-	if not path_node: return
+	var _path_n = Path3D.new()
+	entity.add_child(_path_n)
+	_path_n.name = 'Path3d_generated'
 	
-	# Переносим path из визуал в ентити
-	path_node.get_parent().remove_child(path_node)
-	entity.add_child(path_node)
-	
-	var curve_length = path_node.curve.get_baked_length()
-	
-	# Пересчет кривой
-	if curve_length < 0.1: # Если длина нулевая, то подставляется сгенерированная
-		path_node.curve = curve
-		curve_length = path_node.curve.get_baked_length()
+	_path_n.curve = curve
+	var curve_length = _path_n.curve.get_baked_length()
 
 	# Середина кривой
-	var _new_offset = - path_node.curve.sample_baked_with_rotation(curve_length/2).origin
+	var _new_offset = - _path_n.curve.sample_baked_with_rotation(curve_length/2).origin
 	
 	# И пересчет offset по новой кривой
-	path_node.position = _new_offset
-	entity.send_event('on_offset_changed', {"new_offset": _new_offset})
+	_path_n.position = _new_offset
+	entity.send_event('on_offset_changed', {"new_offset": _new_offset}) # В C_Pivot
 	pivot_offset = _new_offset
 
-	return path_node
+	return _path_n
 
 
 
@@ -90,25 +82,20 @@ func _sync_with_visual_ballast():
 	if not visual or not visual.instance: return
 
 	# Находим ноду балласта 
-	ballast_n = _find_ballast_recursive(visual.instance)
+	ballast_node = _find_ballast_recursive(visual.instance)
 	
 	# Проверка сцены. Eсли в ней балласта нет, то значит он не нужен, выходим
-	if not ballast_n: return 
+	if not ballast_node: return 
 
-	# Переносим балласт из визуал в ентити
-	ballast_n.get_parent().remove_child(ballast_n)
-	entity.add_child(ballast_n)
-	
 	#Если коллизия есть, то она сделана в сцене специально для оптимизации (прямая состоит из одного сегмента например) или намеренно - оставляем.
 	# Расчет балласта. Если у балласта нет коллизий, то будем генерить.
-	if ballast_n.get_child_count() == 0: 
+	if ballast_node.get_child_count() == 0: 
 		generate_ballast_collisions(b_count, b_size, b_start_end_padding, b_gap)
 	
-	ballast_n.position = path_n.position
 	
 	#INFO цвет коллизий для дебага
 	var _debug_color=Color("00b929ff")
-	var collision_shapes =  ballast_n.get_children()
+	var collision_shapes =  ballast_node.get_children()
 	for seg in collision_shapes:
 		seg.set_debug_color(_debug_color)
 
@@ -155,7 +142,7 @@ func generate_track_curve(_radius: float, _deg: float) -> Curve3D:
 		
 	return new_curve
 
-""" баг с коллизией снапа"""
+
 
 # Генерация сегментов коллизии балласта
 func generate_ballast_collisions(count: int, cross_size: Vector2, start_end_padding: float = 0.0, gap: float = 0.0) -> void:
@@ -199,26 +186,34 @@ func generate_ballast_collisions(count: int, cross_size: Vector2, start_end_padd
 		var box_shape = BoxShape3D.new()
 		box_shape.size = box_size
 	
-		# Делается цвет в синке выше
-		#var _debug_color=Color("00b929ff")	
-		#collision_shape.set_debug_color(_debug_color)
-		
 		collision_shape.shape = box_shape
 		collision_shape.transform = segment_transform
 		
-		ballast_n.add_child(collision_shape)
+		ballast_node.add_child(collision_shape)
 
 
 
-func _find_path3d_recursive(node: Node) -> Path3D:
-	if node is Path3D:
-		return node
-	for child in node.get_children():
-		var found = _find_path3d_recursive(child)
-		if found:
-			return found
-	return null
-	
+#------SAVE\LOAD----
+
+## Данные для сохранения.
+## Этот компонент отвечает за path и ballast. На данном этапе из этих значений можно получить копию трака
+func save_data() -> Dictionary:
+	return {
+		'comp_path':get_script().resource_path,		# "res://core/components/c_power_clip.gd"
+		'comp_name':get_script().resource_path.get_file().get_basename(),
+		"radius": radius,
+		"deg": deg
+	}
+
+
+func load_data(data: Dictionary) -> void:
+	if data.has("radius"):
+		radius = data.radius
+	if data.has("deg"):
+		deg = data.deg
+
+
+# -----HELPERS------
 
 func _find_ballast_recursive(node: Node) -> Area3D:
 	if node.name == 'Ballast' :	return node
@@ -228,3 +223,19 @@ func _find_ballast_recursive(node: Node) -> Area3D:
 		if found:
 			return found
 	return null
+
+
+
+func get_length() -> float:
+	return snapped(radius * deg_to_rad(deg), 0.1) if deg !=0.0 else snapped(radius,0.1)
+
+
+# Больше не ищем, только генерация
+#func _find_path3d_recursive(node: Node) -> Path3D:
+	#if node is Path3D:
+		#return node
+	#for child in node.get_children():
+		#var found = _find_path3d_recursive(child)
+		#if found:
+			#return found
+	#return null

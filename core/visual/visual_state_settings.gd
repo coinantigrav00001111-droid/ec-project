@@ -5,6 +5,7 @@ class_name VisualStateSettings extends Resource
 @export var selected_material: Material
 @export var blocked_material: Material
 @export var hover_material: Material
+@export var power_material: Material
 
 @export_category('Shader Materials')
 @export var ghost_shader_material: Material

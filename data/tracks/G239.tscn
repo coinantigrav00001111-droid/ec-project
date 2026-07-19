@@ -48,6 +48,9 @@ _data = {
 }
 point_count = 2
 
+[sub_resource type="PlaneMesh" id="PlaneMesh_3owqy"]
+size = Vector2(2, 23.9)
+
 [sub_resource type="BoxShape3D" id="BoxShape3D_vung0"]
 size = Vector3(3.2, 0.6, 23.3)
 
@@ -69,6 +72,12 @@ mesh = SubResource("SphereMesh_5an37")
 
 [node name="Path3D" type="Path3D" parent="." unique_id=1859957119]
 curve = SubResource("Curve3D_5an37")
+
+[node name="PowerSchemaMesh" type="MeshInstance3D" parent="." unique_id=1794510574]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.61, -11.95)
+visible = false
+layers = 4
+mesh = SubResource("PlaneMesh_3owqy")
 
 [node name="Ballast" type="Area3D" parent="." unique_id=837544535]
 collision_layer = 4

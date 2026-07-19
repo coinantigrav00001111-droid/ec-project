@@ -17,6 +17,10 @@ run/main_scene="uid://csy3eqxdwo2lo"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
 
+[autoload]
+
+PowerGridManager="*uid://cs6t1pamqjrbq"
+
 [display]
 
 window/size/viewport_width=1600
@@ -24,7 +28,7 @@ window/size/viewport_height=900
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/Todo_Manager/plugin.cfg", "res://addons/fancy_folder_colors/plugin.cfg", "res://addons/kanban_tasks/plugin.cfg", "res://addons/version_bumper/plugin.cfg")
+enabled=PackedStringArray("res://addons/Todo_Manager/plugin.cfg", "res://addons/fancy_folder_colors/plugin.cfg", "res://addons/kanban_tasks/plugin.cfg")
 
 [file_customization]
 

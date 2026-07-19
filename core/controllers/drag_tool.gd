@@ -69,7 +69,7 @@ func _drop_object():
 
 
 ## Драг окончен
-func exit():
+func exit(_to_drag : bool = false):
 	if target_entity:
 		target_entity.remove_component(C_Drag)
 		target_entity.send_event("on_drag_ended", {})

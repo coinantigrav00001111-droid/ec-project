@@ -10,6 +10,10 @@ class_name C_Socket extends ISnappable
 
 var sockets: Array[Dictionary] = []
 
+# Настройки формы сокета
+var  capsule_radius := 0.6
+var capsule_height := 1.49
+
 # Используем on_entity_ready, чтобы гарантировать, что C_Visual 
 # уже добавил свои инстансы (Path3D) в дерево.
 # Вызывается ядром Entity после того, как все компоненты добавлены
@@ -23,8 +27,8 @@ func on_entity_ready():
 func _parse_paths():
 	# Стучимся в логический компонент пути
 	var path_comp = get_comp(C_Path)
-	if path_comp and path_comp.path_n:
-		_parse_curve(path_comp.curve, path_comp.path_n)
+	if path_comp and path_comp.path_node:
+		_parse_curve(path_comp.curve, path_comp.path_node)
 
 
 
@@ -36,7 +40,7 @@ func _parse_curve(c: Curve3D, p: Path3D):
 	var p_first = c.get_point_position(0)
 	var p_last = c.get_point_position(c.get_point_count() - 1)
 
-	printt('====SOCKED======') 
+	#printt('====SOCKED======') 
 	#printt('====entity        : ',entity.transform.origin, entity.global_position) 
 	#printt('====path        : ',p.position) 
 
@@ -54,13 +58,12 @@ func _parse_curve(c: Curve3D, p: Path3D):
 	if d_last.is_zero_approx():
 		d_last = -(c.get_point_position(c.get_point_count() - 2) - p_last).normalized()
 		#printt('d_1 loc_pos:',p_last, ' dir: ', d_last)
+		
 	_add_socket_if_unique(p_first, d_first)
-	_add_socked_area( p_first, d_first)
 	_add_cone(p.transform * p_first, Color.CHARTREUSE)  #debug
 	
 	
 	_add_socket_if_unique(p_last, d_last)
-	_add_socked_area(p_last, d_last)
 	_add_cone(p.transform * p_last, Color.DEEP_PINK)#debug
 
 
@@ -73,22 +76,30 @@ func _add_socket_if_unique(pos: Vector3, dir: Vector3):
 		if s.pos.distance_to(pos) < 0.01:
 			return # Сокет уже зарегистрирован
 			
+	var new_socket =  _add_socked_area( pos, dir)
 	sockets.append({
 		"pos": pos,
-		"out_dir": dir
+		"out_dir": dir,
+		"socket": new_socket
 	})
 
 
 
-func _add_socked_area(_pos: Vector3, dir: Vector3) -> void:
-	printt(entity.name)
+func _add_socked_area(_pos: Vector3, dir: Vector3) -> Area3D:
+	#printt(entity.name)
 	var area = Area3D.new()
 	var collision = CollisionShape3D.new()
 	var capsule = CapsuleShape3D.new()
 	
-	# Настройки формы сокета (размеры подгони под свои нужды)
-	capsule.radius = 0.5
-	capsule.height = 2.0
+	# подрезаем высоту сокета на коротком траке
+	for s in sockets:
+		if s.pos.distance_to(_pos) <= 1.5 and s.pos.distance_to(_pos) > 0:
+			capsule_height = s.pos.distance_to(_pos) - 0.1
+			s.socket.get_child(0).shape.height = s.pos.distance_to(_pos) - 0.1
+	# Настройки формы сокета 
+	capsule.height = capsule_height
+	capsule.radius = capsule_radius
+	
 	collision.shape = capsule
 	collision.rotation.x = PI/2 # положить вдоль Z капсулу вперед (-Z)
 	
@@ -129,6 +140,7 @@ func _add_socked_area(_pos: Vector3, dir: Vector3) -> void:
 	# Визуальный маркер
 	_add_marker(collision)
 
+	return area
 
 
 ## СИГНАЛЫ

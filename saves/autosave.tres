@@ -1,11 +1,72 @@
 [gd_resource type="Resource" script_class="SavedGame" format=3]
 
-[ext_resource type="Script" path="res://saves/saved_game.gd" id="1_lmart"]
+[ext_resource type="Script" path="res://core/components/c_pivot.gd" id="1_x1ohl"]
+[ext_resource type="Script" path="res://core/components/capabilities/c_path.gd" id="2_67ftc"]
+[ext_resource type="Script" path="res://core/components/capabilities/c_power_track.gd" id="3_mogm6"]
+[ext_resource type="Script" path="res://saves/saved_game.gd" id="4_mogm6"]
+[ext_resource type="Script" path="res://core/components/c_power_clip.gd" id="4_wegac"]
 
 [resource]
-script = ExtResource("1_lmart")
+script = ExtResource("4_mogm6")
 gimbal = {
-"camera": Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 7.280242),
-"elevation": Transform3D(1, 0, 0, 0, 0.6340629, 0.7732798, 0, -0.7732798, 0.6340629, 0, 0, 0),
-"transform": Transform3D(0.13884482, 0, -0.9903144, 0, 1, 0, 0.9903144, 0, 0.13884482, -5.4411645, 7.6293945e-06, 1.829542)
+"camera": Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 21.461166),
+"elevation": Transform3D(1, 0, 0, 0, 0.3412086, 0.9399829, 0, -0.9399829, 0.3412086, 0, 0, 0),
+"transform": Transform3D(0.9489501, 0, 0.3154247, 0, 1, 0, -0.3154247, 0, 0.9489501, 34.017704, 1.9073486e-05, 30.513245)
 }
+entities = [{
+"components": {
+ExtResource("1_x1ohl"): {
+"comp_name": "c_pivot",
+"comp_path": "res://core/components/c_pivot.gd",
+"offset": Vector3(0, 0, 11.95)
+},
+ExtResource("2_67ftc"): {
+"comp_name": "c_path",
+"comp_path": "res://core/components/capabilities/c_path.gd",
+"deg": 0.0,
+"radius": 23.9
+},
+ExtResource("3_mogm6"): {
+"comp_name": "c_power_track",
+"comp_path": "res://core/components/capabilities/c_power_track.gd",
+"contour_id": 0,
+"voltage": 0.0
+},
+ExtResource("4_wegac"): {
+"comp_name": "c_power_clip",
+"comp_path": "res://core/components/c_power_clip.gd",
+"contour_id": 2,
+"voltage": 0.0
+}
+},
+"setting_path": "res://data/tracks/objects/g239.tres",
+"transform": Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27.230803, 0, 26.854774)
+}, {
+"components": {
+ExtResource("1_x1ohl"): {
+"comp_name": "c_pivot",
+"comp_path": "res://core/components/c_pivot.gd",
+"offset": Vector3(0, 0, 11.95)
+},
+ExtResource("2_67ftc"): {
+"comp_name": "c_path",
+"comp_path": "res://core/components/capabilities/c_path.gd",
+"deg": 0.0,
+"radius": 23.9
+},
+ExtResource("3_mogm6"): {
+"comp_name": "c_power_track",
+"comp_path": "res://core/components/capabilities/c_power_track.gd",
+"contour_id": 0,
+"voltage": 0.0
+},
+ExtResource("4_wegac"): {
+"comp_name": "c_power_clip",
+"comp_path": "res://core/components/c_power_clip.gd",
+"contour_id": 1,
+"voltage": 0.0
+}
+},
+"setting_path": "res://data/tracks/objects/g239.tres",
+"transform": Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35.514515, 0, 24.702993)
+}]

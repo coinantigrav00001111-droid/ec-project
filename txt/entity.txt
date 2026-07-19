@@ -1,0 +1,124 @@
+class_name Entity extends Node3D
+
+######################
+## (Ядро системы)
+######################
+## Собирает на себе все компоненты. 
+## Принимает сигналы(не в буквальном смысле, а через функцию) от компонентов и тулзов через send_event и транслирует в другие компоненты
+
+
+## ⚡Сигналы передают Script (тип компонента) для точной идентификации
+signal component_added(type: Script)
+signal component_removed(type: Script)
+
+
+
+func _ready():
+	# Оповещаем все компоненты, что сущность полностью собрана
+	for child in get_children():
+		if child is Component:
+			child.on_entity_ready()
+	
+	name = get_comp(C_Identity).get_name_e() + '_01'
+
+
+## ------ BUS --------
+
+## 💡 Ключевой способ передачи событий между компонентами. 
+## Вызывается из тулзов или других компонентов
+func send_event(event_name: String, data: Dictionary = {}) -> void:
+	for child in get_children():
+		# Если это компонент и у него есть нужная функция — вызываем её
+		if child is Component and child.has_method(event_name):
+			child.call(event_name, data)
+
+
+## ------ КОМПОНЕНТЫ ---------
+
+## Добавление компонента в ентити выполняется при его создании, например в PathSetting
+func add_component(comp: Component):
+	var type = comp.get_script()
+	# Если компонент такого типа уже есть — заменяем
+	if has_comp(type):
+		remove_component(type)
+
+	add_child(comp)
+	comp.entity = self
+	
+	comp.on_added() # Отрабатывает свою функцию компонента при создании
+	# ⚡ Сообщение всем компонентам через шину, которое запустит on_component_added(type) в каждом компоненте
+	send_event("_on_component_added", {"type": type}) 
+	# ⚡Сигнал извещает, что этот компонент создан
+	component_added.emit(type)
+
+
+
+func remove_component(type: Script): 
+	var comp = get_comp(type) 
+	if comp: 
+		# ⚡ Предохранитель от крашей при queue_free()
+		if is_queued_for_deletion():
+			return
+		#1. Отключаем внутри самого компонента
+		comp.on_removed() 
+		# 2. Мгновенно отрываем от дерева, чтобы has_comp(type) стал false прямо сейчас
+		remove_child(comp)
+		# 4. Освобождаем память
+		comp.queue_free()
+		# ⚡ Внешнее общение: дергаем классический сигнал для UI
+		component_removed.emit(type) 
+		# ⚡ Внутреннее общение: кричим всем компонентам через шину
+		send_event("_on_component_removed", {"type": type})
+
+
+
+## 💡 Сейв 
+func save_entity() -> Dictionary:
+	# Предохранитель: не сохраняем призраков или удаляемые объекты
+	if has_comp(C_Ghost) or is_queued_for_deletion():
+		return {}
+
+	var identity = get_comp(C_Identity)
+	if not identity or not identity.setting:
+		push_error("Entity без C_Identity или настроек не может быть сохранен: ", name)
+		return {}
+
+	# Список компонентов
+	var components_dict = {}
+	
+	# Опрашиваем все дочерние компоненты
+	for child in get_children():
+		if child is Component and child.has_method("save_data"):
+			
+			var comp_data = child.save_data() # Получили из компонента
+			if not comp_data.is_empty():
+				# Ключ - это тип компонента
+				var comp_type = child.get_script()
+				components_dict[comp_type] = comp_data # добавили в список
+				
+	var save_data = {
+		# Данные от ентити
+		"setting_path": identity.setting.resource_path,
+		"transform": global_transform, 
+		
+		# Список данных от компонентов
+		"components": components_dict 
+	}
+	
+	return save_data
+
+
+
+## ----- Helpers--------------
+
+## Поиск компонента (используем is_instance_of для поддержки интерфейсов/наследования)
+func get_comp(type: Script) -> Component:
+	for child in get_children():
+		if is_instance_of(child, type):
+			return child
+	return null
+
+
+
+func has_comp(type: Script) -> bool:
+	return get_comp(type) != null

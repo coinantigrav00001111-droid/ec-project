@@ -5,30 +5,36 @@ extends DCController
 ########################
 @onready var power_slider: VSlider = %PowerSlider
 
+
 ## Наследует контроллер_р но упрощает его функции за счет дефолтных нод управления
 
 func _ready() -> void:
 	# начальное значение кнопки видимости 
 	%ShowControllerButton.button_pressed = true
 	# реакция на кнопку dc контроллера (в редакторе он виден по умолчанию)
-	#_on_show_controller_button_pressed() 
+	_on_show_controller_button_pressed() 
+	
 	# Это надо до тех пор, пока при старте сцены UI есть контроллер(для дебага в общем)
 	#object_setting  =load("res://ui/dc_controllers/dc_controller_mini.tres")
 	
-	#XX подключаемся к powercontroller
-	#change_power_pwm.connect(PC.on_change_power_dc)
-	#onoff_power_pwm.connect(PC.on_onoff_power_dc)
+	# подключаемся к powermanager
+	#change_power_pwm.connect(PowerGridManager.on_change_power_dc)
+	#onoff_power_pwm.connect(PowerGridManager.on_onoff_power_dc)
 
 	## сразу питание в сеть как в слайдере (для дебага)
-	current_power_local()
+	#current_power_local()
+
+
 
 ## Запись текущего питания в переменные и сигнал в powercontroller 
 func current_power_local() -> void:
 	var value = $PowerSlider.value
 	power_local = int(value * power_mult)
 	%PowerLabel.text = str(power_local) + '%'
-	# Подача сигнала с питание в контур. 0 - во все 
-	change_power_pwm.emit(power_local, active_contour)
+	# Подача сигнала с питание в контур. -1 - во все 
+	#change_power_pwm.emit(active_contour, power_local)
+	
+	PowerGridManager.set_power_pwm(active_contour, power_local)
 
 
 

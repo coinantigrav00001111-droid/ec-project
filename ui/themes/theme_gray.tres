@@ -6,6 +6,14 @@
 content_margin_left = 10.0
 bg_color = Color(0.1882353, 0.3019608, 0.44705883, 1)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hik3j"]
+bg_color = Color(0.101960786, 0.101960786, 0.101960786, 0.6)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.69803923, 0.69803923, 0.69803923, 1)
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wmhti"]
 bg_color = Color(0.6, 0.6, 0.6, 0)
 
@@ -79,6 +87,7 @@ default_font = ExtResource("1_psqb8")
 HeaderSmall/font_sizes/font_size = 18
 HeaderSmall/styles/normal = SubResource("StyleBoxFlat_hwk3b")
 LineEdit/constants/minimum_character_width = 2
+LineEdit/styles/focus = SubResource("StyleBoxFlat_hik3j")
 Lvl1PanelContainer/base_type = &"PanelContainer"
 Lvl1PanelContainer/styles/panel = SubResource("StyleBoxFlat_wmhti")
 ModeButton/base_type = &"Button"

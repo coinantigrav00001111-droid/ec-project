@@ -96,6 +96,7 @@ debug_color = Color(0, 1, 0.701961, 1)
 
 [node name="PowerClip" type="MeshInstance3D" parent="." unique_id=453832429]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2, 0.3, -4.2)
+visible = false
 mesh = SubResource("BoxMesh_l8dgr")
 skeleton = NodePath("../..")
 

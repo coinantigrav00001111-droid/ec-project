@@ -19,7 +19,7 @@ class_name ToolController extends Node3D
 @onready var build_tool: BuildTool = %BuildTool
 @onready var select_tool = %SelectTool
 @onready var drag_tool: DragTool = %DragTool
-@onready var save_controller: SaveController = %SaveController
+@onready var save_controller: SaveManager = %SaveManager
 
 
 
@@ -67,12 +67,16 @@ func _unhandled_input(event: InputEvent) -> void:
 func _process(delta: float) -> void:
 	if active_tool and active_tool.has_method("process_tick"):
 		active_tool.process_tick(delta) # Смотрит тик активного инструмента
-
+	$"../UI/ModeLabel".text = active_tool.name
 
 
 # Выбор инструмента/tool
 func switch_tool(new_tool: Node):
-	if active_tool: active_tool.exit()
+	if active_tool: 
+		# При выходе в драг надо без  отмены селект
+		var _to_drag = active_tool == $%SelectTool and new_tool == %DragTool
+		active_tool.exit(_to_drag)
+
 	active_tool = new_tool
 	active_tool.enter()
 
@@ -90,33 +94,15 @@ func _on_build_selected(setting: EntitySetting):
 	# переключение в build_tool
 	switch_tool(build_tool)
 
-
+		
+		
 # ------- MENU -----------
-# ⚡Сигнал из toppanel\верхнего меню 
+# ⚡Сигнал из toppanel\верхнего меню .
+# TODO Можно переносить В сейвменеджер.Это его зона ответсвенности.
 func _on_menu_button_pressed(idx : int) -> void:
-	match idx:
-		0: # save
-			save_controller.save_game()
-		1: # load
-			save_controller.load_game('savegame', false)
-			#print(OS.get_data_dir())
-			pass
-		2: # ++
-			pass
-		3: #ничего
-			#saver.clear_game()
-			pass
-			
-		5: #DEFAULT jolt
-			#GM. apply_jolt_profile(GM.AssistProfile.DEFAULT) 
-			pass
-		6: #STABLE jolt
-			#GM. apply_jolt_profile(GM.AssistProfile.STABLE) 
-			pass
-		7: #EXTREME jolt
-			#GM. apply_jolt_profile(GM.AssistProfile.EXTREME) 
-			pass
-	pass
+	# Пока все индексы передаем в save контроллер
+	save_controller.menu_click_handling(idx)
+
 
 
 # 💡 --- Общие хелперы для инструментов ---

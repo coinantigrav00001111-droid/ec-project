@@ -10,20 +10,20 @@ var selected_entity: Entity
 
 # Флаги для инпута
 
-#var mouse_start_pos := Vector2.ZERO # в инпуте замена на drag = event.accumulate(event)
 var clicked_entity: Entity = null
 
 var lmb_start_pos := Vector2.ZERO
 var rmb_start_pos := Vector2.ZERO
 
 
+
 func enter():
 	pass
 
 
+
 func process_tick(_delta):
 	_update_hover()
-
 
 
 
@@ -58,10 +58,10 @@ func handle_input(event: InputEvent):
 			if lmb_start_pos.distance_to(event.position) > 10:
 				_start_drag(clicked_entity)
 				clicked_entity = null
-#
+
+
 
 func _get_entity_under_mouse() -> Entity:
-	
 	# Слой земли(1), траков(3), селектеда(11)- 11 это гост!
 	var hit = controller.get_mouse_ray((1 << 0) | (1 << 2) | (1 << 10)) 
 	if hit and hit.collider:
@@ -69,9 +69,9 @@ func _get_entity_under_mouse() -> Entity:
 	return null
 
 
+
 func _set_selection(entity_to_select: Entity):
 	if selected_entity == entity_to_select: return 
-	
 	if selected_entity: 
 		selected_entity.remove_component(C_Selected)
 		#selected_entity = null # из старого, убрать? 
@@ -81,20 +81,9 @@ func _set_selection(entity_to_select: Entity):
 	if selected_entity:
 		selected_entity.add_component(C_Selected.new())
 		
-	# ДЕРГАЕМ ПАНЕЛЬ!
+	#INFO ДЕРГАЕМ ПАНЕЛЬ!
 	controller.info_panel.set_target(selected_entity)
-	##инспектор
-	#controller.entity_debugger.set_target(selected_entity)
-	
-#func _set_selection(entity_to_select: Entity):
-	#if selected_entity == entity_to_select: return # Уже выбран, ничего не делаем
-	#
-	#_clear_selection()
-	#selected_entity = entity_to_select
-	#selected_entity.add_component(C_Selected.new())
-	#
-	##инспектор
-	#controller.entity_debugger.set_target(selected_entity)
+
 
 
 
@@ -122,22 +111,18 @@ func _update_hover():
 		hovered_entity = new_hover
 		if hovered_entity: 
 			hovered_entity.add_component(C_Hovered.new())
-			
-			## Инспектор 
-			#controller.entity_debugger.set_target(hovered_entity)
 
 
 
+# Снимает селекшн при лкм пкм без драга
 func _clear_selection():
 	if selected_entity: 
 		selected_entity.remove_component(C_Selected)
+		
 	selected_entity = null
 	
-	# ОЧИЩАЕМ ПАНЕЛЬ!
+	#INFO ОЧИЩАЕМ ПАНЕЛЬ! +
 	controller.info_panel.set_target(null)
-	
-	##инспектор
-	#controller.entity_debugger.set_target(selected_entity)
 
 
 
@@ -150,6 +135,25 @@ func _find_entity(node):
 
 
 
-func exit():
-	if hovered_entity: hovered_entity.remove_component(C_Hovered)
-	hovered_entity = null
+# при выходе из селекта чистим 
+func exit(_to_drag : bool = false):
+	if selected_entity: 
+		selected_entity.remove_component(C_Hovered)
+		if !_to_drag: # если выход не в драг, то убираем селект полностью
+			if selected_entity.has_comp(C_Selected):
+				selected_entity.remove_component(C_Selected)
+			
+			selected_entity = null
+			#INFO Очищаем панель
+			controller.info_panel.set_target(null) 
+
+	if hovered_entity: 	hovered_entity = null
+
+
+
+# TODO Можно убирать, было временно. При выходе из селекта в драг иной выход
+func exit_to_drag():
+	if selected_entity: 
+		selected_entity.remove_component(C_Hovered)
+
+	if hovered_entity: 	hovered_entity = null

@@ -32,8 +32,7 @@ func enter():
 
 	#INFO ДЕРГАЕМ ПАНЕЛЬ!
 	controller.info_panel.set_target(ghost)
-	 ##Старый инспектор
-	#controller.entity_debugger.set_target(ghost)
+
 
 
 func handle_input(event: InputEvent):
@@ -72,7 +71,7 @@ func _place_real_object():
 	real_ent.global_transform = ghost.global_transform
 	controller.entities_root.add_child(real_ent)
 	
-	real_ent.name = ghost_setting.name # имя ентити берется из сеттинга госта
+	#real_ent.name = ghost_setting.name + '_01' # имя ентити берется из сеттинга госта
 	
 	# 💥 Тул больше не ищет компоненты. Он приказывает Госту клонировать стейт:
 	ghost.send_event("on_clone_state_to", {"target": real_ent})
@@ -105,7 +104,7 @@ func _set_collision_layer_recursive(node: Node, layer: int):
 
 
 ## Выполняется при выходе из инстр.
-func exit():
+func exit(_to_drag : bool = false):
 	if ghost:
 		ghost.queue_free()
 		ghost = null
@@ -114,9 +113,7 @@ func exit():
 	
 	#INFO ОЧИЩАЕМ ПАНЕЛЬ!
 	controller.info_panel.set_target(null)
-	##старый инспектор
-	#await get_tree().process_frame # ждем кадр до удаления
-	#controller.entity_debugger.set_target(ghost)
+
 
 
 # find_snap перенесен из snap_service. Но он вообще не нужен... пока. Может потом для power 

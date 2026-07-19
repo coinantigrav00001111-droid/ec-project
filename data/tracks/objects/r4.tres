@@ -41,6 +41,8 @@ metadata/_custom_type_script = "uid://chprgtlxn3aub"
 
 [sub_resource type="Resource" id="Resource_5an37"]
 script = ExtResource("10_tqibq")
+radius = 54.6
+deg = 30.0
 metadata/_custom_type_script = "uid://b7f7dka1i3slu"
 
 [sub_resource type="Resource" id="Resource_lnr61"]
@@ -52,7 +54,6 @@ script = ExtResource("13_8qaaw")
 id = 24
 name = "R4"
 description = "Радиусный трак 54,6см"
-radius = 54.6
 tag = &"curve"
 icon = ExtResource("12_t72st")
 components = Array[ExtResource("1_wx4ya")]([SubResource("Resource_yfcut"), SubResource("Resource_iqocg"), SubResource("Resource_0xkto"), SubResource("Resource_qqtt6"), SubResource("Resource_o7fpk"), SubResource("Resource_t8too"), SubResource("Resource_5an37"), SubResource("Resource_lnr61")])

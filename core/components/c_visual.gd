@@ -58,8 +58,10 @@ func update_visual(_removing_type: Script = null):
 	elif has_comp(C_Selected) and _removing_type != C_Selected:
 		_set_selected() 
 	elif has_comp(C_Hovered) and _removing_type != C_Hovered:
-		_set_hovered() 
-	else: 
+		_set_hovered()
+	elif is_power_view_active: # <--- Включаем слой Power
+		_set_power_view()
+	else:
 		_reset()
 
 
@@ -105,7 +107,6 @@ func _find_meshes(node):
 func _collect_collision_nodes():
 	area_nodes = {}
 	_find_collisions(instance)
-
 
 
 ## Заполняем словарь {статик, его лэйер}
@@ -209,3 +210,38 @@ func apply_shader(mesh_instance: MeshInstance3D, _shader: Shader):
 	
 	# 4. Прикрепляем его в самый конец цепочки
 	current_mat.next_pass = highlight_mat
+
+
+
+# ---- POWER LAYER ---
+var is_power_view_active: bool = false
+var power_materials: Dictionary = {} # Кэш материалов для контуров, чтобы не плодить их на каждый рельс
+
+# Слушаем событие от шины Entity
+func on_power_view_changed(data: Dictionary):
+	is_power_view_active = data.active
+	update_visual()
+
+
+func _set_power_view():
+	var power_comp = get_comp(C_PowerTrack)
+	if not power_comp:
+		_reset() # Если это дерево или домик без электрики
+		return
+
+	var cid = power_comp.contour_id
+	var volt = power_comp.voltage
+	
+	# Получаем или создаем уникальный материал для этого контура
+	var mat = _get_power_material(cid, volt)
+	
+	for mesh in mesh_nodes:
+		mesh.set_material_overlay(mat)
+
+# Хелпер для материалов
+func _get_power_material(cid: int, voltage: float) -> Material:
+	# Здесь ты берешь базовый шейдер электрики и настраиваешь параметры (Albedo, UV-scroll speed)
+	# в зависимости от номера контура и напряжения.
+	return settings.power_material
+	
+	pass

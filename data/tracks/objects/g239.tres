@@ -13,6 +13,7 @@
 [ext_resource type="Script" uid="uid://bv065wdiw674c" path="res://core/components/capabilities/c_socked_setting.gd" id="10_qqtt6"]
 [ext_resource type="Texture2D" uid="uid://c8tndy1lksot8" path="res://ui/icons/transport/rail-road.svg" id="11_0xkto"]
 [ext_resource type="Script" uid="uid://b7f7dka1i3slu" path="res://core/components/capabilities/c_path_setting.gd" id="11_o7fpk"]
+[ext_resource type="Script" uid="uid://cjk51o364xfn" path="res://core/components/capabilities/c_power_track_setting.gd" id="12_t8too"]
 
 [sub_resource type="Resource" id="Resource_yfcut"]
 script = ExtResource("3_r42n5")
@@ -25,7 +26,6 @@ metadata/_custom_type_script = "uid://b1jwuxb32so7e"
 
 [sub_resource type="Resource" id="Resource_0xkto"]
 script = ExtResource("7_o7fpk")
-offset = Vector3(0, 0, 11.95)
 metadata/_custom_type_script = "uid://djbifkyei01t7"
 
 [sub_resource type="Resource" id="Resource_qqtt6"]
@@ -49,13 +49,15 @@ metadata/_custom_type_script = "uid://b7f7dka1i3slu"
 script = ExtResource("10_qqtt6")
 metadata/_custom_type_script = "uid://bv065wdiw674c"
 
+[sub_resource type="Resource" id="Resource_3owqy"]
+script = ExtResource("12_t8too")
+metadata/_custom_type_script = "uid://cjk51o364xfn"
+
 [resource]
 script = ExtResource("3_7vxw7")
 id = 10
 name = "G239 раб тест"
 description = "Прямой трак 23.9см"
-radius = 23.9
-deg = 0.0
 icon = ExtResource("11_0xkto")
-components = Array[ExtResource("1_k7o5x")]([SubResource("Resource_yfcut"), SubResource("Resource_iqocg"), SubResource("Resource_0xkto"), SubResource("Resource_qqtt6"), SubResource("Resource_o7fpk"), SubResource("Resource_t8too"), SubResource("Resource_vxtmo"), SubResource("Resource_lnr61")])
+components = Array[ExtResource("1_k7o5x")]([SubResource("Resource_yfcut"), SubResource("Resource_iqocg"), SubResource("Resource_0xkto"), SubResource("Resource_qqtt6"), SubResource("Resource_o7fpk"), SubResource("Resource_t8too"), SubResource("Resource_vxtmo"), SubResource("Resource_lnr61"), SubResource("Resource_3owqy")])
 metadata/_custom_type_script = "uid://do5hjkm3r2pdg"

@@ -11,8 +11,7 @@
 [ext_resource type="PackedScene" uid="uid://57xnplsftgls" path="res://ui/ui.tscn" id="9_jy1t0"]
 [ext_resource type="Script" uid="uid://bnkd3ih6wvat" path="res://core/world.gd" id="9_m5pu1"]
 [ext_resource type="PackedScene" uid="uid://b6bt6i4wh1nk2" path="res://ui/debug/entity_debugger.tscn" id="10_4pdep"]
-[ext_resource type="Script" uid="uid://bsa8y6evha5ud" path="res://core/controllers/snap_service.gd" id="10_7cj6n"]
-[ext_resource type="Script" uid="uid://dninmf7u7bdkm" path="res://core/controllers/save_controller.gd" id="10_hf67p"]
+[ext_resource type="Script" uid="uid://dninmf7u7bdkm" path="res://core/controllers/save_manager.gd" id="10_hf67p"]
 [ext_resource type="PackedScene" uid="uid://b5a0jw0b12rtr" path="res://world/objects/tools/rulette.tscn" id="13_bc160"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_igrpr"]
@@ -83,12 +82,7 @@ script = ExtResource("7_7cj6n")
 [node name="EntityFactory" type="Node" parent="." unique_id=2116315265]
 script = ExtResource("7_jy1t0")
 
-[node name="SnapService" type="Node" parent="." unique_id=973240477 node_paths=PackedStringArray("entities_root")]
-unique_name_in_owner = true
-script = ExtResource("10_7cj6n")
-entities_root = NodePath("../World/EntitiesRoot")
-
-[node name="SaveController" type="Node" parent="." unique_id=2126699721]
+[node name="SaveManager" type="Node" parent="." unique_id=2126699721]
 unique_name_in_owner = true
 script = ExtResource("10_hf67p")
 
@@ -123,12 +117,43 @@ transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 2
 
 [node name="WoodFloor" type="MeshInstance3D" parent="World/WorldEnvironment" unique_id=863018642]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+visible = false
 mesh = SubResource("BoxMesh_igrpr")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="World/WorldEnvironment/WoodFloor" unique_id=1859659393]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="World/WorldEnvironment/WoodFloor/StaticBody3D" unique_id=1440149493]
 shape = SubResource("BoxShape3D_bc160")
+
+[node name="Environment" type="Node3D" parent="World" unique_id=978530249]
+
+[node name="rulette" parent="World/Environment" unique_id=1234101903 instance=ExtResource("13_bc160")]
+
+[node name="BoxMeshInstance3D" type="MeshInstance3D" parent="World/Environment" unique_id=265796463]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -61.62892, 2.725039, -6.326641)
+mesh = SubResource("BoxMesh_4pdep")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="World/Environment/BoxMeshInstance3D" unique_id=706195363]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="World/Environment/BoxMeshInstance3D/StaticBody3D" unique_id=1269428165]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.04789734, 0.012802124, 0.13165283)
+shape = SubResource("BoxShape3D_4pdep")
+
+[node name="PrismMeshInstance3D" type="MeshInstance3D" parent="World/Environment" unique_id=614958111]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.714453, 2.015177, -42.153603)
+mesh = SubResource("PrismMesh_bc160")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="World/Environment/PrismMeshInstance3D" unique_id=395990527]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="World/Environment/PrismMeshInstance3D/StaticBody3D" unique_id=1132558667]
+transform = Transform3D(0.9886041, -0.15053914, 0, 0.15053914, 0.9886041, 0, 0, 0, 1, -12.201029, -0.48023987, 0.04610443)
+shape = SubResource("BoxShape3D_wekbu")
+debug_color = Color(0, 0.98, 1.145, 1)
+
+[node name="CollisionShape3D2" type="CollisionShape3D" parent="World/Environment/PrismMeshInstance3D/StaticBody3D" unique_id=777788026]
+transform = Transform3D(0.986233, 0.16536203, 0, -0.16536203, 0.986233, 0, 0, 0, 1, 12.799073, -0.68053985, 0.04610443)
+shape = SubResource("BoxShape3D_wekbu")
+debug_color = Color(0, 0.98, 1.145, 1)
 
 [node name="EntitiesRoot" type="Node3D" parent="World" unique_id=1906579946]
 unique_name_in_owner = true
@@ -137,33 +162,3 @@ unique_name_in_owner = true
 unique_name_in_owner = true
 
 [node name="Trains" type="Node3D" parent="World/EntitiesRoot" unique_id=1705629162]
-
-[node name="Props" type="Node3D" parent="World/EntitiesRoot" unique_id=978530249]
-
-[node name="rulette" parent="World/EntitiesRoot/Props" unique_id=1234101903 instance=ExtResource("13_bc160")]
-
-[node name="BoxMeshInstance3D" type="MeshInstance3D" parent="World/EntitiesRoot/Props" unique_id=265796463]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -61.62892, 2.725039, -6.326641)
-mesh = SubResource("BoxMesh_4pdep")
-
-[node name="StaticBody3D" type="StaticBody3D" parent="World/EntitiesRoot/Props/BoxMeshInstance3D" unique_id=706195363]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="World/EntitiesRoot/Props/BoxMeshInstance3D/StaticBody3D" unique_id=1269428165]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.04789734, 0.012802124, 0.13165283)
-shape = SubResource("BoxShape3D_4pdep")
-
-[node name="PrismMeshInstance3D" type="MeshInstance3D" parent="World/EntitiesRoot/Props" unique_id=614958111]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.714453, 2.015177, -42.153603)
-mesh = SubResource("PrismMesh_bc160")
-
-[node name="StaticBody3D" type="StaticBody3D" parent="World/EntitiesRoot/Props/PrismMeshInstance3D" unique_id=395990527]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="World/EntitiesRoot/Props/PrismMeshInstance3D/StaticBody3D" unique_id=1132558667]
-transform = Transform3D(0.9886041, -0.15053914, 0, 0.15053914, 0.9886041, 0, 0, 0, 1, -12.201029, -0.48023987, 0.04610443)
-shape = SubResource("BoxShape3D_wekbu")
-debug_color = Color(0, 0.98, 1.145, 1)
-
-[node name="CollisionShape3D2" type="CollisionShape3D" parent="World/EntitiesRoot/Props/PrismMeshInstance3D/StaticBody3D" unique_id=777788026]
-transform = Transform3D(0.986233, 0.16536203, 0, -0.16536203, 0.986233, 0, 0, 0, 1, 12.799073, -0.68053985, 0.04610443)
-shape = SubResource("BoxShape3D_wekbu")
-debug_color = Color(0, 0.98, 1.145, 1)
