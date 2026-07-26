@@ -8,17 +8,34 @@ class_name C_PowerTrack extends IPowerable
 
 
 var voltage: float #текущее напряжение
-var contour_id :int = 0 # Контур питания. 0 -не подключен к клипу
+var contour_id :int = 0: # Контур питания. 0 -не подключен к клипу
+	set(val):
+		#print("Трак [", entity.name, "] изменил contour_id с ", contour_id, " на ", val)
+		contour_id = val
+		
 var is_flipped :bool = false # разворот пути относительно эталонного(клип-трак - эталон)
 
+var power_schema_mesh : PlaneMesh
 
 func on_added():
+	#TODO  перекинуть в on_entity_ready можно
+	entity.add_to_group('power_track')
+	pass
+	
+
+func on_entity_ready() -> void:
+	# Ждем просчета физики, чтобы C_Socket успел найти соседей
+	#await get_tree().physics_frame
+	#PGM.request_recalculate()
 	pass
 
+
+
+	
 func on_removed():
 	# Если рельс удалили (DragTool/Delete), нужно пнуть менеджера пересчитать сеть
 	if contour_id != 0:
-		PowerGridManager.recalculate_grid()
+		PGM.request_recalculate()
 
 # Сейв данных по запросу ентити
 func save_data() -> Dictionary:
@@ -29,6 +46,7 @@ func save_data() -> Dictionary:
 		'comp_name':get_script().resource_path.get_file().get_basename(), # "c_power_clip"
 		"contour_id": contour_id,
 		"voltage": voltage,
+		"is_flipped": is_flipped,
 
 	}
 
@@ -39,3 +57,5 @@ func load_data(_data: Dictionary) -> void:
 		contour_id = _data.contour_id
 	if _data.has("voltage"):
 		voltage = _data.voltage
+	if _data.has("is_flipped"):
+		is_flipped = _data.is_flipped

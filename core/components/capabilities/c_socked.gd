@@ -10,6 +10,9 @@ class_name C_Socket extends ISnappable
 
 var sockets: Array[Dictionary] = []
 
+## Массив ссылок на валидные соседние сущности (для графа сети)
+var connected_entities: Array[Entity] = []
+
 # Настройки формы сокета
 var  capsule_radius := 0.6
 var capsule_height := 1.49
@@ -40,15 +43,10 @@ func _parse_curve(c: Curve3D, p: Path3D):
 	var p_first = c.get_point_position(0)
 	var p_last = c.get_point_position(c.get_point_count() - 1)
 
-	#printt('====SOCKED======') 
-	#printt('====entity        : ',entity.transform.origin, entity.global_position) 
-	#printt('====path        : ',p.position) 
-
 	# Направление на старте — это направление ручки `out`, либо просто вперед, если ручки нет
 	var d_first = -c.get_point_out(0).normalized()
 	if d_first.is_zero_approx(): #true если значения этого вектора приблизительно равны нулю
 		d_first = -(c.get_point_position(1) - p_first).normalized()
-		#printt('d_0 loc_pos:',p_first, ' dir: ', d_first) #debug
 	else:
 		d_first = d_first # Смотрит наружу по направлению ручки
 		
@@ -57,7 +55,6 @@ func _parse_curve(c: Curve3D, p: Path3D):
 	
 	if d_last.is_zero_approx():
 		d_last = -(c.get_point_position(c.get_point_count() - 2) - p_last).normalized()
-		#printt('d_1 loc_pos:',p_last, ' dir: ', d_last)
 		
 	_add_socket_if_unique(p_first, d_first)
 	_add_cone(p.transform * p_first, Color.CHARTREUSE)  #debug
@@ -145,16 +142,28 @@ func _add_socked_area(_pos: Vector3, dir: Vector3) -> Area3D:
 
 ## СИГНАЛЫ
 
+## TODO Почистить скрипт
 ## ⚡Сигнал area вход
 # s_socket - стац трак, d_socket - драг трак
 func _on_socket_area_entered(s_socket: Area3D, d_socket: Area3D) -> void:
 	# Чтобы стейты заехали в ентити
-	await get_tree().process_frame
+	await get_tree().physics_frame
 	
 	# Из Блокед не может быть снапа
 	if entity.has_comp(C_Blocked):
 		return
-		
+	
+	var neighbor_entity = _find_entity_from_collider(s_socket)
+
+
+
+	## Добавляем соседа в список. Предохранители:
+	# 1. Сущность найдена и это не мы сами. 2. Сущность не является призраком 3. Мы еще не добавили ее в массив.
+
+	if neighbor_entity and neighbor_entity != entity:
+		if not neighbor_entity.has_comp(C_Ghost) and not connected_entities.has(neighbor_entity):
+			connected_entities.append(neighbor_entity)
+
 	# Снаппинг обрабатывается только той сущностью, которую СЕЙЧАС ТАЩАТ
 	if not (entity.has_comp(C_Drag) or entity.has_comp(C_Ghost)):
 		return
@@ -177,9 +186,6 @@ func _on_socket_area_entered(s_socket: Area3D, d_socket: Area3D) -> void:
 	if _is_socket_occupied(s_socket):
 		return
 		
-	#FIXME баг
-	''' Проверка себя  = драгед или гост зачем??
-	'''
 	#TODO зачем проверять себя??
 	# Если наш собственный уже занят другим рельсом — отмена.
 	#if _is_socket_occupied(d_socket):
@@ -200,16 +206,37 @@ func _on_socket_area_entered(s_socket: Area3D, d_socket: Area3D) -> void:
 	if c_draggable:
 		c_draggable.start_snap(target_entity_transform)
 
+	# Тут делааем сеть или не делаем
+	PGM.request_recalculate() # пересчет сети
+	
 
 
-## ⚡Сигнал area 
-func _on_socket_area_exited(_area: Area3D):
-	#print('sock area exit: ', area)
-	pass
+## Выход ⚡Сигнал area 
+func _on_socket_area_exited(_area: Area3D) -> void:
+	var neighbor_entity = _find_entity_from_collider(_area)
+	
+	# Убираем соседа из списка
+	if neighbor_entity and connected_entities.has(neighbor_entity):
+		connected_entities.erase(neighbor_entity)
+
+	PGM.request_recalculate() # пересчет сети
+	
+	# ⚡Сигнал для  UI обновление данных трака
+	await get_tree().physics_frame
 
 
+# ---- HELPERS ---
 
-## HELPERS
+#лямбда-фильтр  для защиты от крашей. Если игрок удалил рельс через инструмент удаления (вызвался queue_free()), физический сигнал exited может не успеть отработать. Фильтр гарантирует, что диспетчер получит только живые объекты.
+# Возвращает массив живых соседей для PGM
+func get_connected_entities() -> Array[Entity]:
+	# Очищаем массив от "мертвых" ссылок перед отдачей
+	connected_entities = connected_entities.filter(
+		func(e): return is_instance_valid(e) and not e.is_queued_for_deletion()
+	)
+	return connected_entities
+	
+
 
 func get_sockets() -> Array[Dictionary]:
 	return sockets
@@ -252,7 +279,8 @@ func _find_entity_from_collider(node: Node) -> Entity:
 			return current
 		current = current.get_parent()
 	return null
-	
+
+
 
 # Рекурсивный поиск всех Path3D в визуале
 func _find_paths_recursive(node: Node) -> Array[Path3D]:

@@ -98,7 +98,7 @@ func _apply_regular_movement(target_pos: Vector3, normal: Vector3) -> void:
 
 ## 💡Вызывается из C_Socket при успешной коллизии сокетов
 func start_snap(target_global_transform: Transform3D) -> void:
-	print('снап старт')
+	#print('снап старт')
 	snapped_entity_transform = target_global_transform
 	is_snapped_locked = true # Блокируем обычное влияние мыши
 	# Актуализируем углы сразу при снапе. Тогда после в драге снапа угол не возвращается
@@ -111,6 +111,10 @@ func start_snap(target_global_transform: Transform3D) -> void:
 
 	# Мгновенно примагничиваем рельс в идеальную позицию
 	entity.global_transform = snapped_entity_transform
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+
 
 
 
@@ -118,7 +122,10 @@ func on_drag_ended(_data: Dictionary) -> void:
 	# Если рельс заблокирован коллизией балласта при отпускании — возвращаем назад
 	if entity.has_comp(C_Blocked):
 		entity.global_transform = initial_transform
-	
+		
+	# Запрашиваем пересчет сети после возврата на исходную
+		PGM.request_recalculate()
+		
 	# При дропе объекта отключаем логику срыва, чтобы рельс остался лежать в точке снапа
 	is_snapped_locked = false
 

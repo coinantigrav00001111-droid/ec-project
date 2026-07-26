@@ -10,6 +10,7 @@ script = ExtResource("1_qjih2")
 zoom_max = 100.0
 
 [node name="Elevation" type="Node3D" parent="." unique_id=1289677272]
+unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 0.47715846, 0.8788166, 0, -0.8788166, 0.47715846, 0, 0, 0)
 
 [node name="Camera" type="Camera3D" parent="Elevation" unique_id=592187562]

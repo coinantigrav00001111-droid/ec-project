@@ -19,7 +19,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-PowerGridManager="*uid://cs6t1pamqjrbq"
+PGM="*uid://cs6t1pamqjrbq"
 
 [display]
 

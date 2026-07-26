@@ -1,24 +1,36 @@
 shader_type spatial;
-render_mode unshaded, blend_add; // unlit для чистого свечения, blend_add для голографического наложения
+render_mode unshaded; 
 
-uniform vec4 contour_color : source_color = vec4(0.0, 0.8, 1.0, 1.0); // Базовый цвет контура
-uniform float scroll_speed = 1.0; // Скорость (зависит от напряжения)
-uniform float stripe_density = 5.0; // Количество "пусковых" полос на метр
+uniform vec4 contour_color : source_color = vec4(0.0, 0.8, 1.0, 1.0);
+uniform float scroll_speed = 0.0;
+uniform float stripe_density = 4.0;
+
+uniform bool is_solid = false; // Глобальная заливка (true = весь рельс плотный)
+uniform float transparent_alpha = 0.8; // Прозрачность промежутков
+uniform bool solid_stripes = true; // НОВЫЙ ПАРАМЕТР: Непрозрачные бегущие полосы
 
 void fragment() {
-    // Делаем UV-скроллинг по оси Y (или X, зависит от развертки твоего меша рельса)
-    float moving_uv = UV.y + (TIME * scroll_speed);
-    
-    // Создаем полосатый паттерн с помощью функции fract
+    // Вычисляем бегущую полосу
+    float moving_uv = UV.x + (TIME * scroll_speed);
     float pattern = fract(moving_uv * stripe_density);
-    
-    // Делаем края полос резкими с помощью step
     float stripes = step(0.5, pattern);
     
-    // Добавляем легкое базовое свечение, чтобы рельс было видно даже между полосами
+    // Формируем цвет
     vec3 final_color = contour_color.rgb * (0.3 + (stripes * 0.7));
     
     ALBEDO = final_color;
-    EMISSION = final_color * 2.0; // Умножаем для эффекта неонового свечения
-    ALPHA = 0.8; // Легкая полупрозрачность
+    EMISSION = final_color * 1.5;
+    
+    // Логика прозрачности
+    if (is_solid) {
+        // Режим 1: Весь материал (и полосы, и фон) на 100% непрозрачный
+        ALPHA = 1.0; 
+    } else {
+        // Режим 2: Полупрозрачный фон, но полосы можно сделать плотными
+        if (solid_stripes && stripes > 0.0) {
+            ALPHA = 1.0; // Пиксель попал на полосу тока — делаем его плотным
+        } else {
+            ALPHA = transparent_alpha; // Промежуток — оставляем полупрозрачным
+        }
+    }
 }

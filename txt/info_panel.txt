@@ -8,6 +8,9 @@ var current_target: Entity
 
 func _ready():
 	hide() # Прячем панель на старте
+	PGM.power_tab_updated.connect(_update_power_tab)
+	PGM.power_updated.connect(_on_power_track_updated)
+	#PGM.neighbor_updated.connect(_on_neighbor_updated)
 
 
 
@@ -70,7 +73,7 @@ func _populate_main_tab():
 	var path = current_target.get_comp(C_Path)
 	
 	if identity:
-		%HeaderLabel.text = identity.get_name_e()
+		%HeaderLabel.text = identity.get_name_e() + ' node :' + current_target.name
 		%DescriptionLabel.text = identity.get_description()
 		%IconRect.texture = identity.get_icon()
 		
@@ -88,61 +91,95 @@ func _populate_main_tab():
 		%HeaderLabel.text = "Системный объект"
 
 
-''' Нужны актуальные повер значения трака, клип норм.'''
 
+#---POWER TAB ---
+'''обновление неправильное при драге 4го трака'''
+# Обновление ВСЕЙ вкладки 
 func _update_power_tab():
+	#await get_tree().physics_frame
+	printt('_update_power_tab')
 	if not current_target: return
+	
 	var _power_comp = null
-	if current_target.has_comp(C_PowerTrack): # Если трак
-		_power_comp = current_target.get_comp(C_PowerTrack)
+	if current_target.has_comp(C_PowerTrack): # Если Power трак
+		_power_comp = current_target.get_comp(C_PowerTrack) as C_PowerTrack
 		%PowerClipButton.disabled = false
 		%PowerClipButton.button_pressed = false
 		%ClipContourIDButton.disabled = true  # запрещаем менять контур
-		# TODO Ждем инфу для этого
-		%VoltageLabel.text = str(_power_comp.voltage)
+		# Трак
+		%TrackContourLabel.text = str(_power_comp.contour_id)
+		%TrackVoltageLabel.text = str(PGM.get_voltage(_power_comp.contour_id))
 		%FlippedLabel.text = str(_power_comp.is_flipped)
 		
 	else: # Если трака нет, то в дефолт все
 		%PowerClipButton.disabled = true
 		%PowerClipButton.button_pressed = false
 		%ClipContourIDButton.disabled = true  # запрещаем менять контур
-		%VoltageLabel.text = str(0)
+		%TrackContourLabel.text = str(0)
+		%TrackVoltageLabel.text = str(0)
 		%FlippedLabel.text = str(0) 
 		return
 	
 	var _power_clip = null
 	if current_target.has_comp(C_PowerClip): # Если клип есть, то он определяет
 		_power_clip = current_target.get_comp(C_PowerClip)
+		%PowerClipButton.disabled = false
 		%PowerClipButton.button_pressed = true
 		%ClipContourIDButton.disabled = false # разрешаем менять контур
 		_power_comp = _power_clip # Переключаемся на клип
-	
+		
+	if _power_comp.contour_id != 0 and !_power_clip:
+			%PowerClipButton.button_pressed = false
+			%PowerClipButton.disabled = true
+			%ClipContourIDButton.disabled = true # не менять контур
+			
 	# 💡-option_button- Делаем селектор контура-
-	var option_button = %ClipContourIDButton as OptionButton
-	option_button.clear() # Полностью очищаем старые пункты
-	
-	# 1.1️⃣ Добавляем базовый вариант (0 - отключено от питания)
-	option_button.add_item("0: Отключено", 0)
-	
-	# Получаем массив контуров, которые УЖЕ заняты другими клеммами на макете
-	var occupied_contours = PowerGridManager.get_occupied_contours()
-	var current_id = _power_comp.contour_id # Текущий контур этого объекта
+	_fill_clip_contour_button(_power_comp.contour_id)
 
-	# 2. 2️⃣ Динамически наполняем список доступными контурами
-	for i in range(1, PowerGridManager.MAX_CONTOURS + 1):
-		# Контур доступен, если он СВОБОДЕН, ИЛИ если это "родной" контур текущего объекта
-		if i == current_id or not i in occupied_contours:
-			option_button.add_item("Контур " + str(i), i) # Текст и внутренний ID элемента
-	
-	# 3. 3️⃣ Выставляем визуальный фокус на текущий контур объекта
-	# Так как мы передавали реальный ID контура вторым аргументом в add_item,
-	# мы можем легко найти индекс нужной строки
-	for idx in range(option_button.item_count):
-		if option_button.get_item_id(idx) == current_id:
-			option_button.select(idx)
-			break
+	var _socket_comp = current_target.get_comp(C_Socket)
+	if _socket_comp:
+		var neighbors = _socket_comp.get_connected_entities()
+		_on_neighbor_updated(neighbors)
+		
+	if  PGM.get_voltage(_power_comp.contour_id) > 0:
+		%TrackVoltageLabel.modulate = Color(0.0, 0.824, 0.0, 1.0)
+	elif PGM.get_voltage(_power_comp.contour_id) < 0:
+		%TrackVoltageLabel.modulate = Color(1.0, 0.302, 0.043, 1.0)
+	else:
+		%TrackVoltageLabel.modulate = Color(1.0, 1.0, 1.0, 1.0)
 
-	%TrackContourLabel.text = str(current_target.get_comp(C_PowerTrack).contour_id)
+
+# Обновляет инфопанель актуальной инфой о ТРАКЕ!. ⚡Сигнал из менеджера при дергании ручки
+func _on_power_track_updated(_contour : int, _voltage : float) ->void:
+	if not current_target: return
+	
+	var _power_comp = null
+	if current_target.has_comp(C_PowerTrack): # Если трак
+		_power_comp = current_target.get_comp(C_PowerTrack)
+		%TrackContourLabel.text = str(_power_comp.contour_id)
+		%TrackVoltageLabel.text = str(PGM.get_voltage(_power_comp.contour_id))
+		%FlippedLabel.text = str(_power_comp.is_flipped)
+	
+		if  _voltage > 0:
+			%TrackVoltageLabel.modulate = Color(0.0, 0.824, 0.0, 1.0)
+		elif _voltage < 0:
+			%TrackVoltageLabel.modulate = Color(1.0, 0.302, 0.043, 1.0)
+		else:
+			%TrackVoltageLabel.modulate = Color(1.0, 1.0, 1.0, 1.0)
+
+	if current_target.has_comp(C_Socket): # Если трак
+		var _socket_comp = current_target.get_comp(C_Socket) as C_Socket
+		_on_neighbor_updated(_socket_comp.connected_entities)
+
+
+
+# Инфа о соседях трака
+func _on_neighbor_updated(_neighbor_list):
+	var _list := ''
+	for _n in _neighbor_list:
+		_list += _n.name + '\n'
+	%NeighborLabel.text = _list
+
 
 
 func _update_debug_tab():
@@ -171,7 +208,6 @@ func _on_components_changed(_type: Script):
 
 ## ---⚡Сигналы от кнопок---
 
-
 ## Кнопка меняет Номер контура  0 - нет подключения
 ## должен щелкать только по свободным контурам, 0 и своему, если он есть
 
@@ -192,45 +228,64 @@ func _on_contour_id_item_selected(index: int):
 		power_clip.set_contour(new_contour_id)
 		# Вешаем на трак новый контур
 		current_target.get_comp(C_PowerTrack).contour_id = new_contour_id
-
-		# Оповещаем менеджер о перерасчете графа дорог (если такой метод есть)
-		if PowerGridManager.has_method("recalculate_topology"):
-			PowerGridManager.recalculate_topology()
-
+		
+		#await get_tree().physics_frame
+		
+		# Оповещаем менеджер о перерасчете графа дорог
+		#PGM._update_shader_voltage(new_contour_id, PGM.get_voltage(power_clip.contour_id))
+		PGM.request_recalculate()
+		#current_target.send_event("on_power_view_changed", {"active": true})
 		# На всякий случай перерисовываем панель, чтобы закрепить состояние
 		_update_power_tab()
-		
+
 
 
 	
 ## Кнопка вешает PowerClip на трак
 
 func _on_power_clip_button_pressed() -> void:
+	
 	if not current_target or not current_target.has_comp(C_PowerTrack):
 		return # это powertrack?
 	
-	var target_contour: int = %ClipContourIDButton.selected
-		
-	# Проверяем: если контур равен 0 (игрок не выбрал конкретный канал)
-	if target_contour == 0:
-		target_contour = PowerGridManager.get_free_contour_id()
-		# Обновляем UI, чтобы игрок сразу визуально увидел, какой контур ему выдали
-		%ClipContourIDButton.selected = target_contour
-
+	# Выбор контура 
+	var _contour: int = %ClipContourIDButton.selected
+	var _btn_pressed = %PowerClipButton.button_pressed
 	
-	if  %PowerClipButton.button_pressed: # нажата 
-		# Вешаем C_PowerClip 
-		var power_clip = C_PowerClip.new()
-		#power_clip.contour_id = target_contour
-		current_target.add_component(power_clip)
-		power_clip.set_power(target_contour, 0)
-		
-		# Вешаем на трак контур
-		current_target.get_comp(C_PowerTrack).contour_id = target_contour
-		
-	else : # отжата 
-		current_target.remove_component(C_PowerClip)
-		# Снимаем контур с трака
-		current_target.get_comp(C_PowerTrack).contour_id = 0
-		
+	# Менеджер проверит и создаст 
+	_contour = PGM.create_power_clip(current_target, _contour, _btn_pressed)
+	
+	# Обновляем UI, чтобы игрок сразу визуально увидел, какой контур ему выдали
+	%ClipContourIDButton.selected = _contour
+	
 	_update_power_tab()
+
+
+
+# --Helpers --
+
+# 💡-option_button- Делаем селектор контура-
+func _fill_clip_contour_button(_current_contour_id) -> void:
+	var option_button = %ClipContourIDButton as OptionButton
+	option_button.clear() # Полностью очищаем старые пункты
+	
+	# 1.1️⃣ Добавляем базовый вариант (0 - отключено от питания)
+	option_button.add_item("0: Отключено", 0)
+	
+	# Получаем массив контуров, которые УЖЕ заняты другими клеммами на макете
+	var occupied_contours = PGM.get_occupied_contours()
+	var current_id = _current_contour_id # Текущий контур этого объекта
+
+	# 2. 2️⃣ Динамически наполняем список доступными контурами
+	for i in range(1, PGM.MAX_CONTOURS + 1):
+		# Контур доступен, если он СВОБОДЕН, ИЛИ если это "родной" контур текущего объекта
+		if i == current_id or not i in occupied_contours:
+			option_button.add_item("Контур " + str(i), i) # Текст и внутренний ID элемента
+	
+	# 3. 3️⃣ Выставляем визуальный фокус на текущий контур объекта
+	# Так как мы передавали реальный ID контура вторым аргументом в add_item,
+	# мы можем легко найти индекс нужной строки
+	for idx in range(option_button.item_count):
+		if option_button.get_item_id(idx) == current_id:
+			option_button.select(idx)
+			break

@@ -15,7 +15,7 @@ func create_component(_entity: Entity) -> Component:
 	comp.scene = scene # Передаем сцену в саму ноду компонента
 	
 	#TODO реализация теперь в EC?? Материалы. 
-	comp.settings = settings 
+	comp.visual_settings = settings 
 	comp.name = 'C_Visual'
 	_entity.add_component(comp) # Добавили комп к объекту
 	

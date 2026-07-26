@@ -18,8 +18,8 @@ func _ready() -> void:
 	#object_setting  =load("res://ui/dc_controllers/dc_controller_mini.tres")
 	
 	# подключаемся к powermanager
-	#change_power_pwm.connect(PowerGridManager.on_change_power_dc)
-	#onoff_power_pwm.connect(PowerGridManager.on_onoff_power_dc)
+	#change_power_pwm.connect(PGM.on_change_power_dc)
+	#onoff_power_pwm.connect(PGM.on_onoff_power_dc)
 
 	## сразу питание в сеть как в слайдере (для дебага)
 	#current_power_local()
@@ -34,7 +34,7 @@ func current_power_local() -> void:
 	# Подача сигнала с питание в контур. -1 - во все 
 	#change_power_pwm.emit(active_contour, power_local)
 	
-	PowerGridManager.set_power_pwm(active_contour, power_local)
+	PGM.set_power_pwm(active_contour, power_local)
 
 
 

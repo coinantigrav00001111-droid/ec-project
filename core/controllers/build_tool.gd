@@ -93,14 +93,14 @@ func process_tick(_delta):
 		})
 
 
-
-## Выставляет всем дочерним нодам-коллизиям слой
-func _set_collision_layer_recursive(node: Node, layer: int):
-	if node is CollisionObject3D:
-		node.collision_layer = layer
-	for child in node.get_children():
-		_set_collision_layer_recursive(child, layer)
-
+#
+### Выставляет всем дочерним нодам-коллизиям слой
+#func _set_collision_layer_recursive(node: Node, layer: int):
+	#if node is CollisionObject3D:
+		#node.collision_layer = layer
+	#for child in node.get_children():
+		#_set_collision_layer_recursive(child, layer)
+#
 
 
 ## Выполняется при выходе из инстр.

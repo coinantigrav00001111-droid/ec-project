@@ -59,6 +59,7 @@ var pre_a = 0 #предыдущее значение угла для расче�
 
 # ⚡Сигнал текущей power в обработчик powermanager
 signal change_power_pwm(power, contour)
+@warning_ignore("unused_signal")
 signal onoff_power_pwm(onoff)
 
 
@@ -301,14 +302,17 @@ func _on_contour_slider_value_changed(value: float) -> void:
 func _on_power_button_pressed() -> void:
 	var pwr_on = %PowerButton.button_pressed
 	if !pwr_on: #Выкл
-		power_mult = 0
+		#power_mult = 0
 		active_contour = 0
 		%PowerSlider.value =0
-		onoff_power_pwm.emit(pwr_on) # Подача сигнала питание выкл в powermanager 
+		
+		#onoff_power_pwm.emit(pwr_on) # Подача сигнала питание выкл в powermanager 
 	else: # Вкл
-		power_mult = 1
+		#power_mult = 1
 		active_contour = %ContourSlider.value
-		onoff_power_pwm.emit(pwr_on) # восстановит все из мемори
+		#onoff_power_pwm.emit(pwr_on) # восстановит все из мемори
 		current_power_local() # обновляем питание по ручке
 	
+	PGM.emergency_stop(!pwr_on)
+
 	

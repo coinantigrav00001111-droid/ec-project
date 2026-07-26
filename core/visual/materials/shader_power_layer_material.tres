@@ -1,0 +1,11 @@
+[gd_resource type="ShaderMaterial" format=3 uid="uid://ce6lbjfn8u0mw"]
+
+[ext_resource type="Shader" uid="uid://bnqeg0bxwa8ux" path="res://core/visual/materials/shader_power_track_0.gdshader" id="1_u7gws"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_u7gws")
+shader_parameter/contour_color = Color(0, 0.8, 1, 1)
+shader_parameter/scroll_speed = 0.0
+shader_parameter/stripe_density = 5.0
+shader_parameter/alpha = 0.8

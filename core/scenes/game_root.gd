@@ -35,6 +35,7 @@ var current_mode :StringName = &'build'
 
 
 func _ready() -> void:
+	#SaveManager.load_game('autosave')
 	pass
 
 

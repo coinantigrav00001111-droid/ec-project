@@ -6,6 +6,7 @@
 [ext_resource type="Material" uid="uid://bq3euyw84s54s" path="res://core/visual/materials/hovered_material.res" id="4_j3q5s"]
 [ext_resource type="Material" uid="uid://b5x8r8udgb4c1" path="res://core/visual/materials/power_material.res" id="5_esewd"]
 [ext_resource type="Script" uid="uid://dyjri63w7c0cb" path="res://core/visual/visual_state_settings.gd" id="5_ngbl8"]
+[ext_resource type="Shader" uid="uid://b6upaba4tvegw" path="res://core/visual/materials/shader_power_track.gdshader" id="6_1viyt"]
 [ext_resource type="Material" uid="uid://bqgir5a1kos3d" path="res://core/visual/materials/selected_material.res" id="6_n23pq"]
 [ext_resource type="Material" uid="uid://di32k46peaduu" path="res://core/visual/materials/selected_outline_mat.tres" id="6_oifuv"]
 
@@ -18,5 +19,19 @@ hover_material = ExtResource("4_j3q5s")
 power_material = ExtResource("5_esewd")
 ghost_shader_material = ExtResource("3_xtfy3")
 selected_shader_material = ExtResource("6_oifuv")
+power_shader = ExtResource("6_1viyt")
 selected_color = Color(0.27116957, 0.4940508, 0.91261333, 1)
+CONTOUR_COLORS = {
+0: Color(0.5, 0.5, 0.5, 1),
+1: Color(0.8901961, 0.95686275, 0, 1),
+2: Color(0.7, 0.2, 0.9, 1),
+3: Color(0.2, 1, 0.2, 1),
+4: Color(0.72, 0.666, 0.313, 1),
+5: Color(1, 0.4, 0.8, 1),
+6: Color(0, 0.6, 0.6, 1),
+7: Color(0.8, 0.6, 1, 1),
+8: Color(0.5, 0.3, 0.1, 1),
+9: Color(0.357, 0.6, 0.071, 1),
+10: Color(0.3, 0, 0.5, 1)
+}
 metadata/_custom_type_script = "uid://dyjri63w7c0cb"

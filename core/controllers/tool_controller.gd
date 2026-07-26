@@ -19,7 +19,7 @@ class_name ToolController extends Node3D
 @onready var build_tool: BuildTool = %BuildTool
 @onready var select_tool = %SelectTool
 @onready var drag_tool: DragTool = %DragTool
-@onready var save_controller: SaveManager = %SaveManager
+#@onready var save_controller: SaveManager = %SaveManager
 
 
 
@@ -47,7 +47,7 @@ func _ready() -> void:
 	#build_controller.object_deselected.connect(build_controller._on_object_deselected)
 	
 	# ⚡Сигнал из топпанели нажат пункт меню контроллера
-	top_panel.menu_button_pressed.connect(_on_menu_button_pressed)
+	#top_panel.menu_button_pressed.connect(_on_menu_button_pressed)
 	
 	# Инициализируем инструменты, передав им ссылку на себя
 	for tool in %Tools.get_children():
@@ -99,9 +99,9 @@ func _on_build_selected(setting: EntitySetting):
 # ------- MENU -----------
 # ⚡Сигнал из toppanel\верхнего меню .
 # TODO Можно переносить В сейвменеджер.Это его зона ответсвенности.
-func _on_menu_button_pressed(idx : int) -> void:
-	# Пока все индексы передаем в save контроллер
-	save_controller.menu_click_handling(idx)
+#func _on_menu_button_pressed(idx : int) -> void:
+	 #Пока все индексы передаем в save контроллер
+	#SaveManager.menu_click_handling(idx)
 
 
 

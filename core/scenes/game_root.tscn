@@ -7,11 +7,11 @@
 [ext_resource type="Script" uid="uid://hgj4x5huj448" path="res://core/controllers/drag_tool.gd" id="7_7cj6n"]
 [ext_resource type="Script" uid="uid://dfop7bhf2teoc" path="res://core/entity_factory.gd" id="7_jy1t0"]
 [ext_resource type="Script" uid="uid://ba410qkqq0iok" path="res://core/controllers/build_tool.gd" id="8_4pdep"]
+[ext_resource type="Script" uid="uid://dninmf7u7bdkm" path="res://core/controllers/save_manager.gd" id="8_bc160"]
 [ext_resource type="Script" uid="uid://di5kuetyise5i" path="res://core/controllers/select_tool.gd" id="9_7cj6n"]
 [ext_resource type="PackedScene" uid="uid://57xnplsftgls" path="res://ui/ui.tscn" id="9_jy1t0"]
 [ext_resource type="Script" uid="uid://bnkd3ih6wvat" path="res://core/world.gd" id="9_m5pu1"]
 [ext_resource type="PackedScene" uid="uid://b6bt6i4wh1nk2" path="res://ui/debug/entity_debugger.tscn" id="10_4pdep"]
-[ext_resource type="Script" uid="uid://dninmf7u7bdkm" path="res://core/controllers/save_manager.gd" id="10_hf67p"]
 [ext_resource type="PackedScene" uid="uid://b5a0jw0b12rtr" path="res://world/objects/tools/rulette.tscn" id="13_bc160"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_igrpr"]
@@ -81,10 +81,6 @@ script = ExtResource("7_7cj6n")
 
 [node name="EntityFactory" type="Node" parent="." unique_id=2116315265]
 script = ExtResource("7_jy1t0")
-
-[node name="SaveManager" type="Node" parent="." unique_id=2126699721]
-unique_name_in_owner = true
-script = ExtResource("10_hf67p")
 
 [node name="Debug" type="CanvasLayer" parent="." unique_id=1812429807]
 
@@ -162,3 +158,6 @@ unique_name_in_owner = true
 unique_name_in_owner = true
 
 [node name="Trains" type="Node3D" parent="World/EntitiesRoot" unique_id=1705629162]
+
+[node name="SaveManager" type="Node" parent="." unique_id=442502772]
+script = ExtResource("8_bc160")

@@ -1,4 +1,5 @@
-class_name SaveManager extends Node
+extends Node
+class_name SaveManager  #это в автолоад прописано
 ###########################
 ##💡 SaveManager - Системный сервис(autoload), контроль загрузки сохранения
 ############################
@@ -8,35 +9,40 @@ const SAVE_DIR = "res://saves/"
 
 # Ссылка на узел дерева, где лежат все рельсы
 @onready var world_entities_root = "/root/GameRoot/World/EntitiesRoot"
-@onready var entity_factory: EntityFactory = $"../EntityFactory"
-@onready var info_panel: InfoPanel = $"../UI/InfoPanel"
+@onready var entity_factory: EntityFactory = $"/root/GameRoot/EntityFactory"
+@onready var info_panel: InfoPanel = $"/root/GameRoot/UI/InfoPanel"
 
 
 func _ready() -> void:
+	#await  get_tree().process_frame
+	# Откладывает вызов функции до тех пор, пока дерево полностью не построится
+	#load_game.call_deferred('autosave')
 	load_game('autosave')
 	pass
 
-func _exit_tree() -> void:
-	#await  get_tree().process_frame
-	save_game('autosave')
+#func _exit_tree() -> void:
+	##await  get_tree().process_frame
+	#save_game('autosave')
+	
 	
 	
 ## Завершение работы
 func _notification(what):
-	## Срабатывает при закрытии окна (крестик, Alt+F4)
+	### Срабатывает при закрытии окна (крестик, Alt+F4)
 	if what == NOTIFICATION_WM_CLOSE_REQUEST: 
-		save_game('autosave')
-		#await  get_tree().process_frame
 		#print('1')
+		save_game('autosave')
+		await  get_tree().process_frame
+		
 		get_tree().quit() # Разрешаем выход после сохранения
-		#
-	# Непонятно зачем, но Срабатывает при штатном выходе через get_tree().quit()
-	#elif what == NOTIFICATION_PREDELETE:
-#
-		##save_game()
+		##
+	## Непонятно зачем, но Срабатывает при штатном выходе через get_tree().quit()
+	#if what == NOTIFICATION_PREDELETE:
 		#print('2')
-		##pass
-	pass
+		#save_game()
+		
+		###pass
+	#pass
 
 
 
@@ -51,13 +57,13 @@ func save_game(slot_name: String ='savegame') -> void:
 	var _saved_game : SavedGame = SavedGame.new()
 	
 	# 1️⃣ сохраняем камеру через ее метод
-	_saved_game.gimbal =  $"../Gimbal".save_global_state()
+	_saved_game.gimbal = $"/root/GameRoot/Gimbal".save_global_state()
 	
 	#var save_data = {
 		##"game_version": "1.0",
 		##"global_managers": {
 			##"gimbal" : _gimbal.save_global_state(),
-			###"PowerGrid": PowerGridManager.save_global_state()
+			###"PowerGrid": PGM.save_global_state()
 		##},
 		#"entities": []
 	#}
@@ -82,12 +88,15 @@ func save_game(slot_name: String ='savegame') -> void:
 
 
 
-# Очистка от ентити
+# Очистка от ентити. Хотя это больше подходит для тулза стройки, но пока тут
 func clear_scene() -> void:
 	var root_node = get_node(world_entities_root)
-	
+
 	# 1. ПОЛНАЯ ОЧИСТКА МАКЕТА
 	for child in root_node.get_children():
+		var clip = child.get_comp(C_PowerClip)
+		if clip in PGM.active_clips:
+			PGM.active_clips.erase(clip)
 		child.queue_free()
 		
 	#INFO ДЕРГАЕМ ПАНЕЛЬ!
@@ -102,8 +111,7 @@ func load_game(slot_name: String  ='savegame') -> void:
 	var _saved_game :SavedGame = load(save_path) as SavedGame #автокомплит
 	
 	# 1️⃣ загружаем камеру вызывая ее метод
-	$"../Gimbal".load_global_state(_saved_game.gimbal)
-	
+	$"/root/GameRoot/Gimbal".load_global_state(_saved_game.gimbal)
 	var root_node = get_node(world_entities_root)
 	
 	# 1. ПОЛНАЯ ОЧИСТКА СТАРОГО МАКЕТА
@@ -111,7 +119,7 @@ func load_game(slot_name: String  ='savegame') -> void:
 		child.queue_free()
 
 	# Ждем, пока Godot гарантированно удалит старые объекты из памяти и физики
-	await get_tree().process_frame
+	await get_tree().physics_frame
 
 	## 0️⃣ 3. СПАВН СУЩНОСТЕЙ С НАКАТЫВАНИЕМ ДАННЫХ
 	for e_data in _saved_game.entities:
@@ -146,32 +154,36 @@ func load_game(slot_name: String  ='savegame') -> void:
 
 	# 4. ВАЖНЕЙШИЙ ТАКТ СИНХРОНИЗАЦИИ ФИЗИКИ (см. Критические нюансы ниже)
 	await get_tree().physics_frame
+	
+	#DEBUG повер слой принудительно обновляем
+	PGM.toggle_power_layer(true)
+	PGM.request_recalculate()
 	print("Макет успешно загружен!")
 
 
-
-func menu_click_handling(_idx : int) -> void:
-	match _idx:
-		0: # save
-			save_game()
-		1: # load
-			load_game('savegame')
-			#print(OS.get_data_dir())
-			pass
-		2: # ++
-			pass
-		3: #ничего
-			clear_scene()
-			pass
-			
-		5: #DEFAULT jolt
-			#GM. apply_jolt_profile(GM.AssistProfile.DEFAULT) 
-			pass
-		6: #STABLE jolt
-			#GM. apply_jolt_profile(GM.AssistProfile.STABLE) 
-			pass
-		7: #EXTREME jolt
-			#GM. apply_jolt_profile(GM.AssistProfile.EXTREME) 
-			pass
-	pass
-	
+#
+#func menu_click_handling(_idx : int) -> void:
+	#match _idx:
+		#0: # save
+			#save_game()
+		#1: # load
+			#load_game('savegame')
+			##print(OS.get_data_dir())
+			#pass
+		#2: # ++
+			#pass
+		#3: #ничего
+			#clear_scene()
+			#pass
+			#
+		#5: #DEFAULT jolt
+			##GM. apply_jolt_profile(GM.AssistProfile.DEFAULT) 
+			#pass
+		#6: #STABLE jolt
+			##GM. apply_jolt_profile(GM.AssistProfile.STABLE) 
+			#pass
+		#7: #EXTREME jolt
+			##GM. apply_jolt_profile(GM.AssistProfile.EXTREME) 
+			#pass
+	#pass
+	#
