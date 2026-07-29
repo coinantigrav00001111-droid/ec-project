@@ -2,20 +2,16 @@ extends Resource
 class_name DCControllerSetting
 
 ########################
-## Ресурс контроллера питания
+## Ресурс контроллера питания для 2D контроллеров
 ########################
 
-## Все контроллеры в папке objects
 
 @export var id :int = 0 # сортировка в панели кнопок
 @export var name :String = 'DC Controller'
 @export var description :String = 'Стандартный DC контроллер'
-@export var tab :int = 0
+@export var category :StringName = &'dc_controller'
+@export var tag :StringName = &'2d'
 @export var scene :PackedScene
 @export var icon :Texture2D
-@export var rotation_with_direction :bool = true
-@export var handle_max_angle :int = 270
-
-
-# Правильно для сейва видимо
-# @export var power_pwm : Dictionary[int, int] = {} 
+@export var rotation_with_direction :bool = true # Вращение ручки в обе стороны вместо переключателя полярности
+@export var handle_max_angle :int = 270 # Максимальный угол поворота ручки

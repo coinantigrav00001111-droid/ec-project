@@ -9,6 +9,7 @@ extends DCController
 ## Наследует контроллер_р но упрощает его функции за счет дефолтных нод управления
 
 func _ready() -> void:
+	PGM.dc_controller = self
 	# начальное значение кнопки видимости 
 	%ShowControllerButton.button_pressed = true
 	# реакция на кнопку dc контроллера (в редакторе он виден по умолчанию)
@@ -32,8 +33,7 @@ func current_power_local() -> void:
 	power_local = int(value * power_mult)
 	%PowerLabel.text = str(power_local) + '%'
 	# Подача сигнала с питание в контур. -1 - во все 
-	#change_power_pwm.emit(active_contour, power_local)
-	
+
 	PGM.set_power_pwm(active_contour, power_local)
 
 

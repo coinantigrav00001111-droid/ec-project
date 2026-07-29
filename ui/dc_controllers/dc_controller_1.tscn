@@ -1,0 +1,272 @@
+[gd_scene format=3 uid="uid://bc3syho60ewgx"]
+
+[ext_resource type="Texture2D" uid="uid://bnnomcgl78w4x" path="res://ui/dc_controllers/dc_controller_1.webp" id="1_3tfl0"]
+[ext_resource type="Script" uid="uid://b0crmcsn0yll5" path="res://ui/dc_controllers/dc_controller_1.gd" id="2_3tfl0"]
+[ext_resource type="Texture2D" uid="uid://rv80dwos0nl3" path="res://ui/dc_controllers/slider_back_1.webp" id="4_1wx3e"]
+[ext_resource type="Texture2D" uid="uid://etlcg48ryqlc" path="res://ui/dc_controllers/handle_1.webp" id="5_gvho3"]
+[ext_resource type="Texture2D" uid="uid://bf12fnh3mnchv" path="res://ui/dc_controllers/slider_knob_1.webp" id="6_3tfl0"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_krtm5"]
+texture = ExtResource("1_3tfl0")
+
+[sub_resource type="LabelSettings" id="LabelSettings_w7n8v"]
+font_size = 11
+font_color = Color(0.103743516, 0.10374353, 0.103743516, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ovwif"]
+bg_color = Color(0.16078432, 0.16078432, 0.16078432, 0.6)
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.7607843, 0.7529412, 0.7372549, 1)
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+
+[sub_resource type="LabelSettings" id="LabelSettings_0q1qr"]
+font_size = 11
+font_color = Color(0.103743516, 0.10374353, 0.103743516, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_exhnd"]
+content_margin_top = 13.0
+content_margin_bottom = 13.0
+texture = ExtResource("4_1wx3e")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1lc0d"]
+bg_color = Color(0, 0, 0, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xc2bt"]
+bg_color = Color(0, 0, 0, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_14lua"]
+bg_color = Color(0.23529412, 0.23529412, 0.23529412, 0.36078432)
+border_width_bottom = 1
+border_color = Color(0, 0, 0, 0.54901963)
+border_blend = true
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+expand_margin_top = 6.0
+expand_margin_bottom = 6.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_o7aer"]
+bg_color = Color(0.23529412, 0.23529412, 0.23529412, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_n3g47"]
+bg_color = Color(0.23529412, 0.23529412, 0.23529412, 0)
+
+[sub_resource type="LabelSettings" id="LabelSettings_ovwif"]
+font_color = Color(0.103743516, 0.10374353, 0.103743516, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_cec4i"]
+font_color = Color(0.103743516, 0.10374353, 0.103743516, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_fru3f"]
+font_color = Color(0.103743516, 0.10374353, 0.103743516, 1)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_k8okf"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_1wx3e"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_gvho3"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_1h3x0"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_fo2ea"]
+
+[node name="DCControllerPanel1" type="Panel" unique_id=1088175003]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 5.0
+offset_top = -360.0
+offset_right = 422.0
+offset_bottom = -78.0
+grow_vertical = 0
+size_flags_horizontal = 0
+size_flags_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxTexture_krtm5")
+script = ExtResource("2_3tfl0")
+handle_max_angle = 270
+rotation_with_direction = true
+metadata/_edit_vertical_guides_ = [29.0, 177.0, 131.0, 78.0]
+metadata/_edit_horizontal_guides_ = [681.0, 706.0]
+
+[node name="ModelLabel" type="Label" parent="." unique_id=900776097]
+layout_mode = 0
+offset_left = 306.0
+offset_top = 11.0
+offset_right = 404.0
+offset_bottom = 25.0
+size_flags_vertical = 8
+text = "Model DС-01-"
+label_settings = SubResource("LabelSettings_w7n8v")
+horizontal_alignment = 2
+
+[node name="ShowControllerButton" type="Button" parent="." unique_id=1684760681]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 417.0
+offset_top = 11.0
+offset_right = 437.0
+offset_bottom = 61.0
+theme_override_styles/pressed = SubResource("StyleBoxFlat_ovwif")
+toggle_mode = true
+button_pressed = true
+text = "<"
+
+[node name="DirectionSliderLabels" type="HBoxContainer" parent="." unique_id=1369345211]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 148.0
+offset_right = 142.0
+offset_bottom = 162.0
+
+[node name="RewLabel" type="Label" parent="DirectionSliderLabels" unique_id=2032015062]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "REW"
+label_settings = SubResource("LabelSettings_0q1qr")
+horizontal_alignment = 1
+
+[node name="OffLabel" type="Label" parent="DirectionSliderLabels" unique_id=583315644]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "OFF"
+label_settings = SubResource("LabelSettings_0q1qr")
+horizontal_alignment = 1
+
+[node name="FWDLabel" type="Label" parent="DirectionSliderLabels" unique_id=1849747037]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "FWD"
+label_settings = SubResource("LabelSettings_0q1qr")
+horizontal_alignment = 1
+
+[node name="DirectionSlider" type="HSlider" parent="." unique_id=714059684]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 161.0
+offset_right = 135.0
+offset_bottom = 213.0
+theme_override_constants/center_grabber = 0
+theme_override_constants/grabber_offset = 6
+theme_override_icons/grabber = ExtResource("6_3tfl0")
+theme_override_icons/grabber_highlight = ExtResource("6_3tfl0")
+theme_override_styles/slider = SubResource("StyleBoxTexture_exhnd")
+theme_override_styles/grabber_area = SubResource("StyleBoxFlat_1lc0d")
+theme_override_styles/grabber_area_highlight = SubResource("StyleBoxFlat_xc2bt")
+min_value = -1.0
+max_value = 1.0
+value = 1.0
+
+[node name="HandlePower" type="Control" parent="." unique_id=1599104646]
+unique_name_in_owner = true
+anchors_preset = 0
+offset_left = 276.289
+offset_top = 140.0
+offset_right = 276.289
+offset_bottom = 140.0
+
+[node name="Handle_texture" type="TextureRect" parent="HandlePower" unique_id=534543844]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -84.0
+offset_top = -119.0
+offset_right = 84.0
+offset_bottom = 123.0
+grow_horizontal = 2
+rotation = -2.3561945
+pivot_offset = Vector2(84, 119)
+texture = ExtResource("5_gvho3")
+
+[node name="ContourSlider" type="HSlider" parent="." unique_id=1894012943]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 16.0
+offset_top = 46.0
+offset_right = 183.0
+offset_bottom = 62.0
+theme_override_styles/slider = SubResource("StyleBoxFlat_14lua")
+theme_override_styles/grabber_area = SubResource("StyleBoxFlat_o7aer")
+theme_override_styles/grabber_area_highlight = SubResource("StyleBoxFlat_n3g47")
+min_value = -1.0
+max_value = 8.0
+value = -1.0
+tick_count = 9
+ticks_on_borders = true
+ticks_position = 3
+
+[node name="DirectionLabel" type="Label" parent="." unique_id=284571161]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(26, 0)
+layout_mode = 0
+offset_left = 102.0
+offset_top = 113.0
+offset_right = 128.0
+offset_bottom = 136.0
+size_flags_horizontal = 4
+size_flags_vertical = 8
+text = "🠊"
+label_settings = SubResource("LabelSettings_ovwif")
+horizontal_alignment = 1
+vertical_alignment = 2
+
+[node name="PowerLabel" type="Label" parent="." unique_id=1084003456]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 0
+offset_left = 73.0
+offset_top = 96.0
+offset_right = 123.0
+offset_bottom = 115.0
+text = "0%"
+label_settings = SubResource("LabelSettings_cec4i")
+horizontal_alignment = 2
+vertical_alignment = 2
+
+[node name="ContourLabel" type="Label" parent="." unique_id=726288885]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(37, 0)
+layout_mode = 0
+offset_left = 104.0
+offset_top = 77.0
+offset_right = 141.0
+offset_bottom = 96.0
+size_flags_horizontal = 6
+size_flags_stretch_ratio = 2.0
+text = "c:-1"
+label_settings = SubResource("LabelSettings_fru3f")
+
+[node name="PowerButton" type="Button" parent="." unique_id=1978775152]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 55.0
+offset_top = 228.0
+offset_right = 91.0
+offset_bottom = 264.0
+theme_override_colors/icon_normal_color = Color(0.46587956, 0.23176971, 2.8878452e-07, 1)
+theme_override_colors/icon_pressed_color = Color(1, 0.5294118, 0.03529412, 1)
+theme_override_colors/icon_hover_color = Color(1, 0.619562, 0.33242485, 1)
+theme_override_colors/icon_hover_pressed_color = Color(0.5422765, 0.27287892, 0, 1)
+theme_override_font_sizes/font_size = 9
+theme_override_styles/normal = SubResource("StyleBoxEmpty_k8okf")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_1wx3e")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_gvho3")
+theme_override_styles/hover_pressed = SubResource("StyleBoxEmpty_1h3x0")
+theme_override_styles/hover_pressed_mirrored = SubResource("StyleBoxEmpty_fo2ea")
+toggle_mode = true
+button_pressed = true
+text = "Power"
+icon = ExtResource("6_3tfl0")
+icon_alignment = 1
+
+[connection signal="pressed" from="ShowControllerButton" to="." method="_on_show_controller_button_pressed"]
+[connection signal="value_changed" from="DirectionSlider" to="." method="_on_direction_slider_value_changed"]
+[connection signal="gui_input" from="HandlePower/Handle_texture" to="." method="_on_handle_texture_gui_input"]
+[connection signal="mouse_entered" from="HandlePower/Handle_texture" to="." method="_on_handle_texture_mouse_entered"]
+[connection signal="mouse_exited" from="HandlePower/Handle_texture" to="." method="_on_handle_texture_mouse_exited"]
+[connection signal="value_changed" from="ContourSlider" to="." method="_on_contour_slider_value_changed"]
+[connection signal="pressed" from="PowerButton" to="." method="_on_power_button_pressed"]

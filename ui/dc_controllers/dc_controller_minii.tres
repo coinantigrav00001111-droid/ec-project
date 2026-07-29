@@ -1,9 +1,0 @@
-[gd_resource type="Resource" script_class="DCControllerSetting" format=3 uid="uid://rp26uwqantw2"]
-
-[ext_resource type="Script" uid="uid://d3qtfreanh8j6" path="res://ui/dc_controllers/controller_setting.gd" id="1_3tnxx"]
-
-[resource]
-script = ExtResource("1_3tnxx")
-name = "DC Controller mimmal"
-description = "DC контроллер минимальный дизай"
-metadata/_custom_type_script = "uid://d3qtfreanh8j6"

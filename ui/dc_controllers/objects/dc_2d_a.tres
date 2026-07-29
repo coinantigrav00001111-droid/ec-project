@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="DCControllerSetting" format=3 uid="uid://be0n5pbiovbcc"]
+
+[ext_resource type="Texture2D" uid="uid://dhl4w0xbju0e6" path="res://ui/dc_controllers/i_controller_a.webp" id="1_vujck"]
+[ext_resource type="PackedScene" uid="uid://dq57r0cxlhgy3" path="res://ui/dc_controllers/dc_controller.tscn" id="2_ohbgj"]
+[ext_resource type="Script" uid="uid://d3qtfreanh8j6" path="res://ui/dc_controllers/controller_setting.gd" id="3_q5c4r"]
+
+[resource]
+script = ExtResource("3_q5c4r")
+id = 3
+name = "DC A"
+description = "Базовый DC контроллер"
+scene = ExtResource("2_ohbgj")
+icon = ExtResource("1_vujck")
+rotation_with_direction = false
+metadata/_custom_type_script = "uid://d3qtfreanh8j6"

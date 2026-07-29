@@ -21,7 +21,8 @@ class_name DCController extends Panel
 ########################
 
 ## Ресурс с настройками экземпляра 
-var object_setting :DCControllerSetting
+#var controller_setting :DCControllerSetting
+var setting :DCControllerSetting
 
 ## Подача мощности в 0 - 100% с учетом направления +-. 
 # текущий повер внутри контроллера
@@ -29,7 +30,6 @@ var power_local : int = 0
 #var power_memory : Dictionary[int, int] = {}
 
 ## Множитель мощности для умножения мощности. Не реализовано. Учитывать float!
-## В текущем состоянии этот множитель используется в кнопке выключения питания всего
 var power_mult : float = 1.0
 
 ## Активный контур, в который передается питание. 0 - во все
@@ -58,7 +58,7 @@ var pre_a = 0 #предыдущее значение угла для расче�
 
 
 # ⚡Сигнал текущей power в обработчик powermanager
-signal change_power_pwm(power, contour)
+#signal change_power_pwm(power, contour)
 @warning_ignore("unused_signal")
 signal onoff_power_pwm(onoff)
 
@@ -69,6 +69,8 @@ signal onoff_power_pwm(onoff)
 ########################
 
 func _ready() -> void:
+	PGM.dc_controller = self
+	
 	# Имя контроллера на корпусе
 	var _model_index = 'B' if rotation_with_direction else 'A'
 	$ModelLabel.text += str(handle_max_angle) + _model_index
@@ -118,10 +120,10 @@ func _physics_process(_delta: float) -> void:
 
 ## настройки передаются в объект перед реди
 func new_setting(_setting: DCControllerSetting) -> void:
-	object_setting = _setting 
+	setting = _setting 
 	# Это нужно и для передачи туда текущего остояния питания
-	rotation_with_direction = object_setting.rotation_with_direction
-	handle_max_angle = object_setting.handle_max_angle
+	rotation_with_direction = setting.rotation_with_direction
+	handle_max_angle = setting.handle_max_angle
 	name =  'DCControllerPanel'  # Имя не влияет ни на что пока
 
 
@@ -150,8 +152,8 @@ func current_power_local() -> void:
 	%ContourLabel.text = 'C: ' + str(active_contour)
 
 	# Подача сигнала с питание в контур. 0 - во все 
-	change_power_pwm.emit(power_local, active_contour)
-
+	#change_power_pwm.emit(power_local, active_contour)
+	PGM.set_power_pwm(active_contour, power_local)
 
 
 ## Обработка вращения ручки
@@ -250,7 +252,8 @@ func _on_direction_slider_value_changed(value: float) -> void:
 ##Кнопка вкл\выкл видимости контроллера
 func _on_show_controller_button_pressed() -> void:
 	var contr_size = $".".size
-	var y_offset =%CatContainer.size.y + 5 # смещение по вертикали на высоту CatContainer
+	var y_offset = 300 # смещение по вертикали на высоту BuildObjectsContainer
+	#var y_offset = $'../MainControl/BuildObjectsContainer'.size.y + 5 # смещение по вертикали на высоту BuildObjectsContainer
 
 
 	if %ShowControllerButton.button_pressed:
@@ -291,7 +294,7 @@ func _on_handle_texture_gui_input(_event: InputEvent) -> void:
 		
 		current_power_local()
 
-## Слайдер для активного контура. 0 - питает все контуры
+## Слайдер для активного контура. -1 - питает все контуры
 func _on_contour_slider_value_changed(value: float) -> void:
 	active_contour = int(value)
 	%ContourLabel.text = 'C: ' + str(active_contour)
@@ -304,9 +307,7 @@ func _on_power_button_pressed() -> void:
 	if !pwr_on: #Выкл
 		#power_mult = 0
 		active_contour = 0
-		%PowerSlider.value =0
-		
-		#onoff_power_pwm.emit(pwr_on) # Подача сигнала питание выкл в powermanager 
+
 	else: # Вкл
 		#power_mult = 1
 		active_contour = %ContourSlider.value

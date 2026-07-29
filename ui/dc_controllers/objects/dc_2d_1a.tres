@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="DCControllerSetting" format=3 uid="uid://xfwcbh0p03pi"]
+
+[ext_resource type="Texture2D" uid="uid://b1wd4pufp4mrt" path="res://ui/dc_controllers/i_controller_1a.webp" id="1_7gqek"]
+[ext_resource type="PackedScene" uid="uid://bc3syho60ewgx" path="res://ui/dc_controllers/dc_controller_1.tscn" id="2_xdvih"]
+[ext_resource type="Script" uid="uid://d3qtfreanh8j6" path="res://ui/dc_controllers/controller_setting.gd" id="3_n40j6"]
+
+[resource]
+script = ExtResource("3_n40j6")
+id = 400
+name = "DC 1A"
+scene = ExtResource("2_xdvih")
+icon = ExtResource("1_7gqek")
+rotation_with_direction = false
+metadata/_custom_type_script = "uid://d3qtfreanh8j6"

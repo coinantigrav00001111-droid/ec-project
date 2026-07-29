@@ -84,6 +84,8 @@ bg_color = Color(0.699, 0.29, 0.29, 0)
 
 [resource]
 default_font = ExtResource("1_psqb8")
+DCButton/base_type = &"Button"
+DCButton/constants/icon_max_width = 36
 HeaderSmall/font_sizes/font_size = 18
 HeaderSmall/styles/normal = SubResource("StyleBoxFlat_hwk3b")
 LineEdit/constants/minimum_character_width = 2
@@ -93,7 +95,7 @@ Lvl1PanelContainer/styles/panel = SubResource("StyleBoxFlat_wmhti")
 ModeButton/base_type = &"Button"
 ModeButton/constants/icon_max_width = 28
 ObjectButton/base_type = &"Button"
-ObjectButton/constants/icon_max_width = 46
+ObjectButton/constants/icon_max_width = 69
 Panel/font_sizes/fs = 5
 Panel/styles/panel = SubResource("StyleBoxFlat_m3eqx")
 PanelContainer/styles/panel = SubResource("StyleBoxFlat_lcayw")
@@ -106,4 +108,4 @@ TabContainer/styles/tab_hovered = SubResource("StyleBoxFlat_0aq3t")
 TabContainer/styles/tab_selected = SubResource("StyleBoxFlat_v0ka0")
 TabContainer/styles/tab_unselected = SubResource("StyleBoxFlat_sjej7")
 TagButton/base_type = &"Button"
-TagButton/constants/icon_max_width = 25
+TagButton/constants/icon_max_width = 32

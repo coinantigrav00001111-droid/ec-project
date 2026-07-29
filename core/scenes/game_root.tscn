@@ -51,6 +51,7 @@ size = Vector3(25.96474, 1.2593689, 19.82579)
 [node name="GameRoot" type="Node3D" unique_id=1065014004]
 script = ExtResource("1_6mh03")
 debug_mode = true
+current_mode = &"operate"
 
 [node name="Gimbal" parent="." unique_id=1102985730 instance=ExtResource("2_7cj6n")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.2, 0, -4.2)
@@ -113,7 +114,6 @@ transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 2
 
 [node name="WoodFloor" type="MeshInstance3D" parent="World/WorldEnvironment" unique_id=863018642]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
-visible = false
 mesh = SubResource("BoxMesh_igrpr")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="World/WorldEnvironment/WoodFloor" unique_id=1859659393]
@@ -153,11 +153,6 @@ debug_color = Color(0, 0.98, 1.145, 1)
 
 [node name="EntitiesRoot" type="Node3D" parent="World" unique_id=1906579946]
 unique_name_in_owner = true
-
-[node name="Tracks" type="Node3D" parent="World/EntitiesRoot" unique_id=1817411642]
-unique_name_in_owner = true
-
-[node name="Trains" type="Node3D" parent="World/EntitiesRoot" unique_id=1705629162]
 
 [node name="SaveManager" type="Node" parent="." unique_id=442502772]
 script = ExtResource("8_bc160")

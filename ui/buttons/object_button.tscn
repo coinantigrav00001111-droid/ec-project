@@ -12,6 +12,7 @@ custom_minimum_size = Vector2(120, 80)
 offset_right = 120.0
 offset_bottom = 80.0
 theme_type_variation = &"ObjectButton"
+theme_override_constants/icon_max_width = 68
 toggle_mode = true
 button_group = SubResource("ButtonGroup_2rg7e")
 icon_alignment = 1

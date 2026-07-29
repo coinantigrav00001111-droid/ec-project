@@ -12,7 +12,7 @@ extends Node
 ## Подача питания  в цепь осуществляет поверклип компонент, который можно подключить на некоторые типы траков.
 ## 
 ## power_pwm - Словарь, в котором есть все контуры и питание на них, и останов
-
+@onready var dc_controller: Panel #= $"/root/GameRoot/UI/DCControlPanel" #$"/root/GameRoot/Gimbal"
 # Максимальное количество контуров в сети. Не связано с DCC контроллером, там отдельно регулировать слайдер
 const MAX_CONTOURS = 10
 
@@ -58,6 +58,7 @@ func _process(_delta: float) -> void:
 	#var labeltest: Label = $"/root/GameRoot/UI/Labeltest"
 	#labeltest.text = 'Act cl: '+str(active_clips) + 
 	#labeltest.text = '\n PowerPwm: '+ str(power_pwm)
+	#labeltest.text = str(dc_controller)
 	pass
 
 

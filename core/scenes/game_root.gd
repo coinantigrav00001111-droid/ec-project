@@ -30,12 +30,12 @@ class_name GameRoot
 
 
 ## Текущий режим из : &'build' &'operate' &'observe' &'library'
-var current_mode :StringName = &'build' 
+@export var current_mode :StringName = &'build' 
 
 
 
 func _ready() -> void:
-	#SaveManager.load_game('autosave')
+
 	pass
 
 

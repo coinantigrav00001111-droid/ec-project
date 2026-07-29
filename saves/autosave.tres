@@ -10,8 +10,8 @@
 script = ExtResource("5_4v72m")
 gimbal = {
 "camera": Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 13.977486),
-"elevation": Transform3D(1, 0, 0, 0, 0.66884416, 0.7433978, 0, -0.7433978, 0.66884416, 0, 0, 0),
-"transform": Transform3D(0.99248785, 0, 0.122343756, 0, 1, 0, -0.122343756, 0, 0.99248785, -16.018578, -0.00011730194, 224.94872)
+"elevation": Transform3D(1, 0, 0, 0, 0.8992363, 0.43745437, 0, -0.43745437, 0.8992363, 0, 0, 0),
+"transform": Transform3D(0.9958629, 0, 0.09086551, 0, 1, 0, -0.09086551, 0, 0.9958629, -15.516287, -0.00011730194, 224.38676)
 }
 entities = [{
 "components": {
@@ -30,8 +30,7 @@ ExtResource("3_mogm6"): {
 "comp_name": "c_power_track",
 "comp_path": "res://core/components/capabilities/c_power_track.gd",
 "contour_id": 5,
-"is_flipped": false,
-"voltage": 0.0
+"is_flipped": false
 }
 },
 "setting_path": "res://data/tracks/objects/g239.tres",
@@ -53,8 +52,7 @@ ExtResource("3_mogm6"): {
 "comp_name": "c_power_track",
 "comp_path": "res://core/components/capabilities/c_power_track.gd",
 "contour_id": 5,
-"is_flipped": false,
-"voltage": 0.0
+"is_flipped": false
 }
 },
 "setting_path": "res://data/tracks/objects/g239.tres",
@@ -76,8 +74,7 @@ ExtResource("3_mogm6"): {
 "comp_name": "c_power_track",
 "comp_path": "res://core/components/capabilities/c_power_track.gd",
 "contour_id": 5,
-"is_flipped": false,
-"voltage": 0.0
+"is_flipped": false
 }
 },
 "setting_path": "res://data/tracks/objects/g239.tres",
@@ -99,8 +96,7 @@ ExtResource("3_mogm6"): {
 "comp_name": "c_power_track",
 "comp_path": "res://core/components/capabilities/c_power_track.gd",
 "contour_id": 5,
-"is_flipped": false,
-"voltage": 0.0
+"is_flipped": false
 }
 },
 "setting_path": "res://data/tracks/objects/g239.tres",
@@ -122,8 +118,7 @@ ExtResource("3_mogm6"): {
 "comp_name": "c_power_track",
 "comp_path": "res://core/components/capabilities/c_power_track.gd",
 "contour_id": 5,
-"is_flipped": false,
-"voltage": 0.0
+"is_flipped": false
 },
 ExtResource("4_wegac"): {
 "comp_name": "c_power_clip",
@@ -151,8 +146,7 @@ ExtResource("3_mogm6"): {
 "comp_name": "c_power_track",
 "comp_path": "res://core/components/capabilities/c_power_track.gd",
 "contour_id": 5,
-"is_flipped": true,
-"voltage": 0.0
+"is_flipped": true
 }
 },
 "setting_path": "res://data/tracks/objects/g239.tres",
@@ -174,8 +168,7 @@ ExtResource("3_mogm6"): {
 "comp_name": "c_power_track",
 "comp_path": "res://core/components/capabilities/c_power_track.gd",
 "contour_id": 5,
-"is_flipped": false,
-"voltage": 0.0
+"is_flipped": false
 }
 },
 "setting_path": "res://data/tracks/objects/g239.tres",
@@ -197,8 +190,7 @@ ExtResource("3_mogm6"): {
 "comp_name": "c_power_track",
 "comp_path": "res://core/components/capabilities/c_power_track.gd",
 "contour_id": 5,
-"is_flipped": true,
-"voltage": 0.0
+"is_flipped": true
 }
 },
 "setting_path": "res://data/tracks/objects/g239.tres",
@@ -220,8 +212,7 @@ ExtResource("3_mogm6"): {
 "comp_name": "c_power_track",
 "comp_path": "res://core/components/capabilities/c_power_track.gd",
 "contour_id": 5,
-"is_flipped": false,
-"voltage": 0.0
+"is_flipped": false
 }
 },
 "setting_path": "res://data/tracks/objects/g239.tres",
@@ -243,8 +234,7 @@ ExtResource("3_mogm6"): {
 "comp_name": "c_power_track",
 "comp_path": "res://core/components/capabilities/c_power_track.gd",
 "contour_id": 5,
-"is_flipped": false,
-"voltage": 0.0
+"is_flipped": false
 }
 },
 "setting_path": "res://data/tracks/objects/g239.tres",
@@ -266,8 +256,7 @@ ExtResource("3_mogm6"): {
 "comp_name": "c_power_track",
 "comp_path": "res://core/components/capabilities/c_power_track.gd",
 "contour_id": 0,
-"is_flipped": false,
-"voltage": 0.0
+"is_flipped": false
 }
 },
 "setting_path": "res://data/tracks/objects/g239.tres",
@@ -289,8 +278,7 @@ ExtResource("3_mogm6"): {
 "comp_name": "c_power_track",
 "comp_path": "res://core/components/capabilities/c_power_track.gd",
 "contour_id": 0,
-"is_flipped": false,
-"voltage": 0.0
+"is_flipped": false
 }
 },
 "setting_path": "res://data/tracks/objects/g239.tres",
@@ -312,8 +300,7 @@ ExtResource("3_mogm6"): {
 "comp_name": "c_power_track",
 "comp_path": "res://core/components/capabilities/c_power_track.gd",
 "contour_id": 3,
-"is_flipped": true,
-"voltage": 0.0
+"is_flipped": true
 }
 },
 "setting_path": "res://data/tracks/objects/g239.tres",
@@ -335,8 +322,7 @@ ExtResource("3_mogm6"): {
 "comp_name": "c_power_track",
 "comp_path": "res://core/components/capabilities/c_power_track.gd",
 "contour_id": 3,
-"is_flipped": false,
-"voltage": 0.0
+"is_flipped": false
 },
 ExtResource("4_wegac"): {
 "comp_name": "c_power_clip",
@@ -364,8 +350,7 @@ ExtResource("3_mogm6"): {
 "comp_name": "c_power_track",
 "comp_path": "res://core/components/capabilities/c_power_track.gd",
 "contour_id": 0,
-"is_flipped": false,
-"voltage": 0.0
+"is_flipped": false
 }
 },
 "setting_path": "res://data/tracks/objects/g239.tres",
@@ -387,8 +372,7 @@ ExtResource("3_mogm6"): {
 "comp_name": "c_power_track",
 "comp_path": "res://core/components/capabilities/c_power_track.gd",
 "contour_id": 0,
-"is_flipped": false,
-"voltage": 0.0
+"is_flipped": false
 }
 },
 "setting_path": "res://data/tracks/objects/g239.tres",

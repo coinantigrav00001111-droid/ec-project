@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="EntitySetting" format=3 uid="uid://bqvikus0rvl2n"]
+
+[ext_resource type="Script" uid="uid://m4g5jbfwmaa0" path="res://core/component_setting.gd" id="1_atd6h"]
+[ext_resource type="Texture2D" uid="uid://bykn7sk7nse02" path="res://ui/icons/electric/joystick.svg" id="2_atd6h"]
+[ext_resource type="Script" uid="uid://do5hjkm3r2pdg" path="res://core/entity_setting.gd" id="3_cnmtp"]
+
+[resource]
+script = ExtResource("3_cnmtp")
+id = 524
+name = "DC 3d"
+description = "тестим 3д"
+category = &"dc_controller"
+tag = &"3d"
+icon = ExtResource("2_atd6h")
+metadata/_custom_type_script = "uid://do5hjkm3r2pdg"

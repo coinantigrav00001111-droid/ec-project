@@ -65,7 +65,6 @@
 				"1bdea74b-2ef0-48de-94c3-43f45b91a67d",
 				"046ad09f-d7d4-442b-8112-44c12d37b39c",
 				"0c7c66a3-ed32-4045-b2e6-322e4c722831",
-				"696f3605-24ee-4aae-80fc-4fab7f26e758",
 				"54cd8419-ce4b-44ce-93c9-e408e1cb7131",
 				"620f4006-a6b4-4a97-9c42-a5eae75fdb18",
 				"68f213c1-57f9-4966-bc40-ab8392085640",
@@ -78,9 +77,9 @@
 			"title": "Doing",
 			"tasks": [
 				"c9518725-a1fc-4454-884a-26f5c9febb9b",
-				"38dc854d-a8dd-4a1c-88d3-c1206f4023be",
-				"5072b8a6-6a55-4d20-b8c9-d33a4d0521ab",
-				"bed7a3ee-9e8e-4e8f-9e60-b5103e9f7e8b"
+				"bed7a3ee-9e8e-4e8f-9e60-b5103e9f7e8b",
+				"bf78136f-cb36-4783-a60d-3d56ebfbec0b",
+				"c250b768-076e-4194-aa2e-a084846f870d"
 			]
 		},
 		{
@@ -89,14 +88,15 @@
 			"tasks": [
 				"c3d65b49-5533-46e9-b6ef-dce81c18deb6",
 				"e93d0435-fc2b-42cc-8673-038d55a8cac4",
-				"cb3dd73c-6c8f-4073-866f-bdf0aa4954b4",
 				"5891ae87-e9cc-4475-bda2-32b97c590f0a",
 				"f6982df0-c908-46ce-a8f4-5c88be1c8446",
 				"a5000c49-b31e-41d6-ab52-4d2660910631",
 				"9f90edf4-d314-48c4-bf48-e5cac23ba348",
 				"3c3e46f9-8063-4296-bc7f-ba1964604faf",
 				"4a76b5e3-8552-4d95-a4b9-541685eff7a9",
-				"fb06345d-0266-4ee6-a59e-42ef826fb139"
+				"079b6dce-586d-417b-8e84-7af75da6ab55",
+				"fb06345d-0266-4ee6-a59e-42ef826fb139",
+				"5072b8a6-6a55-4d20-b8c9-d33a4d0521ab"
 			]
 		}
 	],
@@ -178,13 +178,6 @@
 			"steps": []
 		},
 		{
-			"uuid": "cb3dd73c-6c8f-4073-866f-bdf0aa4954b4",
-			"title": "Проверить процессы, нет ли там лишних ",
-			"description": "",
-			"category": "91f41b95-cfcd-4026-a09a-48fb304f9a00",
-			"steps": []
-		},
-		{
 			"uuid": "f6982df0-c908-46ce-a8f4-5c88be1c8446",
 			"title": "Можно сделать отдельный ховер для селект-трака",
 			"description": "",
@@ -197,38 +190,6 @@
 			"description": "",
 			"category": "50f9c949-da71-4afd-beb9-f08415f2f066",
 			"steps": []
-		},
-		{
-			"uuid": "696f3605-24ee-4aae-80fc-4fab7f26e758",
-			"title": "Инфопанель",
-			"description": "",
-			"category": "4e1e522f-ed31-43ef-82dc-7958b5551b97",
-			"steps": [
-				{
-					"details": "Вывод координат, высоты!",
-					"done": true
-				},
-				{
-					"details": "power",
-					"done": true
-				},
-				{
-					"details": "функция длявидимости строк в майн таб  для разных объектов",
-					"done": true
-				},
-				{
-					"details": "transform",
-					"done": true
-				},
-				{
-					"details": "debug",
-					"done": true
-				},
-				{
-					"details": "visual",
-					"done": false
-				}
-			]
 		},
 		{
 			"uuid": "046ad09f-d7d4-442b-8112-44c12d37b39c",
@@ -292,13 +253,6 @@
 			"steps": []
 		},
 		{
-			"uuid": "38dc854d-a8dd-4a1c-88d3-c1206f4023be",
-			"title": "контроллеры UI кнопки создания",
-			"description": "",
-			"category": "c60a33ef-b953-40cd-951b-a080048b0093",
-			"steps": []
-		},
-		{
 			"uuid": "3c3e46f9-8063-4296-bc7f-ba1964604faf",
 			"title": "Вращение по вертикали не от центра а от края трака",
 			"description": "",
@@ -324,13 +278,6 @@
 			"title": "Как будет выглядеть ентити и компоненты вагона?",
 			"description": "",
 			"category": "af31571d-f162-41be-9c9c-7b15a2004d2c",
-			"steps": []
-		},
-		{
-			"uuid": "54cd8419-ce4b-44ce-93c9-e408e1cb7131",
-			"title": "Инфопанель - довести динамическое создание вкладок",
-			"description": "",
-			"category": "4e1e522f-ed31-43ef-82dc-7958b5551b97",
 			"steps": []
 		},
 		{
@@ -435,6 +382,34 @@
 			"title": "Сейвить вольтаж DCC",
 			"description": "",
 			"category": "c60a33ef-b953-40cd-951b-a080048b0093",
+			"steps": []
+		},
+		{
+			"uuid": "079b6dce-586d-417b-8e84-7af75da6ab55",
+			"title": "Перетаскивание плоских контроллеров",
+			"description": "",
+			"category": "eb217580-82d1-4df7-a8ff-ff0c35c057e3",
+			"steps": []
+		},
+		{
+			"uuid": "bf78136f-cb36-4783-a60d-3d56ebfbec0b",
+			"title": "Подтянуть компоненты к остальным тракам",
+			"description": "",
+			"category": "50f9c949-da71-4afd-beb9-f08415f2f066",
+			"steps": []
+		},
+		{
+			"uuid": "c250b768-076e-4194-aa2e-a084846f870d",
+			"title": "Расписать вагон и локо.",
+			"description": "",
+			"category": "bfe07748-730a-4469-a662-08c8f873a722",
+			"steps": []
+		},
+		{
+			"uuid": "54cd8419-ce4b-44ce-93c9-e408e1cb7131",
+			"title": "Инфопанель - довести динамическое создание вкладок",
+			"description": "",
+			"category": "4e1e522f-ed31-43ef-82dc-7958b5551b97",
 			"steps": []
 		}
 	],

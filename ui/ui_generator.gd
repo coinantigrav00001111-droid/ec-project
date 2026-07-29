@@ -5,8 +5,15 @@ class_name UIGenerator extends Node
 ## Генератор кнопок UI BUILD режима (пока только его)
 ########################
  
-## Генерит кнопки для категорий, тегов и объектов
+## Генерит кнопки для категорий, тегов и объектов (в своих контроллерах режимов)
  
+## Сейчас BuildController и OperateController полностью одниковые, отличаются только тем, что каждый управляет своим контейнером BuildObjectsContainer для кнопок объектов и BuildPanel для кнопок категорий(track, wagon). Для OperateController такие же контейнеры.
+
+## OperateController также сам обрабатывает создание 2D объектов\контроллеров
+
+## TODO желательно создать универсальный контроллер переключения панелей, а не кучу этих.
+
+
 ## ⭐ золотое правило: «Сигналы — вверх, вызовы функций — вниз».
 #Родитель знает о дочерних узлах и может вызывать их функции напрямую.
 #Дочерние узлы не должны знать о родителе, поэтому они сообщают о событиях через сигналы.
@@ -17,6 +24,7 @@ class_name UIGenerator extends Node
 @export var icon_from_config := true # иконки собираем из объектов 
 
 @onready var build_controller: BuildController = %BuildController
+@onready var operate_controller: OperateController = %OperateController
 
 ## Словарь ССЫЛОК на ресурсы category → tag → objects
 var data := {} 
@@ -52,51 +60,74 @@ var objects_by_id := {}
 
 ## Папки с объектами
 ##TODO вынести в конфиг папки с объектами
-var objects_dirs := ["res://data/tracks/objects/"]
-var cat_btn_scene := preload("res://ui/buttons/category_button.tscn") #загрузка кат кнопки
-var tag_btn_scene := preload("res://ui/buttons/tag_button.tscn") #загрузка тег кнопки 
-var obj_btn_scene := preload("res://ui/buttons/object_button.tscn") #загрузка тег кнопки 
+var objects_dirs := [	"res://data/tracks/objects/", 
+						"res://ui/dc_controllers/objects/"]
+#загрузка кат кнопки
+var cat_btn_scene := preload("res://ui/buttons/category_button.tscn") 
+#загрузка тег кнопки 
+var tag_btn_scene := preload("res://ui/buttons/tag_button.tscn") 
+#var obj_btn_scene := preload("res://ui/buttons/object_button.tscn")  
 
 
-## Заполняет контейнер кнопками 2 lvl. Вызывается в gameroot 
+
+## Заполняет контейнер кнопками 2 lvl. 
 func _ready() -> void:
 	var _object_list := _collect_data() 	# Собрали список объектов
 
-	_build_data(_object_list) 			# Пересобрали списки по кат\тегам и id 
-	create_btn_categories()
+	_build_data(_object_list) 	# Cобрали в data списки по кат\тегам и id 
+	# создаем кнопки объектов билд
+	create_btn_categories(build_controller)
+	create_btn_categories(operate_controller)
 
 	# Задержка, чтобы создались кнопки, иначе нулевые размеры врапперов
 	await get_tree().process_frame
 	# После создания размеров врапперов выключаем видимость контейнеров
-	%CatContainer.hide()
+	%BuildObjectsContainer.hide()
+	#$'../MainControl/BuildObjectsContainer'.hide()
 	%BuildPanel.hide()
 
 
+
+		
+		
 ##======= Objects ===========
 
-func create_btn_objects(_cat : StringName, _tag : StringName):
-	for _btn in %ObjContainer.get_children():
-		_btn.queue_free()
-	
-	var obj_list = get_objects(_cat, _tag)
-	if obj_list.size() == 0: 
-		return # Если нет тегов, то выход
+## Формирует data с категориями, тегами, и объектами
+func _build_data(_object_list) -> void:
+	for _obj in _object_list: # Крутим весь список объектов
+		var cat = _obj.category 
+		var tag = _obj.tag
 		
-	for _obj in obj_list:
-		var btn : ObjectButton = obj_btn_scene.instantiate() #экземпляр кнопки
-		btn.config(_obj)
-		%ObjContainer.add_child(btn)
-		# подключение сигнала кнопки к билдконтроллеру
-		btn.object_selected.connect(build_controller.on_object_selected)	
-
+		add_tag(cat, tag) # добавляет в data тег и кат если нету
+		data[cat][tag].append(_obj)
 	
+		if objects_by_id.has(_obj.id): # Пропускаем если повтор id 
+			push_error("Duplicate ID: %s" % _obj.name)
+			continue
+		
+		objects_by_id[_obj.id] = _obj # добавили объект с id 
 
 
+## Создает кнопки для категорий 
+func create_btn_categories(_controller: Node)-> void:
+	for _cat in _controller.category_list: # проход по категориям
+		var _cat_btn : CategoryButton = cat_btn_scene.instantiate() #экземпляр кнопки из списка контроллера
+		_cat_btn.config( _controller.category_list[_cat])
+		
+		# кнопки в свой контейнер
+		var _container = '%' + _controller.name.trim_suffix("Controller") + 'BtnLvl2Container'
+		get_node(_container).add_child(_cat_btn) # кнопки в контейнер
+		
+		# подключение сигнала кнопки к контроллеру
+		_cat_btn.category_selected.connect(_controller.on_category_selected)
+		
 
-## Создает кнопки тегов при нажатии на категорию (см UIGenerator)
-func create_btn_tags(_cat : StringName):
+
+## Создает кнопки тегов ПРИ НАЖАТИИ на категорию 
+func create_btn_tags(_cat : StringName, _mode: String):
 	# Очистили от старых кнопок
-	for _btn in %TagPanel.get_children():
+	var _group = get_tree().get_nodes_in_group('tag_buttons')
+	for _btn in _group:
 		_btn.queue_free()
 	
 	if !data.has(_cat): return # Если нет тегов, то выход
@@ -112,28 +143,21 @@ func create_btn_tags(_cat : StringName):
 			"icon": get_tag_icon(_cat, _tag) # Из объекта
 		}
 		btn.config(btn_data)
-		%TagPanel.add_child(btn)
-		# подключение сигнала кнопки к билдконтроллеру
-		btn.tag_selected.connect(build_controller.on_tag_selected)	
+		var _panel = '%' + _mode.substr(0,2) + 'TagPanel'
+		get_node(_panel).add_child(btn)
+
+		# подключение сигнала кнопки к контроллеру
+		var _controller  
+		match _mode:
+			'Build':_controller = build_controller
+			'Operate':_controller = operate_controller
+			
+		btn.tag_selected.connect(_controller.on_tag_selected)	
 		
 		# Если это первая кнопка — «нажимаем» её
 		if is_first_btn:
 			btn.select_as_default() 
 			is_first_btn = false
-			
-	%CatTitle.text = (_cat) # Заголовок окна
-
-
-## Создает кнопки для категорий
-func create_btn_categories()-> void:
-	for _cat in build_controller.category_list:
-		var btn : CategoryButton = cat_btn_scene.instantiate() #экземпляр кнопки
-		btn.config( build_controller.category_list[_cat])
-
-		%BuildLvl2Container.add_child(btn)
-		
-		# подключение сигнала кнопки к билдконтроллеру
-		btn.category_selected.connect(build_controller.on_category_selected)
 
 
 
@@ -146,29 +170,14 @@ func _collect_data() -> Array:
 		for _file in DirAccess.get_files_at(_dir): # Загрузка ресурс файлов траков в массив
 			if !_file.ends_with('.tres'): continue # Контроль на .tres 
 			
-			var res :EntitySetting = load(_dir + _file)  # ресурс трака
+			#var res :EntitySetting = load(_dir + _file)  # ресурс трака
+			var res :Resource = load(_dir + _file)  # ресурс трака не уточняем, или надо разделять на разные массивы (EntitySetting и DCControllerSetting)
 
 			objects_list.append(res)
 
 	#_objects_array.sort_custom(func(a, b): return a.id < b.id) # сортировка по индексу
 	return objects_list
 
-
-
-## Формирует data с категориями, тегами, и объектами
-func _build_data(_object_list) -> void:
-	for _obj in _object_list: # Крутим весь список объектов
-		var cat = _obj.category 
-		var tag = _obj.tag
-		
-		add_tag(cat, tag) # добавляет тег и кат
-		data[cat][tag].append(_obj)
-	
-		if objects_by_id.has(_obj.id): # Пропускаем если повтор id 
-			push_error("Duplicate ID: %s" % _obj.name)
-			continue
-		
-		objects_by_id[_obj.id] = _obj # добавили объект с id 
 
 
 

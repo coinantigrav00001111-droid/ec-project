@@ -1,7 +1,7 @@
 class_name ToolController extends Node3D
 
 ##########################
-##  Главный инструмент для управления инструментами. 
+##  Главный инструмент для управления инструментами в режиме BUILD. 
 ##  Связь с UI.
 ##########################
 ## Переключает текущий инструмент - билд, селект, драг
@@ -25,6 +25,7 @@ class_name ToolController extends Node3D
 
 # UI 
 @onready var build_controller: BuildController = $"../UI/BuildController"
+#@onready var operate_controller: OperateController = $"../UI/OperateController"
 @onready var info_controller: InfoController =  $"../UI/InfoController"
 @onready var entity_debugger = $"../Debug/EntityDebugger"
 @onready var info_panel: InfoPanel = $"../UI/InfoPanel"
@@ -42,8 +43,10 @@ signal update_info
 func _ready() -> void:
 	# ⚡Сигнал из моде контроллера
 	$"../UI/ModeController".current_mode_changed.connect(on_current_mode_changed)
+	
 	# ⚡Сигнал из билд контроллера
 	build_controller.object_selected.connect(_on_build_selected)
+	#operate_controller.object_selected.connect(_on_operate_selected)
 	#build_controller.object_deselected.connect(build_controller._on_object_deselected)
 	
 	# ⚡Сигнал из топпанели нажат пункт меню контроллера
@@ -83,7 +86,7 @@ func switch_tool(new_tool: Node):
 
 
 
-# ⚡выбран объект для билда - в билд-тул в бывшую  ‼️(old) btn_object_selected(_setting: EntitySetting)
+# ⚡выбран объект для билда
 func _on_build_selected(setting: EntitySetting):
 	if setting == null :
 		# Очищаем селекта в UI если null
@@ -94,8 +97,9 @@ func _on_build_selected(setting: EntitySetting):
 	# переключение в build_tool
 	switch_tool(build_tool)
 
-		
-		
+
+
+
 # ------- MENU -----------
 # ⚡Сигнал из toppanel\верхнего меню .
 # TODO Можно переносить В сейвменеджер.Это его зона ответсвенности.
@@ -131,11 +135,11 @@ func on_current_mode_changed(_new_mode):
 	update_info.emit() 
 
 
-## Получаем текущий current mode
-func get_current_mode() -> StringName:
-	return GR.current_mode
+### Получаем текущий current mode
+#func get_current_mode() -> StringName:
+	#return GR.current_mode
 
 
-## Получаем текущий debug_mode
-func get_debug_mode() -> bool:
-	return GR.debug_mode
+### Получаем текущий debug_mode
+#func get_debug_mode() -> bool:
+	#return GR.debug_mode

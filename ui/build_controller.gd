@@ -9,10 +9,14 @@ class_name BuildController extends Node
 @export var anim_time := 0.4
 
 @onready var mode_controller: ModeController = %ModeController
-@onready var obj_container: GridContainer = %ObjContainer
+@onready var obj_container: GridContainer = %BuBtnGridContainer
+#@onready var ui_generator: UIGenerator #= %UIGenerator
+
+#загрузка кнопки объекта
+var obj_btn_scene := preload("res://ui/buttons/object_button.tscn") 
 
 # ⚡Сигнал обновление инфы
-signal update_info
+#signal update_info
 # ⚡Сигнал объект выбран
 signal object_selected(setting)
 
@@ -46,18 +50,11 @@ var category_list = {
 		"id": &"terrain",
 		"name": "Terrain",
 		"icon": preload("res://ui/icons/tool/spade.svg")
-	}
+	},
 }
 
 
-
-func _ready() -> void:
-	#object_deselected.connect(on_object_deselected)
-	pass
-
-
-
-## ⚡Сигнал Универсальная функция приема объекта для спавна из кнопок объектов 
+## ⚡Сигнал функция приема объекта для спавна из кнопок объектов 
 func on_object_selected(_asset :EntitySetting):
 	object_selected.emit(_asset)
 
@@ -73,9 +70,10 @@ func object_deselected():
 ## ⚡Сигнал из кнопок тегов
 func on_tag_selected(_new_tag : StringName):
 	current_tag = _new_tag
-	%UIGenerator.create_btn_objects(current_cat, _new_tag)
+	if current_cat !=  &'idle':
+		create_btn_objects(current_cat, _new_tag)
 	# ⚡Сигнал инфа
-	update_info.emit()
+	#update_info.emit()
 
 
 ## ⚡Сигнал из кнопок кат.
@@ -86,23 +84,40 @@ func on_category_selected(_new_cat : StringName):
 	current_cat = _new_cat
 	
 	## Надо показать панели выбранной кат.
-	on_show_panel(current_cat)
+	show_category_panel(current_cat)
 	# ⚡Сигнал инфа
-	update_info.emit()
+	#update_info.emit()
+
+
+
+func create_btn_objects(_cat : StringName, _tag : StringName):
+	for _btn in %BuBtnGridContainer.get_children():
+		_btn.queue_free()
 	
-	
-##=========== ex ToolController ==============================================
-##⚡Сигнал из BUILDCONTR принимаем - Показать\спрятать панели
-func on_show_panel(_cat: StringName) -> void:
+	var obj_list = %UIGenerator.get_objects(_cat, _tag)
+	if obj_list.size() == 0: 
+		return # Если нет тегов, то выход
+		
+	for _obj in obj_list:
+		var btn : ObjectButton = obj_btn_scene.instantiate() #экземпляр кнопки
+		btn.config(_obj)
+		%BuBtnGridContainer.add_child(btn)
+		# подключение сигнала кнопки к билдконтроллеру
+		btn.btn_pressed_object_selected.connect(on_object_selected)	
+		
+		
+##==============================================
+##⚡Сигнал из BUILDCONTR принимаем - Показать\спрятать панель 
+func show_category_panel(_cat: StringName) -> void:
 	# Включаем панель. Теперь уже только одну, которую будем набивать кнопками
 	if _cat != &'idle':
 		
-		%UIGenerator.create_btn_tags(current_cat) # кнопки тегов
-		%CatTitle.text = (current_cat) # Заголовок окна
-		animate_wrapper(%CatContainer)# Показывает lvl2 контейнеры
+		%UIGenerator.create_btn_tags(current_cat, 'Build') # кнопки тегов
+		%BuCatTitle.text = (current_cat) # Заголовок окна
+		animate_wrapper(%BuildObjectsContainer)# Показывает lvl2 контейнеры
 	
 	else: 
-		%CatContainer.hide()
+		%BuildObjectsContainer.hide()
 
 
 
