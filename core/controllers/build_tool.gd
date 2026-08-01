@@ -26,10 +26,16 @@ func enter():
 	if ghost: ghost.queue_free()
 	
 	ghost = controller.entity_factory.create_from_setting(ghost_setting)
-	ghost.name = 'ghost'
 	controller.entities_root.add_child(ghost)
-	ghost.add_component(C_Ghost.new())
-
+	
+	# выбор гост или объект по настройке сеттинга
+	## TODO вместо каегории сделать в сеттинге отдельный флаг как ставить - через гостили сразу
+	if ghost_setting.category == &'track':
+		ghost.name = 'ghost'
+		ghost.add_component(C_Ghost.new())
+	else : # Если сразу то ничего?
+		pass
+		
 	#INFO ДЕРГАЕМ ПАНЕЛЬ!
 	controller.info_panel.set_target(ghost)
 
@@ -91,6 +97,7 @@ func process_tick(_delta):
 			"normal": hit.normal,
 			"snap": snap_data
 		})
+	$"../../UI/ModeLabel".text = name
 
 
 #

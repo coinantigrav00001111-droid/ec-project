@@ -21,6 +21,7 @@ var snapped_entity_transform := Transform3D()
 
 ## Считает свой оффсет и запоминает стартовую позицию
 func on_drag_started(_data: Dictionary) -> void:
+
 	initial_transform = entity.global_transform
 	rotation_euler = entity.global_transform.basis.get_euler() # угол для снапа
 	# Берем смещение, но обнуляем Y, чтобы не тащить за собой перепады высот
@@ -98,7 +99,6 @@ func _apply_regular_movement(target_pos: Vector3, normal: Vector3) -> void:
 
 ## 💡Вызывается из C_Socket при успешной коллизии сокетов
 func start_snap(target_global_transform: Transform3D) -> void:
-	#print('снап старт')
 	snapped_entity_transform = target_global_transform
 	is_snapped_locked = true # Блокируем обычное влияние мыши
 	# Актуализируем углы сразу при снапе. Тогда после в драге снапа угол не возвращается

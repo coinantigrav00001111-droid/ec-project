@@ -6,7 +6,7 @@
 
 [resource]
 script = ExtResource("2_xxl6p")
-id = 4
+id = 1000
 name = "loco 1"
 description = "локо 1"
 category = &"train"

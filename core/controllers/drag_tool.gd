@@ -42,6 +42,7 @@ func process_tick(_delta):
 			"normal": hit.normal,
 			"snap": snap_data
 		})
+	$"../../UI/ModeLabel".text = name
 
 
 

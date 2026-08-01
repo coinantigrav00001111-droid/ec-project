@@ -24,6 +24,7 @@ func enter():
 
 func process_tick(_delta):
 	_update_hover()
+	$"../../UI/ModeLabel".text = name
 
 
 

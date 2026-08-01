@@ -20,5 +20,7 @@ class_name EntitySetting extends Resource
 
 @export var icon :Texture2D
 
+@export var hide : bool = false # скрыть кнопку в UI 
+
 ## Массив сеттингов компонентов объекта
 @export var components :Array[ComponentSettings] = []

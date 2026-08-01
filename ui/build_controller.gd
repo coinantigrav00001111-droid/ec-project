@@ -26,15 +26,15 @@ var current_tag = &'idle'
 
 ## Список категорий
 var category_list = {
-	&"track": {
-		"id": &"track",
-		"name": "Tracks",
-		"icon": preload("res://ui/icons/transport/railway.svg")
-	},
 	&"train": {
 		"id": &"train",
 		"name": "Trains",
 		"icon": preload("res://ui/icons/transport/steam-locomotive.svg")
+	},
+	&"track": {
+		"id": &"track",
+		"name": "Tracks",
+		"icon": preload("res://ui/icons/transport/railway.svg")
 	},
 	&"building": {
 		"id": &"building",

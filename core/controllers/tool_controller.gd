@@ -70,7 +70,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _process(delta: float) -> void:
 	if active_tool and active_tool.has_method("process_tick"):
 		active_tool.process_tick(delta) # Смотрит тик активного инструмента
-	$"../UI/ModeLabel".text = active_tool.name
+	#$"../UI/ModeLabel".text = active_tool.name
 
 
 # Выбор инструмента/tool
