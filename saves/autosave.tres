@@ -1,258 +1,31 @@
 [gd_resource type="Resource" script_class="SavedGame" format=3]
 
-[ext_resource type="Script" path="res://core/components/c_pivot.gd" id="1_x1ohl"]
-[ext_resource type="Script" path="res://core/components/capabilities/c_path.gd" id="2_67ftc"]
-[ext_resource type="Script" path="res://core/components/capabilities/c_power_track.gd" id="3_mogm6"]
-[ext_resource type="Script" path="res://core/components/c_power_clip.gd" id="4_wegac"]
+[ext_resource type="Script" path="res://core/components/c_pivot.gd" id="1_r6rv2"]
+[ext_resource type="Script" path="res://core/components/capabilities/c_path.gd" id="2_x1ohl"]
+[ext_resource type="Script" path="res://core/components/capabilities/c_power_track.gd" id="3_67ftc"]
 [ext_resource type="Script" path="res://saves/saved_game.gd" id="5_4v72m"]
 
 [resource]
 script = ExtResource("5_4v72m")
 gimbal = {
-"camera": Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 13.977486),
-"elevation": Transform3D(1, 0, 0, 0, 0.8992363, 0.43745437, 0, -0.43745437, 0.8992363, 0, 0, 0),
-"transform": Transform3D(0.9958629, 0, 0.09086551, 0, 1, 0, -0.09086551, 0, 0.9958629, -15.516287, -0.00011730194, 224.38676)
+"camera": Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 40.65043),
+"elevation": Transform3D(1, 0, 0, 0, 0.66816247, 0.743989, 0, -0.743989, 0.66816247, 0, 0, 0),
+"transform": Transform3D(-0.99992764, 0, 0.011804024, 0, 1, 0, -0.011804024, 0, -0.99992764, -42.443047, -0.000104904175, -1.1031506)
 }
 entities = [{
 "components": {
-ExtResource("1_x1ohl"): {
+ExtResource("1_r6rv2"): {
 "comp_name": "c_pivot",
 "comp_path": "res://core/components/c_pivot.gd",
 "offset": Vector3(0, 0, 11.95)
 },
-ExtResource("2_67ftc"): {
+ExtResource("2_x1ohl"): {
 "comp_name": "c_path",
 "comp_path": "res://core/components/capabilities/c_path.gd",
 "deg": 0.0,
 "radius": 23.9
 },
-ExtResource("3_mogm6"): {
-"comp_name": "c_power_track",
-"comp_path": "res://core/components/capabilities/c_power_track.gd",
-"contour_id": 5,
-"is_flipped": false
-}
-},
-"setting_path": "res://data/tracks/objects/g239.tres",
-"transform": Transform3D(1, 0, 1.7484555e-07, 0, 1, 0, -1.7484555e-07, 0, 1, -24.16246, 0, 123.17709)
-}, {
-"components": {
-ExtResource("1_x1ohl"): {
-"comp_name": "c_pivot",
-"comp_path": "res://core/components/c_pivot.gd",
-"offset": Vector3(0, 0, 11.95)
-},
-ExtResource("2_67ftc"): {
-"comp_name": "c_path",
-"comp_path": "res://core/components/capabilities/c_path.gd",
-"deg": 0.0,
-"radius": 23.9
-},
-ExtResource("3_mogm6"): {
-"comp_name": "c_power_track",
-"comp_path": "res://core/components/capabilities/c_power_track.gd",
-"contour_id": 5,
-"is_flipped": false
-}
-},
-"setting_path": "res://data/tracks/objects/g239.tres",
-"transform": Transform3D(1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, 1, -24.162457, 0, 147.07709)
-}, {
-"components": {
-ExtResource("1_x1ohl"): {
-"comp_name": "c_pivot",
-"comp_path": "res://core/components/c_pivot.gd",
-"offset": Vector3(0, 0, 11.95)
-},
-ExtResource("2_67ftc"): {
-"comp_name": "c_path",
-"comp_path": "res://core/components/capabilities/c_path.gd",
-"deg": 0.0,
-"radius": 23.9
-},
-ExtResource("3_mogm6"): {
-"comp_name": "c_power_track",
-"comp_path": "res://core/components/capabilities/c_power_track.gd",
-"contour_id": 5,
-"is_flipped": false
-}
-},
-"setting_path": "res://data/tracks/objects/g239.tres",
-"transform": Transform3D(1, 0, 1.7484555e-07, 0, 1, 0, -1.7484555e-07, 0, 1, -24.162453, 0, 170.97708)
-}, {
-"components": {
-ExtResource("1_x1ohl"): {
-"comp_name": "c_pivot",
-"comp_path": "res://core/components/c_pivot.gd",
-"offset": Vector3(0, 0, 11.95)
-},
-ExtResource("2_67ftc"): {
-"comp_name": "c_path",
-"comp_path": "res://core/components/capabilities/c_path.gd",
-"deg": 0.0,
-"radius": 23.9
-},
-ExtResource("3_mogm6"): {
-"comp_name": "c_power_track",
-"comp_path": "res://core/components/capabilities/c_power_track.gd",
-"contour_id": 5,
-"is_flipped": false
-}
-},
-"setting_path": "res://data/tracks/objects/g239.tres",
-"transform": Transform3D(1, 0, 2.6226832e-07, 0, 1, 0, -2.6226832e-07, 0, 1, -24.162447, 0, 194.87708)
-}, {
-"components": {
-ExtResource("1_x1ohl"): {
-"comp_name": "c_pivot",
-"comp_path": "res://core/components/c_pivot.gd",
-"offset": Vector3(0, 0, 11.95)
-},
-ExtResource("2_67ftc"): {
-"comp_name": "c_path",
-"comp_path": "res://core/components/capabilities/c_path.gd",
-"deg": 0.0,
-"radius": 23.9
-},
-ExtResource("3_mogm6"): {
-"comp_name": "c_power_track",
-"comp_path": "res://core/components/capabilities/c_power_track.gd",
-"contour_id": 5,
-"is_flipped": false
-},
-ExtResource("4_wegac"): {
-"comp_name": "c_power_clip",
-"comp_path": "res://core/components/c_power_clip.gd",
-"contour_id": 5,
-"voltage": 38.0
-}
-},
-"setting_path": "res://data/tracks/objects/g239.tres",
-"transform": Transform3D(1, 0, 3.496911e-07, 0, 1, 0, -3.496911e-07, 0, 1, -24.16244, 0, 218.77707)
-}, {
-"components": {
-ExtResource("1_x1ohl"): {
-"comp_name": "c_pivot",
-"comp_path": "res://core/components/c_pivot.gd",
-"offset": Vector3(0, 0, 11.95)
-},
-ExtResource("2_67ftc"): {
-"comp_name": "c_path",
-"comp_path": "res://core/components/capabilities/c_path.gd",
-"deg": 0.0,
-"radius": 23.9
-},
-ExtResource("3_mogm6"): {
-"comp_name": "c_power_track",
-"comp_path": "res://core/components/capabilities/c_power_track.gd",
-"contour_id": 5,
-"is_flipped": true
-}
-},
-"setting_path": "res://data/tracks/objects/g239.tres",
-"transform": Transform3D(-1, 0, -4.371139e-07, 0, 1, 0, 4.371139e-07, 0, -1, -24.16243, 0, 242.67706)
-}, {
-"components": {
-ExtResource("1_x1ohl"): {
-"comp_name": "c_pivot",
-"comp_path": "res://core/components/c_pivot.gd",
-"offset": Vector3(0, 0, 11.95)
-},
-ExtResource("2_67ftc"): {
-"comp_name": "c_path",
-"comp_path": "res://core/components/capabilities/c_path.gd",
-"deg": 0.0,
-"radius": 23.9
-},
-ExtResource("3_mogm6"): {
-"comp_name": "c_power_track",
-"comp_path": "res://core/components/capabilities/c_power_track.gd",
-"contour_id": 5,
-"is_flipped": false
-}
-},
-"setting_path": "res://data/tracks/objects/g239.tres",
-"transform": Transform3D(1, 0, 5.245367e-07, 0, 1, 0, -5.245367e-07, 0, 1, -24.162418, 0, 266.57706)
-}, {
-"components": {
-ExtResource("1_x1ohl"): {
-"comp_name": "c_pivot",
-"comp_path": "res://core/components/c_pivot.gd",
-"offset": Vector3(0, 0, 11.95)
-},
-ExtResource("2_67ftc"): {
-"comp_name": "c_path",
-"comp_path": "res://core/components/capabilities/c_path.gd",
-"deg": 0.0,
-"radius": 23.9
-},
-ExtResource("3_mogm6"): {
-"comp_name": "c_power_track",
-"comp_path": "res://core/components/capabilities/c_power_track.gd",
-"contour_id": 5,
-"is_flipped": true
-}
-},
-"setting_path": "res://data/tracks/objects/g239.tres",
-"transform": Transform3D(-1, 0, -6.119595e-07, 0, 1, 0, 6.119595e-07, 0, -1, -24.162405, 0, 290.47708)
-}, {
-"components": {
-ExtResource("1_x1ohl"): {
-"comp_name": "c_pivot",
-"comp_path": "res://core/components/c_pivot.gd",
-"offset": Vector3(0, 0, 11.95)
-},
-ExtResource("2_67ftc"): {
-"comp_name": "c_path",
-"comp_path": "res://core/components/capabilities/c_path.gd",
-"deg": 0.0,
-"radius": 23.9
-},
-ExtResource("3_mogm6"): {
-"comp_name": "c_power_track",
-"comp_path": "res://core/components/capabilities/c_power_track.gd",
-"contour_id": 5,
-"is_flipped": false
-}
-},
-"setting_path": "res://data/tracks/objects/g239.tres",
-"transform": Transform3D(1, 0, 6.9938227e-07, 0, 1, 0, -6.9938227e-07, 0, 1, -24.16239, 0, 314.3771)
-}, {
-"components": {
-ExtResource("1_x1ohl"): {
-"comp_name": "c_pivot",
-"comp_path": "res://core/components/c_pivot.gd",
-"offset": Vector3(0, 0, 11.95)
-},
-ExtResource("2_67ftc"): {
-"comp_name": "c_path",
-"comp_path": "res://core/components/capabilities/c_path.gd",
-"deg": 0.0,
-"radius": 23.9
-},
-ExtResource("3_mogm6"): {
-"comp_name": "c_power_track",
-"comp_path": "res://core/components/capabilities/c_power_track.gd",
-"contour_id": 5,
-"is_flipped": false
-}
-},
-"setting_path": "res://data/tracks/objects/g239.tres",
-"transform": Transform3D(1, 0, 7.8680506e-07, 0, 1, 0, -7.8680506e-07, 0, 1, -24.162373, 0, 338.27713)
-}, {
-"components": {
-ExtResource("1_x1ohl"): {
-"comp_name": "c_pivot",
-"comp_path": "res://core/components/c_pivot.gd",
-"offset": Vector3(0, 0, 11.95)
-},
-ExtResource("2_67ftc"): {
-"comp_name": "c_path",
-"comp_path": "res://core/components/capabilities/c_path.gd",
-"deg": 0.0,
-"radius": 23.9
-},
-ExtResource("3_mogm6"): {
+ExtResource("3_67ftc"): {
 "comp_name": "c_power_track",
 "comp_path": "res://core/components/capabilities/c_power_track.gd",
 "contour_id": 0,
@@ -260,21 +33,21 @@ ExtResource("3_mogm6"): {
 }
 },
 "setting_path": "res://data/tracks/objects/g239.tres",
-"transform": Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19.056297, 3.8146973e-06, 151.73076)
+"transform": Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34.054733, 0, 31.360863)
 }, {
 "components": {
-ExtResource("1_x1ohl"): {
+ExtResource("1_r6rv2"): {
 "comp_name": "c_pivot",
 "comp_path": "res://core/components/c_pivot.gd",
 "offset": Vector3(0, 0, 11.95)
 },
-ExtResource("2_67ftc"): {
+ExtResource("2_x1ohl"): {
 "comp_name": "c_path",
 "comp_path": "res://core/components/capabilities/c_path.gd",
 "deg": 0.0,
 "radius": 23.9
 },
-ExtResource("3_mogm6"): {
+ExtResource("3_67ftc"): {
 "comp_name": "c_power_track",
 "comp_path": "res://core/components/capabilities/c_power_track.gd",
 "contour_id": 0,
@@ -282,71 +55,21 @@ ExtResource("3_mogm6"): {
 }
 },
 "setting_path": "res://data/tracks/objects/g239.tres",
-"transform": Transform3D(1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, 1, 19.0563, 3.8146973e-06, 175.63075)
+"transform": Transform3D(1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, 1, -34.054733, 0, 55.260864)
 }, {
 "components": {
-ExtResource("1_x1ohl"): {
+ExtResource("1_r6rv2"): {
 "comp_name": "c_pivot",
 "comp_path": "res://core/components/c_pivot.gd",
 "offset": Vector3(0, 0, 11.95)
 },
-ExtResource("2_67ftc"): {
+ExtResource("2_x1ohl"): {
 "comp_name": "c_path",
 "comp_path": "res://core/components/capabilities/c_path.gd",
 "deg": 0.0,
 "radius": 23.9
 },
-ExtResource("3_mogm6"): {
-"comp_name": "c_power_track",
-"comp_path": "res://core/components/capabilities/c_power_track.gd",
-"contour_id": 3,
-"is_flipped": true
-}
-},
-"setting_path": "res://data/tracks/objects/g239.tres",
-"transform": Transform3D(1, 0, 1.7484555e-07, 0, 1, 0, -1.7484555e-07, 0, 1, -6.0290384, 1.9073486e-06, 207.6074)
-}, {
-"components": {
-ExtResource("1_x1ohl"): {
-"comp_name": "c_pivot",
-"comp_path": "res://core/components/c_pivot.gd",
-"offset": Vector3(0, 0, 11.95)
-},
-ExtResource("2_67ftc"): {
-"comp_name": "c_path",
-"comp_path": "res://core/components/capabilities/c_path.gd",
-"deg": 0.0,
-"radius": 23.9
-},
-ExtResource("3_mogm6"): {
-"comp_name": "c_power_track",
-"comp_path": "res://core/components/capabilities/c_power_track.gd",
-"contour_id": 3,
-"is_flipped": false
-},
-ExtResource("4_wegac"): {
-"comp_name": "c_power_clip",
-"comp_path": "res://core/components/c_power_clip.gd",
-"contour_id": 3,
-"voltage": 38.0
-}
-},
-"setting_path": "res://data/tracks/objects/g239.tres",
-"transform": Transform3D(-1, 0, -2.6226832e-07, 0, 1, 0, 2.6226832e-07, 0, -1, -6.029033, 1.9073486e-06, 231.5074)
-}, {
-"components": {
-ExtResource("1_x1ohl"): {
-"comp_name": "c_pivot",
-"comp_path": "res://core/components/c_pivot.gd",
-"offset": Vector3(0, 0, 11.95)
-},
-ExtResource("2_67ftc"): {
-"comp_name": "c_path",
-"comp_path": "res://core/components/capabilities/c_path.gd",
-"deg": 0.0,
-"radius": 23.9
-},
-ExtResource("3_mogm6"): {
+ExtResource("3_67ftc"): {
 "comp_name": "c_power_track",
 "comp_path": "res://core/components/capabilities/c_power_track.gd",
 "contour_id": 0,
@@ -354,21 +77,21 @@ ExtResource("3_mogm6"): {
 }
 },
 "setting_path": "res://data/tracks/objects/g239.tres",
-"transform": Transform3D(-1, 0, -3.496911e-07, 0, 1, 0, 3.496911e-07, 0, -1, 19.056316, 3.8146973e-06, 247.33073)
+"transform": Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.0006682873, 0, 2.6114616)
 }, {
 "components": {
-ExtResource("1_x1ohl"): {
+ExtResource("1_r6rv2"): {
 "comp_name": "c_pivot",
 "comp_path": "res://core/components/c_pivot.gd",
 "offset": Vector3(0, 0, 11.95)
 },
-ExtResource("2_67ftc"): {
+ExtResource("2_x1ohl"): {
 "comp_name": "c_path",
 "comp_path": "res://core/components/capabilities/c_path.gd",
 "deg": 0.0,
 "radius": 23.9
 },
-ExtResource("3_mogm6"): {
+ExtResource("3_67ftc"): {
 "comp_name": "c_power_track",
 "comp_path": "res://core/components/capabilities/c_power_track.gd",
 "contour_id": 0,
@@ -376,5 +99,35 @@ ExtResource("3_mogm6"): {
 }
 },
 "setting_path": "res://data/tracks/objects/g239.tres",
-"transform": Transform3D(1, 0, 4.371139e-07, 0, 1, 0, -4.371139e-07, 0, 1, 19.056326, 3.8146973e-06, 271.23074)
+"transform": Transform3D(1.1924881e-08, 0, -1, 0, 1, 0, 1, 0, 1.1924881e-08, 0.6994705, 1.9073486e-06, 41.561268)
+}, {
+"components": {
+ExtResource("1_r6rv2"): {
+"comp_name": "c_pivot",
+"comp_path": "res://core/components/c_pivot.gd",
+"offset": Vector3(0, 0, 11.95)
+},
+ExtResource("2_x1ohl"): {
+"comp_name": "c_path",
+"comp_path": "res://core/components/capabilities/c_path.gd",
+"deg": 0.0,
+"radius": 23.9
+},
+ExtResource("3_67ftc"): {
+"comp_name": "c_power_track",
+"comp_path": "res://core/components/capabilities/c_power_track.gd",
+"contour_id": 0,
+"is_flipped": false
+}
+},
+"setting_path": "res://data/tracks/objects/g239.tres",
+"transform": Transform3D(-0.7071068, 0, -0.7071067, 0, 1, 0, 0.7071067, 0, -0.7071068, 3.131775, 0, 69.44827)
+}, {
+"components": {},
+"setting_path": "res://data/tracks/objects/aw1.tres",
+"transform": Transform3D(0.99990326, 1.686017e-06, -0.01391086, -1.6836746e-06, 1, 1.8010441e-07, 0.01391086, -1.5666562e-07, 0.99990326, -54.875214, 5.453826, -6.734124)
+}, {
+"components": {},
+"setting_path": "res://data/tracks/objects/aw1.tres",
+"transform": Transform3D(-1, -1.9142983e-06, -8.7412516e-08, -1.9142983e-06, 1, 3.3177278e-07, 8.741188e-08, 3.3177295e-07, -1, -41.630722, -4.7683716e-06, -7.8499985)
 }]

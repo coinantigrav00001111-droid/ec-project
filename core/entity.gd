@@ -25,11 +25,17 @@ func _ready():
 	for child in get_children():
 		if child is Component:
 			child.on_entity_ready()
-	
+		
 	var _identity = get_comp(C_Identity)
 	name = _identity.get_name_e() + '_01'
 
-	
+	#DD делаем метку центра ентити для дебага
+	var center = MeshInstance3D.new()
+	var box_shape = BoxMesh.new()
+	box_shape.size = Vector3(0.5, 0.5, 0.5)
+	center.position.y = 8.0
+	center.mesh = box_shape
+	add_child(center)
 
 ## ------ BUS --------
 

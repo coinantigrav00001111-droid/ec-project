@@ -20,6 +20,11 @@ var deg: float
 var path_node: Path3D
 var curve: Curve3D
 var ballast_node: Area3D
+
+# TODO Ноды рельсов надо сделать как балласт
+var headl_node: StaticBody3D
+var headr_node: StaticBody3D
+
 var pivot_offset := Vector3.ZERO 
 
 # Ballast
@@ -84,6 +89,9 @@ func _sync_with_visual_ballast():
 	# Находим ноду балласта 
 	ballast_node = _find_ballast_recursive(visual.instance)
 	
+	# TODO организовать поиск рельсов как балласта. Или в одну функцию запихнуть
+	headl_node = visual.instance.get_node('HeadL')
+	headr_node = visual.instance.get_node('HeadR')
 	# Проверка сцены. Eсли в ней балласта нет, то значит он не нужен, выходим
 	if not ballast_node: return 
 
@@ -224,6 +232,28 @@ func _find_ballast_recursive(node: Node) -> Area3D:
 			return found
 	return null
 
+
+## Меняет активный слой объекта при перетаскивании
+func on_select_layer(_data):
+	# нужные слои (collision_layer / collision_mask)
+	#area.set_collision_layer_value(3, true) # вкл этот слой 
+	if _data.enabled:
+		ballast_node.collision_layer =  1 << 10	# заменяет активный слой на 11
+		ballast_node.collision_mask = 1 << 2 # гост видит только 3 слой
+		
+		headl_node.collision_layer =  1 << 10	# заменяет активный слой на 11
+		headr_node.collision_layer =  1 << 10	# заменяет активный слой на 11
+		headl_node.collision_mask = 1 << 2 # гост видит только 3 слой
+		headr_node.collision_mask = 1 << 2 # гост видит только 3 слой
+	else:
+		ballast_node.collision_layer = 1 << 2 	# заменяет активный слой на 3
+		ballast_node.collision_mask = 1 << 2
+		
+		headl_node.collision_layer =  1 << 2	# заменяет активный слой на 11
+		headr_node.collision_layer =  1 << 2	# заменяет активный слой на 11
+		headl_node.collision_mask = 1 << 2 # гост видит только 3 слой
+		headr_node.collision_mask = 1 << 2 # гост видит только 3 слой
+	pass
 
 
 func get_length() -> float:

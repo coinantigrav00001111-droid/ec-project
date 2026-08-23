@@ -1,0 +1,85 @@
+class_name C_Chassis extends ICapability
+
+####################
+## Способность, Библиотека действий. Она живет на объекте всегда.
+####################
+## Читает Curve3D трака и вычисляет свои координаты на сплайне.
+## Cчитается позиция Вагон как "хорда" на кривой. Запрашивает у кривой трака две точки:
+## distance_travelled + front_bogie_offset (Позиция передних колес).
+## distance_travelled + rear_bogie_offset (Позиция задних колес).
+## Центр вагона (global_position Entity) = Середина между этими двумя точками (Front + Rear) / 2.
+## Поворот вагона (Basis/LookAt) = Вектор направления от задней тележки к передней.
+
+# Радиус и угол заполняются в редакторе в pat_setting при создании ентити 
+var front_bogie_offset: float # Расстояние от центра до передней тележки
+var rear_bogie_offset: float  # Расстояние от центра до задней тележки
+
+
+var current_track: Entity = null
+var current_spline_offset: float = 0.0
+var is_on_rails: bool = false
+
+func on_added():
+	pass
+
+
+#"track","offset","is_flipped"
+# Ловит евент от C_TrainDraggable при успешном дропе на рельс
+func on_train_snapped(data: Dictionary) -> void:
+	printt ('snapped', data)
+	current_track = data.get("track")
+	current_spline_offset = data.get("offset", 0.0)
+	is_on_rails = true
+	#var is_flipped = data.is_flipped # пока не исп
+	
+	## Выключаем физику Godot, отдаемся математике
+	#var rb = entity.get_node_or_null("RigidBody3D")
+	#if rb:
+		#rb.freeze = true
+
+
+
+# Событие схода с рельс (от C_Kinematics или столкновения)
+func on_derailed(_data: Dictionary) -> void:
+	printt ('derailed')
+	if not is_on_rails: return
+	is_on_rails = false
+	current_track = null
+	
+	# Отвязываемся от сплайна
+	var rb = entity.get_node_or_null("RigidBody3D")
+	if rb:
+		rb.freeze = false
+
+
+
+# В идеале это должно вызываться не в _process, а через системный менеджер поездов, 
+# но для инкапсуляции логики компонента пока оставляем так.
+func _physics_process(_delta: float) -> void:
+	return 	
+	if not is_on_rails or not is_instance_valid(current_track):
+		#printt(is_on_rails)
+		''' ищем логику как надо делать драг'''
+		entity.send_event('on_speed_changed', {'speed': 0.0})
+		return
+	var path_comp = current_track.get_comp(C_Path)
+	if not path_comp or not path_comp.curve:
+		return
+
+	# Запрашиваем 2 точки у кривой (передняя и задняя опора)
+	var curve = path_comp.curve
+	# Защита от выхода за пределы трака (упрощенно, тут нужна логика перехода по сокетам)
+	var front_pos = curve.sample_baked(clamp(current_spline_offset + front_bogie_offset, 0.0, curve.get_baked_length()))
+	var rear_pos = curve.sample_baked(clamp(current_spline_offset + rear_bogie_offset, 0.0, curve.get_baked_length()))
+	
+	# Конвертируем локальные точки трака в глобальные
+	var track_transform = current_track.global_transform
+	var global_front = track_transform * front_pos
+	var global_rear = track_transform * rear_pos
+	
+	# Центр вагона — середина хорды
+	entity.global_position = (global_front + global_rear) / 2.0
+	
+	# Поворот вагона (смотрим от зада к переду)
+	if global_front.distance_squared_to(global_rear) > 0.01:
+		entity.look_at(global_front, Vector3.UP)

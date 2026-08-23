@@ -180,17 +180,18 @@ func _set_blocked():
 		mesh.set_material_overlay(visual_settings.blocked_material) 
 
 
-
+# не исп.
 func _reset(): 
-	for mesh in mesh_nodes: 
-		mesh.set_material_overlay( null)
-		
-	# статик в родной слой (трак, вагон и тд)
-	for coll in area_nodes:
-		var original_layer = area_nodes[coll]
-		if coll.collision_layer != original_layer:
-			coll.collision_layer = original_layer
-
+	print('c_visual-reset')
+	#for mesh in mesh_nodes: 
+		#mesh.set_material_overlay( null)
+		#
+	## статик в родной слой (трак, вагон и тд)
+	#for coll in area_nodes:
+		#var original_layer = area_nodes[coll]
+		#if coll.collision_layer != original_layer:
+			#coll.collision_layer = original_layer
+	pass
 
 
 ## ----  МАТЕРИАЛЫ ----

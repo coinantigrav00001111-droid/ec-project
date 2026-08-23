@@ -50,7 +50,6 @@ size = Vector3(25.96474, 1.2593689, 19.82579)
 
 [node name="GameRoot" type="Node3D" unique_id=1065014004]
 script = ExtResource("1_6mh03")
-debug_mode = true
 
 [node name="Gimbal" parent="." unique_id=1102985730 instance=ExtResource("2_7cj6n")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.2, 0, -4.2)

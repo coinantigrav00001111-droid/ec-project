@@ -1,0 +1,34 @@
+extends Node
+
+##########################
+##
+## Global Setting (GS) пока это глобальные настройки
+##
+###########################
+
+#DD Дебаги вкл
+var debug_mode := true
+
+# Высота трака с балластом
+const TRACK_WITH_BALLAST_HEIGHT = 0.85
+
+## Текущий режим из : &'build' &'operate' &'observe' &'library'
+var current_mode :StringName = &'build' 
+
+
+
+
+########## HELPERS ##################
+
+	#Выдает маску для слоя\маски коллизии из массива строк
+func active_layers(data:Array) -> int:
+	var i := 0
+	
+	for d in data:
+		match d:
+			'ground' : i = i | 1 << 0
+			'tracks' : i = i | 1 << 2
+			'sokets' : i = i | 1 << 3
+			'trains' : i = i | 1 << 4
+			'ghost'  : i = i | 1 << 10
+	return i

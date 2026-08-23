@@ -38,7 +38,7 @@
 		{
 			"uuid": "50f9c949-da71-4afd-beb9-f08415f2f066",
 			"title": "Track",
-			"color": "0c9601"
+			"color": "0c7001"
 		},
 		{
 			"uuid": "eb217580-82d1-4df7-a8ff-ff0c35c057e3",
@@ -66,6 +66,7 @@
 				"046ad09f-d7d4-442b-8112-44c12d37b39c",
 				"0c7c66a3-ed32-4045-b2e6-322e4c722831",
 				"54cd8419-ce4b-44ce-93c9-e408e1cb7131",
+				"907c3250-49ff-463a-bd12-52f38bc4a2ae",
 				"620f4006-a6b4-4a97-9c42-a5eae75fdb18",
 				"68f213c1-57f9-4966-bc40-ab8392085640",
 				"63d7ef6f-2e59-4bb2-8ad9-152fb2aaf0e4",
@@ -77,10 +78,15 @@
 			"title": "Doing",
 			"tasks": [
 				"c9518725-a1fc-4454-884a-26f5c9febb9b",
-				"bed7a3ee-9e8e-4e8f-9e60-b5103e9f7e8b",
 				"bf78136f-cb36-4783-a60d-3d56ebfbec0b",
+				"3139c855-55d8-4fc5-b2f2-cf19b5b670cc",
+				"eab392e7-a7e9-4a81-a3bb-cf49d7f728c7",
 				"c250b768-076e-4194-aa2e-a084846f870d",
-				"652cc125-80de-4dab-972f-1c75a474f7fd"
+				"651c4325-7c2f-4da1-9605-af60bfe22b94",
+				"2e299622-0552-4f50-a2f0-73b4888598c7",
+				"532c6725-a4c2-4335-ab23-47da95cdb7a2",
+				"f990589c-60e3-4a5c-b4fe-9989d7b0c730",
+				"0d9905d4-dcb8-4425-903b-78e44e8b8068"
 			]
 		},
 		{
@@ -403,7 +409,7 @@
 			"uuid": "c250b768-076e-4194-aa2e-a084846f870d",
 			"title": "Расписать вагон и локо.",
 			"description": "",
-			"category": "bfe07748-730a-4469-a662-08c8f873a722",
+			"category": "8d041509-442f-4442-9d1d-a60528722dfe",
 			"steps": []
 		},
 		{
@@ -416,6 +422,76 @@
 		{
 			"uuid": "652cc125-80de-4dab-972f-1c75a474f7fd",
 			"title": "вместо каегории сделать в сеттинге отдельный флаг как ставить в билдтул - через гост или сразу",
+			"description": "",
+			"category": "8d041509-442f-4442-9d1d-a60528722dfe",
+			"steps": []
+		},
+		{
+			"uuid": "e4598e68-bdca-466d-b399-a76ac32de00f",
+			"title": "сделать или найти выбор слоев по простому",
+			"description": "",
+			"category": "eb217580-82d1-4df7-a8ff-ff0c35c057e3",
+			"steps": []
+		},
+		{
+			"uuid": "651c4325-7c2f-4da1-9605-af60bfe22b94",
+			"title": "Установка вагона на наклонный трак",
+			"description": "",
+			"category": "8d041509-442f-4442-9d1d-a60528722dfe",
+			"steps": []
+		},
+		{
+			"uuid": "907c3250-49ff-463a-bd12-52f38bc4a2ae",
+			"title": "надо поворачивать трак за край.",
+			"description": "",
+			"category": "50f9c949-da71-4afd-beb9-f08415f2f066",
+			"steps": []
+		},
+		{
+			"uuid": "2e299622-0552-4f50-a2f0-73b4888598c7",
+			"title": "blocked как делать для вагона, если ригид во фризе",
+			"description": "",
+			"category": "8d041509-442f-4442-9d1d-a60528722dfe",
+			"steps": []
+		},
+		{
+			"uuid": "3139c855-55d8-4fc5-b2f2-cf19b5b670cc",
+			"title": "ballast_node: Area3D или static ???",
+			"description": "",
+			"category": "50f9c949-da71-4afd-beb9-f08415f2f066",
+			"steps": []
+		},
+		{
+			"uuid": "532c6725-a4c2-4335-ab23-47da95cdb7a2",
+			"title": "движение по сплайну по кругу",
+			"description": "",
+			"category": "8d041509-442f-4442-9d1d-a60528722dfe",
+			"steps": []
+		},
+		{
+			"uuid": "f990589c-60e3-4a5c-b4fe-9989d7b0c730",
+			"title": "Настройка физики вагона",
+			"description": "",
+			"category": "8d041509-442f-4442-9d1d-a60528722dfe",
+			"steps": []
+		},
+		{
+			"uuid": "eab392e7-a7e9-4a81-a3bb-cf49d7f728c7",
+			"title": "универсальное определение высоты трака для устновки вагона",
+			"description": "",
+			"category": "50f9c949-da71-4afd-beb9-f08415f2f066",
+			"steps": []
+		},
+		{
+			"uuid": "4b3facb9-4e21-4283-890e-37b567aebc14",
+			"title": "В движении не драгается.",
+			"description": "",
+			"category": "8d041509-442f-4442-9d1d-a60528722dfe",
+			"steps": []
+		},
+		{
+			"uuid": "0d9905d4-dcb8-4425-903b-78e44e8b8068",
+			"title": "тень под вагоном при драге и визуал при снапе",
 			"description": "",
 			"category": "8d041509-442f-4442-9d1d-a60528722dfe",
 			"steps": []

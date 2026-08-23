@@ -5,7 +5,7 @@ class_name InfoController extends Node
 #########################
 
 ## 💡По сути ничего не делает пока, кроме вывода метки режима игры
-@onready var GR : GameRoot = $"../../"
+#@onready var GR : GameRoot = $"../../"
 @onready var tool_controller: ToolController = $"../../ToolController"
 
 func _ready() -> void:
@@ -19,7 +19,7 @@ func _ready() -> void:
 # ⚡Сигнал обработка из ui контроллера 
 func on_update_info():
 
-	%ModeLabel.text = GR.current_mode
+	%ModeLabel.text = GS.current_mode
 
 
 @export var m_colors = {

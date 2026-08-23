@@ -3,9 +3,12 @@ class_name GameRoot
 
 ##########################
 ##
-## GameRoot (GR) - бывший GameManager 
+## GameRoot ничего не делает 
 ##
 ###########################
+
+## 💡 Глобальные переменные в GS - globals.gd
+
 ## 💡 В идеале - ТОЛЬКО связывает системы, больше не синглтон пока!
 #Entity (объект) = контейнер компонентов
 #Components = данные + логика (по месту)
@@ -26,11 +29,12 @@ class_name GameRoot
 
 
 #DD Дебаги вкл
-@export var debug_mode := false
+#@export var debug_mode := false
 
+#const TRACK_WITH_BALLAST_HEIGHT = 0.85
 
-## Текущий режим из : &'build' &'operate' &'observe' &'library'
-@export var current_mode :StringName = &'build' 
+### Текущий режим из : &'build' &'operate' &'observe' &'library'
+#@export var current_mode :StringName = &'build' 
 
 
 

@@ -1,7 +1,7 @@
 class_name C_Draggable extends IDraggable
 
 ##################################
-## Библиотека действий. Она живет на объекте всегда.
+## Библиотека действий. Она живет на объекте всегда.   
 ##################################
 ## способность двигать ентити, когда включено C_Drag 
 ## компонент двигает сущность по евенту из ентити
@@ -23,9 +23,10 @@ var snapped_entity_transform := Transform3D()
 func on_drag_started(_data: Dictionary) -> void:
 
 	initial_transform = entity.global_transform
-	rotation_euler = entity.global_transform.basis.get_euler() # угол для снапа
+	#TODO это ломает драг повернутого трака на наклонной. Решить вместе с поворотом на краю
+	#rotation_euler = entity.global_transform.basis.get_euler() # угол для снапа
 	# Берем смещение, но обнуляем Y, чтобы не тащить за собой перепады высот
-	var raw_offset = entity.global_position - _data.pos
+	var raw_offset = entity.global_position - _data.position
 	drag_offset = Vector3(raw_offset.x, 0.0, raw_offset.z)
 	
 	is_snapped_locked = false
@@ -39,7 +40,7 @@ func on_drag_started(_data: Dictionary) -> void:
 # Обращать внимание на то какие слои хватает рейкаст
 func on_drag_moved(_data: Dictionary) -> void:
 	# Забираем сырые данные от рейкаста из тулза
-	var mouse_pos: Vector3 = _data.pos
+	var mouse_pos: Vector3 = _data.position
 	var normal: Vector3 = _data.normal
 	
 	# -Действия для определния вертикальной позиции в точке рейкаста и центра трака-
@@ -72,6 +73,7 @@ func on_drag_moved(_data: Dictionary) -> void:
 		_apply_regular_movement(target_pos, normal)
 		pass
 	
+	
 ## Обычное движение по поверхности
 func _apply_regular_movement(target_pos: Vector3, normal: Vector3) -> void:
 	# 1. Берем базовый вектор и крутим только Yaw (Y)
@@ -88,13 +90,17 @@ func _apply_regular_movement(target_pos: Vector3, normal: Vector3) -> void:
 	var new_basis = Basis(right, up, final_forward)
 	
 	# 3. Накручиваем Pitch (X) уже на строго выровненный локальный базис
+	# TODO Отменили , потому что на наклонной багует с определением угла.
+	# TODO надо поворачивать трак за край.
+	
 	if rotation_euler.x != 0.0:
 		new_basis = new_basis.rotated(new_basis.x, rotation_euler.x)
-	
+		#pass
 	# 4. Применяем
 	entity.global_transform.basis = new_basis
 	entity.global_position = target_pos
-
+	
+	
 
 
 ## 💡Вызывается из C_Socket при успешной коллизии сокетов
@@ -102,7 +108,7 @@ func start_snap(target_global_transform: Transform3D) -> void:
 	snapped_entity_transform = target_global_transform
 	is_snapped_locked = true # Блокируем обычное влияние мыши
 	# Актуализируем углы сразу при снапе. Тогда после в драге снапа угол не возвращается
-	#rotation_euler = target_global_transform.basis.get_euler()
+	rotation_euler = target_global_transform.basis.get_euler()
 
 
 	
@@ -149,7 +155,22 @@ func on_clone_state_to(data: Dictionary) -> void:
 		"rotation_euler": rotation_euler
 		})
 
+
 # Вызывается у Реального объекта в момент клонирования (принимаем данные). см build_tool 
 func on_receive_draggable_state(data: Dictionary) -> void:
 	if data.has("rotation_euler"):
 		rotation_euler = data.rotation_euler
+
+
+
+## Сброс высоты и вращения в дефолт (вызывается из DragTool по кнопке)
+func on_drag_reset(_data: Dictionary) -> void:
+	# 1. Сбрасываем накопленные игроком углы в ноль
+	rotation_euler = Vector3.ZERO
+	
+	# 2. Сбрасываем смещение по высоте
+	drag_offset = Vector3.ZERO
+	
+	# 3. Принудительно сбрасываем локальный трансформ самой сущности, 
+	# чтобы визуально она сразу выровнялась до следующего тика on_drag_moved
+	entity.rotation = Vector3.ZERO

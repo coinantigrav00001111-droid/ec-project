@@ -6,7 +6,7 @@ class_name ToolController extends Node3D
 ##########################
 ## Переключает текущий инструмент - билд, селект, драг
 
-@onready var GR : GameRoot = $".."
+#@onready var GR : GameRoot = $".."
 @onready var world: World = $"../World"
 
 @onready var entity_factory: EntityFactory = $"../EntityFactory"
@@ -72,12 +72,14 @@ func _process(delta: float) -> void:
 		active_tool.process_tick(delta) # Смотрит тик активного инструмента
 	#$"../UI/ModeLabel".text = active_tool.name
 
+var to_drag := false
 
 # Выбор инструмента/tool
 func switch_tool(new_tool: Node):
 	if active_tool: 
 		# При выходе в драг надо без  отмены селект
 		var _to_drag = active_tool == $%SelectTool and new_tool == %DragTool
+		#to_drag = _to_drag
 		active_tool.exit(_to_drag)
 
 	active_tool = new_tool
@@ -86,7 +88,7 @@ func switch_tool(new_tool: Node):
 
 
 
-# ⚡выбран объект для билда
+# ⚡Сигнал выбран объект для билда
 func _on_build_selected(setting: EntitySetting):
 	if setting == null :
 		# Очищаем селекта в UI если null
@@ -118,7 +120,7 @@ func get_mouse_ray(mask: int = -1) -> Dictionary:
 	var to = from + camera.project_ray_normal(mouse_pos) * 1000
 	var query = PhysicsRayQueryParameters3D.create(from, to)
 	query.collide_with_areas = true
-	
+	query.collide_with_bodies = true
 	#TODO Нужен не только 3 леер
 	query.collision_mask = (1) if mask == -1 else mask # Земля (1) и Траки (3-й слой -> маска 4)
 	
@@ -131,7 +133,7 @@ func get_mouse_ray(mask: int = -1) -> Dictionary:
 ## 💡--------------Меняем режим ---------------------------------
 
 func on_current_mode_changed(_new_mode):
-	GR.current_mode = _new_mode
+	GS.current_mode = _new_mode
 	update_info.emit() 
 
 

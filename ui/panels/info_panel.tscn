@@ -24,7 +24,7 @@ theme_type_variation = &"HeaderSmall"
 [node name="TabContainer" type="TabContainer" parent="VBoxContainer" unique_id=2133864374]
 unique_name_in_owner = true
 layout_mode = 2
-current_tab = 1
+current_tab = 2
 clip_tabs = false
 tab_0/title = "Общее"
 tab_1/title = "Питание"
@@ -103,6 +103,7 @@ layout_mode = 2
 text = "jkljlпро ап"
 
 [node name="PowerTab" type="VBoxContainer" parent="VBoxContainer/TabContainer" unique_id=1614374328]
+visible = false
 layout_mode = 2
 metadata/_tab_index = 1
 metadata/_tab_name = "Питание"
@@ -256,7 +257,6 @@ layout_mode = 2
 text = "разное"
 
 [node name="TransformTab" type="VBoxContainer" parent="VBoxContainer/TabContainer" unique_id=358071816]
-visible = false
 layout_mode = 2
 metadata/_tab_index = 2
 metadata/_tab_name = "Положение"
@@ -307,7 +307,44 @@ custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 size_flags_horizontal = 4
 
-[node name="DescLabel" type="RichTextLabel" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer" unique_id=30436952]
+[node name="HBoxContainer3" type="HBoxContainer" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer" unique_id=1493116159]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Control3" type="Control" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3" unique_id=1599429424]
+custom_minimum_size = Vector2(10, 0)
+layout_mode = 2
+size_flags_stretch_ratio = 0.5
+
+[node name="Label" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3" unique_id=1980250078]
+layout_mode = 2
+text = "On track:"
+
+[node name="OnTrackLabel" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3" unique_id=1567603876]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+text = "0"
+
+[node name="Control" type="Control" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3" unique_id=1103427215]
+layout_mode = 2
+size_flags_stretch_ratio = 0.5
+
+[node name="Label2" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3" unique_id=650495695]
+layout_mode = 2
+text = "Freeze:"
+
+[node name="FreezeLabel" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3" unique_id=197282319]
+unique_name_in_owner = true
+layout_mode = 2
+text = "0"
+
+[node name="Control2" type="Control" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3" unique_id=972307897]
+custom_minimum_size = Vector2(10, 0)
+layout_mode = 2
+size_flags_stretch_ratio = 0.5
+
+[node name="DescLabel" type="RichTextLabel" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3" unique_id=30436952]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 55)
 layout_mode = 2

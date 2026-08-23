@@ -23,20 +23,26 @@ func _process(_delta):
 		var _rot = current_target.rotation_degrees
 		%PosLabel.text =  "(%.2f, %.2f, %.2f)" % [_pos.x, _pos.y, _pos.z]
 		%RotLabel.text =  "(%.2f, %.2f, %.2f)" % [_rot.x, _rot.y, _rot.z]
+		if current_target.get_comp(C_Chassis) and  current_target.get_comp(C_Kinematics):
+			var _ontrack = current_target.get_comp(C_Chassis).is_on_rails
+			var _freeze = current_target.get_comp(C_Kinematics).rb.freeze
+			%OnTrackLabel.text ='On' if _ontrack else 'Off'
+			%FreezeLabel.text = 'On' if _freeze else 'Off'
 	if visible and current_target and tab_container.current_tab == 4: 
 		_update_debug_tab()
+	
 
 
 
 # Вызывается из SelectTool, когда мы кликаем по объекту
 func set_target(entity: Entity):
+
 	# 1. Отписываемся от старого объекта
 	if current_target:
 		current_target.component_added.disconnect(_on_components_changed)
 		current_target.component_removed.disconnect(_on_components_changed)
 		
 	current_target = entity
-	
 	# 2. Если кликнули в пустоту - прячем панель
 	if not current_target:
 		hide()

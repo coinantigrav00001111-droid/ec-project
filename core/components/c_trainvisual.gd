@@ -1,19 +1,25 @@
 class_name C_TrainVisual extends Component
 
 ###################################
-## Логика. Обработка файла сцены объекта
+## Логика. Обработка файла сцены вагона
 ###################################
 
+##TODO  корневая нода у Вагона  RigidBody3D, поэтому instance можно назвать соответственно. Если не полетит все в контроллерах
+
+## За перемещение физического тела отвечает кинематикс, у него есть ссылка на него.
 
 
-var instance: Node3D 
+var instance: RigidBody3D
 var scene: PackedScene
 var visual_settings: VisualStateSettings
 
+var rb: RigidBody3D # Ссылка на наш физический кузов
+
+# Массив мешей
 var mesh_nodes: Array[MeshInstance3D] 
 
-# Массив статикбоди сцены и их collision layers
-var area_nodes: Dictionary [CollisionObject3D, int] 
+# Массив нод с коллизиями
+var collision_nodes: Array[CollisionObject3D] 
 
 
 ## Вызов из ентити при создании комп
@@ -21,26 +27,52 @@ func on_added():
 	instance = scene.instantiate() # Создаем сцену
 	entity.add_child(instance)
 
-	# Осталось пока
 	_collect_meshes()
 	_collect_collision_nodes()
+
+	# Вся физика через кинематикс
+	#XX Находим RigidBody3D внутри загруженной сцены
+	#rb = instance
 	
+	#if rb:
+		#var _is_ghost = entity.get_comp(C_Ghost)
+		#
+		## По умолчанию при спавне физика отключена для срабатывания сеттингов
+		#if _is_ghost:
+			#rb.freeze = true
+			#rb.top_level = false
 
 
+
+# Реакция на появление компонентов в ентити
 func on_component_added(_type: Script):
-	#if _type in VISUAL_STATES:
-		update_visual()  # нужный
+		update_visual()
+		#if _type == C_Ghost: # Для срабатывания сеттингов откл физику
+			#rb.freeze = true
+			#rb.top_level = false
 
 
 
 func on_component_removed(_type: Script):
-	# Смотрит удаляемый комп, если увидит, то сбросит в нормальный вид
-	#if _type in VISUAL_STATES:
 	update_visual(_type)  # нужный
 
 
 
-###############################
+## Меняет активный слой объекта при перетаскивании
+func on_select_layer(_data):
+
+	if _data.enabled:
+		instance.collision_layer =  GS.active_layers(['ghost'])
+		instance.collision_mask = GS.active_layers(['ground','tracks','trains'])
+
+	else: # возврат к дефолту, когда снимается селект
+		instance.collision_layer = GS.active_layers(['trains'])
+		# 1 << 4 	# заменяет активный слой на 5
+		instance.collision_mask = GS.active_layers(['ground','tracks','trains','ghost'])
+
+
+#### Общие фукнции с драгабле###########################
+
 ## Смотрит удаляемый комп, если увидит, то сбросит в нормальный вид
 
 func update_visual(_removing_type: Script = null): 
@@ -100,17 +132,17 @@ func _find_meshes(node):
 
 
 
-## -----Сбор нод с коллизиями (Area3D и StaticBody3D)-------
+## -----Сбор нод с коллизиями (Area3D, StaticBody3D, RigidBody3D)-------
 
 func _collect_collision_nodes():
-	area_nodes = {}
+	collision_nodes = []
 	_find_collisions(instance)
 
 
-## Заполняем словарь {статик, его лэйер}
+## Заполняем массив коллизий
 func _find_collisions(node): 
 	if node is CollisionObject3D: 
-		area_nodes[node] = node.collision_layer 
+		collision_nodes.append(node)
 
 	for child in node.get_children(): 
 		_find_collisions(child)
@@ -149,17 +181,17 @@ func _set_blocked():
 		mesh.set_material_overlay(visual_settings.blocked_material) 
 
 
-
+# Не исп.
 func _reset(): 
-	for mesh in mesh_nodes: 
-		mesh.set_material_overlay( null)
+	#for mesh in mesh_nodes: 
+		#mesh.set_material_overlay( null)
 		
 	# статик в родной слой (трак, вагон и тд)
-	for coll in area_nodes:
-		var original_layer = area_nodes[coll]
-		if coll.collision_layer != original_layer:
-			coll.collision_layer = original_layer
-
+	#for coll in area_nodes:
+		#var original_layer = area_nodes[coll]
+		#if coll.collision_layer != original_layer:
+			#coll.collision_layer = original_layer
+	pass
 
 
 ## ----  МАТЕРИАЛЫ ----

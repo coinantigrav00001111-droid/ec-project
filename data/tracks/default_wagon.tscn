@@ -2,6 +2,10 @@
 
 [ext_resource type="Texture2D" uid="uid://dq3ymk2gtv8pb" path="res://ui/icons/hamburger-menu.svg" id="2_by7bw"]
 
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_ufoa1"]
+friction = 0.8
+rough = true
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cvlc5"]
 albedo_color = Color(1, 0.1882353, 1, 1)
 
@@ -15,12 +19,12 @@ albedo_texture = ExtResource("2_by7bw")
 
 [sub_resource type="BoxMesh" id="BoxMesh_hp83x"]
 material = SubResource("StandardMaterial3D_yc5xd")
-size = Vector3(1, 0.95, 6)
+size = Vector3(3, 6, 10)
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_rces7"]
 top_radius = 0.01
 bottom_radius = 0.05
-height = 1.0
+height = 5.0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_upj0g"]
 albedo_color = Color(0.00546265, 0.699219, 0, 1)
@@ -49,18 +53,29 @@ bottom_radius = 0.1
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_by7bw"]
 albedo_color = Color(0.00546265, 0.699219, 0, 1)
 
-[node name="GhostNode" type="Node3D" unique_id=2064155934]
+[sub_resource type="BoxShape3D" id="BoxShape3D_3owqy"]
+size = Vector3(3, 6, 10)
 
-[node name="ta" type="MeshInstance3D" parent="." unique_id=1229154046]
+[sub_resource type="BoxShape3D" id="BoxShape3D_3hmm7"]
+size = Vector3(4, 1, 11)
+
+[node name="WagonRigidBody3D" type="RigidBody3D" unique_id=662628486]
+collision_layer = 16
+collision_mask = 1045
+physics_material_override = SubResource("PhysicsMaterial_ufoa1")
+linear_damp = 3.623
+
+[node name="sphere" type="MeshInstance3D" parent="." unique_id=1229154046]
 unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -10)
 mesh = SubResource("SphereMesh_by7bw")
 
 [node name="WagonMesh" type="MeshInstance3D" parent="." unique_id=747693034]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
 mesh = SubResource("BoxMesh_hp83x")
 
 [node name="Ay" type="MeshInstance3D" parent="WagonMesh" unique_id=1600521713]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6845, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 visible = false
 mesh = SubResource("CylinderMesh_rces7")
 surface_material_override/0 = SubResource("StandardMaterial3D_upj0g")
@@ -96,39 +111,15 @@ text = "--Z"
 font_size = 122
 
 [node name="FrontMarker" type="MeshInstance3D" parent="WagonMesh" unique_id=1130341113]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9875001, -3)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, -4.5)
 mesh = SubResource("CylinderMesh_cvlc5")
 surface_material_override/0 = SubResource("StandardMaterial3D_by7bw")
 
-[node name="GhostSensorController" type="Node3D" parent="." unique_id=1391252842]
-visible = false
+[node name="WagonCollision" type="CollisionShape3D" parent="." unique_id=1520040488]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+shape = SubResource("BoxShape3D_3owqy")
 
-[node name="GhostRailProbeFront" type="Node3D" parent="." unique_id=1058581775]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -3)
-visible = false
-
-[node name="RayDown_L" type="RayCast3D" parent="GhostRailProbeFront" unique_id=260148011]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.875, 0.1, -0.001)
-target_position = Vector3(0, -0.2, 0)
-collision_mask = 1024
-collide_with_areas = true
-
-[node name="RayDown_R" type="RayCast3D" parent="GhostRailProbeFront" unique_id=946756451]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.875, 0.1, -0.001)
-target_position = Vector3(0, -0.2, 0)
-collision_mask = 1024
-
-[node name="GhostRailProbeRear" type="Node3D" parent="." unique_id=1199592780]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3)
-visible = false
-
-[node name="RayDown_L" type="RayCast3D" parent="GhostRailProbeRear" unique_id=328764109]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.875, 0.1, -0.001)
-target_position = Vector3(0, -0.2, 0)
-collision_mask = 1024
-collide_with_areas = true
-
-[node name="RayDown_R" type="RayCast3D" parent="GhostRailProbeRear" unique_id=1502039587]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.875, 0.1, -0.001)
-target_position = Vector3(0, -0.2, 0)
-collision_mask = 1024
+[node name="BogieCollision" type="CollisionShape3D" parent="." unique_id=404534012]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("BoxShape3D_3hmm7")
+debug_color = Color(0.9372549, 0, 0.6313726, 1)

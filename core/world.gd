@@ -1,5 +1,7 @@
 class_name World extends Node
 
+## TODO МОЖНО УДАЛЯТЬ!!
+
 ##########################
 ## 📦 World (менеджер сущностей)
 ##########################
@@ -15,14 +17,14 @@ class_name World extends Node
 
 
 #############################################################
-var entities = []
-
-func add_entity(e: Entity):
-	entities.append(e)
-	%EntitiesRoot.add_child(e)
-	
-	#_init_visual(e)
-
+#var entities = []
+#
+#func add_entity(e: Entity):
+	#entities.append(e)
+	#%EntitiesRoot.add_child(e)
+	#
+	##_init_visual(e)
+#
 
 #
 #func _init_visual(entity):
