@@ -62,13 +62,13 @@ func on_component_removed(_type: Script):
 func on_select_layer(_data):
 
 	if _data.enabled:
-		instance.collision_layer =  GS.active_layers(['ghost'])
-		instance.collision_mask = GS.active_layers(['ground','tracks','trains'])
+		instance.collision_layer =  Global.active_layers(['ghost'])
+		instance.collision_mask = Global.active_layers(['ground','tracks','trains'])
 
 	else: # возврат к дефолту, когда снимается селект
-		instance.collision_layer = GS.active_layers(['trains'])
+		instance.collision_layer = Global.active_layers(['trains'])
 		# 1 << 4 	# заменяет активный слой на 5
-		instance.collision_mask = GS.active_layers(['ground','tracks','trains','ghost'])
+		instance.collision_mask = Global.active_layers(['ground','tracks','trains','ghost'])
 
 
 #### Общие фукнции с драгабле###########################

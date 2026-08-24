@@ -2,21 +2,25 @@ extends Node
 
 ##########################
 ##
-## Global Setting (GS) пока это глобальные настройки
+## Global  (Global) пока это глобальные настройки
 ##
 ###########################
+
+# Настройки объектов
+var settings: Resource = preload("res://core/global_setting.tres")
 
 #DD Дебаги вкл
 var debug_mode := true
 
-# Высота трака с балластом
-const TRACK_WITH_BALLAST_HEIGHT = 0.85
 
 ## Текущий режим из : &'build' &'operate' &'observe' &'library'
 var current_mode :StringName = &'build' 
 
 
-
+######### TRACK ##############
+ 
+# Высота трака с балластом
+#const TRACK_WITH_BALLAST_HEIGHT = 0.85
 
 ########## HELPERS ##################
 

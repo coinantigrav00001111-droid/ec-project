@@ -15,24 +15,29 @@ var drag_offset := Vector3.ZERO # Смещение ентити
 
 # Ссылки на текущий трак, если мы над ним
 var current_track: Entity = null
-var current_curve_offset: float = 0.0
+var current_curve_point: float = 0.0 # Смещение на кривой
 var is_snapped_to_track := false # Флаг привязки к траку
 var is_flipped_on_track := false # Флаг: смотрит ли вагон мордой к началу трака
 
 
 func on_drag_started(_data: Dictionary) -> void:
 	initial_transform = entity.global_transform
-	
-	drag_offset = Vector3.ZERO + Vector3(0, 1.0, 0) # приподняли на старте
-	
+
+	var track_h = Vector3(0,  Global.settings.get_track_height() + 0.15, 0) 
+	if entity.global_position.y < 0.9:
+		drag_offset = Vector3.ZERO + track_h # приподняли на старте повыше трака
+	else:
+		drag_offset.y = 0.15
 	
 	# Проверяем, если евент из билд моде, то смещения мыши не будет
 	var _build_mode =  true if _data.has('build') and _data.build else false
 	if not _build_mode :
 		# Берем смещение по X/Z, чтобы мышь не центрировалась жестко по пивоту вагона
 		var raw_offset = entity.global_position - _data.position
+
 		# в билд тоже приподняли на старте 
-		drag_offset = Vector3(raw_offset.x, raw_offset.y + 1.0, raw_offset.z)
+		drag_offset.x = raw_offset.x
+		drag_offset.z = raw_offset.z
 	
 	# ⚡Сигнал в trainvisual о смене слоя
 	entity.send_event("on_select_layer", {'enabled':true})
@@ -53,7 +58,7 @@ func on_drag_moved(_data: Dictionary) -> void:
 	current_track = null
 	
 	# 1. Проверяем, над траком ли мы (Слой 3)
-	if collider and (collider.collision_layer == GS.active_layers(['tracks'])):
+	if collider and (collider.collision_layer == Global.active_layers(['tracks'])):
 		var track_entity = _find_entity_from_collider(collider)
 		if track_entity :
 			_snap_to_track(track_entity, mouse_pos)
@@ -70,8 +75,8 @@ func on_drag_ended(_data: Dictionary) -> void:
 		# Передаем данные в тележки (C_Chassis), чтобы они закрепились на кривой
 		entity.send_event("on_train_snapped", {
 			"track": current_track,
-			"offset": current_curve_offset,
-			"is_flipped": is_flipped_on_track # Передаем тележкам разворот
+			"offset": current_curve_point,
+			"is_flipped": is_flipped_on_track # Передаем разворот
 		})
 	else:
 		# Бросили мимо рельсов — включаем физику Godot (RigidBody)
@@ -107,6 +112,9 @@ func on_lift_input(data: Dictionary):
 # ==========================================
 # Логика Снаппинга
 # ==========================================
+### ==========================================
+### Логика Снаппинга
+### ==========================================
 
 func _snap_to_track(track_entity: Entity, world_mouse_pos: Vector3) -> void:
 	var path_comp = track_entity.get_comp(C_Path)
@@ -117,12 +125,13 @@ func _snap_to_track(track_entity: Entity, world_mouse_pos: Vector3) -> void:
 	var path_node = path_comp.path_node
 	var curve = path_comp.curve
 
+
 	# 1. Находим ближайшую точку на кривой в локальных координатах
 	var local_mouse_pos = path_node.to_local(world_mouse_pos)
-	current_curve_offset = curve.get_closest_offset(local_mouse_pos)
+	current_curve_point = curve.get_closest_offset(local_mouse_pos)
 
 	# 2. Получаем Transform3D точки на кривой, чтобы узнать касательную (tangent)
-	var curve_point_transform = curve.sample_baked_with_rotation(current_curve_offset)
+	var curve_point_transform = curve.sample_baked_with_rotation(current_curve_point)
 	var global_point_pos = path_node.to_global(curve_point_transform.origin)
 
 	# 3. Вычисляем глобальный вектор направления сплайна. -Z
@@ -139,7 +148,7 @@ func _snap_to_track(track_entity: Entity, world_mouse_pos: Vector3) -> void:
 		final_forward = -track_forward
 
 	# 6. Устанавливаем позицию и выравниваем базис (поворот).Прибавляем высоту от drag_offset
-	entity.global_position = global_point_pos + Vector3(0, drag_offset.y, 0) 
+	entity.global_position = global_point_pos + Vector3(0,  Global.settings.get_track_height(), 0) 
 	
 	# Защита от коллинеарности с вектором UP (если рельсы идут строго вертикально)
 	if abs(final_forward.dot(Vector3.UP)) < 0.99:
@@ -159,6 +168,7 @@ func _snap_to_track(track_entity: Entity, world_mouse_pos: Vector3) -> void:
 func _apply_free_movement(world_mouse_pos: Vector3) -> void:
 	# transform не бьет ошибку если ентити не в дереве еще
 	#entity.position = world_mouse_pos + drag_offset
+
 	entity.transform.origin = world_mouse_pos + drag_offset
 	# 🛠️ Обязательно обнуляем стейт, когда вагон сорвался с рельсов
 	is_snapped_to_track = false # 🛠️

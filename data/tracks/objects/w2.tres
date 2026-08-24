@@ -6,7 +6,7 @@
 
 [resource]
 script = ExtResource("2_t5pxf")
-id = 1520
+id = 2020
 name = "wagon 2"
 description = "Вагон пасс"
 category = &"train"

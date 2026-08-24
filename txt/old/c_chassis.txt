@@ -1,0 +1,265 @@
+class_name C_Chassis extends ICapability
+
+####################
+## Способность, Библиотека действий. Она живет на объекте всегда.
+####################
+## Читает Curve3D трака и вычисляет свои координаты на сплайне.
+## Cчитается позиция Вагон как "хорда" на кривой. Запрашивает у кривой трака две точки:
+## distance_travelled + front_bogie_offset (Позиция передних колес).
+## distance_travelled + rear_bogie_offset (Позиция задних колес).
+## Центр вагона (global_position Entity) = Середина между этими двумя точками (Front + Rear) / 2.
+## Поворот вагона (Basis/LookAt) = Вектор направления от задней тележки к передней.
+
+
+var front_bogie_offset: float = 2.5 # Расстояние от центра до передней тележки
+var rear_bogie_offset: float  = -2.5 # Расстояние от центра до задней тележки
+
+# Тело вагона
+var rb :RigidBody3D
+var current_track: Entity = null
+var current_spline_offset: float = 0.0 # Смещение.точка на сплайне
+var is_on_rails: bool = false
+var is_flipped := false
+
+
+# --- Новые переменные для движения ---
+var current_speed: float = 0.0       # Текущая скорость вдоль сплайна
+var friction_decel: float = 0.5      # Затухание скорости (трение)
+
+
+
+func on_added():
+	rb = get_comp(C_TrainVisual).instance
+	pass
+
+
+
+# Слушаем событие пинка
+func on_train_kicked(data: Dictionary) -> void:
+	if not is_on_rails:		return
+	
+	var power = data.get("power", 0.0)
+	# Если вагон перевернут относительно сплайна, инвертируем скорость качения
+	if is_flipped:
+		current_speed -= power
+	else:
+		current_speed += power
+
+
+
+func _physics_process(delta: float) -> void:
+	if not is_on_rails or not is_instance_valid(current_track):
+		entity.send_event('on_speed_changed', {'speed': 0.0})
+		return
+
+	var path_comp = current_track.get_comp(C_Path)
+	if not path_comp or not path_comp.curve or not path_comp.path_node:
+		return
+
+	if current_speed != 0.0:
+		current_spline_offset += current_speed * delta
+		current_speed = move_toward(current_speed, 0.0, friction_decel * delta)
+
+	if current_speed == 0.0:
+		return
+
+	var track_length = path_comp.curve.get_baked_length()
+
+	# 1. ПРОВЕРЯЕМ ПЕРЕХОД ЦЕНТРА НА НОВЫЙ ТРАК
+	if current_spline_offset > track_length:
+		if not _try_switch_track(true, track_length): return
+	elif current_spline_offset < 0.0:
+		if not _try_switch_track(false, track_length): return
+
+	# 2. ВЫЧИСЛЯЕМ ПОЗИЦИИ ТЕЛЕЖЕК (они могут быть на разных траках!)
+	var front_global = _get_bogie_global_pos(current_track, current_spline_offset + front_bogie_offset)
+	var rear_global = _get_bogie_global_pos(current_track, current_spline_offset + rear_bogie_offset)
+
+	# Если функция вернула INF, значит тележка съехала в пустоту -> СХОД С РЕЛЬС
+	if front_global == Vector3.INF or rear_global == Vector3.INF:
+		entity.send_event("on_derailed", {})
+		return
+
+	# 3. ДВИГАЕМ КУЗОВ
+	var base_pos = (front_global + rear_global) / 2.0
+	var track_h = Vector3(0, GS.TRACK_WITH_BALLAST_HEIGHT, 0) 
+	entity.global_position = base_pos + track_h
+	
+	## TODO Если когда-нибудь в игре появятся рельсы, идущие под горку (наклонные сплайны), вагоны начнут визуально "проседать" в рельс. В таком случае нужно будет прибавлять высоту вдоль локального вектора UP самого трака: path_comp.path_node.global_transform.basis.y * suspension_height)
+	
+	if front_global.distance_to(rear_global) > 0.001:
+		entity.look_at(front_global, path_comp.path_node.global_transform.basis.y)
+		
+	# Убеждаемся, что кузов отвязан от ентити
+	if not rb.top_level: rb.top_level = false
+
+	if is_on_rails:	# ФИЗИЧЕСКИЙ ДРАГ: RigidBody догоняет Entity (курсор)
+		rb.global_position = entity.global_position
+
+
+
+# ==========================================
+# ХЕЛПЕРЫ ДЛЯ ПЕРЕХОДА ПО ТРАКАМ
+# ==========================================
+
+func _try_switch_track(is_exiting_end: bool, current_length: float) -> bool:
+	var socket_comp = current_track.get_comp(C_Socket)
+	var next_track = socket_comp.get_neighbor_at(is_exiting_end) if socket_comp else null
+	
+	if not is_instance_valid(next_track):
+		entity.send_event("on_derailed", {})
+		return false
+		
+	# Выясняем, как пристыкован новый трак (поляризация)
+	var next_path = next_track.get_comp(C_Path)
+	var next_start_pos = next_path.path_node.to_global(next_path.curve.sample_baked(0.0))
+	var path_comp = current_track.get_comp(C_Path)
+	var exit_pos = path_comp.path_node.to_global(path_comp.curve.sample_baked(current_length if is_exiting_end else 0.0))
+	
+	var entered_from_start = exit_pos.distance_to(next_start_pos) < 0.1
+	var next_length = next_path.curve.get_baked_length()
+	
+	# Бесшовно переносим стейт с учетом разворота рельсов
+	if is_exiting_end: 
+		if entered_from_start:
+			current_spline_offset -= current_length
+		else:
+			current_spline_offset = next_length - (current_spline_offset - current_length)
+			is_flipped = not is_flipped
+			current_speed = -current_speed
+	else: 
+		if entered_from_start:
+			current_spline_offset = -current_spline_offset
+			is_flipped = not is_flipped
+			current_speed = -current_speed
+		else:
+			current_spline_offset = next_length + current_spline_offset
+			
+	current_track = next_track
+	return true
+
+func _get_bogie_global_pos(base_track: Entity, offset: float) -> Vector3:
+	var path_comp = base_track.get_comp(C_Path)
+	var track_length = path_comp.curve.get_baked_length()
+
+	if offset >= 0.0 and offset <= track_length:
+		return path_comp.path_node.to_global(path_comp.curve.sample_baked(offset))
+
+	# Тележка за краем - ищем её на соседе
+	var is_exiting_end = offset > track_length
+	var socket_comp = base_track.get_comp(C_Socket)
+	var next_track = socket_comp.get_neighbor_at(is_exiting_end) if socket_comp else null
+	
+	if not is_instance_valid(next_track):
+		return Vector3.INF
+		
+	var next_path = next_track.get_comp(C_Path)
+	var next_start_pos = next_path.path_node.to_global(next_path.curve.sample_baked(0.0))
+	var exit_pos = path_comp.path_node.to_global(path_comp.curve.sample_baked(track_length if is_exiting_end else 0.0))
+	
+	var entered_from_start = exit_pos.distance_to(next_start_pos) < 0.1
+	var remaining_offset = offset - track_length if is_exiting_end else -offset
+	
+	var final_offset = remaining_offset if entered_from_start else next_path.curve.get_baked_length() - remaining_offset
+	return next_path.path_node.to_global(next_path.curve.sample_baked(final_offset))
+	
+
+# В идеале это должно вызываться не в _process, а через системный менеджер поездов, 
+# но для инкапсуляции логики компонента пока оставляем так.
+
+func _physics_process0(delta: float) -> void:
+	if not is_on_rails or not is_instance_valid(current_track):
+		# В кинематикс
+		entity.send_event('on_speed_changed', {'speed': 0.0})
+		return
+
+	var path_comp = current_track.get_comp(C_Path)
+	# Проверка path_node
+	if not path_comp or not path_comp.curve or not path_comp.path_node:
+		return
+
+	# 🚩 Поехали 
+	# 1. Применяем скорость (работает для + и -)
+	if current_speed != 0.0:
+		current_spline_offset += current_speed * delta
+		#Двигается from в направлении to на delta величину
+		current_speed = move_toward(current_speed, 0.0, friction_decel * delta)
+
+	# 2. Если стоим и нет скорости - экономим ресурсы, не считаем кривые
+	if current_speed == 0.0:
+		return
+
+	var curve: Curve3D = path_comp.curve
+	var path_node = path_comp.path_node 
+	var track_length = curve.get_baked_length()
+
+	# 3. ‼️ВРЕМЕННЫЙ ПРЕДОХРАНИТЕЛЬ для одного трака
+	# Не даем оффсету выйти за края кривой, чтобы тележки не съехались
+	current_spline_offset = clamp(
+		current_spline_offset, 
+		abs(rear_bogie_offset), 
+		track_length - front_bogie_offset
+	)
+	
+	# 4. Находим локальные позиции тележек на кривой
+	# TODO надо универсальное определение высоты трака
+	var track_h = Vector3(0, GS.TRACK_WITH_BALLAST_HEIGHT, 0) 
+	var front_local = curve.sample_baked(current_spline_offset + front_bogie_offset) + track_h
+	var rear_local = curve.sample_baked(current_spline_offset + rear_bogie_offset)+ track_h
+	
+	# 5. 🛠 ПЕРЕВОДИМ В ГЛОБАЛ ЧЕРЕЗ PATH_NODE (Решает проблему телепорта!)
+	var front_global = path_node.to_global(front_local)
+	
+	var rear_global = path_node.to_global(rear_local)
+
+	# 6. Двигаем кузов
+	entity.global_position = (front_global + rear_global) / 2.0
+	
+	# 7. Поворачиваем кузов
+	if front_global.distance_to(rear_global) > 0.001:
+		# Базис UP берем от глобального трансформа самого path_node
+		entity.look_at(front_global, path_node.global_transform.basis.y)
+		
+	# Убеждаемся, что кузов отвязан от ентити
+	if not rb.top_level: rb.top_level = false
+
+	if is_on_rails:	# ФИЗИЧЕСКИЙ ДРАГ: RigidBody догоняет Entity (курсор)
+		rb.global_position = entity.global_position
+
+
+
+
+## ===================================================
+func on_drag_started(_data: Dictionary) -> void:
+	# Как только игрок схватил вагон, отключаем математику рельс и сбрасываем скорость
+	is_on_rails = false
+	current_speed = 0.0
+	
+
+	
+#"track","offset","is_flipped"
+# Ловит евент от C_TrainDraggable при успешном дропе на рельс
+func on_train_snapped(data: Dictionary) -> void:
+	
+	current_track = data.get("track")
+	current_spline_offset = data.get("offset", 0.0) # Смещение на сплайне
+	is_on_rails = true
+	is_flipped = data.is_flipped 
+	
+	## Выключаем физику Godot, отдаемся математике
+	if rb:
+		await  get_tree().process_frame
+		rb.freeze = true
+
+
+
+# Событие схода с рельс (от C_Kinematics или столкновения)
+func on_derailed(_data: Dictionary) -> void:
+	printt ('derailed')
+	if not is_on_rails: return
+	is_on_rails = false
+	current_track = null
+	
+	# Отвязываемся от сплайна
+	if rb:
+		rb.freeze = false

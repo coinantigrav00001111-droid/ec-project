@@ -23,7 +23,7 @@ func enter():
 	target_entity.add_component(C_Drag.new())
 	
 	# Драг начался вот в этой точке
-	var hit = controller.get_mouse_ray(GS.active_layers(['ground']))
+	var hit = controller.get_mouse_ray(Global.active_layers(['ground']))
 	# Драг проверит, если евент из билд моде, то смещения мыши не будет
 	#hit['build'] = false
 	if hit:
@@ -34,7 +34,7 @@ func enter():
 ## ⚡Сигнал(почти) о смене позиции в сущность. Там рзберется драгабл
 func process_tick(_delta):
 	#var hit = controller.get_mouse_ray((1 << 0) | (1 << 2)|(1 << 4))
-	var hit = controller.get_mouse_ray(GS.active_layers(['ground','tracks','trains']))
+	var hit = controller.get_mouse_ray(Global.active_layers(['ground','tracks','trains']))
 	if hit:
 		# Отправляем приказ в сущность. Оттуда C_Draggable сам разберется.
 		target_entity.send_event("on_drag_moved", hit)
@@ -53,7 +53,7 @@ func handle_input(event: InputEvent):
 		target_entity.send_event("on_rotate_input", {"axis": "x", "amount": ROT_STEP})
 	if Input.is_action_just_pressed("key_f"):
 		target_entity.send_event("on_rotate_input", {"axis": "x", "amount": -ROT_STEP})
-	if Input.is_action_just_pressed("key_num5"):
+	if Input.is_action_just_pressed("ui_home"):
 		target_entity.send_event("on_drag_reset", {}) # сбросить состояние
 	if Input.is_action_pressed("ui_page_up"):
 		target_entity.send_event("on_lift_input", {"step": LIFT_STEP}) 

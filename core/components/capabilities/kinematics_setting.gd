@@ -1,4 +1,4 @@
-class_name C_KinematicsSetting extends ComponentSettings
+class_name KinematicsSetting extends ComponentSettings
 
 # Данные заполняются в редакторе, в массиве сеттингов
 @export var mass: float = 0.2 # Кг

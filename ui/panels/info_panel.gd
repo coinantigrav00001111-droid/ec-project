@@ -28,6 +28,10 @@ func _process(_delta):
 			var _freeze = current_target.get_comp(C_Kinematics).rb.freeze
 			%OnTrackLabel.text ='On' if _ontrack else 'Off'
 			%FreezeLabel.text = 'On' if _freeze else 'Off'
+			if _ontrack:
+				%SpeedmpsLabel.text = "(%.2f)" % [current_target.get_comp(C_Chassis).current_speed]
+			else:
+				%SpeedmpsLabel.text = "(%.2f)" % [current_target.get_comp(C_Kinematics).rb.linear_velocity.z]
 	if visible and current_target and tab_container.current_tab == 4: 
 		_update_debug_tab()
 	

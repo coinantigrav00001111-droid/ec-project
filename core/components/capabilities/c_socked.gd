@@ -225,6 +225,45 @@ func _on_socket_area_exited(_area: Area3D) -> void:
 	await get_tree().physics_frame
 
 
+
+##  -------ДЛЯ ВАГОНА ----------
+
+# Ищет соседа, который пристыкован к указанному краю нашего трака
+func get_neighbor_at(is_exiting_end: bool) -> Entity:
+	var path_comp = get_comp(C_Path)
+	if not path_comp or not path_comp.path_node:
+		return null
+		
+	var curve = path_comp.curve
+	# Находим глобальную координату того края, с которого съезжаем
+	var local_exit = curve.sample_baked(curve.get_baked_length() if is_exiting_end else 0.0)
+	var global_exit = path_comp.path_node.to_global(local_exit)
+
+	# Перебираем всех живых соседей
+	for neighbor in get_connected_entities():
+		var n_path = neighbor.get_comp(C_Path)
+		if not n_path or not n_path.path_node:
+			continue
+			
+		var n_curve = n_path.curve
+		var n_node = n_path.path_node
+		
+		# Получаем глобальные координаты начала и конца соседа
+		var n_start = n_node.to_global(n_curve.sample_baked(0.0))
+		var n_end = n_node.to_global(n_curve.sample_baked(n_curve.get_baked_length()))
+		
+		# Если край соседа совпадает с нашей точкой выхода (с погрешностью 0.1м)
+		if global_exit.distance_to(n_start) < 0.1 or global_exit.distance_to(n_end) < 0.1:
+			return neighbor
+			
+	return null
+	
+	
+
+
+
+
+
 # ---- HELPERS ---
 
 #лямбда-фильтр  для защиты от крашей. Если игрок удалил рельс через инструмент удаления (вызвался queue_free()), физический сигнал exited может не успеть отработать. Фильтр гарантирует, что диспетчер получит только живые объекты.

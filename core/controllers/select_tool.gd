@@ -74,9 +74,9 @@ func handle_input(event: InputEvent):
 		#INFO ДЕРГАЕМ ПАНЕЛЬ!
 		controller.info_panel.set_target(null)
 		
-	if selected_entity and Input.is_action_just_pressed("key_r"):
+	if selected_entity and Input.is_action_just_pressed("ui_page_up"):
 		selected_entity.send_event("on_train_kicked", {"power": 2.0}) # Пинок силой 2 м/с
-	if selected_entity and Input.is_action_just_pressed("key_f"):
+	if selected_entity and Input.is_action_just_pressed("ui_page_down"):
 		selected_entity.send_event("on_train_kicked", {"power": -2.0}) # Пинок силой 2 м/с
 
 
@@ -85,7 +85,7 @@ func _get_entity_under_mouse() -> Entity:
 	# Слой земли(1), траков(3), трейна(5), селектеда(11)- 11 это гост!
 	
 	#var hit = controller.get_mouse_ray((1 << 0) | (1 << 2) |(1 << 4)| (1 << 10)) 
-	var hit = controller.get_mouse_ray(GS.active_layers(['ground','tracks','trains','ghost'])) 
+	var hit = controller.get_mouse_ray(Global.active_layers(['ground','tracks','trains','ghost'])) 
 	if hit and hit.collider:
 		return _find_entity(hit.collider)
 	return null
@@ -123,7 +123,7 @@ func _start_drag(target: Entity):
 func _update_hover():
 	# (1 << 0) | (1 << 2) | (1 << 10)
 	# Слои земля, трак, вагон
-	var result = controller.get_mouse_ray(GS.active_layers(['ground','tracks','trains','ghost'])) 
+	var result = controller.get_mouse_ray(Global.active_layers(['ground','tracks','trains','ghost'])) 
 	var new_hover = null
 	
 	# Наехали на сущность?

@@ -133,7 +133,7 @@ func get_mouse_ray(mask: int = -1) -> Dictionary:
 ## 💡--------------Меняем режим ---------------------------------
 
 func on_current_mode_changed(_new_mode):
-	GS.current_mode = _new_mode
+	Global.current_mode = _new_mode
 	update_info.emit() 
 
 

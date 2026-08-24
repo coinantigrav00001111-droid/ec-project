@@ -19,7 +19,7 @@ func _ready() -> void:
 # ⚡Сигнал обработка из ui контроллера 
 func on_update_info():
 
-	%ModeLabel.text = GS.current_mode
+	%ModeLabel.text = Global.current_mode
 
 
 @export var m_colors = {

@@ -350,6 +350,42 @@ custom_minimum_size = Vector2(0, 55)
 layout_mode = 2
 text = "разное"
 
+[node name="HBoxContainer4" type="HBoxContainer" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer" unique_id=127040788]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Control3" type="Control" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer4" unique_id=603285527]
+custom_minimum_size = Vector2(10, 0)
+layout_mode = 2
+size_flags_stretch_ratio = 0.5
+
+[node name="Label" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer4" unique_id=1679071840]
+layout_mode = 2
+text = "Speed( ): "
+
+[node name="SpeedmpsLabel" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer4" unique_id=649939751]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+text = "0"
+
+[node name="Control" type="Control" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer4" unique_id=967557134]
+layout_mode = 2
+size_flags_stretch_ratio = 0.5
+
+[node name="Label2" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer4" unique_id=1442670066]
+layout_mode = 2
+text = "Rotation:"
+
+[node name="SpeedKmhLabel" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer4" unique_id=102936220]
+layout_mode = 2
+text = "0"
+
+[node name="Control2" type="Control" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer4" unique_id=814645474]
+custom_minimum_size = Vector2(10, 0)
+layout_mode = 2
+size_flags_stretch_ratio = 0.5
+
 [node name="VisualTab" type="VBoxContainer" parent="VBoxContainer/TabContainer" unique_id=1874121866]
 visible = false
 layout_mode = 2

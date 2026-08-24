@@ -6,7 +6,7 @@
 
 [resource]
 script = ExtResource("2_ykoog")
-id = 1010
+id = 1520
 name = "loco 2"
 description = "локо 2"
 category = &"train"

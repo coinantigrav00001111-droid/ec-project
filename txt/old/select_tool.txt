@@ -69,10 +69,17 @@ func handle_input(event: InputEvent):
 				_start_drag(clicked_entity)
 				clicked_entity = null
 
-	if Input.is_action_just_pressed("ui_graph_delete"):
+	if selected_entity and Input.is_action_just_pressed("ui_graph_delete"):
 		selected_entity.free()
 		#INFO ДЕРГАЕМ ПАНЕЛЬ!
 		controller.info_panel.set_target(null)
+		
+	if selected_entity and Input.is_action_just_pressed("key_r"):
+		selected_entity.send_event("on_train_kicked", {"power": 2.0}) # Пинок силой 2 м/с
+	if selected_entity and Input.is_action_just_pressed("key_f"):
+		selected_entity.send_event("on_train_kicked", {"power": -2.0}) # Пинок силой 2 м/с
+
+
 
 func _get_entity_under_mouse() -> Entity:
 	# Слой земли(1), траков(3), трейна(5), селектеда(11)- 11 это гост!

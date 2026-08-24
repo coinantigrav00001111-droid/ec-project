@@ -22,7 +22,8 @@ var is_flipped_on_track := false # Флаг: смотрит ли вагон мо
 
 func on_drag_started(_data: Dictionary) -> void:
 	initial_transform = entity.global_transform
-	var track_h = Vector3(0, GS.TRACK_WITH_BALLAST_HEIGHT + 0.15, 0) 
+
+	var track_h = Vector3(0,  Global.settings.get_track_height() + 0.15, 0) 
 	if entity.global_position.y < 0.9:
 		drag_offset = Vector3.ZERO + track_h # приподняли на старте повыше трака
 	else:
@@ -57,7 +58,7 @@ func on_drag_moved(_data: Dictionary) -> void:
 	current_track = null
 	
 	# 1. Проверяем, над траком ли мы (Слой 3)
-	if collider and (collider.collision_layer == GS.active_layers(['tracks'])):
+	if collider and (collider.collision_layer == Global.active_layers(['tracks'])):
 		var track_entity = _find_entity_from_collider(collider)
 		if track_entity :
 			_snap_to_track(track_entity, mouse_pos)
@@ -147,7 +148,7 @@ func _snap_to_track(track_entity: Entity, world_mouse_pos: Vector3) -> void:
 		final_forward = -track_forward
 
 	# 6. Устанавливаем позицию и выравниваем базис (поворот).Прибавляем высоту от drag_offset
-	entity.global_position = global_point_pos + Vector3(0, GS.TRACK_WITH_BALLAST_HEIGHT, 0) 
+	entity.global_position = global_point_pos + Vector3(0,  Global.settings.get_track_height(), 0) 
 	
 	# Защита от коллинеарности с вектором UP (если рельсы идут строго вертикально)
 	if abs(final_forward.dot(Vector3.UP)) < 0.99:

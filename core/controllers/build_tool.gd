@@ -36,7 +36,7 @@ func enter():
 		## 🟡Одиночная постройка. Переход в селект и драг сразу
 	elif ghost_setting.category == &'train': 
 		# Отправляем в позицию мышки разово, пока не видно тело
-		var hit = controller.get_mouse_ray(GS.active_layers(['ground','tracks','trains']))
+		var hit = controller.get_mouse_ray(Global.active_layers(['ground','tracks','trains']))
 		if hit:
 			ghost.send_event("on_drag_moved", hit)
 			
@@ -130,7 +130,7 @@ func _place_real_object() -> Entity:
 
 func process_tick(_delta):
 	#var hit = controller.get_mouse_ray((1 << 0) | (1 << 2)|(1 << 4))
-	var hit = controller.get_mouse_ray(GS.active_layers(['ground','tracks','trains']))
+	var hit = controller.get_mouse_ray(Global.active_layers(['ground','tracks','trains']))
 	
 	if hit and ghost:
 		# Отправляем приказ в сущность. Оттуда C_Draggable сам разберется

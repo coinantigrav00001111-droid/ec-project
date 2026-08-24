@@ -28,13 +28,9 @@ var headr_node: StaticBody3D
 var pivot_offset := Vector3.ZERO 
 
 # Ballast
-# size: размеры по X (ширина) и Y (высота). Z высчитывается автоматически.
-# start_end_padding: минус - внутрь трака, плюс =0 .
-# gap: зазор между сегментами.
-var b_count : int = 4
-var b_size := Vector2(3.2, 0.6)
-var b_gap := 0.0
-var b_start_end_padding: float = -0.1
+
+#var b_gap := 0.0 # зазор между сегментами.
+var b_start_end_padding: float = -0.1	#  минус - внутрь трака, плюс =0 .
 
 
 func on_added():
@@ -56,7 +52,9 @@ func on_entity_ready() -> void:
 	
 	# Синхронизируем коллизии балласта с нодой Ballast, если она есть в сцене
 	_sync_with_visual_ballast()
-
+	
+	# Синхронизируем коллизии рельсов с нодами сцены
+	_sync_with_visual_heads()
 
 
 # Генерируем ноду Path3D и новый оффсет в C_Pivot 
@@ -89,16 +87,14 @@ func _sync_with_visual_ballast():
 	# Находим ноду балласта 
 	ballast_node = _find_ballast_recursive(visual.instance)
 	
-	# TODO организовать поиск рельсов как балласта. Или в одну функцию запихнуть
-	headl_node = visual.instance.get_node('HeadL')
-	headr_node = visual.instance.get_node('HeadR')
 	# Проверка сцены. Eсли в ней балласта нет, то значит он не нужен, выходим
 	if not ballast_node: return 
 
 	#Если коллизия есть, то она сделана в сцене специально для оптимизации (прямая состоит из одного сегмента например) или намеренно - оставляем.
 	# Расчет балласта. Если у балласта нет коллизий, то будем генерить.
+	var gs_ballast = Global.settings.track_ballast_segment
 	if ballast_node.get_child_count() == 0: 
-		generate_ballast_collisions(b_count, b_size, b_start_end_padding, b_gap)
+		generate_ballast_collisions(gs_ballast.count,gs_ballast.size, gs_ballast.padding, gs_ballast.gap)
 	
 	
 	#INFO цвет коллизий для дебага
@@ -107,6 +103,38 @@ func _sync_with_visual_ballast():
 	for seg in collision_shapes:
 		seg.set_debug_color(_debug_color)
 
+
+
+## Синхронизируем ноды "Head_L Head_R" с нодами сцены внутри C_Visual
+func _sync_with_visual_heads():
+	var visual = get_comp(C_Visual)
+	if not visual or not visual.instance: return
+
+	# Находим ноды рельсов
+	# TODO организовать поиск рельсов как балласта. Или в одну функцию запихнуть
+	headl_node = visual.instance.get_node('HeadL')
+	headr_node = visual.instance.get_node('HeadR')
+	# Проверка сцены. Eсли в ней рельсов, то значит он не нужен, выходим
+	#if not headl_node or not headr_node: return 
+
+	#Если коллизия есть, то она сделана в сцене специально для оптимизации (прямая состоит из одного сегмента например) или намеренно - оставляем.
+	# Расчет балласта. Если нет коллизий, то будем генерить.
+	var gs_head = Global.settings.track_head_segment
+	if not headl_node or headl_node.get_child_count() == 0: 
+		generate_head_collisions(headl_node, gs_head.count, gs_head.size, gs_head.padding, gs_head.gap, gs_head.offset)
+	if not headr_node or headr_node.get_child_count() == 0: 
+		generate_head_collisions(headr_node, gs_head.count, gs_head.size, gs_head.padding, gs_head.gap, gs_head.offset)
+	
+	#INFO цвет коллизий для дебага
+	var _debug_color=Color("c40070ff")
+	var collision_shapes =  headl_node.get_children()
+	for seg in collision_shapes:
+		seg.set_debug_color(_debug_color)
+	collision_shapes =  headr_node.get_children()
+	for seg in collision_shapes:
+		seg.set_debug_color(_debug_color)
+	
+		
 
 
 ## Процедурный генератор кривой с идеальными касательными на торцах
@@ -186,7 +214,7 @@ func generate_ballast_collisions(count: int, cross_size: Vector2, start_end_padd
 		# На t=0 мы сдвигаем бокс вперед (-Z в Godot) на z_size/2, чтобы его край совпал со стартом.
 		# На t=1 мы сдвигаем бокс назад (+Z) на z_size/2, чтобы его край совпал с финишем.
 		var z_shift = lerp(-z_size / 2.0, z_size / 2.0, t)
-		segment_transform = segment_transform.translated_local(Vector3(0.0, b_size.y/2, z_shift))
+		segment_transform = segment_transform.translated_local(Vector3(0.0, Global.settings.track_ballast_segment.size.y/2, z_shift))
 		
 		var collision_shape = CollisionShape3D.new()
 		collision_shape.name = "BallastShape_%d" % i
@@ -200,6 +228,51 @@ func generate_ballast_collisions(count: int, cross_size: Vector2, start_end_padd
 		ballast_node.add_child(collision_shape)
 
 
+# Генерация сегментов коллизии балласта
+func generate_head_collisions(owner_node : Node3D, count: int, cross_size: Vector2, start_end_padding: float = 0.0, gap: float = 0.0, offset = 0.865) -> void:
+	
+	if not curve or curve.get_baked_length() == 0 or count < 1:
+		push_warning("C_Path: Кривая не инициализирована или count < 1.")
+		return
+
+	var total_length = curve.get_baked_length()
+	# Вычисляем дистанции (минус padding сдвигает старт в плюс, т.е. внутрь)
+	var start_distance = -start_end_padding
+	var end_distance = total_length + start_end_padding
+	var usable_length = end_distance - start_distance
+	
+	# Вычисляем размер одного сегмента по оси Z
+	var total_gap = gap * (count - 1)
+	var z_size = (usable_length - total_gap) / float(count)
+	var box_size = Vector3(cross_size.x, cross_size.y, z_size)
+	
+	for i in range(count):
+		# t от 0.0 (первый сегмент) до 1.0 (последний)
+		var t = float(i) / (count - 1) if count > 1 else 0.5
+		
+		# Дистанция выборки на кривой
+		var d = lerp(start_distance, end_distance, t)
+		
+		# Встроенная защита: Godot автоматически зажмет d в пределах [0, total_length],
+		# поэтому даже если padding плюсовой (наружу), мы возьмем правильный крайний тангенс.
+		var segment_transform = curve.sample_baked_with_rotation(d)
+		
+		# Магия выравнивания:
+		# На t=0 мы сдвигаем бокс вперед (-Z в Godot) на z_size/2, чтобы его край совпал со стартом.
+		# На t=1 мы сдвигаем бокс назад (+Z) на z_size/2, чтобы его край совпал с финишем.
+		var z_shift = lerp(-z_size / 2.0, z_size / 2.0, t)
+		segment_transform = segment_transform.translated_local(Vector3(0.0, cross_size.y/2, z_shift))
+		print(segment_transform)
+		var collision_shape = CollisionShape3D.new()
+		collision_shape.name = "BallastShape_%d" % i
+		
+		var box_shape = BoxShape3D.new()
+		box_shape.size = box_size
+	
+		collision_shape.shape = box_shape
+		collision_shape.transform = segment_transform
+		
+		owner_node.add_child(collision_shape)
 
 #------SAVE\LOAD----
 
