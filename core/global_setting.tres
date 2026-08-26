@@ -4,4 +4,20 @@
 
 [resource]
 script = ExtResource("1_3d062")
+track_head_segment = {
+"count": 10,
+"deg_per_segment": 10.0,
+"gap": 0.0,
+"offset_x": 0.865,
+"size": Vector2(0.2, 0.25),
+"start_end_padding": 0.0
+}
+track_ballast_segment = {
+"count": 4,
+"deg_per_segment": 10.0,
+"gap": 0.0,
+"offset_x": 0.0,
+"size": Vector2(3.2, 0.6),
+"start_end_padding": -0.1
+}
 metadata/_custom_type_script = "uid://dtnlxwwqt15sb"

@@ -8,6 +8,8 @@ class_name C_Engine extends ICapability
 # Коэффициент конвертации напряжения (V) в скорость/тягу
 var speed_multiplier: float = 10.5 
 
+
+
 func _physics_process(_delta: float) -> void:
 	var chassis = entity.get_comp(C_Chassis)
 	

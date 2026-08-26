@@ -28,13 +28,9 @@ var headr_node: StaticBody3D
 var pivot_offset := Vector3.ZERO 
 
 # Ballast
-# size: размеры по X (ширина) и Y (высота). Z высчитывается автоматически.
-# start_end_padding: минус - внутрь трака, плюс =0 .
-# gap: зазор между сегментами.
-var b_count : int = 4
-var b_size := Vector2(3.2, 0.6)
-var b_gap := 0.0
-var b_start_end_padding: float = -0.1
+
+#var b_gap := 0.0 # зазор между сегментами.
+var b_start_end_padding: float = -0.1	#  минус - внутрь трака, плюс =0 .
 
 
 func on_added():
@@ -56,7 +52,9 @@ func on_entity_ready() -> void:
 	
 	# Синхронизируем коллизии балласта с нодой Ballast, если она есть в сцене
 	_sync_with_visual_ballast()
-
+	
+	# Синхронизируем коллизии рельсов с нодами сцены
+	_sync_with_visual_heads()
 
 
 # Генерируем ноду Path3D и новый оффсет в C_Pivot 
@@ -89,16 +87,15 @@ func _sync_with_visual_ballast():
 	# Находим ноду балласта 
 	ballast_node = _find_ballast_recursive(visual.instance)
 	
-	# TODO организовать поиск рельсов как балласта. Или в одну функцию запихнуть
-	headl_node = visual.instance.get_node('HeadL')
-	headr_node = visual.instance.get_node('HeadR')
 	# Проверка сцены. Eсли в ней балласта нет, то значит он не нужен, выходим
 	if not ballast_node: return 
 
 	#Если коллизия есть, то она сделана в сцене специально для оптимизации (прямая состоит из одного сегмента например) или намеренно - оставляем.
 	# Расчет балласта. Если у балласта нет коллизий, то будем генерить.
+	var gs_ballast = Global.settings.track_ballast_segment
 	if ballast_node.get_child_count() == 0: 
-		generate_ballast_collisions(b_count, b_size, b_start_end_padding, b_gap)
+		var dynamic_count = _calculate_collision_count(radius, deg, 10)
+		_generate_collision_segments(ballast_node, dynamic_count,gs_ballast.size,  gs_ballast.offset_x, 0, gs_ballast.start_end_padding , gs_ballast.gap, true)
 	
 	
 	#INFO цвет коллизий для дебага
@@ -109,25 +106,62 @@ func _sync_with_visual_ballast():
 
 
 
+## Синхронизируем ноды "Head_L Head_R" с нодами сцены внутри C_Visual
+func _sync_with_visual_heads():
+	var visual = get_comp(C_Visual)
+	if not visual or not visual.instance: return
+
+	# Находим ноды рельсов
+	# TODO организовать поиск рельсов как балласта. Или в одну функцию запихнуть
+	headl_node = visual.instance.get_node('HeadL')
+	headr_node = visual.instance.get_node('HeadR')
+	# Проверка сцены. Eсли в ней рельсов, то значит он не нужен, выходим
+	#if not headl_node or not headr_node: return 
+
+	#Если коллизия есть, то она сделана в сцене специально для оптимизации (прямая состоит из одного сегмента например) или намеренно - оставляем.
+	# Расчет балласта. Если нет коллизий, то будем генерить.
+	
+	var dynamic_count = _calculate_collision_count(radius, deg, 10)
+	var gs_head = Global.settings.track_head_segment
+	
+	if not headl_node or headl_node.get_child_count() == 0: 
+	
+		_generate_collision_segments(headl_node,dynamic_count, gs_head.size, gs_head.offset_x, 0, gs_head.start_end_padding, gs_head.gap, false)
+
+	if not headr_node or headr_node.get_child_count() == 0: 
+		_generate_collision_segments(headr_node,dynamic_count, gs_head.size, -gs_head.offset_x, 0, gs_head.start_end_padding, gs_head.gap, false)
+	
+	#INFO цвет коллизий для дебага
+	var _debug_color=Color("c40070ff")
+	var collision_shapes =  headl_node.get_children()
+	for seg in collision_shapes:
+		seg.set_debug_color(_debug_color)
+	collision_shapes =  headr_node.get_children()
+	for seg in collision_shapes:
+		seg.set_debug_color(_debug_color)
+	
+		
+
+
 ## Процедурный генератор кривой с идеальными касательными на торцах
 func generate_track_curve(_radius: float, _deg: float) -> Curve3D:
 	var new_curve = Curve3D.new()
 	
-	if abs(deg) < 0.01:
+	if abs(_deg) < 0.01:
 		# --- ЧАСТНЫЙ СЛУЧАЙ: ПРЯМОЙ ТРАК ---
 		# Первая точка в нуле, вторая уходит по оси -Z на расстояние radius (длину)
 		# Ручки строго нулевые, так как это идеальная прямая
 		new_curve.add_point(Vector3.ZERO, Vector3.ZERO, Vector3.ZERO)
-		new_curve.add_point(Vector3(0, 0, -radius), Vector3.ZERO, Vector3.ZERO)
+		new_curve.add_point(Vector3(0, 0, -_radius), Vector3.ZERO, Vector3.ZERO)
 		
 	else:
 		# --- РАДИУСНЫЙ ТРАК (ДУГА ОКРУЖНОСТИ) ---
-		var alpha = deg_to_rad(abs(deg))
-		var dir_sign = sign(deg)
+		var alpha = deg_to_rad(abs(_deg))
+		var dir_sign = sign(_deg)
 		if dir_sign == 0: dir_sign = 1.0 # Предохранитель
 		
 		# Идеальная длина управляющих векторов Безье для дуги окружности
-		var L = (4.0 / 3.0) * tan(alpha / 4.0) * radius
+		var L = (4.0 / 3.0) * tan(alpha / 4.0) * _radius
 		
 		# 1. СТАРТОВАЯ ТОЧКА (всегда в нуле, направлена строго вперед по -Z)
 		var start_pos = Vector3.ZERO
@@ -138,9 +172,9 @@ func generate_track_curve(_radius: float, _deg: float) -> Curve3D:
 		# 2. КОНЕЧНАЯ ТОЧКА (вычисляется через тригонометрию дуги)
 		# Если dir_sign = 1 (вправо), координата X положительная. Если -1 (влево) — отрицательная.
 		var end_pos = Vector3(
-			dir_sign * radius * (1.0 - cos(alpha)), 
+			dir_sign * _radius * (1.0 - cos(alpha)), 
 			0, 
-			-radius * sin(alpha)
+			-_radius * sin(alpha)
 			)
 		
 		# Ручка "внутрь" (end_in) должна быть направлена строго назад по касательной к окружности
@@ -149,57 +183,90 @@ func generate_track_curve(_radius: float, _deg: float) -> Curve3D:
 		new_curve.add_point(end_pos, end_in, end_out)
 		
 	return new_curve
-
-
-
-# Генерация сегментов коллизии балласта
-func generate_ballast_collisions(count: int, cross_size: Vector2, start_end_padding: float = 0.0, gap: float = 0.0) -> void:
 	
-	if not curve or curve.get_baked_length() == 0 or count < 1:
-		push_warning("C_Path: Кривая не инициализирована или count < 1.")
-		return
+	
+### Расчет оптимального количества сегментов коллизии
+func _calculate_collision_count(track_radius: float, track_deg: float, deg_per_segment: float) -> int:
+	# 1. Прямые траки (или нулевой радиус)
+	if track_radius == 0.0 or track_deg == 0.0:
+		return 1 # Одной длинной коробки достаточно
+		
+	# 2. Настройки аппроксимации кривой
+	# Сколько градусов дуги может покрывать один прямой сегмент коллизии
+	
+	# 15.0 - отличный баланс: на 90 градусов будет 6 боксов, на 45 градусов — 3 бокса.
+	# 3. Считаем количество (округляем вверх, чтобы покрыть весь угол)
+	var count = ceil(abs(track_deg) / deg_per_segment)
+	
+	# Любая кривая должна состоять минимум из 2 сегментов для формирования угла
+	return int(max(2, count))
+		
+	
+### ====Моя рабочая====Универсальная генерация сегментов коллизий
+func _generate_collision_segments(
+	target_node: Node3D, # родительская нода
+	count: int, # количество сегментов
+	cross_size: Vector2, # размеры без Z
+	x_offset: float = 0.0, # смещение влево
+	y_offset: float = 0.0, # смещение вверх
+	start_end_padding: float = 0.0, # смещение первого последнего сегмента
+	gap: float = 0.0, # зазор
+	align_ends: bool = true # Выравнивание торцов
+) -> void:
 
-	var total_length = curve.get_baked_length()
-	
-	# Вычисляем дистанции (минус padding сдвигает старт в плюс, т.е. внутрь)
-	var start_distance = -start_end_padding
-	var end_distance = total_length + start_end_padding
-	var usable_length = end_distance - start_distance
-	
-	# Вычисляем размер одного сегмента по оси Z
-	var total_gap = gap * (count - 1)
-	var z_size = (usable_length - total_gap) / float(count)
-	var box_size = Vector3(cross_size.x, cross_size.y, z_size)
-	
-	for i in range(count):
-		# t от 0.0 (первый сегмент) до 1.0 (последний)
-		var t = float(i) / (count - 1) if count > 1 else 0.5
-		
-		# Дистанция выборки на кривой
-		var d = lerp(start_distance, end_distance, t)
-		
-		# Встроенная защита: Godot автоматически зажмет d в пределах [0, total_length],
-		# поэтому даже если padding плюсовой (наружу), мы возьмем правильный крайний тангенс.
-		var segment_transform = curve.sample_baked_with_rotation(d)
-		
-		# Магия выравнивания:
-		# На t=0 мы сдвигаем бокс вперед (-Z в Godot) на z_size/2, чтобы его край совпал со стартом.
-		# На t=1 мы сдвигаем бокс назад (+Z) на z_size/2, чтобы его край совпал с финишем.
-		var z_shift = lerp(-z_size / 2.0, z_size / 2.0, t)
-		segment_transform = segment_transform.translated_local(Vector3(0.0, b_size.y/2, z_shift))
-		
-		var collision_shape = CollisionShape3D.new()
-		collision_shape.name = "BallastShape_%d" % i
-		
-		var box_shape = BoxShape3D.new()
-		box_shape.size = box_size
-	
-		collision_shape.shape = box_shape
-		collision_shape.transform = segment_transform
-		
-		ballast_node.add_child(collision_shape)
+	# длина  дуги
+	var l_arc= (radius - x_offset) * deg_to_rad(deg) 
+	var _d = 0.0 # текущий угол для создания коллизии
 
+	# 0. Размер сегмента
+	var _segment_size_z = (l_arc - gap * (count - 1) + start_end_padding * 2)/ count
+	var _last_segment = -1 # флаг последней коллизии
+	var _segment_size = Vector3(cross_size.x, cross_size.y, _segment_size_z) #размер фрагмента 
+	
 
+	# 💡 Генерим сегменты
+	for i in range(0, count):
+		# 1. угол для сегмента	
+		# по умолчанию _d = 0 и используется когда i=0, в остальном :
+		if i == 0:  # 🅰️ первая коллизия 
+			# Доворот на катет паддинг
+			_d = deg * 0.5 / float(count) - rad_to_deg(asin( start_end_padding / radius ))
+			if align_ends: 
+				_d = 0 
+				
+				
+		else : # 🅱️ промежуточные сегменты
+			_d = deg * (i+0.5) / float(count)
+
+			if i == count - 1: # 🆑 последняя коллизия  
+				#_d = deg
+				# Доворот на катет паддинг
+				_d = deg *  (i+0.5)/ float(count) + rad_to_deg(asin( start_end_padding / radius ))
+				if align_ends: 	
+					_d= deg
+					_last_segment = 1
+
+		var new_segment = CollisionShape3D.new()
+		target_node.add_child(new_segment)
+		new_segment.shape = BoxShape3D.new()
+		new_segment.shape.set_size(_segment_size)
+
+		# трансформ для коллижн 
+		var s_z = 0.0 # смещение от центра последней или первой отличается от остальных
+		if align_ends : 
+			if _d == 0 or _last_segment ==  1:# первая и последняя смещаются
+				s_z = _last_segment * (_segment_size_z /2  - start_end_padding)
+
+		var _segment_tr = Transform3D(Basis.IDENTITY,Vector3(-radius + x_offset, y_offset, s_z))
+		# поворот на угол
+		_segment_tr = _segment_tr.rotated(Vector3.UP, deg_to_rad(-_d)) 
+
+		## возврат на место
+		_segment_tr.origin -= Vector3(-radius, -cross_size.y / 2, 0)
+		new_segment.set_transform(_segment_tr)
+
+			
+	
 
 #------SAVE\LOAD----
 
@@ -222,7 +289,16 @@ func load_data(data: Dictionary) -> void:
 
 
 # -----HELPERS------
-
+### Универсальный рекурсивный поиск ноды по имени
+func _find_node_recursive(node: Node, target_name: String) -> Node:
+	if node.name == target_name: 
+		return node
+	for child in node.get_children():
+		var found = _find_node_recursive(child, target_name)
+		if found: 
+			return found
+	return null
+	
 func _find_ballast_recursive(node: Node) -> Area3D:
 	if node.name == 'Ballast' :	return node
 	

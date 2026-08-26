@@ -63,7 +63,6 @@ size = Vector3(0.3, 0.25, 24)
 [node name="G239" type="Node3D" unique_id=1608166051]
 
 [node name="G239_002" type="MeshInstance3D" parent="." unique_id=1126295511]
-visible = false
 layers = 32
 mesh = SubResource("ArrayMesh_7jyoi")
 

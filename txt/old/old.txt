@@ -1,0 +1,112 @@
+## !!!!! Это фрагмент старого скрипта для сравнения !!!!
+
+func generate_ballast_collisions(_parent_node, _debug_color=Color("00b929ff")) -> void: 
+	var segment_props = GM.road_setting.track_ballast_segment
+	
+	var l_arc = (object_setting.RADIUS + segment_props.offset.x) * deg_to_rad(object_setting.DEG) #  длина  дуги
+	# длина по Z
+	var _segment_size_z = (l_arc - segment_props.distance * (segment_props.count - 1) - segment_props.offset.z * 2)/ segment_props.count
+	
+	var _d = 0.0 # текущий угол для создания коллизии
+	var _segment_last = -1 # флаг последней коллизии
+	var _segment_size = Vector3(segment_props.size.x, segment_props.size.y, _segment_size_z + segment_props.offset.z) #размер фрагмента с учетом всего 
+	
+	for i in range(0, segment_props.count):
+		# угол для коллизии
+		# по умолчанию _d = 0 и используется когда i=0, в остальном :
+		#XX ====
+		if i != 0: # первая коллизия делается от 0 вверх
+			# сам угол + половина коллизии(для центра)
+			_d = object_setting.DEG * (i+0.5) / float(segment_props.count)
+			if i == segment_props.count - 1: # последняя коллизия  от полного угла вниз
+				_d = object_setting.DEG
+				_segment_last = 1 
+				
+		else: # i= 0
+			#если приспичит править то тут и ниже есть
+			#object_setting.DEG * (i+0.5) / float(segment_props.count)
+			pass
+		# Вместо лямбды сюда
+		var new_segment = CollisionShape3D.new()
+		_parent_node.add_child(new_segment)
+		new_segment.shape = BoxShape3D.new()
+		new_segment.shape.set_size(_segment_size)
+		
+		# трансформ для коллижн 
+		var s_z = 0.0 # смещение от центра последней или первой отличается от остальных
+		
+		#Если приспичит править, то то что выше и тут 
+		if _d == 0.0 or _segment_last == 1:# первая и последняя смещаются
+			s_z = _segment_last * (_segment_size.z /2 - segment_props.offset.z)
+		
+		var _segment_tr = Transform3D(Basis.IDENTITY,Vector3(-object_setting.RADIUS - segment_props.offset.x,0,s_z))
+		# поворот на угол
+		_segment_tr = _segment_tr.rotated(Vector3.UP, deg_to_rad(-_d)) 
+
+		## возврат на место
+		_segment_tr.origin -= Vector3(-object_setting.RADIUS, -segment_props.size.y / 2, 0)
+		new_segment.set_transform(_segment_tr)
+		new_segment.set_debug_color(_debug_color)
+
+
+
+## Генерирует коллиззии по дуге 
+## coll_props - настройки шейпа и допусков,
+## object_setting.RADIUS - радиус дуги
+## object_setting.DEG - угол дуги, _parent_node - нода для привязки,
+## _debug_color - цвет для дебага
+
+func generate_head_collisions(_parent_node, _debug_color=Color("bc0029ff")) -> void:
+	var _head_props = GM.road_setting.track_head_segment
+	#FIXME Временная для дебага вагона, удалить:
+	_head_props.count = 20
+	var _is_left = 1
+	if _parent_node.name.ends_with('L'):
+		_is_left = -1
+	
+	# Лямбда для создания сегментов ======================
+	# size - вектор3 размеры, diam - диаметр , _last -+1 последняя колл
+	var create_segment = func (_size, _diam = 0.0, _last = - 1):
+		var new_segment = CollisionShape3D.new()
+		_parent_node.add_child(new_segment)
+		new_segment.shape = BoxShape3D.new()
+		new_segment.shape.set_size(_size)
+
+		# трансформ для коллижн 
+		var s_z = 0.0 # смещение от центра последней или первой отличается от остальных
+		#if _diam == 0 or _last == 1:# первая и последняя смещаются
+			#s_z = _last * (_size.z /2 - _head_props.offset.z)
+
+		var _segment_tr = Transform3D(Basis.IDENTITY,Vector3(-object_setting.RADIUS + _is_left * _head_props.offset.x, 0, s_z))
+		# поворот на угол
+		_segment_tr = _segment_tr.rotated(Vector3.UP, deg_to_rad(-_diam)) 
+
+		## возврат на место
+		_segment_tr.origin -= Vector3(-object_setting.RADIUS, -_head_props.size.y / 2, 0)
+		new_segment.set_transform(_segment_tr)
+		new_segment.set_debug_color(_debug_color)	
+
+
+
+	# длина  дуги
+	var l_arc= (object_setting.RADIUS - _is_left * _head_props.offset.x) * deg_to_rad(object_setting.DEG) 
+
+	# длина по Z
+	var _segment_size_z = (l_arc - _head_props.distance * (_head_props.count - 1) - _head_props.offset.z * 2)/ _head_props.count
+	
+	var _d = 0.0 # текущий угол для создания коллизии
+	var _last_segment = -1 # флаг последней коллизии
+	var _segment_size = Vector3(_head_props.size.x, _head_props.size.y, _segment_size_z + _head_props.offset.z) #размер фрагмента с учетом всего 
+	
+	for i in range(0, _head_props.count):
+		# угол для сегмента
+		# FIXME вся идея с углом для балластов!!!  0 для первой пока не очень понятна, надо смотреть на стыках траков или убирать.
+		# по умолчанию _d = 0 и используется когда i=0, в остальном :
+		#if i != 0: # первая коллизия делается от 0 вверх
+			#сам угол + половина коллизии(для центра)
+		_d = object_setting.DEG * (i+0.5) / float(_head_props.count)			
+			#if i == _head_props.count - 1: # последняя коллизия  от полного угла вниз
+				#_d = object_setting.DEG
+				#_last_segment = 1 
+		
+		create_segment.call(_segment_size, _d, _last_segment)

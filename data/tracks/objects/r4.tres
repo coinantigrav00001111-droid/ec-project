@@ -11,6 +11,7 @@
 [ext_resource type="Script" uid="uid://chprgtlxn3aub" path="res://core/components/capabilities/blockable_setting.gd" id="9_j62kd"]
 [ext_resource type="Script" uid="uid://b7f7dka1i3slu" path="res://core/components/capabilities/path_setting.gd" id="10_tqibq"]
 [ext_resource type="Script" uid="uid://bv065wdiw674c" path="res://core/components/capabilities/socked_setting.gd" id="11_7xp33"]
+[ext_resource type="Script" uid="uid://cjk51o364xfn" path="res://core/components/capabilities/power_track_setting.gd" id="12_8xxbd"]
 [ext_resource type="Texture2D" uid="uid://kg7asogbvkny" path="res://ui/icons/transport/rail_r2.svg" id="12_t72st"]
 [ext_resource type="Script" uid="uid://do5hjkm3r2pdg" path="res://core/entity_setting.gd" id="13_8qaaw"]
 
@@ -49,6 +50,10 @@ metadata/_custom_type_script = "uid://b7f7dka1i3slu"
 script = ExtResource("11_7xp33")
 metadata/_custom_type_script = "uid://bv065wdiw674c"
 
+[sub_resource type="Resource" id="Resource_mwa1h"]
+script = ExtResource("12_8xxbd")
+metadata/_custom_type_script = "uid://cjk51o364xfn"
+
 [resource]
 script = ExtResource("13_8qaaw")
 id = 24
@@ -56,5 +61,5 @@ name = "R4"
 description = "Радиусный трак 54,6см"
 tag = &"curve"
 icon = ExtResource("12_t72st")
-components = Array[ExtResource("1_wx4ya")]([SubResource("Resource_yfcut"), SubResource("Resource_iqocg"), SubResource("Resource_0xkto"), SubResource("Resource_qqtt6"), SubResource("Resource_o7fpk"), SubResource("Resource_t8too"), SubResource("Resource_5an37"), SubResource("Resource_lnr61")])
+components = Array[ExtResource("1_wx4ya")]([SubResource("Resource_yfcut"), SubResource("Resource_iqocg"), SubResource("Resource_0xkto"), SubResource("Resource_qqtt6"), SubResource("Resource_o7fpk"), SubResource("Resource_t8too"), SubResource("Resource_5an37"), SubResource("Resource_lnr61"), SubResource("Resource_mwa1h")])
 metadata/_custom_type_script = "uid://do5hjkm3r2pdg"

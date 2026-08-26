@@ -28,20 +28,25 @@ _surfaces = [{
 "vertex_data": PackedByteArray("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")
 }]
 
-[sub_resource type="Curve3D" id="Curve3D_bsjox"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bsjox"]
+albedo_color = Color(0.13333334, 0.57254905, 0, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_uewoh"]
+material = SubResource("StandardMaterial3D_bsjox")
+radius = 0.8
+height = 0.8
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_lks7o"]
 friction = 0.9
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_38iux"]
 
 [node name="R2_75" type="Node3D" unique_id=1062457811]
 
 [node name="Mesh" type="MeshInstance3D" parent="." unique_id=1847053753]
 mesh = SubResource("ArrayMesh_ackvx")
 
-[node name="Path3D" type="Path3D" parent="." unique_id=1717988259]
-curve = SubResource("Curve3D_bsjox")
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Mesh" unique_id=476010029]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+mesh = SubResource("SphereMesh_uewoh")
 
 [node name="Ballast" type="Area3D" parent="." unique_id=71856434]
 collision_layer = 4
@@ -54,19 +59,9 @@ collision_layer = 1024
 collision_mask = 1024
 physics_material_override = SubResource("PhysicsMaterial_lks7o")
 
-[node name="CollisionShapeBox" type="CollisionShape3D" parent="HeadL" unique_id=1696999251]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.075, 0.125, -11.95)
-shape = SubResource("BoxShape3D_38iux")
-debug_color = Color(0, 1, 0.701961, 1)
-
 [node name="HeadR" type="StaticBody3D" parent="." unique_id=1205755373]
 unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
 collision_layer = 1024
 collision_mask = 1024
 physics_material_override = SubResource("PhysicsMaterial_lks7o")
-
-[node name="CollisionShapeBox" type="CollisionShape3D" parent="HeadR" unique_id=340904881]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.075, 0.125, -11.95)
-shape = SubResource("BoxShape3D_38iux")
-debug_color = Color(0, 1, 0.701961, 1)

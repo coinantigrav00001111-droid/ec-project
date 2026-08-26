@@ -12,6 +12,7 @@ class_name C_Kinematics extends ICapability
 var mass: float  # Кг
 var max_grip: float # Максимальная удерживающая сила реборды
 var roll_resistance: float # Трение качения
+
 var current_speed: float = 0.0 # Метры в секунду вдоль сплайна
 
 # Физикс тело вагона
@@ -157,7 +158,25 @@ func on_force_rotate_physics(data: Dictionary) -> void:
 	await get_tree().physics_frame
 	rb.global_basis = data.basis
 
-
+func on_derailed(_data: Dictionary) -> void:
+	if not rb: return
+	
+	# 1. Подтягиваем физику к визуальному кузову
+	rb.global_transform = entity.global_transform
+	
+	# 2. Размораживаем RigidBody
+	rb.freeze = false
+	if rb.sleeping: rb.sleeping = false
+	
+	# 3. Передаем точный 3D-вектор скорости, с которым вагон ехал по траку
+	var chassis = get_comp(C_Chassis)
+	if chassis:
+		rb.linear_velocity = chassis.current_velocity_3d
+	
+	var rot = 0.3
+	# (Опционально) Добавим легкое закручивание, чтобы вагон эффектнее летел в кусты
+	rb.angular_velocity = Vector3(randf_range(-rot, rot), randf_range(-rot, rot), randf_range(-rot,rot))
+		
 
 
 func _check_derailment() -> void:
@@ -177,6 +196,8 @@ func _check_derailment() -> void:
 	
 	if centrifugal_force > max_grip:
 		# Кричим в шину сущности: "Мы падаем!"
+		#print("Мы падаем!")
+		return
 		entity.send_event("on_derailed", {"reason": "speed", "force": centrifugal_force})
 		
 		# Передаем импульс в RigidBody, чтобы вагон улетел по касательной

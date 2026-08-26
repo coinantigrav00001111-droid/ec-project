@@ -49,9 +49,12 @@ func on_train_kicked(data: Dictionary) -> void:
 
 
 
+'''
+в повер траке есть это:
+# разворот пути относительно эталонного(клип-трак - эталон)
+var is_flipped :bool = false 
+'''
 
-# В идеале это должно вызываться не в _process, а через системный менеджер поездов, 
-# но для инкапсуляции логики компонента пока оставляем так.
 
 func _physics_process(delta: float) -> void:
 	if not is_on_rails or not is_instance_valid(current_track):
@@ -63,6 +66,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	if current_speed != 0.0:
+		#var movement_direction = -1.0 if is_flipped else 1.0
 		current_spline_offset += current_speed * delta
 		current_speed = move_toward(current_speed, 0.0, friction_decel * delta)
 
@@ -111,14 +115,15 @@ func _physics_process(delta: float) -> void:
 	if not rb.top_level: rb.top_level = false
 
 	if is_on_rails:	# ФИЗИЧЕСКИЙ ДРАГ: RigidBody догоняет Entity (курсор)
-		rb.global_position = entity.global_position
+		rb.global_transform = entity.global_transform
+
 
 
 
 # ==========================================
 # ХЕЛПЕРЫ ДЛЯ ПЕРЕХОДА ПО ТРАКАМ
 # ==========================================
-
+	
 func _try_switch_track(is_exiting_end: bool, current_length: float) -> bool:
 	var socket_comp = current_track.get_comp(C_Socket)
 	var next_track = socket_comp.get_neighbor_at(is_exiting_end) if socket_comp else null
@@ -154,6 +159,8 @@ func _try_switch_track(is_exiting_end: bool, current_length: float) -> bool:
 			
 	current_track = next_track
 	return true
+
+
 
 func _get_bogie_global_pos(base_track: Entity, offset: float) -> Vector3:
 	var path_comp = base_track.get_comp(C_Path)

@@ -12,18 +12,19 @@ class_name GlobalSetting extends Resource
 @export var track_head_segment  = {
 	'count' : 10, # количество
 	'gap' : 0.0, # зазор между сегментами.
-	"size" : Vector2(0.3, 0.25),
-	'padding' : -0.1,	 #  минус - внутрь трака, плюс =0 
-	'offset' : 0.865, #0.875-смещение влево относительно центра 0.1 -по z
-	
+	"size" : Vector2(0.2, 0.25),
+	'start_end_padding' : 0.0,	 #  минус - внутрь трака, плюс =0 
+	'offset_x' : 0.865, #0.875-смещение влево относительно центра 0.1 -по z
+	'deg_per_segment' : 15.0 # сколько градусов закрывает один сегмент
 	}
 
 @export var track_ballast_segment = {
 	"count" :  4,
 	"gap" : 0.0,
 	"size" : Vector2(3.2, 0.6),
-	'padding' : -0.1,	 #  минус - внутрь трака, плюс =0 
-	'offset' : 0.0, #смещение влево 
+	'start_end_padding' : -0.1,	 #  минус - внутрь трака, плюс =0 
+	'offset_x' : 0.0, #смещение влево 
+	'deg_per_segment' : 15.0
 }
 
 
