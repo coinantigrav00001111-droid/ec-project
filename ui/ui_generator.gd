@@ -58,10 +58,7 @@ var objects_by_id := {}
 
 
 
-## Папки с объектами
-##TODO вынести в конфиг папки с объектами
-var objects_dirs := [	"res://data/tracks/objects/", 
-						"res://ui/dc_controllers/objects/"]
+
 #загрузка кат кнопки
 var cat_btn_scene := preload("res://ui/buttons/category_button.tscn") 
 #загрузка тег кнопки 
@@ -69,9 +66,14 @@ var tag_btn_scene := preload("res://ui/buttons/tag_button.tscn")
 #var obj_btn_scene := preload("res://ui/buttons/object_button.tscn")  
 
 
-
+	## Папки с объектами
+var object_dirs = Global.object_dirs
+#var objects_dirs := [	"res://data/tracks/objects/", 
+						#"res://ui/dc_controllers/objects/"]
+						
 ## Заполняет контейнер кнопками 2 lvl. 
 func _ready() -> void:
+
 	var _object_list := _collect_data() 	# Собрали список объектов
 
 	_build_data(_object_list) 	# Cобрали в data списки по кат\тегам и id 
@@ -166,14 +168,15 @@ func create_btn_tags(_cat : StringName, _mode: String):
 func _collect_data() -> Array: 
 	var objects_list: Array=[]  # список объектов 
 	
-	for _dir in objects_dirs: # массив с путями к папкам объектов
+	for _dir in object_dirs: # массив с путями к папкам объектов
 		for _file in DirAccess.get_files_at(_dir): # Загрузка ресурс файлов траков в массив
 			if !_file.ends_with('.tres'): continue # Контроль на .tres 
 			
 			#var res :EntitySetting = load(_dir + _file)  # ресурс трака
 			var res :Resource = load(_dir + _file)  # ресурс трака не уточняем, или надо разделять на разные массивы (EntitySetting и DCControllerSetting)
-
-			objects_list.append(res)
+			# TODO нужна проверка всех типов ентити
+			if  res is EntitySetting:
+				objects_list.append(res)
 
 	#_objects_array.sort_custom(func(a, b): return a.id < b.id) # сортировка по индексу
 	return objects_list

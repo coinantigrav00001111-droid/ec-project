@@ -1,0 +1,236 @@
+class_name C_Bogie extends ICapability
+####################
+#### Способность ходовой части. Живет на вагоне/локомотиве.
+#### Управляет тележками, сканирует Слой 3 (Траки) рейкастами,
+#### вычисляет координаты тележек на сплайнах и их YAW-поворот.
+####################
+
+
+class BogieData:
+	var id: int
+	var config: BogieConfig # конфиг конкретного боги из identity
+	var pivot: Node3D # корневая нода в сцене
+	var raycast: RayCast3D # Датчик
+	var current_track: Entity
+	var track_distance: float
+	var global_pos: Vector3
+	var yaw_rotation: float
+	var is_front: bool = false # Флаг для быстрого поиска
+	
+
+# Сами боги, их id, конфиги из TrainVisual перекидываются сюда
+var bogies_data: Array[BogieData] = []
+
+var _is_derailed: bool = false
+
+
+
+func on_added() -> void:
+	#Собираем массив данных боги
+	var identity = entity.get_comp(C_Identity)
+	var bogie_configs
+	if identity:
+		bogie_configs = identity.get_config('bogie_configs')	
+
+	# Принимаем контроль боги из визуала
+	var comp = entity.get_comp(C_TrainVisual)
+	var bogie_nodes = comp.bogie_nodes
+	
+	# Формируем массив данных боги 
+	for i in range(bogie_nodes.size()):
+		var bogie = bogie_nodes[i]
+		_create_bogies_data(i, bogie_configs[i], bogie)
+
+
+
+func _create_bogies_data(_id: int, _config: BogieConfig, bogie:Node3D):
+	
+	var data = BogieData.new()
+	data.id = _id
+	data.config = _config
+	data.pivot = bogie
+	data.raycast = bogie.get_node('RayCast3D')
+	# TODO а если больше 2х боги?
+	var _offset_z = bogie.position.z
+	data.is_front = _offset_z > 0.0
+	bogies_data.append(data)
+
+
+
+## Пересчет позиции в chassis 
+func calculate_next_positions(delta: float, speed: float) -> void:
+	for bogie in bogies_data:
+		_update_bogie_math(bogie, delta, speed)
+
+
+
+func _update_bogie_math(bogie: BogieData, delta: float, speed: float) -> void:
+	if not bogie.raycast.is_colliding():
+		# Тележка повисла в воздухе (сохраняем последнюю позицию или триггерим сход)
+		return
+		
+	var collider = bogie.raycast.get_collider()
+	var track_entity = _find_entity_from_collider(collider) 
+	
+	
+	if not track_entity or not track_entity.has_comp(C_Path):
+		return
+		
+	var path_comp = track_entity.get_comp(C_Path)
+	var power_track = track_entity.get_comp(C_PowerTrack)
+	
+	# Учитываем инверсию кривой (is_flipped)
+	var direction_multiplier = 1.0
+	if power_track and power_track.is_flipped:
+		direction_multiplier = -1.0 #
+		
+	# Шагаем по математической кривой
+	bogie.track_distance += speed * delta * direction_multiplier
+	
+	# Вычисляем идеальную точку в мировых координатах
+	var spline_pos_local = path_comp.curve.sample_baked(bogie.track_distance)
+	bogie.global_pos = path_comp.path_node.to_global(spline_pos_local)
+	
+	# (Здесь же можно посчитать YAW-поворот для самой ноды bogie.pivot)
+
+
+
+# API для C_Chassis
+func get_front_position() -> Vector3:
+	for b in bogies_data:
+		if b.is_front: return b.global_pos
+	return Vector3.ZERO
+
+func get_rear_position() -> Vector3:
+	for b in bogies_data:
+		if not b.is_front: return b.global_pos
+	return Vector3.ZERO
+		
+
+## ====== NEW +++++
+#func process_movement(delta: float, speed: float) -> void:
+	#for bogie in bogies:
+		##print(bogie.pivot.position.z)
+		#_move_bogie_along_spline(bogie, delta, speed)
+#
+#
+#
+#func _move_bogie_along_spline(bogie: BogieData, delta: float, speed: float) -> void:
+	#
+	#if not bogie.raycast.is_colliding():
+		#bogie.current_track = null
+		#return
+	#
+	#var collider = bogie.raycast.get_collider()
+	#var track_entity = _find_entity_from_collider(collider)
+#
+	#if not track_entity or not track_entity.has_comp(C_Path):
+		#return
+		#
+	#bogie.current_track = track_entity
+	#var path_comp = track_entity.get_comp(C_Path)
+	#var power_track = track_entity.get_comp(C_PowerTrack)
+	#
+	## 1. Учитываем разворот трака из C_PowerTrack
+	#var direction_multiplier = 1.0
+	#if power_track and power_track.is_flipped:
+		#direction_multiplier = -1.0
+		#
+	## 2. Двигаем дистанцию
+	#var move_step = speed * delta * direction_multiplier
+	#bogie.track_distance += move_step
+	#
+	## 3. Вычисляем новую глобальную позицию на сплайне
+	#var spline_pos_local = path_comp.curve.sample_baked(bogie.track_distance)
+	#bogie.global_pos = path_comp.path_node.to_global(spline_pos_local)
+	## 4. Физически двигаем pivot тележки для следующего кадра рейкаста
+	##bogie.pivot.global_position = bogie.global_pos
+	#''' #глобал поз неправильно вычисляет'''
+	#
+#
+#func get_bogie_position(is_front :bool=true):
+	#var pos =0.0
+	#for bogie in bogies:
+		##printt('aa', bogie.pivot.position.z)
+		#if is_front :
+			##if bogie.config.offset.x < 0:
+			#if bogie.pivot.position.z < 0:
+				#pos = bogie.global_pos
+				#printt('ff',bogie.pivot.position.z, bogie.global_pos)
+				#return pos
+		#else:
+			##if bogie.config.offset.x > 0:
+			#if bogie.pivot.global_position.z > 0:
+				#pos = bogie.global_pos
+				##pos = bogie.pivot.position.z
+				#printt('rr',bogie.pivot.position.z, bogie.global_pos)
+				#return pos
+###############################################
+
+
+
+
+
+func _physics_process(_delta: float) -> void:
+	if _is_derailed :
+		return
+
+	#_scan_tracks()
+
+
+#
+#func _scan_tracks() -> void:
+	#var rails_found = 0
+	#
+	#for bogie in bogies_data:
+		#if  bogie.raycast.is_colliding():
+			#var collider = bogie.raycast.get_collider()
+			## Ищем Entity трака (используем логику подъема по дереву, как в C_Socket)
+			#var track_entity = _find_entity_from_collider(collider)
+			#
+			#if track_entity and track_entity.has_comp(C_Path):
+				#_update_bogie_on_spline0(bogie, track_entity, bogie.raycast.get_collision_point())
+				#rails_found += 1
+		#else:
+			## Тележка висит в воздухе
+			#bogie.current_track = null
+			#
+	## Если ни одна тележка не на рельсах, мы либо в воздухе (DragTool), либо сошли
+	#if rails_found == 0 and not entity.has_comp(C_Drag):
+		## Логика схода (оставим для C_Kinematics)
+		#pass
+
+
+#
+## Обновляем позицию на сплайне
+#func _update_bogie_on_spline0(bogie: BogieData, track: Entity, hit_point: Vector3) -> void:
+	#var path_comp = track.get_comp(C_Path)
+	#bogie.current_track = track
+	#
+	## Трак развернут в контуре?
+	#var power_comp = track.get_comp(C_PowerTrack)
+	#var is_flipped = power_comp.is_flipped
+	#
+	## Переводим точку попадания в локальные координаты кривой трака
+	#var local_hit = path_comp.path_node.to_local(hit_point)
+	#
+	## Получаем смещение (distance) на кривой
+	#bogie.track_distance = path_comp.curve.get_closest_offset(local_hit)
+	#
+	## Вычисляем идеальную глобальную позицию
+	#var spline_pos_local = path_comp.curve.sample_baked(bogie.track_distance)
+	#bogie.global_pos = path_comp.path_node.to_global(spline_pos_local)
+	#
+	## TODO: учет направления не реализован
+
+
+
+	## Из коллайдера поднимает его Entity
+func _find_entity_from_collider(node: Node) -> Entity:
+	var current = node
+	while current:
+		if current is Entity:
+			return current
+		current = current.get_parent()
+	
+	return null

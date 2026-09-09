@@ -158,6 +158,7 @@ func on_force_rotate_physics(data: Dictionary) -> void:
 	await get_tree().physics_frame
 	rb.global_basis = data.basis
 
+
 func on_derailed(_data: Dictionary) -> void:
 	if not rb: return
 	

@@ -9,32 +9,146 @@
 [resource]
 script = ExtResource("5_4v72m")
 gimbal = {
-"camera": Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 68.59301),
-"elevation": Transform3D(1, 0, 0, 0, 0.63766265, 0.7702257, 0, -0.7702257, 0.63766265, 0, 0, 0),
-"transform": Transform3D(-0.11048399, 0, 0.9938727, 0, 1, 0, -0.9938727, 0, -0.11048399, -39.732197, -0.00012588501, 76.052574)
+"camera": Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 56.922497),
+"elevation": Transform3D(1, 0, 0, 0, 0.9153986, 0.40214413, 0, -0.40214413, 0.9153986, 0, 0, 0),
+"transform": Transform3D(0.59568226, 0, -0.80319196, 0, 1, 0, 0.80319196, 0, 0.59568226, -68.755424, -0.00016243011, 87.92419)
 }
 entities = [{
+"components": {},
+"setting_path": "res://data/trains/objects/loco_01.tres",
+"transform": Transform3D(-0.9997506, -1.6791733e-05, 0.022333764, -1.6792654e-05, 1, 1.4634489e-07, -0.022333764, -2.2873473e-07, -0.9997506, -77.12287, -0.01001668, 104.64839)
+}, {
 "components": {
 ExtResource("1_r6rv2"): {
 "comp_name": "c_pivot",
 "comp_path": "res://core/components/c_pivot.gd",
-"offset": Vector3(0, 0, 11.95)
+"offset": Vector3(-1.4379303, 0, 10.922165)
 },
 ExtResource("2_x1ohl"): {
 "comp_name": "c_path",
 "comp_path": "res://core/components/capabilities/c_path.gd",
-"deg": 0.0,
-"radius": 23.9
+"deg": 30.0,
+"radius": 42.2
 },
 ExtResource("3_67ftc"): {
 "comp_name": "c_power_track",
 "comp_path": "res://core/components/capabilities/c_power_track.gd",
-"contour_id": 0,
-"is_flipped": false
+"contour_id": 1,
+"is_flipped": true
 }
 },
-"setting_path": "res://data/tracks/objects/g239.tres",
-"transform": Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34.054733, 0, 31.360863)
+"setting_path": "res://data/tracks/objects/r2.tres",
+"transform": Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -80.18631, -7.6293945e-06, 51.02626)
+}, {
+"components": {
+ExtResource("1_r6rv2"): {
+"comp_name": "c_pivot",
+"comp_path": "res://core/components/c_pivot.gd",
+"offset": Vector3(-1.4379303, 0, 10.922165)
+},
+ExtResource("2_x1ohl"): {
+"comp_name": "c_path",
+"comp_path": "res://core/components/capabilities/c_path.gd",
+"deg": 30.0,
+"radius": 42.2
+},
+ExtResource("3_67ftc"): {
+"comp_name": "c_power_track",
+"comp_path": "res://core/components/capabilities/c_power_track.gd",
+"contour_id": 1,
+"is_flipped": true
+}
+},
+"setting_path": "res://data/tracks/objects/r2.tres",
+"transform": Transform3D(0.86602545, 0, -0.49999997, 0, 1, 0, 0.49999997, 0, 0.86602545, -69.264145, -7.6293945e-06, 32.10852)
+}, {
+"components": {
+ExtResource("1_r6rv2"): {
+"comp_name": "c_pivot",
+"comp_path": "res://core/components/c_pivot.gd",
+"offset": Vector3(-1.4379303, 0, 10.922165)
+},
+ExtResource("2_x1ohl"): {
+"comp_name": "c_path",
+"comp_path": "res://core/components/capabilities/c_path.gd",
+"deg": 30.0,
+"radius": 42.2
+},
+ExtResource("3_67ftc"): {
+"comp_name": "c_power_track",
+"comp_path": "res://core/components/capabilities/c_power_track.gd",
+"contour_id": 1,
+"is_flipped": true
+}
+},
+"setting_path": "res://data/tracks/objects/r2.tres",
+"transform": Transform3D(0.50000006, 0, -0.8660254, 0, 1, 0, 0.8660254, 0, 0.50000006, -50.3464, -7.6293945e-06, 21.186356)
+}, {
+"components": {
+ExtResource("1_r6rv2"): {
+"comp_name": "c_pivot",
+"comp_path": "res://core/components/c_pivot.gd",
+"offset": Vector3(-1.4379303, 0, 10.922165)
+},
+ExtResource("2_x1ohl"): {
+"comp_name": "c_path",
+"comp_path": "res://core/components/capabilities/c_path.gd",
+"deg": 30.0,
+"radius": 42.2
+},
+ExtResource("3_67ftc"): {
+"comp_name": "c_power_track",
+"comp_path": "res://core/components/capabilities/c_power_track.gd",
+"contour_id": 1,
+"is_flipped": true
+}
+},
+"setting_path": "res://data/tracks/objects/r2.tres",
+"transform": Transform3D(8.742278e-08, 0, -1, 0, 1, 0, 1, 0, 8.742278e-08, -28.502075, -7.6293945e-06, 21.186354)
+}, {
+"components": {
+ExtResource("1_r6rv2"): {
+"comp_name": "c_pivot",
+"comp_path": "res://core/components/c_pivot.gd",
+"offset": Vector3(-1.4379303, 0, 10.922165)
+},
+ExtResource("2_x1ohl"): {
+"comp_name": "c_path",
+"comp_path": "res://core/components/capabilities/c_path.gd",
+"deg": 30.0,
+"radius": 42.2
+},
+ExtResource("3_67ftc"): {
+"comp_name": "c_power_track",
+"comp_path": "res://core/components/capabilities/c_power_track.gd",
+"contour_id": 1,
+"is_flipped": true
+}
+},
+"setting_path": "res://data/tracks/objects/r2.tres",
+"transform": Transform3D(-0.49999988, 0, -0.8660255, 0, 1, 0, 0.8660255, 0, -0.49999988, -9.584331, -7.6293945e-06, 32.108513)
+}, {
+"components": {
+ExtResource("1_r6rv2"): {
+"comp_name": "c_pivot",
+"comp_path": "res://core/components/c_pivot.gd",
+"offset": Vector3(-1.4379303, 0, 10.922165)
+},
+ExtResource("2_x1ohl"): {
+"comp_name": "c_path",
+"comp_path": "res://core/components/capabilities/c_path.gd",
+"deg": 30.0,
+"radius": 42.2
+},
+ExtResource("3_67ftc"): {
+"comp_name": "c_power_track",
+"comp_path": "res://core/components/capabilities/c_power_track.gd",
+"contour_id": 1,
+"is_flipped": true
+}
+},
+"setting_path": "res://data/tracks/objects/r2.tres",
+"transform": Transform3D(-0.8660254, 0, -0.5000002, 0, 1, 0, 0.5000002, 0, -0.8660254, 1.3378367, -7.6293945e-06, 51.026257)
 }, {
 "components": {
 ExtResource("1_r6rv2"): {
@@ -51,24 +165,46 @@ ExtResource("2_x1ohl"): {
 ExtResource("3_67ftc"): {
 "comp_name": "c_power_track",
 "comp_path": "res://core/components/capabilities/c_power_track.gd",
-"contour_id": 0,
+"contour_id": 1,
 "is_flipped": false
 }
 },
 "setting_path": "res://data/tracks/objects/g239.tres",
-"transform": Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -75.410446, 0, 17.533089)
+"transform": Transform3D(1.0000001, 0, 1.7682976e-07, 0, 1, 0, -1.7682976e-07, 0, 1.0000001, 2.775771, -7.6293945e-06, 73.89842)
 }, {
 "components": {
 ExtResource("1_r6rv2"): {
 "comp_name": "c_pivot",
 "comp_path": "res://core/components/c_pivot.gd",
-"offset": Vector3(0, 0, 11.95)
+"offset": Vector3(-1.4379303, 0, 10.922165)
 },
 ExtResource("2_x1ohl"): {
 "comp_name": "c_path",
 "comp_path": "res://core/components/capabilities/c_path.gd",
-"deg": 0.0,
-"radius": 23.9
+"deg": 30.0,
+"radius": 42.2
+},
+ExtResource("3_67ftc"): {
+"comp_name": "c_power_track",
+"comp_path": "res://core/components/capabilities/c_power_track.gd",
+"contour_id": 1,
+"is_flipped": true
+}
+},
+"setting_path": "res://data/tracks/objects/r2.tres",
+"transform": Transform3D(0.8660253, 0, 0.50000024, 0, 1, 0, -0.50000024, 0, 0.8660253, -80.1863, -7.6293945e-06, 96.770584)
+}, {
+"components": {
+ExtResource("1_r6rv2"): {
+"comp_name": "c_pivot",
+"comp_path": "res://core/components/c_pivot.gd",
+"offset": Vector3(-1.4379303, 0, 10.922165)
+},
+ExtResource("2_x1ohl"): {
+"comp_name": "c_path",
+"comp_path": "res://core/components/capabilities/c_path.gd",
+"deg": 30.0,
+"radius": 42.2
 },
 ExtResource("3_67ftc"): {
 "comp_name": "c_power_track",
@@ -77,8 +213,96 @@ ExtResource("3_67ftc"): {
 "is_flipped": false
 }
 },
-"setting_path": "res://data/tracks/objects/g239.tres",
-"transform": Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -64.49536, 3.8146973e-06, 54.17853)
+"setting_path": "res://data/tracks/objects/r2.tres",
+"transform": Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -52.01705, -1.9073486e-06, 106.83321)
+}, {
+"components": {
+ExtResource("1_r6rv2"): {
+"comp_name": "c_pivot",
+"comp_path": "res://core/components/c_pivot.gd",
+"offset": Vector3(-1.4379303, 0, 10.922165)
+},
+ExtResource("2_x1ohl"): {
+"comp_name": "c_path",
+"comp_path": "res://core/components/capabilities/c_path.gd",
+"deg": 30.0,
+"radius": 42.2
+},
+ExtResource("3_67ftc"): {
+"comp_name": "c_power_track",
+"comp_path": "res://core/components/capabilities/c_power_track.gd",
+"contour_id": 1,
+"is_flipped": true
+}
+},
+"setting_path": "res://data/tracks/objects/r2.tres",
+"transform": Transform3D(-5.662441e-07, 0, 1.0000001, 0, 1, 0, -1.0000001, 0, -5.662441e-07, -50.34639, -7.6293945e-06, 126.61049)
+}, {
+"components": {
+ExtResource("1_r6rv2"): {
+"comp_name": "c_pivot",
+"comp_path": "res://core/components/c_pivot.gd",
+"offset": Vector3(-1.4379303, 0, 10.922165)
+},
+ExtResource("2_x1ohl"): {
+"comp_name": "c_path",
+"comp_path": "res://core/components/capabilities/c_path.gd",
+"deg": 30.0,
+"radius": 42.2
+},
+ExtResource("3_67ftc"): {
+"comp_name": "c_power_track",
+"comp_path": "res://core/components/capabilities/c_power_track.gd",
+"contour_id": 1,
+"is_flipped": true
+}
+},
+"setting_path": "res://data/tracks/objects/r2.tres",
+"transform": Transform3D(-0.50000066, 0, 0.8660252, 0, 1, 0, -0.8660252, 0, -0.50000066, -28.502062, -7.6293945e-06, 126.61048)
+}, {
+"components": {
+ExtResource("1_r6rv2"): {
+"comp_name": "c_pivot",
+"comp_path": "res://core/components/c_pivot.gd",
+"offset": Vector3(-1.4379303, 0, 10.922165)
+},
+ExtResource("2_x1ohl"): {
+"comp_name": "c_path",
+"comp_path": "res://core/components/capabilities/c_path.gd",
+"deg": 30.0,
+"radius": 42.2
+},
+ExtResource("3_67ftc"): {
+"comp_name": "c_power_track",
+"comp_path": "res://core/components/capabilities/c_power_track.gd",
+"contour_id": 1,
+"is_flipped": true
+}
+},
+"setting_path": "res://data/tracks/objects/r2.tres",
+"transform": Transform3D(-0.8660259, 0, 0.49999937, 0, 1, 0, -0.49999937, 0, -0.8660259, -9.584325, -7.6293945e-06, 115.6883)
+}, {
+"components": {
+ExtResource("1_r6rv2"): {
+"comp_name": "c_pivot",
+"comp_path": "res://core/components/c_pivot.gd",
+"offset": Vector3(-1.4379303, 0, 10.922165)
+},
+ExtResource("2_x1ohl"): {
+"comp_name": "c_path",
+"comp_path": "res://core/components/capabilities/c_path.gd",
+"deg": 30.0,
+"radius": 42.2
+},
+ExtResource("3_67ftc"): {
+"comp_name": "c_power_track",
+"comp_path": "res://core/components/capabilities/c_power_track.gd",
+"contour_id": 1,
+"is_flipped": true
+}
+},
+"setting_path": "res://data/tracks/objects/r2.tres",
+"transform": Transform3D(-1.0000001, 0, -9.834766e-07, 0, 1, 0, 9.834766e-07, 0, -1.0000001, 1.3378248, -7.6293945e-06, 96.770546)
 }, {
 "components": {
 ExtResource("1_r6rv2"): {
@@ -102,351 +326,9 @@ ExtResource("4_x1ohl"): {
 "comp_name": "c_power_clip",
 "comp_path": "res://core/components/c_power_clip.gd",
 "contour_id": 1,
-"voltage": 0.0
+"voltage": 100.0
 }
 },
 "setting_path": "res://data/tracks/objects/g239.tres",
-"transform": Transform3D(1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, 1, -45.406776, 0, 109.89499)
-}, {
-"components": {
-ExtResource("1_r6rv2"): {
-"comp_name": "c_pivot",
-"comp_path": "res://core/components/c_pivot.gd",
-"offset": Vector3(0, 0, 11.95)
-},
-ExtResource("2_x1ohl"): {
-"comp_name": "c_path",
-"comp_path": "res://core/components/capabilities/c_path.gd",
-"deg": 0.0,
-"radius": 23.9
-},
-ExtResource("3_67ftc"): {
-"comp_name": "c_power_track",
-"comp_path": "res://core/components/capabilities/c_power_track.gd",
-"contour_id": 1,
-"is_flipped": false
-}
-},
-"setting_path": "res://data/tracks/objects/g239.tres",
-"transform": Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -45.406776, 0, 85.994995)
-}, {
-"components": {},
-"setting_path": "res://data/tracks/objects/aw1.tres",
-"transform": Transform3D(0.99990326, 1.686017e-06, -0.01391086, -1.6836746e-06, 1, 1.8010441e-07, 0.01391086, -1.5666562e-07, 0.99990326, -54.875343, 5.4538097, -6.7340918)
-}, {
-"components": {},
-"setting_path": "res://data/tracks/objects/aw1.tres",
-"transform": Transform3D(1, 4.1435815e-06, 2.2342713e-11, -4.1435815e-06, 1, 2.2011454e-07, -2.143065e-11, -2.2011454e-07, 1, -53.471214, -9.775162e-06, 89.1782)
-}, {
-"components": {},
-"setting_path": "res://data/tracks/objects/l1.tres",
-"transform": Transform3D(0.884277, 2.8977226e-07, 0.4669627, 3.6860828e-07, 1, -1.3185725e-06, -0.4669627, 1.3381095e-06, 0.884277, -36.18773, -6.914139e-06, 83.66507)
-}, {
-"components": {
-ExtResource("1_r6rv2"): {
-"comp_name": "c_pivot",
-"comp_path": "res://core/components/c_pivot.gd",
-"offset": Vector3(-1.4379303, 0, 10.922165)
-},
-ExtResource("2_x1ohl"): {
-"comp_name": "c_path",
-"comp_path": "res://core/components/capabilities/c_path.gd",
-"deg": 30.0,
-"radius": 42.2
-},
-ExtResource("3_67ftc"): {
-"comp_name": "c_power_track",
-"comp_path": "res://core/components/capabilities/c_power_track.gd",
-"contour_id": 1,
-"is_flipped": false
-}
-},
-"setting_path": "res://data/tracks/objects/r2.tres",
-"transform": Transform3D(0.8660253, 0, 0.50000024, 0, 1, 0, -0.50000024, 0, 0.8660253, -43.968845, 0, 132.76715)
-}, {
-"components": {
-ExtResource("1_r6rv2"): {
-"comp_name": "c_pivot",
-"comp_path": "res://core/components/c_pivot.gd",
-"offset": Vector3(-1.4379303, 0, 10.922165)
-},
-ExtResource("2_x1ohl"): {
-"comp_name": "c_path",
-"comp_path": "res://core/components/capabilities/c_path.gd",
-"deg": 30.0,
-"radius": 42.2
-},
-ExtResource("3_67ftc"): {
-"comp_name": "c_power_track",
-"comp_path": "res://core/components/capabilities/c_power_track.gd",
-"contour_id": 1,
-"is_flipped": true
-}
-},
-"setting_path": "res://data/tracks/objects/r2.tres",
-"transform": Transform3D(-0.8660253, 0, -0.5000001, 0, 1, 0, 0.5000001, 0, -0.8660253, -46.844707, 0, 63.122833)
-}, {
-"components": {
-ExtResource("1_r6rv2"): {
-"comp_name": "c_pivot",
-"comp_path": "res://core/components/c_pivot.gd",
-"offset": Vector3(-1.4379303, 0, 10.922165)
-},
-ExtResource("2_x1ohl"): {
-"comp_name": "c_path",
-"comp_path": "res://core/components/capabilities/c_path.gd",
-"deg": 30.0,
-"radius": 42.2
-},
-ExtResource("3_67ftc"): {
-"comp_name": "c_power_track",
-"comp_path": "res://core/components/capabilities/c_power_track.gd",
-"contour_id": 0,
-"is_flipped": false
-}
-},
-"setting_path": "res://data/tracks/objects/r2.tres",
-"transform": Transform3D(-5.662441e-07, 0, 1.0000001, 0, 1, 0, -1.0000001, 0, -5.662441e-07, -14.128927, 0, 162.60704)
-}, {
-"components": {
-ExtResource("1_r6rv2"): {
-"comp_name": "c_pivot",
-"comp_path": "res://core/components/c_pivot.gd",
-"offset": Vector3(-1.4379303, 0, 10.922165)
-},
-ExtResource("2_x1ohl"): {
-"comp_name": "c_path",
-"comp_path": "res://core/components/capabilities/c_path.gd",
-"deg": 30.0,
-"radius": 42.2
-},
-ExtResource("3_67ftc"): {
-"comp_name": "c_power_track",
-"comp_path": "res://core/components/capabilities/c_power_track.gd",
-"contour_id": 0,
-"is_flipped": false
-}
-},
-"setting_path": "res://data/tracks/objects/r2.tres",
-"transform": Transform3D(-0.50000066, 0, 0.8660252, 0, 1, 0, -0.8660252, 0, -0.50000066, 7.7154026, 0, 162.60703)
-}, {
-"components": {
-ExtResource("1_r6rv2"): {
-"comp_name": "c_pivot",
-"comp_path": "res://core/components/c_pivot.gd",
-"offset": Vector3(-1.4379303, 0, 10.922165)
-},
-ExtResource("2_x1ohl"): {
-"comp_name": "c_path",
-"comp_path": "res://core/components/capabilities/c_path.gd",
-"deg": 30.0,
-"radius": 42.2
-},
-ExtResource("3_67ftc"): {
-"comp_name": "c_power_track",
-"comp_path": "res://core/components/capabilities/c_power_track.gd",
-"contour_id": 0,
-"is_flipped": false
-}
-},
-"setting_path": "res://data/tracks/objects/r2.tres",
-"transform": Transform3D(0.5000007, 0, -0.86602515, 0, 1, 0, 0.86602515, 0, 0.5000007, 28.071075, 0, 154.17542)
-}, {
-"components": {
-ExtResource("1_r6rv2"): {
-"comp_name": "c_pivot",
-"comp_path": "res://core/components/c_pivot.gd",
-"offset": Vector3(-1.4379303, 0, 10.922165)
-},
-ExtResource("2_x1ohl"): {
-"comp_name": "c_path",
-"comp_path": "res://core/components/capabilities/c_path.gd",
-"deg": 30.0,
-"radius": 42.2
-},
-ExtResource("3_67ftc"): {
-"comp_name": "c_power_track",
-"comp_path": "res://core/components/capabilities/c_power_track.gd",
-"contour_id": 0,
-"is_flipped": false
-}
-},
-"setting_path": "res://data/tracks/objects/r2.tres",
-"transform": Transform3D(7.728762e-07, 0, -1.0000001, 0, 1, 0, 1.0000001, 0, 7.728762e-07, 49.915405, 0, 154.1754)
-}, {
-"components": {
-ExtResource("1_r6rv2"): {
-"comp_name": "c_pivot",
-"comp_path": "res://core/components/c_pivot.gd",
-"offset": Vector3(-1.4379303, 0, 10.922165)
-},
-ExtResource("2_x1ohl"): {
-"comp_name": "c_path",
-"comp_path": "res://core/components/capabilities/c_path.gd",
-"deg": 30.0,
-"radius": 42.2
-},
-ExtResource("3_67ftc"): {
-"comp_name": "c_power_track",
-"comp_path": "res://core/components/capabilities/c_power_track.gd",
-"contour_id": 0,
-"is_flipped": false
-}
-},
-"setting_path": "res://data/tracks/objects/r2.tres",
-"transform": Transform3D(-0.49999937, 0, -0.8660259, 0, 1, 0, 0.8660259, 0, -0.49999937, 68.83316, 0, 165.09755)
-}, {
-"components": {
-ExtResource("1_r6rv2"): {
-"comp_name": "c_pivot",
-"comp_path": "res://core/components/c_pivot.gd",
-"offset": Vector3(-1.4379303, 0, 10.922165)
-},
-ExtResource("2_x1ohl"): {
-"comp_name": "c_path",
-"comp_path": "res://core/components/capabilities/c_path.gd",
-"deg": 30.0,
-"radius": 42.2
-},
-ExtResource("3_67ftc"): {
-"comp_name": "c_power_track",
-"comp_path": "res://core/components/capabilities/c_power_track.gd",
-"contour_id": 0,
-"is_flipped": false
-}
-},
-"setting_path": "res://data/tracks/objects/r2.tres",
-"transform": Transform3D(-0.86602515, 0, -0.5000008, 0, 1, 0, 0.5000008, 0, -0.86602515, 79.75534, 0, 184.01529)
-}, {
-"components": {
-ExtResource("1_r6rv2"): {
-"comp_name": "c_pivot",
-"comp_path": "res://core/components/c_pivot.gd",
-"offset": Vector3(-1.4379303, 0, 10.922165)
-},
-ExtResource("2_x1ohl"): {
-"comp_name": "c_path",
-"comp_path": "res://core/components/capabilities/c_path.gd",
-"deg": 30.0,
-"radius": 42.2
-},
-ExtResource("3_67ftc"): {
-"comp_name": "c_power_track",
-"comp_path": "res://core/components/capabilities/c_power_track.gd",
-"contour_id": 0,
-"is_flipped": false
-}
-},
-"setting_path": "res://data/tracks/objects/r2.tres",
-"transform": Transform3D(-1.0000002, 0, -8.3248085e-07, 0, 1, 0, 8.3248085e-07, 0, -1.0000002, 79.75536, 0, 205.85962)
-}, {
-"components": {
-ExtResource("1_r6rv2"): {
-"comp_name": "c_pivot",
-"comp_path": "res://core/components/c_pivot.gd",
-"offset": Vector3(-1.4379303, 0, 10.922165)
-},
-ExtResource("2_x1ohl"): {
-"comp_name": "c_path",
-"comp_path": "res://core/components/capabilities/c_path.gd",
-"deg": 30.0,
-"radius": 42.2
-},
-ExtResource("3_67ftc"): {
-"comp_name": "c_power_track",
-"comp_path": "res://core/components/capabilities/c_power_track.gd",
-"contour_id": 0,
-"is_flipped": false
-}
-},
-"setting_path": "res://data/tracks/objects/r2.tres",
-"transform": Transform3D(-0.86602604, 0, 0.49999937, 0, 1, 0, -0.49999937, 0, -0.86602604, 68.83321, 0, 224.77737)
-}, {
-"components": {
-ExtResource("1_r6rv2"): {
-"comp_name": "c_pivot",
-"comp_path": "res://core/components/c_pivot.gd",
-"offset": Vector3(-1.4379303, 0, 10.922165)
-},
-ExtResource("2_x1ohl"): {
-"comp_name": "c_path",
-"comp_path": "res://core/components/capabilities/c_path.gd",
-"deg": 30.0,
-"radius": 42.2
-},
-ExtResource("3_67ftc"): {
-"comp_name": "c_power_track",
-"comp_path": "res://core/components/capabilities/c_power_track.gd",
-"contour_id": 0,
-"is_flipped": false
-}
-},
-"setting_path": "res://data/tracks/objects/r2.tres",
-"transform": Transform3D(-0.5000009, 0, 0.86602515, 0, 1, 0, -0.86602515, 0, -0.5000009, 49.915474, 0, 235.69955)
-}, {
-"components": {
-ExtResource("1_r6rv2"): {
-"comp_name": "c_pivot",
-"comp_path": "res://core/components/c_pivot.gd",
-"offset": Vector3(-1.4379303, 0, 10.922165)
-},
-ExtResource("2_x1ohl"): {
-"comp_name": "c_path",
-"comp_path": "res://core/components/capabilities/c_path.gd",
-"deg": 30.0,
-"radius": 42.2
-},
-ExtResource("3_67ftc"): {
-"comp_name": "c_power_track",
-"comp_path": "res://core/components/capabilities/c_power_track.gd",
-"contour_id": 0,
-"is_flipped": false
-}
-},
-"setting_path": "res://data/tracks/objects/r2.tres",
-"transform": Transform3D(-9.218878e-07, 0, 1.0000002, 0, 1, 0, -1.0000002, 0, -9.218878e-07, 28.07114, 0, 235.69957)
-}, {
-"components": {
-ExtResource("1_r6rv2"): {
-"comp_name": "c_pivot",
-"comp_path": "res://core/components/c_pivot.gd",
-"offset": Vector3(-1.4379303, 0, 10.922165)
-},
-ExtResource("2_x1ohl"): {
-"comp_name": "c_path",
-"comp_path": "res://core/components/capabilities/c_path.gd",
-"deg": 30.0,
-"radius": 42.2
-},
-ExtResource("3_67ftc"): {
-"comp_name": "c_power_track",
-"comp_path": "res://core/components/capabilities/c_power_track.gd",
-"contour_id": 0,
-"is_flipped": false
-}
-},
-"setting_path": "res://data/tracks/objects/r2.tres",
-"transform": Transform3D(0.49999928, 0, 0.8660261, 0, 1, 0, -0.8660261, 0, 0.49999928, 9.153384, 0, 224.77742)
-}, {
-"components": {
-ExtResource("1_r6rv2"): {
-"comp_name": "c_pivot",
-"comp_path": "res://core/components/c_pivot.gd",
-"offset": Vector3(-1.4379303, 0, 10.922165)
-},
-ExtResource("2_x1ohl"): {
-"comp_name": "c_path",
-"comp_path": "res://core/components/capabilities/c_path.gd",
-"deg": 30.0,
-"radius": 42.2
-},
-ExtResource("3_67ftc"): {
-"comp_name": "c_power_track",
-"comp_path": "res://core/components/capabilities/c_power_track.gd",
-"contour_id": 0,
-"is_flipped": false
-}
-},
-"setting_path": "res://data/tracks/objects/r2.tres",
-"transform": Transform3D(0.86602515, 0, 0.500001, 0, 1, 0, -0.500001, 0, 0.86602515, -1.7688007, 0, 205.85968)
+"transform": Transform3D(-1.0000001, 0, -2.6623673e-07, 0, 1, 0, 2.6623673e-07, 0, -1.0000001, -81.62424, -7.6293945e-06, 73.89842)
 }]

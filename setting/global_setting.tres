@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="GlobalSetting" format=3 uid="uid://dpdwphy2rvhtn"]
+
+[ext_resource type="Script" uid="uid://dtnlxwwqt15sb" path="res://setting/global_setting.gd" id="1_3d062"]
+
+[resource]
+script = ExtResource("1_3d062")
+metadata/_custom_type_script = "uid://dtnlxwwqt15sb"

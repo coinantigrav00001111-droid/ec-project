@@ -7,7 +7,7 @@ class_name C_TrainVisual extends Component
 ##TODO  корневая нода у Вагона  RigidBody3D, поэтому instance можно назвать соответственно. Если не полетит все в контроллерах
 
 ## За перемещение физического тела отвечает кинематикс, у него есть ссылка на него.
-
+## Строит вагон согласно данным Identity - WagonConfig
 
 var instance: RigidBody3D
 var scene: PackedScene
@@ -21,7 +21,11 @@ var mesh_nodes: Array[MeshInstance3D]
 # Массив нод с коллизиями
 var collision_nodes: Array[CollisionObject3D] 
 
+var bogie_configs: Array[BogieConfig] = []
 
+var bogie_nodes: Array[Node3D] = []
+
+	
 ## Вызов из ентити при создании комп
 func on_added():
 	instance = scene.instantiate() # Создаем сцену
@@ -29,18 +33,48 @@ func on_added():
 
 	_collect_meshes()
 	_collect_collision_nodes()
-
-	# Вся физика через кинематикс
-	#XX Находим RigidBody3D внутри загруженной сцены
-	#rb = instance
 	
-	#if rb:
-		#var _is_ghost = entity.get_comp(C_Ghost)
-		#
-		## По умолчанию при спавне физика отключена для срабатывания сеттингов
-		#if _is_ghost:
-			#rb.freeze = true
-			#rb.top_level = false
+	# instance.collide_with_areas = true нет такой для ригид
+	# достраиваем боги
+	bogie_configs = get_comp(C_Identity).get_config('bogie_configs')
+	var offset_mesh_y = get_comp(C_Identity).get_config('offset_mesh_y')
+	
+	for bogie in bogie_configs: 
+		
+		var b_scene = bogie.scene.instantiate() # Создаем сцену
+		
+		b_scene.position.y = bogie.wheel_radius # боги  от пола вверх до центра колеса
+		b_scene.position.z = bogie.offset.z 
+		
+		# Перестраиваем коллизию вагона с учетом габаритов с боги и колесами.
+		var bogie_collision = b_scene.get_node('BogieCollisionShape3D')
+		b_scene.remove_child(bogie_collision)
+		bogie_collision.owner = null
+
+		bogie_collision.position = b_scene.position # коллизию в точку боги
+		
+		instance.add_child(bogie_collision) #коллизия боги теперь у ригид кузова 
+		# Назначаем новым владельцем корень текущей рабочей сцены
+		bogie_collision.owner = instance.owner 
+		bogie_collision.name = 'BogieCollisionShape3D_01'
+		
+		#НЕТ!  Перекидываем боги в корень ентити, больше визуал его не контролит
+		#b_scene.owner = null
+		#entity.add_child(b_scene) # боги и колеса
+		instance.add_child(b_scene) # боги и колеса
+
+		b_scene.name = 'Bogie_01'
+		
+		# поднимаем кузов 
+		for mesh in mesh_nodes:
+			#mesh.position.y = b_scene.position.y + bogie.offset.y
+			mesh.position.y = offset_mesh_y # из вагон-конфига
+			var wagon_collision = instance.get_node('WagonCollisionShape3D')
+			wagon_collision.position.y = mesh.position.y + wagon_collision.shape.size.y / 2
+	
+		# Ноду добавляем в массив. Дальше им занимается C_Bogie 
+		bogie_nodes.append(b_scene)
+
 
 
 

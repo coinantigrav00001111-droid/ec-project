@@ -1,0 +1,90 @@
+[gd_resource type="Resource" script_class="EntitySetting" format=3 uid="uid://cytrx2um7pe6w"]
+
+[ext_resource type="Script" uid="uid://m4g5jbfwmaa0" path="res://core/component_setting.gd" id="1_1pi1k"]
+[ext_resource type="Script" uid="uid://7vuxuiiysiji" path="res://setting/bogie_config.gd" id="2_xi8dl"]
+[ext_resource type="PackedScene" uid="uid://cl6t7b6265rj" path="res://data/trains/default_bogie.tscn" id="3_dmqtb"]
+[ext_resource type="PackedScene" uid="uid://b3w6wjpmsg3gx" path="res://data/trains/loco_01.tscn" id="4_1pi1k"]
+[ext_resource type="Script" uid="uid://bicjny5dv1h3s" path="res://setting/wagon_config.gd" id="5_ufx6w"]
+[ext_resource type="Script" uid="uid://mpakwrr6lum8" path="res://core/components/identity_setting.gd" id="6_n280y"]
+[ext_resource type="Script" uid="uid://b830vi2lx3hl5" path="res://core/components/trainvisual_setting.gd" id="7_i4jyf"]
+[ext_resource type="Resource" uid="uid://bqss7rh1mwv41" path="res://core/visual/visual_state.tres" id="8_yrtcf"]
+[ext_resource type="Script" uid="uid://bkdny7eq5jthn" path="res://core/components/capabilities/traindraggable_setting.gd" id="9_maqnf"]
+[ext_resource type="Script" uid="uid://cuumo0qj7r7gb" path="res://core/components/capabilities/hoverable_setting.gd" id="10_ohs0c"]
+[ext_resource type="Script" uid="uid://deljgsmo4bpow" path="res://core/components/capabilities/selectable_setting.gd" id="11_81r0d"]
+[ext_resource type="Script" uid="uid://chprgtlxn3aub" path="res://core/components/capabilities/blockable_setting.gd" id="12_hpjo4"]
+[ext_resource type="Script" uid="uid://bhvk4o3qrvslv" path="res://core/components/capabilities/chassis_setting.gd" id="13_xh8lx"]
+[ext_resource type="Script" uid="uid://cpuhrycuvnuar" path="res://core/components/capabilities/kinematics_setting.gd" id="14_x2lrn"]
+[ext_resource type="Script" uid="uid://x3e5f07xbe1r" path="res://core/components/capabilities/engine_setting.gd" id="15_64ui7"]
+[ext_resource type="Script" uid="uid://b5kx0oyxhiaux" path="res://core/components/capabilities/bogie_setting.gd" id="15_xi8dl"]
+[ext_resource type="Texture2D" uid="uid://ccglkaaxdcb5b" path="res://ui/icons/transport/steam-locomotive.svg" id="16_ovl4u"]
+[ext_resource type="Script" uid="uid://do5hjkm3r2pdg" path="res://core/entity_setting.gd" id="17_y6u2v"]
+
+[sub_resource type="Resource" id="Resource_m448q"]
+script = ExtResource("2_xi8dl")
+offset = Vector3(0, 0, -2.43)
+metadata/_custom_type_script = "uid://7vuxuiiysiji"
+
+[sub_resource type="Resource" id="Resource_ibl0p"]
+script = ExtResource("2_xi8dl")
+offset = Vector3(0, 0, 2.43)
+metadata/_custom_type_script = "uid://7vuxuiiysiji"
+
+[sub_resource type="Resource" id="Resource_ybgll"]
+script = ExtResource("5_ufx6w")
+mass = 0.4
+scene = ExtResource("4_1pi1k")
+offset_mesh_y = 1.52
+bogie_configs = Array[ExtResource("2_xi8dl")]([SubResource("Resource_m448q"), SubResource("Resource_ibl0p")])
+metadata/_custom_type_script = "uid://bicjny5dv1h3s"
+
+[sub_resource type="Resource" id="Resource_ldqha"]
+script = ExtResource("6_n280y")
+object_config = SubResource("Resource_ybgll")
+metadata/_custom_type_script = "uid://mpakwrr6lum8"
+
+[sub_resource type="Resource" id="Resource_y13in"]
+script = ExtResource("7_i4jyf")
+metadata/_custom_type_script = "uid://b830vi2lx3hl5"
+
+[sub_resource type="Resource" id="Resource_2odj0"]
+script = ExtResource("9_maqnf")
+metadata/_custom_type_script = "uid://bkdny7eq5jthn"
+
+[sub_resource type="Resource" id="Resource_4lulw"]
+script = ExtResource("10_ohs0c")
+metadata/_custom_type_script = "uid://cuumo0qj7r7gb"
+
+[sub_resource type="Resource" id="Resource_ii5fe"]
+script = ExtResource("11_81r0d")
+metadata/_custom_type_script = "uid://deljgsmo4bpow"
+
+[sub_resource type="Resource" id="Resource_ywat7"]
+script = ExtResource("12_hpjo4")
+metadata/_custom_type_script = "uid://chprgtlxn3aub"
+
+[sub_resource type="Resource" id="Resource_bbw2b"]
+script = ExtResource("13_xh8lx")
+metadata/_custom_type_script = "uid://bhvk4o3qrvslv"
+
+[sub_resource type="Resource" id="Resource_d4y6m"]
+script = ExtResource("14_x2lrn")
+metadata/_custom_type_script = "uid://cpuhrycuvnuar"
+
+[sub_resource type="Resource" id="Resource_ivg4w"]
+script = ExtResource("15_xi8dl")
+metadata/_custom_type_script = "uid://b5kx0oyxhiaux"
+
+[sub_resource type="Resource" id="Resource_keywu"]
+script = ExtResource("15_64ui7")
+metadata/_custom_type_script = "uid://x3e5f07xbe1r"
+
+[resource]
+script = ExtResource("17_y6u2v")
+id = 2510
+name = "loco 1"
+description = "локо 1"
+category = &"train"
+tag = &"loco"
+icon = ExtResource("16_ovl4u")
+components = Array[ExtResource("1_1pi1k")]([SubResource("Resource_ldqha"), SubResource("Resource_y13in"), SubResource("Resource_2odj0"), SubResource("Resource_4lulw"), SubResource("Resource_ii5fe"), SubResource("Resource_ywat7"), SubResource("Resource_bbw2b"), SubResource("Resource_d4y6m"), SubResource("Resource_ivg4w"), SubResource("Resource_keywu")])
+metadata/_custom_type_script = "uid://do5hjkm3r2pdg"

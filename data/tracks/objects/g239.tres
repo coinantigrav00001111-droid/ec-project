@@ -4,6 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://cu3x43vn1g05u" path="res://data/tracks/G239.tscn" id="2_dj8qy"]
 [ext_resource type="Script" uid="uid://do5hjkm3r2pdg" path="res://core/entity_setting.gd" id="3_7vxw7"]
 [ext_resource type="Script" uid="uid://bulwl3x2rykxk" path="res://core/components/visual_setting.gd" id="3_r42n5"]
+[ext_resource type="Script" uid="uid://mpakwrr6lum8" path="res://core/components/identity_setting.gd" id="3_vxtmo"]
 [ext_resource type="Resource" uid="uid://bqss7rh1mwv41" path="res://core/visual/visual_state.tres" id="4_o7fpk"]
 [ext_resource type="Script" uid="uid://b1jwuxb32so7e" path="res://core/components/capabilities/draggable_setting.gd" id="5_qqtt6"]
 [ext_resource type="Script" uid="uid://djbifkyei01t7" path="res://core/components/pivot_setting.gd" id="7_o7fpk"]
@@ -14,6 +15,17 @@
 [ext_resource type="Texture2D" uid="uid://c8tndy1lksot8" path="res://ui/icons/transport/rail-road.svg" id="11_0xkto"]
 [ext_resource type="Script" uid="uid://b7f7dka1i3slu" path="res://core/components/capabilities/path_setting.gd" id="11_o7fpk"]
 [ext_resource type="Script" uid="uid://cjk51o364xfn" path="res://core/components/capabilities/power_track_setting.gd" id="12_t8too"]
+[ext_resource type="Script" uid="uid://b7ds2l6clrm61" path="res://setting/track_config.gd" id="14_lnr61"]
+
+[sub_resource type="Resource" id="Resource_2a3k7"]
+script = ExtResource("14_lnr61")
+radius = 23.9
+metadata/_custom_type_script = "uid://b7ds2l6clrm61"
+
+[sub_resource type="Resource" id="Resource_8t2gm"]
+script = ExtResource("3_vxtmo")
+object_config = SubResource("Resource_2a3k7")
+metadata/_custom_type_script = "uid://mpakwrr6lum8"
 
 [sub_resource type="Resource" id="Resource_yfcut"]
 script = ExtResource("3_r42n5")
@@ -42,7 +54,7 @@ metadata/_custom_type_script = "uid://chprgtlxn3aub"
 
 [sub_resource type="Resource" id="Resource_vxtmo"]
 script = ExtResource("11_o7fpk")
-radius = 23.9
+radius = 0.0
 metadata/_custom_type_script = "uid://b7f7dka1i3slu"
 
 [sub_resource type="Resource" id="Resource_lnr61"]
@@ -59,5 +71,5 @@ id = 10
 name = "G239 раб тест"
 description = "Прямой трак 23.9см"
 icon = ExtResource("11_0xkto")
-components = Array[ExtResource("1_k7o5x")]([SubResource("Resource_yfcut"), SubResource("Resource_iqocg"), SubResource("Resource_0xkto"), SubResource("Resource_qqtt6"), SubResource("Resource_o7fpk"), SubResource("Resource_t8too"), SubResource("Resource_vxtmo"), SubResource("Resource_lnr61"), SubResource("Resource_3owqy")])
+components = Array[ExtResource("1_k7o5x")]([SubResource("Resource_8t2gm"), SubResource("Resource_yfcut"), SubResource("Resource_iqocg"), SubResource("Resource_0xkto"), SubResource("Resource_qqtt6"), SubResource("Resource_o7fpk"), SubResource("Resource_t8too"), SubResource("Resource_vxtmo"), SubResource("Resource_lnr61"), SubResource("Resource_3owqy")])
 metadata/_custom_type_script = "uid://do5hjkm3r2pdg"

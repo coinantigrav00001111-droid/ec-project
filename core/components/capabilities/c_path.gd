@@ -21,26 +21,28 @@ var path_node: Path3D
 var curve: Curve3D
 var ballast_node: Area3D
 
-# TODO Ноды рельсов надо сделать как балласт
-var headl_node: StaticBody3D
-var headr_node: StaticBody3D
+# TODO Ноды рельсов надо\можно или удалить за счет балласта или продулюровать коллизии балласта
+#var headl_node: StaticBody3D
+#var headr_node: StaticBody3D
 
 var pivot_offset := Vector3.ZERO 
 
 # Ballast
 
 #var b_gap := 0.0 # зазор между сегментами.
-var b_start_end_padding: float = -0.1	#  минус - внутрь трака, плюс =0 .
+#var b_start_end_padding: float = -0.1	#  минус - внутрь трака, плюс =0 .
 
 
 func on_added():
 	pass
 
 func on_entity_ready() -> void:
-	var identity = get_comp(C_Identity)
+	var identity = get_comp(C_Identity) as C_Identity
 	if not identity or not identity.setting:
 		return
-	
+		
+	radius = identity.get_config('radius', 0.0)
+	deg = identity.get_config('deg', 0.0)
 	var pivot = get_comp(C_Pivot)
 	if pivot: pivot_offset = pivot.offset
 	
@@ -54,7 +56,7 @@ func on_entity_ready() -> void:
 	_sync_with_visual_ballast()
 	
 	# Синхронизируем коллизии рельсов с нодами сцены
-	_sync_with_visual_heads()
+	#_sync_with_visual_heads()
 
 
 # Генерируем ноду Path3D и новый оффсет в C_Pivot 
@@ -82,24 +84,33 @@ func _generate_path() -> Path3D:
 ## Синхронизируем ноду "Ballast" с нодой сцены внутри C_Visual
 func _sync_with_visual_ballast():
 	var visual = get_comp(C_Visual)
+
 	if not visual or not visual.instance: return
 
 	# Находим ноду балласта 
 	ballast_node = _find_ballast_recursive(visual.instance)
-	
 	# Проверка сцены. Eсли в ней балласта нет, то значит он не нужен, выходим
 	if not ballast_node: return 
 
 	#Если коллизия есть, то она сделана в сцене специально для оптимизации (прямая состоит из одного сегмента например) или намеренно - оставляем.
 	# Расчет балласта. Если у балласта нет коллизий, то будем генерить.
+	var _debug_color=Color("00b296ff")
+	
 	var gs_ballast = Global.settings.track_ballast_segment
 	if ballast_node.get_child_count() == 0: 
+		# основной балласт
 		var dynamic_count = _calculate_collision_count(radius, deg, gs_ballast.deg_per_segment)
-		_generate_collision_segments(ballast_node, dynamic_count,gs_ballast.size,  gs_ballast.offset_x, 0, gs_ballast.start_end_padding , gs_ballast.gap, true)
-	
-	
+		_generate_collision_segments(ballast_node, dynamic_count, gs_ballast.size,  gs_ballast.offset_x, 0, gs_ballast.start_end_padding , gs_ballast.gap, gs_ballast.align_ends)
+		
+		# Вместо хедов
+		var gs_head = Global.settings.track_head_segment
+		
+		_generate_collision_segments(ballast_node , dynamic_count, gs_head.size,  0 , gs_ballast.size.y, gs_head.start_end_padding , gs_head.gap, gs_ballast.align_ends)
+		
+		_debug_color=Color("fd3fadff")
+		
 	#INFO цвет коллизий для дебага
-	var _debug_color=Color("00b929ff")
+	
 	var collision_shapes =  ballast_node.get_children()
 	for seg in collision_shapes:
 		seg.set_debug_color(_debug_color)
@@ -107,14 +118,14 @@ func _sync_with_visual_ballast():
 
 
 ## Синхронизируем ноды "Head_L Head_R" с нодами сцены внутри C_Visual
-func _sync_with_visual_heads():
-	var visual = get_comp(C_Visual)
-	if not visual or not visual.instance: return
+#func _sync_with_visual_heads():
+	#var visual = get_comp(C_Visual)
+	#if not visual or not visual.instance: return
 
 	# Находим ноды рельсов
 	# TODO организовать поиск рельсов как балласта. Или в одну функцию запихнуть
-	headl_node = visual.instance.get_node('HeadL')
-	headr_node = visual.instance.get_node('HeadR')
+	#headl_node = visual.instance.get_node('HeadL')
+	#headr_node = visual.instance.get_node('HeadR')
 	# Проверка сцены. Eсли в ней рельсов, то значит он не нужен, выходим
 	#if not headl_node or not headr_node: return 
 
@@ -122,24 +133,24 @@ func _sync_with_visual_heads():
 	# Расчет балласта. Если нет коллизий, то будем генерить.
 	
 	
-	var gs_head = Global.settings.track_head_segment
-	var dynamic_count = _calculate_collision_count(radius, deg, gs_head.deg_per_segment)
-	
-	if not headl_node or headl_node.get_child_count() == 0: 
-	
-		_generate_collision_segments(headl_node,dynamic_count, gs_head.size, gs_head.offset_x, 0, gs_head.start_end_padding, gs_head.gap, false)
-
-	if not headr_node or headr_node.get_child_count() == 0: 
-		_generate_collision_segments(headr_node,dynamic_count, gs_head.size, -gs_head.offset_x, 0, gs_head.start_end_padding, gs_head.gap, false)
+	#var gs_head = Global.settings.track_head_segment
+	#var dynamic_count = _calculate_collision_count(radius, deg, gs_head.deg_per_segment)
+	#
+	#if not headl_node or headl_node.get_child_count() == 0: 
+	#
+		#_generate_collision_segments(headl_node,dynamic_count, gs_head.size, gs_head.offset_x, 0, gs_head.start_end_padding, gs_head.gap, false)
+#
+	#if not headr_node or headr_node.get_child_count() == 0: 
+		#_generate_collision_segments(headr_node,dynamic_count, gs_head.size, -gs_head.offset_x, 0, gs_head.start_end_padding, gs_head.gap, false)
 	
 	#INFO цвет коллизий для дебага
-	var _debug_color=Color("c40070ff")
-	var collision_shapes =  headl_node.get_children()
-	for seg in collision_shapes:
-		seg.set_debug_color(_debug_color)
-	collision_shapes =  headr_node.get_children()
-	for seg in collision_shapes:
-		seg.set_debug_color(_debug_color)
+	#var _debug_color=Color("c40070ff")
+	#var collision_shapes =  headl_node.get_children()
+	#for seg in collision_shapes:
+		#seg.set_debug_color(_debug_color)
+	#collision_shapes =  headr_node.get_children()
+	#for seg in collision_shapes:
+		#seg.set_debug_color(_debug_color)
 	
 		
 
@@ -218,14 +229,16 @@ func _generate_collision_segments(
 ) -> void:
 
 	# 1. Вычисление размеров сегмента
-	var l_arc = (radius - x_offset) * deg_to_rad(deg)
+	
+	var l_arc = (radius - x_offset) * deg_to_rad(deg) if deg != 0.0 else (radius - x_offset)
+
 	var _segment_size_z = (l_arc - gap * (count - 1) + start_end_padding * 2.0) / count
 	var _segment_size = Vector3(cross_size.x, cross_size.y, _segment_size_z)
 
 	# 2. Оптимизация памяти: один общий ресурс формы на все сегменты
 	var shared_shape = BoxShape3D.new()
 	shared_shape.size = _segment_size
-
+	
 	# 3. Предрасчет неизменяемых значений
 	var padding_angle = rad_to_deg(asin(start_end_padding / radius)) if radius != 0.0 else 0.0
 	var offset_z_delta = _segment_size_z * 0.5 - start_end_padding
@@ -386,18 +399,18 @@ func on_select_layer(_data):
 		ballast_node.collision_layer =  1 << 10	# заменяет активный слой на 11
 		ballast_node.collision_mask = 1 << 2 # гост видит только 3 слой
 		
-		headl_node.collision_layer =  1 << 10	# заменяет активный слой на 11
-		headr_node.collision_layer =  1 << 10	# заменяет активный слой на 11
-		headl_node.collision_mask = 1 << 2 # гост видит только 3 слой
-		headr_node.collision_mask = 1 << 2 # гост видит только 3 слой
+		#headl_node.collision_layer =  1 << 10	# заменяет активный слой на 11
+		#headr_node.collision_layer =  1 << 10	# заменяет активный слой на 11
+		#headl_node.collision_mask = 1 << 2 # гост видит только 3 слой
+		#headr_node.collision_mask = 1 << 2 # гост видит только 3 слой
 	else:
 		ballast_node.collision_layer = 1 << 2 	# заменяет активный слой на 3
 		ballast_node.collision_mask = 1 << 2
 		
-		headl_node.collision_layer =  1 << 2	# заменяет активный слой на 11
-		headr_node.collision_layer =  1 << 2	# заменяет активный слой на 11
-		headl_node.collision_mask = 1 << 2 # гост видит только 3 слой
-		headr_node.collision_mask = 1 << 2 # гост видит только 3 слой
+		#headl_node.collision_layer =  1 << 2	# заменяет активный слой на 11
+		#headr_node.collision_layer =  1 << 2	# заменяет активный слой на 11
+		#headl_node.collision_mask = 1 << 2 # гост видит только 3 слой
+		#headr_node.collision_mask = 1 << 2 # гост видит только 3 слой
 	pass
 
 

@@ -2,12 +2,15 @@ extends Node
 
 ##########################
 ##
-## Global  (Global) пока это глобальные настройки
+## Global  (Global)  глобальные настройки
 ##
 ###########################
+var object_dirs := [	"res://data/tracks/objects/", 
+						"res://data/trains/objects/"]
+						#"res://ui/dc_controllers/objects/"]
 
 # Настройки объектов
-var settings: Resource = preload("res://core/global_setting.tres")
+var settings: Resource = preload("res://setting/global_setting.tres")
 
 #DD Дебаги вкл
 var debug_mode := true

@@ -79,6 +79,7 @@ func set_power_pwm( _cid: int = 0, _voltage :int = 0) -> void:
 		
 		# 2. Обновляем данные во всех клипах на столе
 		for clip in active_clips:
+			print(clip )
 			clip.set_power(clip.contour_id, _voltage)
 
 	elif _cid != 0: # если указан номер != 0 

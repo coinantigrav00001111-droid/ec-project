@@ -1,0 +1,80 @@
+[gd_resource type="Resource" script_class="EntitySetting" format=3 uid="uid://ch617bop430qt"]
+
+[ext_resource type="Script" uid="uid://m4g5jbfwmaa0" path="res://core/component_setting.gd" id="1_ipyj3"]
+[ext_resource type="Script" uid="uid://bicjny5dv1h3s" path="res://setting/wagon_config.gd" id="2_85qad"]
+[ext_resource type="Script" uid="uid://do5hjkm3r2pdg" path="res://core/entity_setting.gd" id="2_kg4t1"]
+[ext_resource type="Texture2D" uid="uid://c7opn7g5dyq4d" path="res://ui/icons/transport/coal-wagon.svg" id="2_sioub"]
+[ext_resource type="PackedScene" uid="uid://cvb468cxyo72o" path="res://data/trains/default_wagon.tscn" id="2_wjam3"]
+[ext_resource type="Script" uid="uid://mpakwrr6lum8" path="res://core/components/identity_setting.gd" id="3_3h2bg"]
+[ext_resource type="Script" uid="uid://b830vi2lx3hl5" path="res://core/components/trainvisual_setting.gd" id="3_4sxil"]
+[ext_resource type="PackedScene" uid="uid://cl6t7b6265rj" path="res://data/trains/default_bogie.tscn" id="3_85qad"]
+[ext_resource type="Resource" uid="uid://bqss7rh1mwv41" path="res://core/visual/visual_state.tres" id="4_5qo4f"]
+[ext_resource type="Script" uid="uid://bkdny7eq5jthn" path="res://core/components/capabilities/traindraggable_setting.gd" id="5_88nct"]
+[ext_resource type="Script" uid="uid://cuumo0qj7r7gb" path="res://core/components/capabilities/hoverable_setting.gd" id="6_85qad"]
+[ext_resource type="Script" uid="uid://deljgsmo4bpow" path="res://core/components/capabilities/selectable_setting.gd" id="7_3h2bg"]
+[ext_resource type="Script" uid="uid://chprgtlxn3aub" path="res://core/components/capabilities/blockable_setting.gd" id="8_ogjdm"]
+[ext_resource type="Script" uid="uid://bhvk4o3qrvslv" path="res://core/components/capabilities/chassis_setting.gd" id="9_nex2q"]
+[ext_resource type="Script" uid="uid://cpuhrycuvnuar" path="res://core/components/capabilities/kinematics_setting.gd" id="10_7lf7j"]
+[ext_resource type="Script" uid="uid://7vuxuiiysiji" path="res://setting/bogie_config.gd" id="13_ogjdm"]
+[ext_resource type="Script" uid="uid://b5kx0oyxhiaux" path="res://core/components/capabilities/bogie_setting.gd" id="15_3h2bg"]
+
+[sub_resource type="Resource" id="Resource_u60jt"]
+script = ExtResource("13_ogjdm")
+metadata/_custom_type_script = "uid://7vuxuiiysiji"
+
+[sub_resource type="Resource" id="Resource_6ly6f"]
+script = ExtResource("13_ogjdm")
+metadata/_custom_type_script = "uid://7vuxuiiysiji"
+
+[sub_resource type="Resource" id="Resource_pgcyc"]
+script = ExtResource("2_85qad")
+bogie_configs = Array[ExtResource("13_ogjdm")]([SubResource("Resource_u60jt"), SubResource("Resource_6ly6f")])
+metadata/_custom_type_script = "uid://bicjny5dv1h3s"
+
+[sub_resource type="Resource" id="Resource_lvfb0"]
+script = ExtResource("3_3h2bg")
+object_config = SubResource("Resource_pgcyc")
+metadata/_custom_type_script = "uid://mpakwrr6lum8"
+
+[sub_resource type="Resource" id="Resource_wjam3"]
+script = ExtResource("3_4sxil")
+metadata/_custom_type_script = "uid://b830vi2lx3hl5"
+
+[sub_resource type="Resource" id="Resource_s3hn0"]
+script = ExtResource("5_88nct")
+metadata/_custom_type_script = "uid://bkdny7eq5jthn"
+
+[sub_resource type="Resource" id="Resource_aqgj4"]
+script = ExtResource("6_85qad")
+metadata/_custom_type_script = "uid://cuumo0qj7r7gb"
+
+[sub_resource type="Resource" id="Resource_j3fkf"]
+script = ExtResource("7_3h2bg")
+metadata/_custom_type_script = "uid://deljgsmo4bpow"
+
+[sub_resource type="Resource" id="Resource_tip3w"]
+script = ExtResource("8_ogjdm")
+metadata/_custom_type_script = "uid://chprgtlxn3aub"
+
+[sub_resource type="Resource" id="Resource_mqnqg"]
+script = ExtResource("9_nex2q")
+metadata/_custom_type_script = "uid://bhvk4o3qrvslv"
+
+[sub_resource type="Resource" id="Resource_6hxcd"]
+script = ExtResource("10_7lf7j")
+metadata/_custom_type_script = "uid://cpuhrycuvnuar"
+
+[sub_resource type="Resource" id="Resource_1pi1k"]
+script = ExtResource("15_3h2bg")
+metadata/_custom_type_script = "uid://b5kx0oyxhiaux"
+
+[resource]
+script = ExtResource("2_kg4t1")
+id = 2010
+name = "wagon_01"
+description = "крытый 01"
+category = &"train"
+tag = &"boxcar"
+icon = ExtResource("2_sioub")
+components = Array[ExtResource("1_ipyj3")]([SubResource("Resource_lvfb0"), SubResource("Resource_wjam3"), SubResource("Resource_s3hn0"), SubResource("Resource_aqgj4"), SubResource("Resource_j3fkf"), SubResource("Resource_tip3w"), SubResource("Resource_mqnqg"), SubResource("Resource_6hxcd"), SubResource("Resource_1pi1k")])
+metadata/_custom_type_script = "uid://do5hjkm3r2pdg"

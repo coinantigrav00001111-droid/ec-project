@@ -76,7 +76,7 @@ func on_drag_ended(_data: Dictionary) -> void:
 		entity.send_event("on_train_snapped", {
 			"track": current_track,
 			"offset": current_curve_point,
-			"is_flipped": is_flipped_on_track # Передаем разворот
+			"is_wagon_flipped": is_flipped_on_track # Передаем разворот
 		})
 	else:
 		# Бросили мимо рельсов — включаем физику Godot (RigidBody)

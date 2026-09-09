@@ -70,14 +70,15 @@ func handle_input(event: InputEvent):
 				clicked_entity = null
 
 	if selected_entity and Input.is_action_just_pressed("ui_graph_delete"):
-		selected_entity.free()
+		selected_entity.kill_me() #entity сама почистит за собой
+		#selected_entity.free()
 		#INFO ДЕРГАЕМ ПАНЕЛЬ!
 		controller.info_panel.set_target(null)
 		
 	if selected_entity and Input.is_action_just_pressed("ui_page_up"):
-		selected_entity.send_event("on_train_kicked", {"power": 2.0}) # Пинок силой 2 м/с
+		selected_entity.send_event("on_train_kicked", {"power_kick": 2.0}) # Пинок силой 2 м/с
 	if selected_entity and Input.is_action_just_pressed("ui_page_down"):
-		selected_entity.send_event("on_train_kicked", {"power": -2.0}) # Пинок силой 2 м/с
+		selected_entity.send_event("on_train_kicked", {"power_kick": -2.0}) # Пинок силой 2 м/с
 
 
 

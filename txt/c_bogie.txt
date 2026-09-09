@@ -1,0 +1,194 @@
+class_name C_Bogie extends ICapability
+
+class BogieData:
+	var id: int
+	var config: BogieConfig 	# конфиг конкретного боги из identity
+	var pivot: Node3D              # Корневая нода тележки (из сцены)
+	var raycast: RayCast3D          # Датчик рельса под тележкой
+	var current_track: Entity
+	var track_distance: float = 0.0
+	var calculated_global_pos: Vector3
+	var is_front: bool = false
+	#var local_offset_z: float = 0.0
+
+var is_derailed: bool = false
+
+# Сами боги, их id, конфиги из TrainVisual перекидываются сюда
+var bogies_data: Array[BogieData] = []
+
+
+func on_added() -> void:
+	#Собираем массив данных боги
+	var identity = entity.get_comp(C_Identity)
+	var bogie_configs
+	if identity:
+		bogie_configs = identity.get_config('bogie_configs')	
+
+	# Принимаем контроль боги из визуала
+	var comp = entity.get_comp(C_TrainVisual)
+	var bogie_nodes = comp.bogie_nodes
+	
+	# Формируем массив данных боги 
+	for i in range(bogie_nodes.size()):
+		var bogie = bogie_nodes[i]
+		_create_bogies_data(i, bogie_configs[i], bogie)
+		
+
+
+func _create_bogies_data(_id: int, _config: BogieConfig, bogie:Node3D):
+	
+	var data = BogieData.new()
+	data.id = _id
+	data.config = _config
+	data.pivot = bogie
+	data.raycast = bogie.get_node('RayCast3D')
+	# TODO а если больше 2х боги?
+	data.is_front = bogie.position.z < 0.0
+	data.calculated_global_pos = bogie.position
+
+	bogies_data.append(data)
+
+
+# ==========================================
+# ПУБЛИЧНЫЙ ИНТЕРФЕЙС / API
+# ==========================================
+#"track","offset","is_flipped"
+# Вызывается из шасси при посадке вагона на рельс. Готовит данные боги дата к снапу вагона
+# Возвращает массив расчетных позиций боги Первая - фронт, последняя - реар
+func set_track_to_bogies_data(track_data: Dictionary) -> Array:
+	is_derailed = false
+	
+	var track = track_data.get("track")
+	var offset = track_data.get("offset", 0.0)
+	#var is_flipped = track_data.get("is_flipped", false)# При снапе без разницы флиппед
+	var bogies_pos = [] # массив расчетных позиций боги
+	
+	# 1️⃣ Считаем глобал пос тележки в снап позиции
+	for bogie in bogies_data:
+		
+		if not is_instance_valid(track) or not track.has_comp(C_Path):
+			#bogies_pos.append(Vector3.ZERO)
+			return bogies_pos
+			
+		bogie.current_track = track
+		var path_comp = track.get_comp(C_Path)
+		var curve_len = path_comp.curve.get_baked_length()
+		
+		# При снапе без разницы флиппед
+		# Формула: если вагон развернут, локальное смещение тележки инвертируется относительно сплайна
+		#var dir_sign = 1# -1.0 if is_flipped else 1.0
+		#printt(dir_sign)
+		#var initial_dist = offset - (bogie.pivot.position.z * dir_sign)
+		var initial_dist = offset - bogie.pivot.position.z
+		
+		bogie.track_distance = clampf(initial_dist, 0.0, curve_len)
+		
+		# Считаем глобал пос тележки в снап позиции
+		_assist_update_calc_global_pos(bogie)
+		bogies_pos.append(bogie.calculated_global_pos)
+		
+	# сортируем массив по X 
+	bogies_pos.sort_custom(func(a, b): return a.x < b.x)
+	return bogies_pos
+	
+
+
+## Главный шаг расчета позиций в physics_process
+# is_w_flipped - разворот вагона по отношению к траку не имеет значения - он будет двигаться по полярности питания. 
+# Направление расчитывается от флипа трака относительно направления питания контура
+func calculate_next_positions(delta: float, speed: float, is_w_flipped: bool)  -> Array:
+	var bogies_pos = [] # массив расчетных позиций боги
+	if is_derailed: return bogies_pos
+	
+	for bogie in bogies_data:
+		_assist_move_bogie(bogie, delta, speed)
+		_assist_check_transition(bogie)
+		_assist_update_calc_global_pos(bogie)
+		bogies_pos.append(bogie.calculated_global_pos)
+
+
+
+	# сортируем массив по X 
+	bogies_pos.sort_custom(func(a, b): return a.x < b.x)
+	return bogies_pos
+
+
+
+# ==========================================
+# ВСПОМОГАТЕЛЬНЫЕ АССИСТ-ФУНКЦИИ (HELPERS)
+# ==========================================
+
+## Математический шаг по сплайну с учетом is_flipped трака
+func _assist_move_bogie(bogie: BogieData, delta: float, speed: float) -> void:
+	if not is_instance_valid(bogie.current_track): return
+	# Формула: 
+	# 1️⃣ если вагон развернут, локальное смещение тележки НЕ инвертируется относительно сплайна
+	# 2️⃣ если трак  развернут, локальное смещение тележки инвертируется относительно сплайна
+	# Разворот трака держит C_PowerTrack
+	var power_track = bogie.current_track.get_comp(C_PowerTrack)
+	
+	# Учитываем инверсию  трака 
+	var  dir_sign = 1.0
+	if power_track:
+		dir_sign =-1.0 if power_track.is_flipped else 1.0
+		
+	bogie.track_distance += speed * delta * dir_sign 
+
+
+ 
+'''   ловим переход'''
+
+## Резервный переход через границы/сокеты (если рейкаст на мгновение потерял рельс)
+func _assist_check_transition(bogie: BogieData) -> void:
+	if not is_instance_valid(bogie.current_track): return
+	
+	var path_comp = bogie.current_track.get_comp(C_Path)
+	var curve_len = path_comp.curve.get_baked_length()
+	
+	if bogie.track_distance >= 0.0 and bogie.track_distance <= curve_len:
+		return # Тележка в пределах текущего сплайна
+	printt(bogie.track_distance)
+	var is_exiting_end = bogie.track_distance > curve_len
+	var socket_comp = bogie.current_track.get_comp(C_Socket)
+	var next_track = socket_comp.get_neighbor_at(is_exiting_end) if socket_comp else null
+	
+	if is_instance_valid(next_track) and next_track.has_comp(C_Path):
+		var overflow = bogie.track_distance - curve_len if is_exiting_end else bogie.track_distance
+		bogie.current_track = next_track
+		var next_path = next_track.get_comp(C_Path)
+		var next_len = next_path.curve.get_baked_length()
+		
+		bogie.track_distance = overflow if is_exiting_end else (next_len + overflow)
+	else:
+		# Рельс закончился, соседних траков нет — Дерейл
+		is_derailed = true
+
+
+
+## Обновление локальных трансформаций ноды тележки и вычисление глобальной позиции
+func _assist_update_calc_global_pos(bogie: BogieData) -> void:
+	if not is_instance_valid(bogie.current_track): return
+	
+	var path_comp = bogie.current_track.get_comp(C_Path)
+	var transform_baked = path_comp.curve.sample_baked_with_rotation(bogie.track_distance)
+	
+	bogie.calculated_global_pos = path_comp.path_node.to_global(transform_baked.origin)
+	var track_h = bogie.current_track.get_comp(C_Identity).get_config('height')
+	bogie.calculated_global_pos.y += track_h 
+
+	## Доворачиваем визуал пивота тележки по касательной (YAW)
+	#if is_instance_valid(bogie.pivot):
+		#var track_forward = -transform_baked.basis.z
+		#var local_forward = bogie.pivot.global_transform.basis.inverse() * track_forward
+		#bogie.pivot.rotation.y = atan2(-local_forward.x, -local_forward.z)
+	
+	
+	
+func _find_entity_from_collider(collider: Node) -> Entity:
+	var curr: Node = collider
+	while curr:
+		if curr is Entity: return curr as Entity
+		curr = curr.get_parent()
+	return null
+#
+#

@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="TrackConfig" format=3 uid="uid://liupwvfdgig5"]
+
+[ext_resource type="Script" uid="uid://b7ds2l6clrm61" path="res://setting/track_config.gd" id="1_x11jj"]
+
+[resource]
+script = ExtResource("1_x11jj")
+metadata/_custom_type_script = "uid://b7ds2l6clrm61"

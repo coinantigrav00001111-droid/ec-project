@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="WagonConfig" format=3 uid="uid://cb8ryawos6qo1"]
+
+[ext_resource type="Script" uid="uid://7vuxuiiysiji" path="res://setting/bogie_config.gd" id="1_fi1m4"]
+[ext_resource type="Script" uid="uid://bicjny5dv1h3s" path="res://setting/wagon_config.gd" id="1_ujrux"]
+
+[resource]
+script = ExtResource("1_ujrux")
+metadata/_custom_type_script = "uid://bicjny5dv1h3s"

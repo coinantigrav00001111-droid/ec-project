@@ -94,7 +94,7 @@ func _sync_with_visual_ballast():
 	# Расчет балласта. Если у балласта нет коллизий, то будем генерить.
 	var gs_ballast = Global.settings.track_ballast_segment
 	if ballast_node.get_child_count() == 0: 
-		var dynamic_count = _calculate_collision_count(radius, deg, 10)
+		var dynamic_count = _calculate_collision_count(radius, deg, gs_ballast.deg_per_segment)
 		_generate_collision_segments(ballast_node, dynamic_count,gs_ballast.size,  gs_ballast.offset_x, 0, gs_ballast.start_end_padding , gs_ballast.gap, true)
 	
 	
@@ -121,8 +121,9 @@ func _sync_with_visual_heads():
 	#Если коллизия есть, то она сделана в сцене специально для оптимизации (прямая состоит из одного сегмента например) или намеренно - оставляем.
 	# Расчет балласта. Если нет коллизий, то будем генерить.
 	
-	var dynamic_count = _calculate_collision_count(radius, deg, 10)
+	
 	var gs_head = Global.settings.track_head_segment
+	var dynamic_count = _calculate_collision_count(radius, deg, gs_head.deg_per_segment)
 	
 	if not headl_node or headl_node.get_child_count() == 0: 
 	
@@ -185,6 +186,7 @@ func generate_track_curve(_radius: float, _deg: float) -> Curve3D:
 	return new_curve
 	
 	
+
 ### Расчет оптимального количества сегментов коллизии
 func _calculate_collision_count(track_radius: float, track_deg: float, deg_per_segment: float) -> int:
 	# 1. Прямые траки (или нулевой радиус)
@@ -202,8 +204,75 @@ func _calculate_collision_count(track_radius: float, track_deg: float, deg_per_s
 	return int(max(2, count))
 		
 	
-### ====Моя рабочая====Универсальная генерация сегментов коллизий
+## ====Вроде рабочая====
+## Универсальная генерация сегментов коллизий
 func _generate_collision_segments(
+	target_node: Node3D, # родительская нода
+	count: int, # количество сегментов
+	cross_size: Vector2, # размеры без Z
+	x_offset: float = 0.0, # смещение влево
+	y_offset: float = 0.0, # смещение вверх
+	start_end_padding: float = 0.0, # смещение первого последнего сегмента
+	gap: float = 0.0, # зазор
+	align_ends: bool = true # Выравнивание торцов
+) -> void:
+
+	# 1. Вычисление размеров сегмента
+	var l_arc = (radius - x_offset) * deg_to_rad(deg)
+	var _segment_size_z = (l_arc - gap * (count - 1) + start_end_padding * 2.0) / count
+	var _segment_size = Vector3(cross_size.x, cross_size.y, _segment_size_z)
+
+	# 2. Оптимизация памяти: один общий ресурс формы на все сегменты
+	var shared_shape = BoxShape3D.new()
+	shared_shape.size = _segment_size
+
+	# 3. Предрасчет неизменяемых значений
+	var padding_angle = rad_to_deg(asin(start_end_padding / radius)) if radius != 0.0 else 0.0
+	var offset_z_delta = _segment_size_z * 0.5 - start_end_padding
+	var return_offset = Vector3(-radius, -cross_size.y * 0.5, 0.0)
+	var base_x = -radius + x_offset
+
+	# 💡 Генерация сегментов
+	for i in range(count):
+		var _d: float
+		var s_z: float = 0.0
+		var _last_segment: int = -1
+
+		# Расчет угла и торцевых смещений
+		if i == 0: # Первая коллизия
+			if align_ends:
+				_d = 0.0
+				s_z = -offset_z_delta
+			else:
+				_d = deg * 0.5 / float(count) - padding_angle
+
+		elif i == count - 1: # Последняя коллизия
+			_last_segment = 1
+			if align_ends:
+				_d = deg
+				s_z = offset_z_delta
+			else:
+				_d = deg * (i + 0.5) / float(count) + padding_angle
+
+		else: # Промежуточные сегменты
+			_d = deg * (i + 0.5) / float(count)
+
+		# Инстанцирование и трансформация
+		var new_segment = CollisionShape3D.new()
+		new_segment.shape = shared_shape
+		target_node.add_child(new_segment)
+
+		var _segment_tr = Transform3D(Basis.IDENTITY, Vector3(base_x, y_offset, s_z))
+		_segment_tr = _segment_tr.rotated(Vector3.UP, deg_to_rad(-_d))
+		_segment_tr.origin -= return_offset
+		
+		new_segment.transform = _segment_tr
+
+
+
+### ====Моя рабочая, но что выше тоже норм вроде ====
+## Универсальная генерация сегментов коллизий
+func _generate_collision_segments0(
 	target_node: Node3D, # родительская нода
 	count: int, # количество сегментов
 	cross_size: Vector2, # размеры без Z

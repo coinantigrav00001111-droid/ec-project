@@ -7,9 +7,12 @@ class_name PathSetting extends ComponentSettings
 ## Фабрика запускает функцию создания
 func create_component(entity) -> Component:
 	var comp = C_Path.new()
-	
-	comp.radius = radius	
-	comp.deg = deg
+	var identity = entity.get_comp(C_Identity)
+
+	if identity:
+		comp.radius = identity.get_config('radius', radius)	
+		comp.deg = identity.get_config('deg', deg)	
+
 	comp.name = 'C_Path'
 	entity.add_component(comp) # Добавили комп к объекту
 	

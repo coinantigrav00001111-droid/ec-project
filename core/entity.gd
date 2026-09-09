@@ -67,6 +67,12 @@ func add_component(comp: Component):
 	component_added.emit(type)
 
 
+func kill_me():
+	var power_clip = get_comp(C_PowerClip)
+	if power_clip:
+		PGM.unregister_clip(power_clip)
+	self.free()
+
 
 func remove_component(type: Script): 
 	var comp = get_comp(type) 

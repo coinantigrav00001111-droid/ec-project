@@ -11,16 +11,14 @@ class_name EntitySetting extends Resource
 @export var id :int = 0 # сортировка в панели кнопок
 @export var name :String = ''
 @export var description :String = 'Прямой трак 1,5см'
-#@export var radius :float = 10.0
-#@export var deg :float = 30.0
 
 @export var category :StringName = &'track'
 @export var tag :StringName = &'straight'
 
-
 @export var icon :Texture2D
 
 @export var hide : bool = false # скрыть кнопку в UI 
+
 
 ## Массив сеттингов компонентов объекта
 @export var components :Array[ComponentSettings] = []
