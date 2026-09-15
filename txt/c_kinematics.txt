@@ -23,11 +23,8 @@ var is_dragging: bool = false
 
 
 func on_added():
-	#rb = entity.get_node_or_null("WagonRigidBody3D")
 	rb = get_comp(C_TrainVisual).instance
-	
-	
-	pass
+
 
 # Реакция на появление компонентов в ентити
 func on_component_added(_type: Script):
@@ -69,7 +66,9 @@ func on_is_dragging(_data: Dictionary) -> void:
 			else:
 				rb.linear_damp = 2.0
 				rb.angular_damp = 4.0
-	
+
+
+
 # Слушаем событие пинка
 func on_train_kicked(data: Dictionary) -> void:
 	var chassis = get_comp(C_Chassis)
@@ -89,9 +88,6 @@ func on_train_kicked(data: Dictionary) -> void:
 	rb.linear_velocity += forward_vec * (power * 10.0)
 	
 	on_is_dragging({'on': false, 'freeze': false})
-	
-	
-
 
 
 
@@ -182,10 +178,11 @@ func on_derailed(_data: Dictionary) -> void:
 
 func _check_derailment() -> void:
 	var chassis = get_comp(C_Chassis)
-	if not chassis or not chassis.is_on_rails or not is_instance_valid(chassis.current_track):
+	# FIXME здесь snapped_track меняется только при снапе!!! Нужно из боги брать актуал.
+	if not chassis or not chassis.is_on_rails or not is_instance_valid(chassis.snapped_track):
 		return
-		
-	var path_comp = chassis.current_track.get_comp(C_Path)
+
+	var path_comp = chassis.snapped_track.get_comp(C_Path)
 	if not path_comp: return
 	
 	# Если радиус 0 (прямая), сход от центробежной силы невозможен

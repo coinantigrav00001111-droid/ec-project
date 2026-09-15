@@ -43,7 +43,7 @@ func on_added():
 		
 		var b_scene = bogie.scene.instantiate() # Создаем сцену
 		
-		b_scene.position.y = bogie.wheel_radius # боги  от пола вверх до центра колеса
+		b_scene.position.y = bogie.wheel_pair_position.y # боги  от пола вверх до центра колеса
 		b_scene.position.z = bogie.offset.z 
 		
 		# Перестраиваем коллизию вагона с учетом габаритов с боги и колесами.
@@ -67,7 +67,6 @@ func on_added():
 		
 		# поднимаем кузов 
 		for mesh in mesh_nodes:
-			#mesh.position.y = b_scene.position.y + bogie.offset.y
 			mesh.position.y = offset_mesh_y # из вагон-конфига
 			var wagon_collision = instance.get_node('WagonCollisionShape3D')
 			wagon_collision.position.y = mesh.position.y + wagon_collision.shape.size.y / 2

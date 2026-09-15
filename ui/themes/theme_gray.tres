@@ -37,6 +37,9 @@ border_width_right = 1
 border_width_bottom = 1
 border_color = Color(0.37492278, 0.36790296, 0.3749237, 1)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_y13in"]
+bg_color = Color(0.1882353, 0.3019608, 0.44705883, 1)
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mlmls"]
 bg_color = Color(0.101961, 0.101961, 0.101961, 0.6)
 
@@ -99,6 +102,8 @@ ObjectButton/constants/icon_max_width = 69
 Panel/font_sizes/fs = 5
 Panel/styles/panel = SubResource("StyleBoxFlat_m3eqx")
 PanelContainer/styles/panel = SubResource("StyleBoxFlat_lcayw")
+PanelContainerHeader/base_type = &"PanelContainer"
+PanelContainerHeader/styles/panel = SubResource("StyleBoxFlat_y13in")
 PopupMenu/styles/hover = SubResource("StyleBoxFlat_mlmls")
 PopupMenu/styles/panel = SubResource("StyleBoxFlat_du811")
 TabContainer/constants/icon_max_width = 26

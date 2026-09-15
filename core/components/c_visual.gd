@@ -12,8 +12,11 @@ var visual_settings: VisualStateSettings
 
 var mesh_nodes: Array[MeshInstance3D] 
 
-# Массив статикбоди сцены и их collision layers
+# Массив area сцены и их collision layers
 var area_nodes: Dictionary [CollisionObject3D, int] 
+
+# Массив статик нод
+var static_node: StaticBody3D
 
 #--- POWER Layer ---
 var is_power_view_active: bool = false
@@ -47,9 +50,22 @@ func on_added():
 	# Осталось пока
 	_collect_meshes()
 	_collect_collision_nodes()
+	_get_static_node()
 	
 	## XX баги с обновлением клипа
 	#PGM.grid_recalculated.connect(update_visual)
+
+
+
+## Статик нода в static_node
+func _find_staticbodie(node) -> StaticBody3D: 
+	if node is StaticBody3D :	return node
+	
+	for child in node.get_children():
+		var found = _find_staticbodie(child)
+		if found:
+			return found
+	return null
 
 
 func on_component_added(_type: Script):
@@ -131,22 +147,26 @@ func _find_meshes(node):
 
 
 
-## -----Сбор нод с коллизиями (Area3D и StaticBody3D)-------
-
+## -----Сбор нод (Area3D)-------
 func _collect_collision_nodes():
 	area_nodes = {}
 	_find_collisions(instance)
 
 
-## Заполняем словарь {статик, его лэйер}
+## Заполняем словарь {area, его лэйер}
 func _find_collisions(node): 
-	if node is CollisionObject3D: 
+	if node is Area3D: 
 		area_nodes[node] = node.collision_layer 
 
 	for child in node.get_children(): 
 		_find_collisions(child)
 
 
+## -----Сбор нод (StaticBody3D)-------
+func _get_static_node():
+	static_node = _find_staticbodie(instance)
+	
+	
 ## ---- SET по СТЕЙТАМ ----
 
 func _set_ghost():

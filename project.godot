@@ -17,6 +17,10 @@ run/main_scene="uid://csy3eqxdwo2lo"
 config/features=PackedStringArray("4.8", "Forward Plus")
 config/icon="res://icon.svg"
 
+[audio]
+
+driver/driver="Dummy"
+
 [autoload]
 
 Global="*uid://cuyqabojk5lbh"

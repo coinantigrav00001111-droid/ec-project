@@ -8,30 +8,39 @@ class_name C_Engine extends ICapability
 # Коэффициент конвертации напряжения (V) в скорость/тягу
 var speed_multiplier: float = 10.5 
 
+# Что в моменте на моторе
+var power = {
+	'contour_id': 0 ,
+	'voltage': 0.0 ,
+	}
 
 
 func _physics_process(_delta: float) -> void:
-	var chassis = entity.get_comp(C_Chassis)
 	
 	# 1. Проверяем наличие шасси, контакт с рельсами и валидность трака
-	if not chassis or not chassis.is_on_rails or not is_instance_valid(chassis.current_track):
+	# FIXME шасси должно иметь актуальный трак . Сейчас там только при снапе прописывается
+	var chassis = entity.get_comp(C_Chassis)
+	if not chassis or not chassis.is_on_rails:# or not is_instance_valid(chassis.cu!!rrent_track):
 		entity.send_event('on_speed_changed', {'speed': 0.0})
 		return
 
-	# 2. Получаем электрический компонент трака, на котором стоим
-	var power_track = chassis.current_track.get_comp(C_PowerTrack) as C_PowerTrack
-	if not power_track:
-		# Трак не электрифицирован
-		entity.send_event('on_speed_changed', {'speed': 0.0})
-		return
-
-	# 3. Читаем напряжение контура и передаем импульс
-	var contour = power_track.contour_id
-	var voltage = PGM.get_power(contour)
+	# 2. Из боги (контакт колес) получаем электрический компонент трака, на котором стоим
+	var bogie_comp = entity.get_comp(C_Bogie) as C_Bogie
+	var power_track : C_PowerTrack
 	
-	if voltage != 0.0:
-		# Вагон движется пропорционально поданному напряжению
-		var target_speed = voltage * speed_multiplier
+	# Все боги по списку
+	for bogie in bogie_comp.bogies_data:
+		power_track = bogie.current_track.get_comp(C_PowerTrack)
+		if not power_track or power_track.contour_id == 0: # Если нет подключения, то 0
+			power.contour_id = 0
+			power.voltage = 0.0
+			
+		else : # Если контур не 0, то он питает мотор
+			power.contour_id =  power_track.contour_id
+			power.voltage =  PGM.get_power(power_track.contour_id)
+
+		power.track =  bogie.current_track.name
+
+		# 3. Вагон движется пропорционально поданному напряжению
+		var target_speed = power.voltage * speed_multiplier
 		entity.send_event('on_speed_changed', {'speed': target_speed})
-	else:
-		entity.send_event('on_speed_changed', {'speed': 0.0})

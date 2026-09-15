@@ -3,21 +3,17 @@ class_name C_Chassis extends ICapability
 # Тело вагона
 var rb: RigidBody3D 
 
-var current_track: Entity
+var snapped_track: Entity #FIXME Этот трак детектится при СНАПЕ вагона. Нужен актуальный из боги
 var current_spline_offset: float = 0.0
 var current_speed: float = 0.0
 var current_velocity_3d: Vector3 = Vector3.ZERO #скорость вагона в пространстве(из кинематикс) 
 var is_on_rails: bool = false
-# вагон развернут по траку или или нет
-var is_w_flipped: bool = false 
+var is_w_flipped: bool = false # вагон развернут по траку или или нет
 # трак под вагоном развернут или нет относительно контура питания( powerclip )
 #var is_t_flipped: bool = false 
 
-
 # Значения из инспектора
 var bogie_configs: Array[BogieConfig] = []
-# вертикальное смещение боги от кузова
-var down_bogie_offset: float = -0.36
 
 
 func on_added():
@@ -30,9 +26,23 @@ func on_added():
 #"track","offset","is_flipped"
 # Ловит евент от C_TrainDraggable при успешном дропе на рельс
 func on_train_snapped(track_data: Dictionary) -> void:
-	current_track = track_data.get("track")
+	snapped_track = track_data.get("track")
 	current_spline_offset = track_data.get("offset", 0.0)
-	is_w_flipped = track_data.get("is_wagon_flipped", false)
+	
+	# === ВЫЧИСЛЯЕМ is_w_flipped НА МЕСТЕ ===
+	var path_comp = snapped_track.get_comp(C_Path)
+	if path_comp and path_comp.curve:
+		# Получаем вектор касательной сплайна в точке посадки
+		var curve_transform = path_comp.curve.sample_baked_with_rotation(current_spline_offset)
+		var track_forward = (path_comp.path_node.global_basis * -curve_transform.basis.z).normalized()
+		
+		# Берем текущий вектор морды вагона (который нам выставил драг-тул)
+		var wagon_forward = -entity.global_basis.z
+		
+		# Если вектора смотрят навстречу друг другу — вагон перевернут
+		is_w_flipped = wagon_forward.dot(track_forward) < 0
+	else:
+		is_w_flipped = false
 
 	is_on_rails = true
 	
@@ -41,18 +51,17 @@ func on_train_snapped(track_data: Dictionary) -> void:
 		return
 		
 	#  Синхронизируем тележки с точкой снапа. Вернется массив с правильными позициями боги
-	var b_calc_pos = bogie_comp.set_track_to_bogies_data(track_data)
+	var b_calc_pos = bogie_comp.set_track_to_bogies_data(track_data, is_w_flipped)
 	
 	# Обновляем позицию вагона по рассчитанным позициям боги
 	if b_calc_pos.is_empty(): 
 		return
 		
-	var front_calc_pos = b_calc_pos.front()
-	var rear_calc_pos = b_calc_pos.back()
+	var front_calc_pos = b_calc_pos.front
+	var rear_calc_pos = b_calc_pos.rear
 
 	if front_calc_pos != Vector3.ZERO and rear_calc_pos != Vector3.ZERO:
 		entity.global_position = (front_calc_pos + rear_calc_pos) / 2.0
-
 
 	if rb:
 		_assist_rb_to_entity()
@@ -67,12 +76,13 @@ func on_drag_started(_data: Dictionary) -> void:
 	current_speed = 0.0
 
 
+
 ## Слушаем событие пинка
 func on_train_kicked(data: Dictionary) -> void:
 	if not is_on_rails: return
 	var power_kick = data.get("power_kick", 0.0)
-	#current_speed += -power_kick if is_t_flipped else power_kick
 	current_speed +=  power_kick # толкаем все время в попу
+
 
 
 # Тут нет срабатывания на сход. Что оно дает вообще??
@@ -80,7 +90,6 @@ func on_train_kicked(data: Dictionary) -> void:
 ## Если вагон — от C_Coupler (тяга соседнего вагона).
 func on_speed_changed(data: Dictionary) -> void:
 	current_speed = data.get("speed", 0.0)
-	##_check_derailment()
 
 
 
@@ -90,7 +99,7 @@ func on_derailed(_data: Dictionary) -> void:
 	printt ('derailed')
 	if not is_on_rails: return
 	is_on_rails = false
-	current_track = null
+	snapped_track = null
 	
 	# Отвязываемся от сплайна
 	if rb:
@@ -100,52 +109,53 @@ func on_derailed(_data: Dictionary) -> void:
 # ==========================================
 # ФИЗИЧЕСКИЙ ЦИКЛ
 # ==========================================
-
 func _physics_process(delta: float) -> void:
 	if not is_on_rails: return
-	
+
 	var bogie_comp = entity.get_comp(C_Bogie)
 	if not bogie_comp: return
-	
+
 	# 1. Заставляем тележки пересчитать позиции
-	# Разворот вагона не имеет значения
-	var b_calc_pos = bogie_comp.calculate_next_positions(delta, current_speed, is_w_flipped)
-	
-	# Обновляем позицию вагона по рассчитанным позициям боги
-	if b_calc_pos.is_empty(): 
-		return
-		
-	var front_calc_pos = b_calc_pos.front()
-	var rear_calc_pos = b_calc_pos.back()
-	
+	var b_calc_pos = bogie_comp.calculate_next_positions(delta, current_speed)#, is_w_flipped)
+	var front_calc_pos = b_calc_pos["front"]
+	var rear_calc_pos = b_calc_pos["rear"]
+
 	# 2. Проверяем состояние схода
 	if bogie_comp.is_derailed:
 		_assist_trigger_derail()
 		return
-		
-
-	if _assist_is_invalid_positions(front_calc_pos, rear_calc_pos):
+	
+	if front_calc_pos == Vector3.ZERO or rear_calc_pos == Vector3.ZERO:
 		_assist_trigger_derail()
 		return
-		
-	# 3. Позиционируем вагон как хорду
-	entity.global_position = (front_calc_pos + rear_calc_pos) / 2.0
-	_assist_rb_to_entity()
 	
+	# 3. Позиционируем вагон как хорду (по центру между тележками)
+	entity.global_position = (front_calc_pos + rear_calc_pos) / 2.0
+	
+	# 4. ПОВОРОТ КУЗОВА: вычисляем направляющий вектор от задней к передней
+	var forward_dir = (front_calc_pos - rear_calc_pos).normalized()
+	
+	# Защита от схлопывания точек (если дистанция вдруг стала нулевой)
+	if forward_dir.length_squared() > 0.001:
+		# Выравниваем локальный -Z (морду) по вектору движения
+		entity.global_basis = Basis.looking_at(forward_dir, Vector3.UP)
+	
+	# 5. Подтягиваем ригид к ентити
+	_assist_rb_to_entity()
+
+
+
+
 # ==========================================
 # ВСПОМОГАТЕЛЬНЫЕ АССИСТ-ФУНКЦИИ (HELPERS)
 # ==========================================
-
-func _assist_is_invalid_positions(front: Vector3, rear: Vector3) -> bool:
-	return front == Vector3.ZERO or rear == Vector3.ZERO
-
-
 
 func _assist_trigger_derail() -> void:
 	is_on_rails = false
 	if rb:
 		rb.freeze = false
 	entity.send_event("on_derailed", {})
+
 
 
 # ФИЗИЧЕСКИЙ ДРАГ: RigidBody догоняет Entity (курсор)

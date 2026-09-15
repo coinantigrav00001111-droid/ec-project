@@ -32,6 +32,13 @@ func get_category() -> StringName:
 	if setting and 'category' in setting:
 		cat = setting.category 
 	return cat
+	
+	
+func get_tag() -> StringName:
+	var tag : StringName
+	if setting and 'tag' in setting:
+		tag = setting.tag 
+	return tag
 
 
 # Возвращает одно значение из object_config или default, если его нет

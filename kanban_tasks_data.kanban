@@ -79,20 +79,13 @@
 			"tasks": [
 				"c9518725-a1fc-4454-884a-26f5c9febb9b",
 				"bf78136f-cb36-4783-a60d-3d56ebfbec0b",
-				"3139c855-55d8-4fc5-b2f2-cf19b5b670cc",
-				"eab392e7-a7e9-4a81-a3bb-cf49d7f728c7",
-				"2e6ccca3-2ab5-40a7-ae3c-a91b349b6943",
-				"a106c6fc-b018-463a-8cd1-a415dfeb61e2",
+				"f990589c-60e3-4a5c-b4fe-9989d7b0c730",
 				"c250b768-076e-4194-aa2e-a084846f870d",
 				"651c4325-7c2f-4da1-9605-af60bfe22b94",
 				"2e299622-0552-4f50-a2f0-73b4888598c7",
-				"532c6725-a4c2-4335-ab23-47da95cdb7a2",
-				"f990589c-60e3-4a5c-b4fe-9989d7b0c730",
 				"0d9905d4-dcb8-4425-903b-78e44e8b8068",
 				"2a6692f9-6c4f-4817-adf3-67274baa2dcc",
-				"bc1adf0b-b309-42c8-9ba0-fcbd42bf681a",
-				"51451ccb-6fa1-4eee-bf57-44c3fcce0773",
-				"c3fc15eb-8584-4ce0-bed5-e4503534aaec"
+				"51451ccb-6fa1-4eee-bf57-44c3fcce0773"
 			]
 		},
 		{
@@ -462,31 +455,10 @@
 			"steps": []
 		},
 		{
-			"uuid": "3139c855-55d8-4fc5-b2f2-cf19b5b670cc",
-			"title": "ballast_node: Area3D или static ???",
-			"description": "",
-			"category": "50f9c949-da71-4afd-beb9-f08415f2f066",
-			"steps": []
-		},
-		{
-			"uuid": "532c6725-a4c2-4335-ab23-47da95cdb7a2",
-			"title": "движение по сплайну по кругу",
-			"description": "",
-			"category": "8d041509-442f-4442-9d1d-a60528722dfe",
-			"steps": []
-		},
-		{
 			"uuid": "f990589c-60e3-4a5c-b4fe-9989d7b0c730",
-			"title": "Настройка физики вагона",
+			"title": "физика вагона. Сход по инерции.",
 			"description": "",
-			"category": "8d041509-442f-4442-9d1d-a60528722dfe",
-			"steps": []
-		},
-		{
-			"uuid": "eab392e7-a7e9-4a81-a3bb-cf49d7f728c7",
-			"title": "универсальное определение высоты трака для устновки вагона",
-			"description": "",
-			"category": "50f9c949-da71-4afd-beb9-f08415f2f066",
+			"category": "bfe07748-730a-4469-a662-08c8f873a722",
 			"steps": []
 		},
 		{
@@ -511,31 +483,10 @@
 			"steps": []
 		},
 		{
-			"uuid": "bc1adf0b-b309-42c8-9ba0-fcbd42bf681a",
-			"title": "инфопанель вагона и трака имеют разные данные!",
-			"description": "",
-			"category": "4e1e522f-ed31-43ef-82dc-7958b5551b97",
-			"steps": []
-		},
-		{
 			"uuid": "51451ccb-6fa1-4eee-bf57-44c3fcce0773",
 			"title": "если кнопка спавна вагона расположена над траком, то срабатывает сразу снап к нему и вылет",
 			"description": "",
 			"category": "31a5ac59-e2b4-4e46-a327-067210b7ca4b",
-			"steps": []
-		},
-		{
-			"uuid": "2e6ccca3-2ab5-40a7-ae3c-a91b349b6943",
-			"title": "актуал",
-			"description": "\t\tВставить идентити в объекты\n\t\tвставить конфиги в идентити\n\t\tперенаправить из конфигов данные в компоненты",
-			"category": "bfe07748-730a-4469-a662-08c8f873a722",
-			"steps": []
-		},
-		{
-			"uuid": "a106c6fc-b018-463a-8cd1-a415dfeb61e2",
-			"title": "определить трак ареа(нет физики) или статик(нет сигналов от ареа)",
-			"description": "",
-			"category": "bfe07748-730a-4469-a662-08c8f873a722",
 			"steps": []
 		},
 		{

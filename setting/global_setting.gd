@@ -8,14 +8,15 @@ class_name GlobalSetting extends Resource
 
 ######### TRACK ##############
 @export_group("Tracks")
-# TODO хеды уже как таковые не используем. Можно убрать, только в с-path подставить все из балласта и get_track_height()  пересчитать по другому
 @export var track_head_segment  = {
 	'align_ends' : false, # Выравнивание торцов
 	'deg_per_segment' : 10.0, # сколько градусов закрывает один сегмент
 	'gap' : 0.0, # зазор между сегментами.
-	"size" : Vector2(1.85, 0.25), # 1.65 + 0,1 +0,1
-	'start_end_padding' : -0.1,	 #  минус - внутрь трака, плюс =0 
-	'offset_x' : 0.0, #0.875-смещение влево относительно центра 0.1 -по z
+	"size" : Vector2(0.2, 0.25), # (1.65 + 0,1 +0,1) = 1.85 или 0.2, если 2шт
+	'start_end_padding' : -0.2,	 #  минус - внутрь трака, плюс =0 
+	'offset_x' : 0.875, # 0, или 0.875-смещение влево относительно центра 0.1 -по z, если 2шт
+	'static_generation_ballast' : true, # Метод генерации статикбоди трака
+	'static_generation_heads' : 2,
 	}
 
 @export var track_ballast_segment = {

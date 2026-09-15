@@ -17,7 +17,7 @@ func _ready():
 # Для TransformTab (если нужны живые координаты)
 # Только ЭТУ вкладку имеет смысл обновлять в _process, и только если она открыта!
 func _process(_delta):
-	if visible and current_target and tab_container.current_tab == 2: 
+	if visible and current_target and tab_container.current_tab == 2:# 2 - Положение  
 		# Допустим, TransformTab = 2
 		var _pos = current_target.global_position
 		var _rot = current_target.rotation_degrees
@@ -34,6 +34,9 @@ func _process(_delta):
 				%SpeedmpsLabel.text = "(%.2f)" % [current_target.get_comp(C_Kinematics).rb.linear_velocity.z]
 	if visible and current_target and tab_container.current_tab == 4: 
 		_update_debug_tab()
+	
+	if visible and current_target and tab_container.current_tab == 1: # 1 - Питание
+		_update_power_tab()
 	
 
 
@@ -67,35 +70,38 @@ func set_target(entity: Entity):
 func _populate_data():
 	# Вкладка Main
 	_populate_main_tab()
-	
-	# Вкладка Power (Скрываем, если нет компонента)
-	#var _power_tab = tab_container.get_node("PowerTab")
-	#_power_tab.visible = current_target.has_comp(C_Power) # Условный компонент
-	
-	# Обновляем вкладку отладки
-	_update_debug_tab()
-	# Обновляем вкладку power
+	# Вкладка Power
 	_update_power_tab()
+	# Вкладка Debug
+	_update_debug_tab()
+
 
 
 func _populate_main_tab():
 	var identity = current_target.get_comp(C_Identity)
-	var path = current_target.get_comp(C_Path)
-	
 	if identity:
-		%HeaderLabel.text = identity.get_name_e() + ' node :' + current_target.name
+		%CategoryLabel.text = identity.get_category()
+		%TagLabel.text =  identity.get_tag()
+		%HeaderLLabel.text = '  ' + identity.get_name_e() 
+		%HeaderRLabel.text ='node : ' + current_target.name 
 		%DescriptionLabel.text = identity.get_description()
 		%IconRect.texture = identity.get_icon()
 		
-		#TODO Возможно стоит сделать видимость контейнеров под конкретную категорию отдельной универсальной функцией. Когда не только траки появятся
-		if identity.get_category() == &'track':
-			%TrackContainer.show()
-			%RadiusLabel.text = str(path.radius) + ' u/sm'
-			%DegLabel.text = str(path.deg) + '°'
-			%LengthLabel.text = str(path.get_length()) + ' u/sm'
-		else:
-			%TrackContainer.hide()
-
+		match  identity.get_category():
+			&'track':
+				var _path = current_target.get_comp(C_Path)
+				%TrackContainer.show()
+				%TrainContainer.hide()
+				%RadiusLabel.text = str(_path.radius) + ' u/sm'
+				%DegLabel.text = str(_path.deg) + '°'
+				%LengthLabel.text = str(_path.get_length()) + ' u/sm'
+			&'train':
+				%TrackContainer.hide()
+				%TrainContainer.show()
+				identity.get_config('mass', 0.0)
+				%MassLabel.text = str(identity.get_config('mass', 0.0))
+				%PowerLabel.text = str(identity.get_config('power', 0.0))
+				%MaxSpeedLabel.text = str(identity.get_config('maxspeed', 700.0))
 	else:
 		# Если это какой-то системный объект без паспорта
 		%HeaderLabel.text = "Системный объект"
@@ -103,63 +109,88 @@ func _populate_main_tab():
 
 
 #---POWER TAB ---
-
-# Обновление ВСЕЙ вкладки 
 func _update_power_tab():
 	#await get_tree().physics_frame
 	if not current_target: return
-	
-	
-	var _power_comp = current_target.get_comp(C_PowerTrack) as C_PowerTrack
-	var _power_clip = current_target.get_comp(C_PowerClip)
-	var _socket_comp = current_target.get_comp(C_Socket)
+	var identity = current_target.get_comp(C_Identity)
+	var _category = identity.get_category()
 	
 	# Power Track
-	if _power_comp: # Если Power трак
-		%PowerClipButton.disabled = false
-		%PowerClipButton.button_pressed = false
-		%ClipContourIDButton.disabled = true  # запрещаем менять контур
-		# Трак
-		%TrackContourLabel.text = str(_power_comp.contour_id)
-		%TrackVoltageLabel.text = str(PGM.get_power(_power_comp.contour_id))
-		%FlippedLabel.text = str(_power_comp.is_flipped)
+	match _category:
+		&'track':
+			%PowerTrackTab.show()
+			%PowerTrainTab.hide()
 		
-	else: # Если трака нет, то в дефолт все
-		%PowerClipButton.disabled = true
-		%PowerClipButton.button_pressed = false
-		%ClipContourIDButton.disabled = true  # запрещаем менять контур
-		%TrackContourLabel.text = str(0)
-		%TrackVoltageLabel.text = str(0)
-		%FlippedLabel.text = str(0) 
-		return
-	
-	# Power Clip
-	if _power_clip: # Если клип есть, то он определяет
-		%PowerClipButton.disabled = false
-		%PowerClipButton.button_pressed = true
-		%ClipContourIDButton.disabled = false # разрешаем менять контур
-		_power_comp = _power_clip # Переключаемся на клип
-		
-	if _power_comp.contour_id != 0 and !_power_clip:
-			%PowerClipButton.button_pressed = false
-			%PowerClipButton.disabled = true
-			%ClipContourIDButton.disabled = true # не менять контур
-			
-	# 💡-option_button- Делаем селектор контура-
-	_fill_clip_contour_button(_power_comp.contour_id)
+			var _power_comp = current_target.get_comp(C_PowerTrack) as C_PowerTrack
+			var _power_clip = current_target.get_comp(C_PowerClip)
+			var _socket_comp = current_target.get_comp(C_Socket)
+			var _path = current_target.get_comp(C_Path)
 
-	# Соседи
-	if _socket_comp: 
-		var neighbors = _socket_comp.get_connected_entities()
-		_on_neighbor_updated(neighbors)
-	
-	# Цвета 
-	if  PGM.get_power(_power_comp.contour_id) > 0:
-		%TrackVoltageLabel.modulate = Color(0.0, 0.824, 0.0, 1.0)
-	elif PGM.get_power(_power_comp.contour_id) < 0:
-		%TrackVoltageLabel.modulate = Color(1.0, 0.302, 0.043, 1.0)
-	else:
-		%TrackVoltageLabel.modulate = Color(1.0, 1.0, 1.0, 1.0)
+			%RadiusLabel.text = str(_path.radius) + ' u/sm'
+			%DegLabel.text = str(_path.deg) + '°'
+			%LengthLabel.text = str(_path.get_length()) + ' u/sm'
+			if _power_comp: # Если Power трак
+				%PowerClipButton.disabled = false
+				%PowerClipButton.button_pressed = false
+				%ClipContourIDButton.disabled = true  # запрещаем менять контур
+				# Трак
+				%TrackContourLabel.text = str(_power_comp.contour_id)
+				%TrackVoltageLabel.text = str(PGM.get_power(_power_comp.contour_id))
+				%FlippedLabel.text = str(_power_comp.is_flipped)
+
+		
+			else: # Если трака нет, то в дефолт все
+				%PowerClipButton.disabled = true
+				%PowerClipButton.button_pressed = false
+				%ClipContourIDButton.disabled = true  # запрещаем менять контур
+				%TrackContourLabel.text = str(0)
+				%TrackVoltageLabel.text = str(0)
+				%FlippedLabel.text = str(0) 
+				return
+			
+			# Power Clip
+			if _power_clip: # Если клип есть, то он определяет
+				%PowerClipButton.disabled = false
+				%PowerClipButton.button_pressed = true
+				%ClipContourIDButton.disabled = false # разрешаем менять контур
+				_power_comp = _power_clip # Переключаемся на клип
+				
+			if _power_comp.contour_id != 0 and !_power_clip:
+					%PowerClipButton.button_pressed = false
+					%PowerClipButton.disabled = true
+					%ClipContourIDButton.disabled = true # не менять контур
+					
+			# 💡-option_button- Делаем селектор контура-
+			_fill_clip_contour_button(_power_comp.contour_id)
+
+			# Цвета 
+			if  PGM.get_power(_power_comp.contour_id) > 0:
+				%TrackVoltageLabel.modulate = Color(0.0, 0.824, 0.0, 1.0)
+			elif PGM.get_power(_power_comp.contour_id) < 0:
+				%TrackVoltageLabel.modulate = Color(1.0, 0.302, 0.043, 1.0)
+			else:
+				%TrackVoltageLabel.modulate = Color(1.0, 1.0, 1.0, 1.0)
+				
+		&'train':
+			%PowerTrackTab.hide()
+			%PowerTrainTab.show()
+			
+			var _engine_comp = current_target.get_comp(C_Engine) as C_Engine
+			var _chassis_comp = current_target.get_comp(C_Chassis) as C_Chassis
+			if _engine_comp:
+				%EngineContourLabel.text = str(_engine_comp.power.contour_id)
+				%TrainVoltageLabel.text = str(_engine_comp.power.voltage)
+				%SpeedLabel.text = str(abs(_chassis_comp.current_speed))
+				#%TrackLabel.text = str(_engine_comp.power.track)
+				
+			# Цвета 
+			if  PGM.get_power(_engine_comp.power.contour_id) > 0:
+				%TrainVoltageLabel.modulate = Color(0.0, 0.824, 0.0, 1.0)
+			elif PGM.get_power(_engine_comp.power.contour_id) < 0:
+				%TrainVoltageLabel.modulate = Color(1.0, 0.302, 0.043, 1.0)
+			else:
+				%TrackVoltageLabel.modulate = Color(1.0, 1.0, 1.0, 1.0)
+				
 
 
 
@@ -181,19 +212,7 @@ func _on_power_track_updated(_contour : int, _voltage : float) ->void:
 		else:
 			%TrackVoltageLabel.modulate = Color(1.0, 1.0, 1.0, 1.0)
 
-	if current_target.has_comp(C_Socket): # Если soket 
-		var _socket_comp = current_target.get_comp(C_Socket) as C_Socket
-		_on_neighbor_updated(_socket_comp.connected_entities)
 
-
-
-
-# Инфа о соседях трака
-func _on_neighbor_updated(_neighbor_list):
-	var _list := ''
-	for _n in _neighbor_list:
-		_list += _n.name + '\n'
-	%NeighborLabel.text = _list
 
 
 
@@ -268,7 +287,6 @@ func _on_power_clip_button_pressed() -> void:
 	
 	# Обновляем UI, чтобы игрок сразу визуально увидел, какой контур ему выдали
 	%ClipContourIDButton.selected = _contour
-	
 	_update_power_tab()
 
 

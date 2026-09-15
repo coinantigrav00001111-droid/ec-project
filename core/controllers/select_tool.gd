@@ -127,12 +127,13 @@ func _update_hover():
 	var result = controller.get_mouse_ray(Global.active_layers(['ground','tracks','trains','ghost'])) 
 	var new_hover = null
 	
+
 	# Наехали на сущность?
 	if result and result.collider:
 		var entity = _find_entity(result.collider)
 		if entity and entity.has_comp(IHoverable):
 			new_hover = entity
-	
+			
 	# Если Новый ховер не такой же как был, то делаем ховером новый
 	if hovered_entity != new_hover:
 		if hovered_entity: 

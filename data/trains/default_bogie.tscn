@@ -136,6 +136,5 @@ shape = SubResource("BoxShape3D_ldqha")
 [node name="RayCast3D" type="RayCast3D" parent="." unique_id=159467373]
 target_position = Vector3(0, -2, 0)
 collision_mask = 1029
-collide_with_areas = true
 debug_shape_custom_color = Color(0.827451, 0, 0, 1)
 debug_shape_thickness = 5

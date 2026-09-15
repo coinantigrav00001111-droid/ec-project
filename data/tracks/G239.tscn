@@ -51,11 +51,14 @@ point_count = 2
 [sub_resource type="PlaneMesh" id="PlaneMesh_3owqy"]
 size = Vector2(2, 23.9)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_vung0"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_5an37"]
+size = Vector3(3.0806, 0.6, 23.7)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_7jyoi"]
 size = Vector3(3.2, 0.6, 23.7)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_5an37"]
-size = Vector3(1.85, 0.25, 23.7)
+[sub_resource type="BoxShape3D" id="BoxShape3D_wi2fb"]
+size = Vector3(0.2, 0.25, 23.9)
 
 [node name="G239" type="Node3D" unique_id=1608166051]
 
@@ -80,11 +83,22 @@ mesh = SubResource("PlaneMesh_3owqy")
 collision_layer = 4
 collision_mask = 1028
 
-[node name="CollisionShapeBox" type="CollisionShape3D" parent="Ballast" unique_id=631782095]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ballast" unique_id=2116652641]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, -11.95)
-shape = SubResource("BoxShape3D_vung0")
-
-[node name="CollisionShapeBox2" type="CollisionShape3D" parent="Ballast" unique_id=1168425359]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.725, -11.95)
 shape = SubResource("BoxShape3D_5an37")
-debug_color = Color(0, 1, 0.701961, 1)
+
+[node name="HeadStaticBody3D" type="StaticBody3D" parent="." unique_id=1977146163]
+collision_layer = 4
+collision_mask = 1028
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="HeadStaticBody3D" unique_id=1903968791]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, -11.95)
+shape = SubResource("BoxShape3D_7jyoi")
+
+[node name="CollisionShape3D2" type="CollisionShape3D" parent="HeadStaticBody3D" unique_id=870775915]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.875, 0.725, -11.95)
+shape = SubResource("BoxShape3D_wi2fb")
+
+[node name="CollisionShape3D3" type="CollisionShape3D" parent="HeadStaticBody3D" unique_id=1675245289]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.875, 0.725, -11.95)
+shape = SubResource("BoxShape3D_wi2fb")

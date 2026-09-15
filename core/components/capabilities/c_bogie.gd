@@ -8,8 +8,8 @@ class BogieData:
 	var current_track: Entity
 	var track_distance: float = 0.0
 	var calculated_global_pos: Vector3
-	var is_front: bool = false
-	#var local_offset_z: float = 0.0
+	var calculated_global_basis: Basis
+	#var is_front: bool = false # уже не надо
 
 var is_derailed: bool = false
 
@@ -32,18 +32,19 @@ func on_added() -> void:
 	for i in range(bogie_nodes.size()):
 		var bogie = bogie_nodes[i]
 		_create_bogies_data(i, bogie_configs[i], bogie)
-		
+	
+	# Сортировка от первой тележки к последней
+	bogies_data.sort_custom(func(a, b): return a.pivot.position.z < b.pivot.position.z)
 
 
-func _create_bogies_data(_id: int, _config: BogieConfig, bogie:Node3D):
+func _create_bogies_data(_id: int, _config: BogieConfig, bogie:Node3D) -> void:
 	
 	var data = BogieData.new()
 	data.id = _id
 	data.config = _config
 	data.pivot = bogie
 	data.raycast = bogie.get_node('RayCast3D')
-	# TODO а если больше 2х боги?
-	data.is_front = bogie.position.z < 0.0
+	#data.is_front = bogie.position.z < 0.0
 	data.calculated_global_pos = bogie.position
 
 	bogies_data.append(data)
@@ -55,60 +56,59 @@ func _create_bogies_data(_id: int, _config: BogieConfig, bogie:Node3D):
 #"track","offset","is_flipped"
 # Вызывается из шасси при посадке вагона на рельс. Готовит данные боги дата к снапу вагона
 # Возвращает массив расчетных позиций боги Первая - фронт, последняя - реар
-func set_track_to_bogies_data(track_data: Dictionary) -> Array:
+func set_track_to_bogies_data(track_data: Dictionary, w_flipped: bool) -> Dictionary:
 	is_derailed = false
-	
 	var track = track_data.get("track")
 	var offset = track_data.get("offset", 0.0)
-	#var is_flipped = track_data.get("is_flipped", false)# При снапе без разницы флиппед
-	var bogies_pos = [] # массив расчетных позиций боги
 	
-	# 1️⃣ Считаем глобал пос тележки в снап позиции
+	if not is_instance_valid(track) or not track.has_comp(C_Path): return {}
+		
+	var path_comp = track.get_comp(C_Path)
+	var curve_len = path_comp.curve.get_baked_length()
+	
 	for bogie in bogies_data:
-		
-		if not is_instance_valid(track) or not track.has_comp(C_Path):
-			#bogies_pos.append(Vector3.ZERO)
-			return bogies_pos
-			
 		bogie.current_track = track
-		var path_comp = track.get_comp(C_Path)
-		var curve_len = path_comp.curve.get_baked_length()
 		
-		# При снапе без разницы флиппед
-		# Формула: если вагон развернут, локальное смещение тележки инвертируется относительно сплайна
-		#var dir_sign = 1# -1.0 if is_flipped else 1.0
-		#printt(dir_sign)
-		#var initial_dist = offset - (bogie.pivot.position.z * dir_sign)
-		var initial_dist = offset - bogie.pivot.position.z
+		# Если вагон посажен мордой против сплайна (w_flipped = true), 
+		# передняя тележка (у которой Z < 0) должна оказаться ближе к началу сплайна (0.0).
+		var placement_dir = 1.0 if w_flipped else -1.0
+		var initial_dist = offset + (bogie.pivot.position.z * placement_dir)
 		
 		bogie.track_distance = clampf(initial_dist, 0.0, curve_len)
 		
-		# Считаем глобал пос тележки в снап позиции
-		_assist_update_calc_global_pos(bogie)
-		bogies_pos.append(bogie.calculated_global_pos)
+		# Сразу обновляем глобальные позиции (с учетом словаря из прошлого шага)
+		_assist_update_calc_global_pos(bogie)# , w_flipped) 
 		
-	# сортируем массив по X 
-	bogies_pos.sort_custom(func(a, b): return a.x < b.x)
-	return bogies_pos
-	
+	# Возвращаем словарь крайних точек для хорды
+	if bogies_data.size() > 0:
+		return {
+			"front": bogies_data.front().calculated_global_pos,
+			"rear": bogies_data.back().calculated_global_pos
+		}
+	return {}
+
+
 
 
 ## Главный шаг расчета позиций в physics_process
-# is_w_flipped - разворот вагона по отношению к траку не имеет значения - он будет двигаться по полярности питания. 
+# Не используется - is_w_flipped - разворот вагона по отношению к траку не имеет значения - он будет двигаться по полярности питания. 
 # Направление расчитывается от флипа трака относительно направления питания контура
-func calculate_next_positions(delta: float, speed: float, is_w_flipped: bool)  -> Array:
-	var bogies_pos = [] # массив расчетных позиций боги
+func calculate_next_positions(delta: float, speed: float)  -> Dictionary:#, is_w_flipped: bool)  -> Dictionary:
+	var bogies_pos = {}
+	#var bogies_pos = [] # массив расчетных позиций боги
 	if is_derailed: return bogies_pos
 	
 	for bogie in bogies_data:
 		_assist_move_bogie(bogie, delta, speed)
 		_assist_check_transition(bogie)
 		_assist_update_calc_global_pos(bogie)
-		bogies_pos.append(bogie.calculated_global_pos)
 
-	# сортируем массив по X 
-	bogies_pos.sort_custom(func(a, b): return a.x < b.x)
-	return bogies_pos
+	# Независимо от того, 2 оси у нас или 5, кузов строится по первой и последней:
+	return {
+		"front": bogies_data.front().calculated_global_pos,
+		"rear": bogies_data.back().calculated_global_pos
+		}
+
 
 
 
@@ -124,7 +124,7 @@ func _assist_move_bogie(bogie: BogieData, delta: float, speed: float) -> void:
 	# 2️⃣ если трак  развернут, локальное смещение тележки инвертируется относительно сплайна
 	# Разворот трака держит C_PowerTrack
 	var power_track = bogie.current_track.get_comp(C_PowerTrack)
-	
+
 	# Учитываем инверсию  трака 
 	var  dir_sign = 1.0
 	if power_track:
@@ -174,7 +174,7 @@ func _assist_check_transition(bogie: BogieData) -> void:
 		bogie.raycast.global_position = look_ahead_pos + Vector3(0, sensor_pos.y, 0) # Ставим над рельсом
 		#bogie.raycast.target_position = Vector3(0, -1.0, 0)
 		bogie.raycast.force_raycast_update()
-		printt("перебег", overflow,bogie.raycast.get_collider())
+
 		if bogie.raycast.is_colliding():
 			var hit_entity = _find_entity_from_collider(bogie.raycast.get_collider())
 			
@@ -193,25 +193,17 @@ func _assist_check_transition(bogie: BogieData) -> void:
 	# 5. Если улетели за пределы толерантности зазора (0.4м) и ничего не нащупали — дерейл
 	if abs(overflow) > 0.4:
 		is_derailed = true
-	
 
-#### Обновление локальных трансформаций ноды тележки и вычисление глобальной позиции
-func _assist_update_calc_global_pos(bogie: BogieData) -> void:
-	if not is_instance_valid(bogie.current_track): return
-	
-	var path_comp = bogie.current_track.get_comp(C_Path)
-	var curve_len = path_comp.curve.get_baked_length()
-	var track_h = bogie.current_track.get_comp(C_Identity).get_config('height', 0.0)
-	
-	
-	if bogie.track_distance >= 0.0 and bogie.track_distance <= curve_len:
-		# Штатная позиция на кривой
-		var transform_baked = path_comp.curve.sample_baked_with_rotation(bogie.track_distance)
-		bogie.calculated_global_pos = path_comp.path_node.to_global(transform_baked.origin)
+
+
+#### Получение глобальной координаты на сплайне с поддержкой экстраполяции над зазором
+func _assist_sample_pos_with_extrapolation(path_comp: C_Path, distance: float, curve_len: float) -> Vector3:
+	if distance >= 0.0 and distance <= curve_len:
+		var transform_baked = path_comp.curve.sample_baked_with_rotation(distance)
+		return path_comp.path_node.to_global(transform_baked.origin)
 	else:
-		# Тележка летит в зазоре: используем экстраполяцию для плавности визуала и шасси
-		var is_exiting_end = bogie.track_distance > curve_len
-		var overflow = bogie.track_distance - curve_len if is_exiting_end else bogie.track_distance
+		var is_exiting_end = distance > curve_len
+		var overflow = distance - curve_len if is_exiting_end else distance
 		var edge_offset = curve_len if is_exiting_end else 0.0
 		
 		var edge_transform = path_comp.curve.sample_baked_with_rotation(edge_offset)
@@ -221,9 +213,42 @@ func _assist_update_calc_global_pos(bogie: BogieData) -> void:
 		if not is_exiting_end:
 			global_forward = -global_forward
 			
-		bogie.calculated_global_pos = edge_global_pos + (global_forward * abs(overflow))
+		return edge_global_pos + (global_forward * abs(overflow))
+
+
+
+#### Обновление позиций и доворот (YAW) ноды тележки по хорде колесных пар
+func _assist_update_calc_global_pos(bogie: BogieData) -> void:
+	if not is_instance_valid(bogie.current_track): return
+	
+	var path_comp = bogie.current_track.get_comp(C_Path)
+	var curve_len = path_comp.curve.get_baked_length()
+	var track_h = bogie.current_track.get_comp(C_Identity).get_config('height', 0.0)
+	var wp_z = bogie.config.wheel_pair_position.z if bogie.config else 0.0
+	
+	if wp_z > 0.001:
+		# Двухосная тележка: считаем крайние точки колесных пар (front/rear)
+		var front_pos = _assist_sample_pos_with_extrapolation(path_comp, bogie.track_distance + wp_z, curve_len)
+		var rear_pos = _assist_sample_pos_with_extrapolation(path_comp, bogie.track_distance - wp_z, curve_len)
 		
-	bogie.calculated_global_pos.y += track_h
+		# Центр тележки — точка посередине между осями
+		bogie.calculated_global_pos = (front_pos + rear_pos) / 2.0
+		bogie.calculated_global_pos.y += track_h
+		
+		# Поворот pivot тележки строго по вектору между осями
+		var forward_dir = (front_pos - rear_pos).normalized()
+		if is_instance_valid(bogie.pivot) and forward_dir.length_squared() > 0.001:
+			bogie.pivot.global_basis = Basis.looking_at(forward_dir, Vector3.UP)
+	else:
+		# Одноосная тележка: расчет по центральной точке
+		bogie.calculated_global_pos = _assist_sample_pos_with_extrapolation(path_comp, bogie.track_distance, curve_len)
+		bogie.calculated_global_pos.y += track_h
+		
+		if is_instance_valid(bogie.pivot):
+			var transform_baked = path_comp.curve.sample_baked_with_rotation(clampf(bogie.track_distance, 0.0, curve_len))
+			var global_forward = (path_comp.path_node.global_basis * -transform_baked.basis.z).normalized()
+			if global_forward.length_squared() > 0.001:
+				bogie.pivot.global_basis = Basis.looking_at(global_forward, Vector3.UP)
 
 
 
