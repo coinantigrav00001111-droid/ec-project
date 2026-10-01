@@ -5,8 +5,8 @@ class_name BogieConfig extends Resource
 ####################
 
 @export_category("Base Setup")
-# Смещение от кузова вдоль \ вниз. 
-@export var offset: = Vector3(4.0, 0.0, 0.0)        
+## Смещение меша боги от 0 вверх и вдоль. 
+@export var b_offset: = Vector3(0.0, 0.7, -2.43)        
 # Ссылка на визуал именно этой тележки 
 @export var scene : PackedScene = preload("res://data/trains/default_bogie.tscn")
 
@@ -14,7 +14,15 @@ class_name BogieConfig extends Resource
 # x - пока резерв (может для ширины колеи), 
 # y - высота оси (Радиус колеса без реборды , которая = 0,1), 
 # z - смещение оси от центра тележки (если 0 - ось одна)
-@export var wheel_pair_position: Vector3 = Vector3(0.0, 0.71, 1.5)
+@export var wheel_pair_scene : PackedScene = preload("res://data/trains/wheel_pair_01.tscn")
+
+## Установка колесной пары, 0.71 - радиус без реборды.
+@export var wheel_pair_position: Vector3 = Vector3(0.0, 0.71, 1.5)  
+
+# По массиву расставим колеса, по первой паре выставим высоту установки боги
+#@export var wheel_pair_positions: Array = [Vector3(0.0, 0.71, -1.5),
+											#Vector3(0.0, 0.71, 1.5)]
+
 
 @export_category("Rotation Limits (YAW)")
 @export var max_yaw_deg: float = 25.0    # Максимальный угол поворота тележки

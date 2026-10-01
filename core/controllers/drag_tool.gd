@@ -8,7 +8,7 @@ var controller: ToolController
 var target_entity: Entity
 
 const ROT_STEP := 45.0 # Градусы
-const LIFT_STEP := 1.0 # Метры
+const LIFT_STEP := 10.0 # Метры
 
 # Флаг позиции пкм
 var rmb_pressed_pos := Vector2.ZERO

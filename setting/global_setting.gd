@@ -26,12 +26,11 @@ class_name GlobalSetting extends Resource
 	"size" : Vector2(3.2, 0.6),
 	'start_end_padding' : -0.2,	 #  минус - внутрь трака, плюс =0 
 	'offset_x' : 0.0, #смещение влево 
-
-
 }
 
-
 ## Это не исп. а для справки
+@export_group("Not Used")
+
 @export var sleeper_size  = {
 	'distance' : 0.4,
 	'length' : 0.3,

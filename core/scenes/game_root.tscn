@@ -12,6 +12,7 @@
 [ext_resource type="PackedScene" uid="uid://57xnplsftgls" path="res://ui/ui.tscn" id="9_jy1t0"]
 [ext_resource type="Script" uid="uid://bnkd3ih6wvat" path="res://core/world.gd" id="9_m5pu1"]
 [ext_resource type="PackedScene" uid="uid://b6bt6i4wh1nk2" path="res://ui/debug/entity_debugger.tscn" id="10_4pdep"]
+[ext_resource type="PackedScene" uid="uid://0gxfmn122rg4" path="res://world/objects/tools/speedometer_h.tscn" id="12_4pdep"]
 [ext_resource type="PackedScene" uid="uid://b5a0jw0b12rtr" path="res://world/objects/tools/rulette.tscn" id="13_bc160"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_igrpr"]
@@ -32,10 +33,10 @@ size = Vector3(1000, 1, 1000)
 size = Vector3(1000, 1, 1000)
 
 [sub_resource type="BoxMesh" id="BoxMesh_4pdep"]
-size = Vector3(28.534546, 5.362793, 10.261719)
+size = Vector3(10, 20, 10)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_4pdep"]
-size = Vector3(28.546906, 5.4319763, 10.043091)
+size = Vector3(10, 20, 10)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_4pdep"]
 transparency = 1
@@ -122,19 +123,19 @@ shape = SubResource("BoxShape3D_bc160")
 [node name="Environment" type="Node3D" parent="World" unique_id=978530249]
 
 [node name="rulette" parent="World/Environment" unique_id=1234101903 instance=ExtResource("13_bc160")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.979578, 7.6293945e-06, 66.83783)
 
 [node name="BoxMeshInstance3D" type="MeshInstance3D" parent="World/Environment" unique_id=265796463]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -61.62892, 2.725039, -6.326641)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21.6536, 10, 79.6091)
 mesh = SubResource("BoxMesh_4pdep")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="World/Environment/BoxMeshInstance3D" unique_id=706195363]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="World/Environment/BoxMeshInstance3D/StaticBody3D" unique_id=1269428165]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.04789734, 0.012802124, 0.13165283)
 shape = SubResource("BoxShape3D_4pdep")
 
 [node name="PrismMeshInstance3D" type="MeshInstance3D" parent="World/Environment" unique_id=614958111]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.714453, 2.015177, -42.153603)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.714453, 2.015177, -81.573875)
 mesh = SubResource("PrismMesh_bc160")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="World/Environment/PrismMeshInstance3D" unique_id=395990527]
@@ -151,6 +152,10 @@ debug_color = Color(0, 0.98, 1.145, 1)
 
 [node name="EntitiesRoot" type="Node3D" parent="World" unique_id=1906579946]
 unique_name_in_owner = true
+
+[node name="SpeedometerH" parent="World" unique_id=1582218133 instance=ExtResource("12_4pdep")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.442186, -3.8146973e-06, 64.02545)
+visible = false
 
 [node name="SaveManager" type="Node" parent="." unique_id=442502772]
 script = ExtResource("8_bc160")

@@ -4,6 +4,8 @@
 [ext_resource type="Script" uid="uid://7vuxuiiysiji" path="res://setting/bogie_config.gd" id="2_xi8dl"]
 [ext_resource type="PackedScene" uid="uid://cl6t7b6265rj" path="res://data/trains/default_bogie.tscn" id="3_dmqtb"]
 [ext_resource type="PackedScene" uid="uid://b3w6wjpmsg3gx" path="res://data/trains/loco_01.tscn" id="4_1pi1k"]
+[ext_resource type="PackedScene" uid="uid://dv6rw0lglxdei" path="res://data/trains/wheel_pair_p01.tscn" id="4_ro1wj"]
+[ext_resource type="PackedScene" uid="uid://be7il350r4fss" path="res://data/trains/wheel_pair_01.tscn" id="5_n280y"]
 [ext_resource type="Script" uid="uid://bicjny5dv1h3s" path="res://setting/wagon_config.gd" id="5_ufx6w"]
 [ext_resource type="Script" uid="uid://mpakwrr6lum8" path="res://core/components/identity_setting.gd" id="6_n280y"]
 [ext_resource type="Script" uid="uid://b830vi2lx3hl5" path="res://core/components/trainvisual_setting.gd" id="7_i4jyf"]
@@ -21,19 +23,21 @@
 
 [sub_resource type="Resource" id="Resource_m448q"]
 script = ExtResource("2_xi8dl")
-offset = Vector3(0, 0, -2.43)
+b_offset = Vector3(0, 0.765, -2.43)
+wheel_pair_scene = ExtResource("4_ro1wj")
+wheel_pair_position = Vector3(0, 0.765, 1.5)
 metadata/_custom_type_script = "uid://7vuxuiiysiji"
 
 [sub_resource type="Resource" id="Resource_ibl0p"]
 script = ExtResource("2_xi8dl")
-offset = Vector3(0, 0, 2.43)
+b_offset = Vector3(0, 0.71, 2.43)
 metadata/_custom_type_script = "uid://7vuxuiiysiji"
 
 [sub_resource type="Resource" id="Resource_ybgll"]
 script = ExtResource("5_ufx6w")
-mass = 0.4
+mass = 4.0
 scene = ExtResource("4_1pi1k")
-offset_mesh_y = 1.52
+offset_mesh_y = 1.66
 bogie_configs = Array[ExtResource("2_xi8dl")]([SubResource("Resource_m448q"), SubResource("Resource_ibl0p")])
 metadata/_custom_type_script = "uid://bicjny5dv1h3s"
 

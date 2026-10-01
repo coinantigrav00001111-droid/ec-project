@@ -5,6 +5,9 @@ class_name InfoPanel extends PanelContainer
 
 var current_target: Entity
 
+## ⚡Сигнал для спидометра
+signal s_select_entity( sel_entity:Variant, spdmetr_on: bool, vert :bool)
+
 
 func _ready():
 	hide() # Прячем панель на старте
@@ -26,12 +29,29 @@ func _process(_delta):
 		if current_target.get_comp(C_Chassis) and  current_target.get_comp(C_Kinematics):
 			var _ontrack = current_target.get_comp(C_Chassis).is_on_rails
 			var _freeze = current_target.get_comp(C_Kinematics).rb.freeze
+			var _friction = current_target.get_comp(C_Kinematics).rb.physics_material_override.friction
+			var _linear_damp = current_target.get_comp(C_Kinematics).rb.linear_damp
+			var _angular_damp = current_target.get_comp(C_Kinematics).rb.angular_damp
+			var _mass = current_target.get_comp(C_Kinematics).rb.mass
 			%OnTrackLabel.text ='On' if _ontrack else 'Off'
 			%FreezeLabel.text = 'On' if _freeze else 'Off'
+			%FrictionLabel.text = "%.2f" % [_friction]
+			%LinearDampLabel.text = "%.2f" % [_linear_damp]
+			%AngularDampLabel.text = "%.2f" % [_angular_damp]
+			%MassWLabel.text = "%.2f" % [_mass]
+			
+			var identity = current_target.get_comp(C_Identity)
+			if identity:
+				#%MassWLabel.text = "%.2f" % [identity.get_config('mass', 0.0)]
+				%RollResistanceLabel.text = "%.2f" % [identity.get_config('roll_resistance', 0.0)]
+				%MaxGripLabel.text = "%.2f" % [identity.get_config('max_grip', 0.0)]
+			
+			var speed = 0.0
 			if _ontrack:
-				%SpeedmpsLabel.text = "(%.2f)" % [current_target.get_comp(C_Chassis).current_speed]
+				speed = current_target.get_comp(C_Chassis).current_speed
 			else:
-				%SpeedmpsLabel.text = "(%.2f)" % [current_target.get_comp(C_Kinematics).rb.linear_velocity.z]
+				speed = current_target.get_comp(C_Kinematics).rb.linear_velocity.z
+			%SpeedmpsLabel.text = "%0.2f" % [speed] if abs(speed) > 0.05 else '0.0'
 	if visible and current_target and tab_container.current_tab == 4: 
 		_update_debug_tab()
 	
@@ -50,14 +70,21 @@ func set_target(entity: Entity):
 		current_target.component_removed.disconnect(_on_components_changed)
 		
 	current_target = entity
+
 	# 2. Если кликнули в пустоту - прячем панель
 	if not current_target:
+		s_select_entity.emit(null, false,false)
 		hide()
 		return
 		
 	# 3. Подписываемся на новый объект (для обновления Debug-вкладки)
 	current_target.component_added.connect(_on_components_changed)
 	current_target.component_removed.connect(_on_components_changed)
+	
+	#INFO ПАНЕЛЬ спидометра! спидометр он офф
+	var _spd = $VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer4/SpeedometerCheckBox.button_pressed
+	var _vert =$VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer4/SpeedometerVCheck.button_pressed
+	s_select_entity.emit(current_target, _spd, _vert)
 	
 	show() # Visible = on
 	
@@ -92,9 +119,10 @@ func _populate_main_tab():
 				var _path = current_target.get_comp(C_Path)
 				%TrackContainer.show()
 				%TrainContainer.hide()
-				%RadiusLabel.text = str(_path.radius) + ' u/sm'
-				%DegLabel.text = str(_path.deg) + '°'
-				%LengthLabel.text = str(_path.get_length()) + ' u/sm'
+				if _path:
+					%RadiusLabel.text = str(_path.radius) + ' u/sm'
+					%DegLabel.text = str(_path.deg) + '°'
+					%LengthLabel.text = str(_path.get_length()) + ' u/sm'
 			&'train':
 				%TrackContainer.hide()
 				%TrainContainer.show()
@@ -105,6 +133,23 @@ func _populate_main_tab():
 	else:
 		# Если это какой-то системный объект без паспорта
 		%HeaderLabel.text = "Системный объект"
+
+
+
+#--- TRANSFORM  TAB ---
+# Все в process
+
+# кнопка спидометра
+func _on_speedometer_check_box_toggled(toggled_on: bool) -> void:
+	var _vert = $VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer4/SpeedometerVCheck.button_pressed
+	s_select_entity.emit(current_target, toggled_on, _vert)
+	
+	
+	
+# Переключатель v\h спидометра
+func _on_speedometer_vert_toggled(toggled_on: bool) -> void:
+	var _spdmeter_on = $VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer4/SpeedometerCheckBox.button_pressed
+	s_select_entity.emit(current_target, _spdmeter_on, toggled_on)
 
 
 
@@ -125,10 +170,10 @@ func _update_power_tab():
 			var _power_clip = current_target.get_comp(C_PowerClip)
 			var _socket_comp = current_target.get_comp(C_Socket)
 			var _path = current_target.get_comp(C_Path)
-
-			%RadiusLabel.text = str(_path.radius) + ' u/sm'
-			%DegLabel.text = str(_path.deg) + '°'
-			%LengthLabel.text = str(_path.get_length()) + ' u/sm'
+			if _path:
+				%RadiusLabel.text = str(_path.radius) + ' u/sm'
+				%DegLabel.text = str(_path.deg) + '°'
+				%LengthLabel.text = str(_path.get_length()) + ' u/sm'
 			if _power_comp: # Если Power трак
 				%PowerClipButton.disabled = false
 				%PowerClipButton.button_pressed = false
@@ -180,16 +225,25 @@ func _update_power_tab():
 			if _engine_comp:
 				%EngineContourLabel.text = str(_engine_comp.power.contour_id)
 				%TrainVoltageLabel.text = str(_engine_comp.power.voltage)
-				%SpeedLabel.text = str(abs(_chassis_comp.current_speed))
-				#%TrackLabel.text = str(_engine_comp.power.track)
+				%MaxTractiveForceLabel.text = str(_engine_comp.max_tractive_force)
+				%MaxTheoreticalSpeedLabel.text = str(_engine_comp.max_theoretical_speed)
 				
-			# Цвета 
-			if  PGM.get_power(_engine_comp.power.contour_id) > 0:
-				%TrainVoltageLabel.modulate = Color(0.0, 0.824, 0.0, 1.0)
-			elif PGM.get_power(_engine_comp.power.contour_id) < 0:
-				%TrainVoltageLabel.modulate = Color(1.0, 0.302, 0.043, 1.0)
-			else:
-				%TrackVoltageLabel.modulate = Color(1.0, 1.0, 1.0, 1.0)
+				
+				var _spd = _chassis_comp.current_speed
+				%SpeedLabel.text = str( "%0.2f" % [_spd] if abs(_spd) > 0.05 else '0.0' )
+				var _c_force = _chassis_comp.centrifugal_force
+				%CentrifugalForceLabel.text = tr( "%0.2f" % [_c_force] if abs(_c_force) > 0.05 else '0.0' )
+				
+				# Цвета 
+				if  PGM.get_power(_engine_comp.power.contour_id) > 0:
+					%TrainVoltageLabel.modulate = Color(0.0, 0.824, 0.0, 1.0)
+					%SpeedLabel.modulate = Color(0.0, 0.824, 0.0, 1.0)
+				elif PGM.get_power(_engine_comp.power.contour_id) < 0:
+					%TrainVoltageLabel.modulate = Color(1.0, 0.302, 0.043, 1.0)
+					%SpeedLabel.modulate = Color(1.0, 0.302, 0.043, 1.0)
+				else:
+					%TrackVoltageLabel.modulate = Color(1.0, 1.0, 1.0, 1.0)
+					%SpeedLabel.modulate = Color(1.0, 1.0, 1.0, 1.0)
 				
 
 

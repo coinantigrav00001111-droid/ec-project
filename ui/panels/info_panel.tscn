@@ -188,180 +188,195 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "straight"
 
-[node name="TrackTab" type="VBoxContainer" parent="VBoxContainer/TabContainer" unique_id=834265400]
+[node name="PowerTab" type="VBoxContainer" parent="VBoxContainer/TabContainer" unique_id=834265400]
 layout_mode = 2
 metadata/_tab_index = 1
 metadata/_tab_name = "Питание"
 
-[node name="PowerTrackTab" type="VBoxContainer" parent="VBoxContainer/TabContainer/TrackTab" unique_id=1614374328]
+[node name="PowerTrackTab" type="VBoxContainer" parent="VBoxContainer/TabContainer/PowerTab" unique_id=1614374328]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 
-[node name="HBoxContainer1" type="HBoxContainer" parent="VBoxContainer/TabContainer/TrackTab/PowerTrackTab" unique_id=2141844317]
+[node name="HBoxContainer1" type="HBoxContainer" parent="VBoxContainer/TabContainer/PowerTab/PowerTrackTab" unique_id=2141844317]
 custom_minimum_size = Vector2(0, 35)
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Control4" type="Control" parent="VBoxContainer/TabContainer/TrackTab/PowerTrackTab/HBoxContainer1" unique_id=70314999]
+[node name="Control4" type="Control" parent="VBoxContainer/TabContainer/PowerTab/PowerTrackTab/HBoxContainer1" unique_id=70314999]
 custom_minimum_size = Vector2(10, 0)
 layout_mode = 2
 size_flags_stretch_ratio = 0.5
 
-[node name="GridContainer" type="GridContainer" parent="VBoxContainer/TabContainer/TrackTab/PowerTrackTab/HBoxContainer1" unique_id=847203993]
+[node name="GridContainer" type="GridContainer" parent="VBoxContainer/TabContainer/PowerTab/PowerTrackTab/HBoxContainer1" unique_id=847203993]
 layout_mode = 2
 columns = 2
 
-[node name="Label" type="Label" parent="VBoxContainer/TabContainer/TrackTab/PowerTrackTab/HBoxContainer1/GridContainer" unique_id=1036287520]
+[node name="Label" type="Label" parent="VBoxContainer/TabContainer/PowerTab/PowerTrackTab/HBoxContainer1/GridContainer" unique_id=1036287520]
 layout_mode = 2
 text = "Track Contour: "
 
-[node name="TrackContourLabel" type="Label" parent="VBoxContainer/TabContainer/TrackTab/PowerTrackTab/HBoxContainer1/GridContainer" unique_id=870047139]
+[node name="TrackContourLabel" type="Label" parent="VBoxContainer/TabContainer/PowerTab/PowerTrackTab/HBoxContainer1/GridContainer" unique_id=870047139]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(36, 0)
 layout_mode = 2
 text = "0"
 
-[node name="Label2" type="Label" parent="VBoxContainer/TabContainer/TrackTab/PowerTrackTab/HBoxContainer1/GridContainer" unique_id=13954289]
+[node name="Label2" type="Label" parent="VBoxContainer/TabContainer/PowerTab/PowerTrackTab/HBoxContainer1/GridContainer" unique_id=13954289]
 layout_mode = 2
 text = "Voltage: "
 
-[node name="TrackVoltageLabel" type="Label" parent="VBoxContainer/TabContainer/TrackTab/PowerTrackTab/HBoxContainer1/GridContainer" unique_id=1645756791]
+[node name="TrackVoltageLabel" type="Label" parent="VBoxContainer/TabContainer/PowerTab/PowerTrackTab/HBoxContainer1/GridContainer" unique_id=1645756791]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(50, 0)
 layout_mode = 2
 text = "0"
 
-[node name="Label3" type="Label" parent="VBoxContainer/TabContainer/TrackTab/PowerTrackTab/HBoxContainer1/GridContainer" unique_id=1352062555]
+[node name="Label3" type="Label" parent="VBoxContainer/TabContainer/PowerTab/PowerTrackTab/HBoxContainer1/GridContainer" unique_id=1352062555]
 layout_mode = 2
 text = "Flipped: "
 
-[node name="FlippedLabel" type="Label" parent="VBoxContainer/TabContainer/TrackTab/PowerTrackTab/HBoxContainer1/GridContainer" unique_id=988670155]
+[node name="FlippedLabel" type="Label" parent="VBoxContainer/TabContainer/PowerTab/PowerTrackTab/HBoxContainer1/GridContainer" unique_id=988670155]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(50, 0)
 layout_mode = 2
 text = "0"
 
-[node name="GridContainer2" type="GridContainer" parent="VBoxContainer/TabContainer/TrackTab/PowerTrackTab/HBoxContainer1" unique_id=933295560]
+[node name="GridContainer2" type="GridContainer" parent="VBoxContainer/TabContainer/PowerTab/PowerTrackTab/HBoxContainer1" unique_id=933295560]
 layout_mode = 2
 size_flags_horizontal = 10
 columns = 2
 
-[node name="Label3" type="Label" parent="VBoxContainer/TabContainer/TrackTab/PowerTrackTab/HBoxContainer1/GridContainer2" unique_id=1052463677]
+[node name="Label3" type="Label" parent="VBoxContainer/TabContainer/PowerTab/PowerTrackTab/HBoxContainer1/GridContainer2" unique_id=1052463677]
 layout_mode = 2
 text = "Power Clip "
 
-[node name="PowerClipButton" type="CheckButton" parent="VBoxContainer/TabContainer/TrackTab/PowerTrackTab/HBoxContainer1/GridContainer2" unique_id=1852075900]
+[node name="PowerClipButton" type="CheckButton" parent="VBoxContainer/TabContainer/PowerTab/PowerTrackTab/HBoxContainer1/GridContainer2" unique_id=1852075900]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 8
 
-[node name="Label2" type="Label" parent="VBoxContainer/TabContainer/TrackTab/PowerTrackTab/HBoxContainer1/GridContainer2" unique_id=745833887]
+[node name="Label2" type="Label" parent="VBoxContainer/TabContainer/PowerTab/PowerTrackTab/HBoxContainer1/GridContainer2" unique_id=745833887]
 layout_mode = 2
 text = "ID: "
 
-[node name="ClipContourIDButton" type="OptionButton" parent="VBoxContainer/TabContainer/TrackTab/PowerTrackTab/HBoxContainer1/GridContainer2" unique_id=2007174680]
+[node name="ClipContourIDButton" type="OptionButton" parent="VBoxContainer/TabContainer/PowerTab/PowerTrackTab/HBoxContainer1/GridContainer2" unique_id=2007174680]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(52, 0)
 layout_mode = 2
 size_flags_horizontal = 8
 
-[node name="Control5" type="Control" parent="VBoxContainer/TabContainer/TrackTab/PowerTrackTab/HBoxContainer1" unique_id=774595267]
+[node name="Control5" type="Control" parent="VBoxContainer/TabContainer/PowerTab/PowerTrackTab/HBoxContainer1" unique_id=774595267]
 custom_minimum_size = Vector2(10, 0)
 layout_mode = 2
 size_flags_stretch_ratio = 0.5
 
-[node name="PowerTrainTab" type="VBoxContainer" parent="VBoxContainer/TabContainer/TrackTab" unique_id=1481414495]
+[node name="PowerTrainTab" type="VBoxContainer" parent="VBoxContainer/TabContainer/PowerTab" unique_id=1481414495]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="HBoxContainer1" type="HBoxContainer" parent="VBoxContainer/TabContainer/TrackTab/PowerTrainTab" unique_id=1566766866]
+[node name="HBoxContainer1" type="HBoxContainer" parent="VBoxContainer/TabContainer/PowerTab/PowerTrainTab" unique_id=1566766866]
 custom_minimum_size = Vector2(0, 35)
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Control4" type="Control" parent="VBoxContainer/TabContainer/TrackTab/PowerTrainTab/HBoxContainer1" unique_id=1835205715]
+[node name="Control4" type="Control" parent="VBoxContainer/TabContainer/PowerTab/PowerTrainTab/HBoxContainer1" unique_id=1835205715]
 custom_minimum_size = Vector2(10, 0)
 layout_mode = 2
 size_flags_stretch_ratio = 0.5
 
-[node name="GridContainer" type="GridContainer" parent="VBoxContainer/TabContainer/TrackTab/PowerTrainTab/HBoxContainer1" unique_id=1275097441]
+[node name="GridContainer" type="GridContainer" parent="VBoxContainer/TabContainer/PowerTab/PowerTrainTab/HBoxContainer1" unique_id=1275097441]
 layout_mode = 2
 columns = 2
 
-[node name="Label" type="Label" parent="VBoxContainer/TabContainer/TrackTab/PowerTrainTab/HBoxContainer1/GridContainer" unique_id=875128603]
+[node name="Label" type="Label" parent="VBoxContainer/TabContainer/PowerTab/PowerTrainTab/HBoxContainer1/GridContainer" unique_id=875128603]
 layout_mode = 2
 text = "Power Contour: "
 
-[node name="EngineContourLabel" type="Label" parent="VBoxContainer/TabContainer/TrackTab/PowerTrainTab/HBoxContainer1/GridContainer" unique_id=1960033597]
+[node name="EngineContourLabel" type="Label" parent="VBoxContainer/TabContainer/PowerTab/PowerTrainTab/HBoxContainer1/GridContainer" unique_id=1960033597]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(36, 0)
 layout_mode = 2
 text = "0"
 
-[node name="Label2" type="Label" parent="VBoxContainer/TabContainer/TrackTab/PowerTrainTab/HBoxContainer1/GridContainer" unique_id=1746308025]
+[node name="Label2" type="Label" parent="VBoxContainer/TabContainer/PowerTab/PowerTrainTab/HBoxContainer1/GridContainer" unique_id=1746308025]
 layout_mode = 2
 text = "Voltage: "
 
-[node name="TrainVoltageLabel" type="Label" parent="VBoxContainer/TabContainer/TrackTab/PowerTrainTab/HBoxContainer1/GridContainer" unique_id=1861439293]
+[node name="TrainVoltageLabel" type="Label" parent="VBoxContainer/TabContainer/PowerTab/PowerTrainTab/HBoxContainer1/GridContainer" unique_id=1861439293]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(50, 0)
 layout_mode = 2
 text = "0"
 
-[node name="Label3" type="Label" parent="VBoxContainer/TabContainer/TrackTab/PowerTrainTab/HBoxContainer1/GridContainer" unique_id=148116922]
+[node name="Label3" type="Label" parent="VBoxContainer/TabContainer/PowerTab/PowerTrainTab/HBoxContainer1/GridContainer" unique_id=148116922]
 layout_mode = 2
 text = "Speed: "
 
-[node name="SpeedLabel" type="Label" parent="VBoxContainer/TabContainer/TrackTab/PowerTrainTab/HBoxContainer1/GridContainer" unique_id=1040856243]
+[node name="SpeedLabel" type="Label" parent="VBoxContainer/TabContainer/PowerTab/PowerTrainTab/HBoxContainer1/GridContainer" unique_id=1040856243]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(50, 0)
 layout_mode = 2
 text = "0"
 
-[node name="Label4" type="Label" parent="VBoxContainer/TabContainer/TrackTab/PowerTrainTab/HBoxContainer1/GridContainer" unique_id=1969715039]
+[node name="Label4" type="Label" parent="VBoxContainer/TabContainer/PowerTab/PowerTrainTab/HBoxContainer1/GridContainer" unique_id=1969715039]
 layout_mode = 2
 text = "Track: "
 
-[node name="TrackLabel" type="Label" parent="VBoxContainer/TabContainer/TrackTab/PowerTrainTab/HBoxContainer1/GridContainer" unique_id=236161780]
+[node name="TrackLabel" type="Label" parent="VBoxContainer/TabContainer/PowerTab/PowerTrainTab/HBoxContainer1/GridContainer" unique_id=236161780]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(50, 0)
 layout_mode = 2
 text = "0"
 
-[node name="GridContainer2" type="GridContainer" parent="VBoxContainer/TabContainer/TrackTab/PowerTrainTab/HBoxContainer1" unique_id=695375257]
+[node name="GridContainer2" type="GridContainer" parent="VBoxContainer/TabContainer/PowerTab/PowerTrainTab/HBoxContainer1" unique_id=695375257]
 layout_mode = 2
 size_flags_horizontal = 10
 columns = 2
 
-[node name="Label3" type="Label" parent="VBoxContainer/TabContainer/TrackTab/PowerTrainTab/HBoxContainer1/GridContainer2" unique_id=653143004]
+[node name="Label3" type="Label" parent="VBoxContainer/TabContainer/PowerTab/PowerTrainTab/HBoxContainer1/GridContainer2" unique_id=653143004]
 layout_mode = 2
-text = "Reserve 1"
+text = "Engine"
+horizontal_alignment = 1
 
-[node name="Res1Button" type="CheckButton" parent="VBoxContainer/TabContainer/TrackTab/PowerTrainTab/HBoxContainer1/GridContainer2" unique_id=1471315065]
-layout_mode = 2
-size_flags_horizontal = 8
-
-[node name="Label2" type="Label" parent="VBoxContainer/TabContainer/TrackTab/PowerTrainTab/HBoxContainer1/GridContainer2" unique_id=696529341]
-layout_mode = 2
-text = "Reserve2: "
-
-[node name="Res2Button" type="OptionButton" parent="VBoxContainer/TabContainer/TrackTab/PowerTrainTab/HBoxContainer1/GridContainer2" unique_id=1251857083]
-custom_minimum_size = Vector2(52, 0)
-layout_mode = 2
-size_flags_horizontal = 8
-
-[node name="Control5" type="Control" parent="VBoxContainer/TabContainer/TrackTab/PowerTrainTab/HBoxContainer1" unique_id=1153055324]
+[node name="Control5" type="Control" parent="VBoxContainer/TabContainer/PowerTab/PowerTrainTab/HBoxContainer1/GridContainer2" unique_id=1153055324]
 custom_minimum_size = Vector2(10, 0)
 layout_mode = 2
 size_flags_stretch_ratio = 0.5
 
-[node name="HSeparator" type="HSeparator" parent="VBoxContainer/TabContainer/TrackTab" unique_id=530586038]
+[node name="Label2" type="Label" parent="VBoxContainer/TabContainer/PowerTab/PowerTrainTab/HBoxContainer1/GridContainer2" unique_id=696529341]
+layout_mode = 2
+text = "max_tractive_force: "
+
+[node name="MaxTractiveForceLabel" type="Label" parent="VBoxContainer/TabContainer/PowerTab/PowerTrainTab/HBoxContainer1/GridContainer2" unique_id=172380238]
+unique_name_in_owner = true
+layout_mode = 2
+text = "0"
+
+[node name="Label4" type="Label" parent="VBoxContainer/TabContainer/PowerTab/PowerTrainTab/HBoxContainer1/GridContainer2" unique_id=2124212293]
+layout_mode = 2
+text = "max_theoretical_speed: "
+
+[node name="MaxTheoreticalSpeedLabel" type="Label" parent="VBoxContainer/TabContainer/PowerTab/PowerTrainTab/HBoxContainer1/GridContainer2" unique_id=905420389]
+unique_name_in_owner = true
+layout_mode = 2
+text = "0 "
+
+[node name="Label5" type="Label" parent="VBoxContainer/TabContainer/PowerTab/PowerTrainTab/HBoxContainer1/GridContainer2" unique_id=1241153739]
+layout_mode = 2
+text = "centrifugal_force: "
+
+[node name="CentrifugalForceLabel" type="Label" parent="VBoxContainer/TabContainer/PowerTab/PowerTrainTab/HBoxContainer1/GridContainer2" unique_id=1713182242]
+unique_name_in_owner = true
+layout_mode = 2
+text = "0 "
+
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer/TabContainer/PowerTab" unique_id=530586038]
 custom_minimum_size = Vector2(450, 0)
 layout_mode = 2
 size_flags_horizontal = 4
 
-[node name="DescLabel" type="RichTextLabel" parent="VBoxContainer/TabContainer/TrackTab" unique_id=1881629544]
+[node name="DescLabel" type="RichTextLabel" parent="VBoxContainer/TabContainer/PowerTab" unique_id=1881629544]
 visible = false
 custom_minimum_size = Vector2(0, 55)
 layout_mode = 2
@@ -428,75 +443,143 @@ custom_minimum_size = Vector2(10, 0)
 layout_mode = 2
 size_flags_stretch_ratio = 0.5
 
-[node name="Label" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3" unique_id=1980250078]
+[node name="GridContainer" type="GridContainer" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3" unique_id=1550384492]
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/GridContainer" unique_id=1980250078]
 layout_mode = 2
 text = "On track:"
 
-[node name="OnTrackLabel" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3" unique_id=1567603876]
+[node name="OnTrackLabel" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/GridContainer" unique_id=1567603876]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 text = "0"
 
-[node name="Control" type="Control" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3" unique_id=1103427215]
-layout_mode = 2
-size_flags_stretch_ratio = 0.5
-
-[node name="Label2" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3" unique_id=650495695]
+[node name="Label3" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/GridContainer" unique_id=650495695]
 layout_mode = 2
 text = "Freeze:"
 
-[node name="FreezeLabel" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3" unique_id=197282319]
+[node name="FreezeLabel" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/GridContainer" unique_id=197282319]
 unique_name_in_owner = true
 layout_mode = 2
 text = "0"
 
-[node name="Control2" type="Control" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3" unique_id=972307897]
-custom_minimum_size = Vector2(10, 0)
+[node name="Label2" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/GridContainer" unique_id=1679071840]
 layout_mode = 2
-size_flags_stretch_ratio = 0.5
+text = "Speed( ): "
 
-[node name="DescLabel" type="RichTextLabel" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3" unique_id=30436952]
+[node name="SpeedmpsLabel" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/GridContainer" unique_id=649939751]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 55)
 layout_mode = 2
-text = "разное"
+text = "0"
+
+[node name="GridContainer2" type="GridContainer" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3" unique_id=1463815308]
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 2
+
+[node name="Label5" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/GridContainer2" unique_id=428473352]
+layout_mode = 2
+text = "Friction:"
+
+[node name="FrictionLabel" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/GridContainer2" unique_id=2118024793]
+unique_name_in_owner = true
+layout_mode = 2
+text = "0"
+
+[node name="Label3" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/GridContainer2" unique_id=1236312602]
+layout_mode = 2
+text = "Linear damp:"
+
+[node name="LinearDampLabel" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/GridContainer2" unique_id=887251516]
+unique_name_in_owner = true
+layout_mode = 2
+text = "0"
+
+[node name="Label4" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/GridContainer2" unique_id=170615040]
+layout_mode = 2
+text = "Angular damp:"
+
+[node name="AngularDampLabel" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/GridContainer2" unique_id=786773900]
+unique_name_in_owner = true
+layout_mode = 2
+text = "0"
+
+[node name="GridContainer3" type="GridContainer" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3" unique_id=1507708990]
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 2
+
+[node name="Label5" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/GridContainer3" unique_id=1328777013]
+layout_mode = 2
+text = "Mass:"
+
+[node name="MassWLabel" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/GridContainer3" unique_id=1828902989]
+unique_name_in_owner = true
+layout_mode = 2
+text = "0"
+
+[node name="Label3" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/GridContainer3" unique_id=1818064410]
+layout_mode = 2
+text = "Roll Resist:"
+
+[node name="RollResistanceLabel" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/GridContainer3" unique_id=790217689]
+unique_name_in_owner = true
+layout_mode = 2
+text = "0"
+
+[node name="Label4" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/GridContainer3" unique_id=73387717]
+layout_mode = 2
+text = "Max grid:"
+
+[node name="MaxGripLabel" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/GridContainer3" unique_id=1906834941]
+unique_name_in_owner = true
+layout_mode = 2
+text = "0"
 
 [node name="HBoxContainer4" type="HBoxContainer" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer" unique_id=127040788]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Control3" type="Control" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer4" unique_id=603285527]
-custom_minimum_size = Vector2(10, 0)
-layout_mode = 2
-size_flags_stretch_ratio = 0.5
-
-[node name="Label" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer4" unique_id=1679071840]
-layout_mode = 2
-text = "Speed( ): "
-
-[node name="SpeedmpsLabel" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer4" unique_id=649939751]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(100, 0)
-layout_mode = 2
-text = "0"
-
 [node name="Control" type="Control" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer4" unique_id=967557134]
 layout_mode = 2
 size_flags_stretch_ratio = 0.5
 
-[node name="Label2" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer4" unique_id=1442670066]
+[node name="SpeedometerCheckBox" type="CheckBox" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer4" unique_id=1277356710]
 layout_mode = 2
-text = "Rotation:"
+button_pressed = true
+text = "Speedometer"
 
-[node name="SpeedKmhLabel" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer4" unique_id=102936220]
+[node name="Control3" type="Control" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer4" unique_id=1011798231]
+custom_minimum_size = Vector2(10, 0)
 layout_mode = 2
-text = "0"
+size_flags_stretch_ratio = 0.5
+
+[node name="SpeedometerVCheck" type="CheckButton" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer4" unique_id=315333322]
+custom_maximum_size = Vector2(147, -1)
+layout_mode = 2
+text = "vertical"
 
 [node name="Control2" type="Control" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer4" unique_id=814645474]
 custom_minimum_size = Vector2(10, 0)
 layout_mode = 2
+size_flags_horizontal = 3
 size_flags_stretch_ratio = 0.5
+
+[node name="Control2" type="Control" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer" unique_id=972307897]
+visible = false
+custom_minimum_size = Vector2(10, 0)
+layout_mode = 2
+size_flags_stretch_ratio = 0.5
+
+[node name="DescLabel" type="RichTextLabel" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer" unique_id=30436952]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 55)
+layout_mode = 2
+text = "разное"
 
 [node name="VisualTab" type="VBoxContainer" parent="VBoxContainer/TabContainer" unique_id=1874121866]
 visible = false
@@ -513,5 +596,7 @@ text = "[color=yellow]текст[/color]"
 fit_content = true
 metadata/_tab_index = 4
 
-[connection signal="pressed" from="VBoxContainer/TabContainer/TrackTab/PowerTrackTab/HBoxContainer1/GridContainer2/PowerClipButton" to="." method="_on_power_clip_button_pressed"]
-[connection signal="item_selected" from="VBoxContainer/TabContainer/TrackTab/PowerTrackTab/HBoxContainer1/GridContainer2/ClipContourIDButton" to="." method="_on_contour_id_item_selected"]
+[connection signal="pressed" from="VBoxContainer/TabContainer/PowerTab/PowerTrackTab/HBoxContainer1/GridContainer2/PowerClipButton" to="." method="_on_power_clip_button_pressed"]
+[connection signal="item_selected" from="VBoxContainer/TabContainer/PowerTab/PowerTrackTab/HBoxContainer1/GridContainer2/ClipContourIDButton" to="." method="_on_contour_id_item_selected"]
+[connection signal="toggled" from="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer4/SpeedometerCheckBox" to="." method="_on_speedometer_check_box_toggled"]
+[connection signal="toggled" from="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer4/SpeedometerVCheck" to="." method="_on_speedometer_vert_toggled"]

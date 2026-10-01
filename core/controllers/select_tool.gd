@@ -16,7 +16,6 @@ var lmb_start_pos := Vector2.ZERO
 var rmb_start_pos := Vector2.ZERO
 
 
-
 func enter():
 
 	if selected_entity and controller.to_drag:
@@ -76,9 +75,9 @@ func handle_input(event: InputEvent):
 		controller.info_panel.set_target(null)
 		
 	if selected_entity and Input.is_action_just_pressed("ui_page_up"):
-		selected_entity.send_event("on_train_kicked", {"power_kick": 2.0}) # Пинок силой 2 м/с
+		selected_entity.send_event("on_train_kicked", {"power_kick": 10.0}) # Пинок силой 10m\s
 	if selected_entity and Input.is_action_just_pressed("ui_page_down"):
-		selected_entity.send_event("on_train_kicked", {"power_kick": -2.0}) # Пинок силой 2 м/с
+		selected_entity.send_event("on_train_kicked", {"power_kick": -10.0}) # Пинок силой 10m\s
 
 
 
@@ -153,7 +152,6 @@ func _clear_selection():
 	selected_entity = null
 	
 	#INFO ОЧИЩАЕМ ПАНЕЛЬ! +
-
 	controller.info_panel.set_target(null)
 
 

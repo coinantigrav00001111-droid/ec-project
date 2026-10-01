@@ -25,7 +25,30 @@ var bogie_configs: Array[BogieConfig] = []
 
 var bogie_nodes: Array[Node3D] = []
 
-	
+var wheel_nodes: Array[Dictionary] = [] # все колеса {'wheel_node', 'radius'}
+
+## ===============================
+func wheel_rotate(delta):
+	var chassis = entity.get_comp(C_Chassis) as C_Chassis
+	if not chassis: return
+	for wheel in wheel_nodes:
+	# Диаметр типичного HO-колеса в метрах (подбери под свою модель)
+		var _r: float = wheel.radius
+
+		# Переводим линейную скорость обода в угловую скорость (радианы в секунду)
+		var angular_velocity = chassis.current_speed / _r
+
+		# Применяем вращение к мешам колесных пар вокруг локальной оси X
+		# (Предполагается, что массив wheel_meshes содержит ссылки на узлы колес)
+		
+		wheel.wheel_node.rotate_object_local(Vector3.RIGHT, angular_velocity * delta)
+
+func _physics_process(delta: float) -> void:
+	wheel_rotate(delta)
+## ===============================
+
+
+
 ## Вызов из ентити при создании комп
 func on_added():
 	instance = scene.instantiate() # Создаем сцену
@@ -34,35 +57,44 @@ func on_added():
 	_collect_meshes()
 	_collect_collision_nodes()
 	
-	# instance.collide_with_areas = true нет такой для ригид
 	# достраиваем боги
 	bogie_configs = get_comp(C_Identity).get_config('bogie_configs')
 	var offset_mesh_y = get_comp(C_Identity).get_config('offset_mesh_y')
 	
 	for bogie in bogie_configs: 
+		# 1. Создаем сцену боги
+		var b_scene = bogie.scene.instantiate() 
+		b_scene.position = bogie.b_offset  # У боги своя независимая позиция в конфиге
 		
-		var b_scene = bogie.scene.instantiate() # Создаем сцену
+		# 2. Добавляем 1 колесо
+		var wp_z = bogie.wheel_pair_position.z 
+		var wp_scene = bogie.wheel_pair_scene.instantiate() # Создаем сцену колеса
+		b_scene.add_child(wp_scene)
+		wp_scene.position.z = wp_z # Смещение вперед\назад
+		wheel_nodes.append({'wheel_node':wp_scene, 'radius': bogie.b_offset.y} )
 		
-		b_scene.position.y = bogie.wheel_pair_position.y # боги  от пола вверх до центра колеса
-		b_scene.position.z = bogie.offset.z 
-		
-		# Перестраиваем коллизию вагона с учетом габаритов с боги и колесами.
-		var bogie_collision = b_scene.get_node('BogieCollisionShape3D')
-		b_scene.remove_child(bogie_collision)
-		bogie_collision.owner = null
+		# 3. Двухосная тележка?: добавляем еще колесо
+		if wp_z > abs(0.001):
+			wp_scene = bogie.wheel_pair_scene.instantiate() # Создаем сцену колеса
+			b_scene.add_child(wp_scene)
+			wp_scene.position.z = -wp_z # Смещение вперед\назад
+			# В массив колес добаляем колесо и радиус
+			wheel_nodes.append({'wheel_node':wp_scene, 'radius': bogie.b_offset.y})
 
-		bogie_collision.position = b_scene.position # коллизию в точку боги
-		
-		instance.add_child(bogie_collision) #коллизия боги теперь у ригид кузова 
-		# Назначаем новым владельцем корень текущей рабочей сцены
-		bogie_collision.owner = instance.owner 
-		bogie_collision.name = 'BogieCollisionShape3D_01'
-		
-		#НЕТ!  Перекидываем боги в корень ентити, больше визуал его не контролит
-		#b_scene.owner = null
-		#entity.add_child(b_scene) # боги и колеса
+		# 4. Перестраиваем коллизию боги c колесами к вагону
+		var bg_collision = CollisionShape3D.new()
+		var sh = BoxShape3D.new()
+		# установка размеров коллизии боги
+		sh.size = Vector3( 2.02, 
+						bogie.wheel_pair_position.y * 2.0, # Диаметр колеса без реборды
+						(bogie.wheel_pair_position.z + bogie.wheel_pair_position.y) * 2.0 # расстояние между центрами + радиусы обоих колес
+						)
+		bg_collision.shape = sh
+		bg_collision.position = b_scene.position # коллизию в точку боги
+		instance.add_child(bg_collision)
+		bg_collision.name = 'BogieCollisionShape3D_01'
+
 		instance.add_child(b_scene) # боги и колеса
-
 		b_scene.name = 'Bogie_01'
 		
 		# поднимаем кузов 
@@ -73,7 +105,7 @@ func on_added():
 	
 		# Ноду добавляем в массив. Дальше им занимается C_Bogie 
 		bogie_nodes.append(b_scene)
-
+		printt(wheel_nodes)
 
 
 

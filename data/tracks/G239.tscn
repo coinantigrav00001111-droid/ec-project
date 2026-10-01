@@ -54,6 +54,9 @@ size = Vector2(2, 23.9)
 [sub_resource type="BoxShape3D" id="BoxShape3D_5an37"]
 size = Vector3(3.0806, 0.6, 23.7)
 
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_dmqtb"]
+friction = 0.0
+
 [sub_resource type="BoxShape3D" id="BoxShape3D_7jyoi"]
 size = Vector3(3.2, 0.6, 23.7)
 
@@ -90,6 +93,7 @@ shape = SubResource("BoxShape3D_5an37")
 [node name="HeadStaticBody3D" type="StaticBody3D" parent="." unique_id=1977146163]
 collision_layer = 4
 collision_mask = 1028
+physics_material_override = SubResource("PhysicsMaterial_dmqtb")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="HeadStaticBody3D" unique_id=1903968791]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, -11.95)

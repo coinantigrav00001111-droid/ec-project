@@ -20,6 +20,7 @@ var is_snapped_to_track := false # Флаг привязки к траку
 var is_flipped_on_track := false # Флаг: смотрит ли вагон мордой к началу трака
 
 
+
 func on_drag_started(_data: Dictionary) -> void:
 	initial_transform = entity.global_transform
 

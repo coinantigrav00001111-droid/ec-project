@@ -13,6 +13,12 @@ var mass: float  # Кг
 var max_grip: float # Максимальная удерживающая сила реборды
 var roll_resistance: float # Трение качения
 
+# --- НОВЫЕ ПАРАМЕТРЫ ---
+var longitudinal_grip: float = 3.0 #  срыва колес в пробуксовку
+var min_curve_radius: float = 0.0 # минимальный проходимый радиус
+var max_tractive_force: float = 0.0 # Максимальная сила тяги мотора (Н) # TODO в c_engine она есть
+var max_theoretical_speed: float = 0.0  # Максимальная скорость # TODO в c_engine она есть
+var has_engine: bool = false
 var current_speed: float = 0.0 # Метры в секунду вдоль сплайна
 
 # Физикс тело вагона
@@ -24,7 +30,8 @@ var is_dragging: bool = false
 
 func on_added():
 	rb = get_comp(C_TrainVisual).instance
-
+	# FIXME масса в конфиге идентити должна ставиться реальная в граммах. А при создании вагона делать ее х10 для устойчивости движка. Или пока как есть - ставить х10
+	rb.mass = mass
 
 # Реакция на появление компонентов в ентити
 func on_component_added(_type: Script):
@@ -34,18 +41,19 @@ func on_component_added(_type: Script):
 
 
 
-## из C_TrainDraggable в начале\конце  драга прилетает
+## из C_TrainDraggable в начале\конце  драга прилетает  {'on': false, 'freeze': false}
 ## при отпускании мыши пытаемся имитировать движение на колесах или поперек
 ## TODO свобное тело(которое не после драга) тоже надо сделать с правильной реакцией
 func on_is_dragging(_data: Dictionary) -> void:
 	if rb:
-		rb.freeze = _data.freeze  # Физика вкл
+		rb.freeze = _data.freeze  # Физика вкл\выкл 
 		is_dragging = _data.on    # Флаг драга
 		
 		if not is_dragging:
 			var vel = rb.linear_velocity
-			rb.linear_damp_mode = RigidBody3D.DAMP_MODE_REPLACE
-			rb.angular_damp_mode = RigidBody3D.DAMP_MODE_REPLACE
+			# В редакторе сделал
+			#rb.linear_damp_mode = RigidBody3D.DAMP_MODE_REPLACE
+			#rb.angular_damp_mode = RigidBody3D.DAMP_MODE_REPLACE
 			
 			if vel.length() > 0.1:
 				var forward_dir = rb.global_transform.basis.z.normalized()
@@ -55,17 +63,17 @@ func on_is_dragging(_data: Dictionary) -> void:
 				# МАГИЯ: Возводим значение в степень 4. 
 				# Теперь только ИДЕАЛЬНО ровный бросок (0.95+) даст низкий дамп.
 				# Бросок под 45 градусов (0.7) превратится в 0.24, что включит жесткий тормоз.
-				var strict_alignment = pow(alignment, 6)
+				var strict_alignment = pow(alignment, 4)
 				
 				# Гасим сам импульс скорости: чем кривее бросок, тем больше энергии сгорает сразу
-				rb.linear_velocity *= lerp(0.2, 1.0, strict_alignment)
+				rb.linear_velocity *= lerp(0.1, 1.0, strict_alignment)
 				
 				# Назначаем дамп на основе нашей строгой кривой
-				rb.linear_damp = lerp(6.0, 0.5, strict_alignment)
-				rb.angular_damp = lerp(8.0, 2.0, strict_alignment)
+				rb.linear_damp = lerp(4.0, 0.0, strict_alignment)
+				rb.angular_damp = lerp(4.0, 0.0, strict_alignment)
 			else:
-				rb.linear_damp = 2.0
-				rb.angular_damp = 4.0
+				rb.linear_damp = 0.0
+				rb.angular_damp = 0.0
 
 
 
@@ -75,7 +83,7 @@ func on_train_kicked(data: Dictionary) -> void:
 	if not chassis or chassis.is_on_rails:
 		return
 	
-	var power = data.get("power", 0.0)
+	var power = data.get("power_kick", 0.0)
 	if power == 0.0 or not rb:
 		return
 	
@@ -85,48 +93,162 @@ func on_train_kicked(data: Dictionary) -> void:
 	# Будим физику и прикладываем импульс вдоль локальной оси
 	rb.freeze = false
 	if rb.sleeping: rb.sleeping = false
-	rb.linear_velocity += forward_vec * (power * 10.0)
 	
-	on_is_dragging({'on': false, 'freeze': false})
+	# Коэффициент пересчета roll_resistance  между сплайном и физикой
+	# TODO Пересчитывать надо связку roll_resistance, mass, friction, K_DAMP в шасси.
+	# при _k =5 и friction = 0.01 движения в шасси и кинемат совпадают!
+	var K_DAMP = 5.0 
+
+	# кик получает вектор направления вагона, направление в рад, смещение от центра масс
+	kick_impulse({	'kick_forward_vector' : (forward_vec * power * K_DAMP),
+					'kick_rotate': 0, #PI / 2,
+					'hit_offset':  Vector3(0, 2.0, 0)
+				})
+
+	'''
+	Что влияет на поведение вагона,локо:
+		Редактор:
+			fricton - свободный ход на полу - только в редакторе установка
+			linear_damp - свободный ход на полу, сопротивление среды. Отнимает процент скорости каждый кадр.
+				on_is_dragging пересчет при переключении драг
+				kick_impulse пересчет при кике в бок
+				on_train_snapped в шасси при снапе
+			angular_damp - свободный ход на полу?
+				дубль с линеар, на что влияет не проверил
+			
+		Конфиг вагона:
+			mass - Вертикальный ассист в процесс кинем, центробежная сила в шасси _check_derailment
+			roll_resistance - Трение качения, speed_correction(замедление) в шасси
+			max_grip - сход, если центробежная больше грип в шасси _check_derailment
+	
+	Лежащий вагон должен получить высокий дамп.
+	'''
+
+## Пинок имеет 2 реализации.
+## Тестовая - для проверки физики при разных направлениях приложения силы.
+## Игровая - с целью подвинуть вагон без драга.
+
+# Пинок вагону
+# Получает вектор направления вагона, направление в рад, смещение от центра масс
+func kick_impulse(_data: Dictionary):
+	# Пример применения поперечного пинка к уже сошедшему (или сходящему) вагону в C_Kinematics
+	var kick_forward_vector = _data.get("kick_forward_vector", Vector3.ZERO)
+	var kick_rotate = _data.get("kick_rotate", 0)
+	var kick_vector = kick_forward_vector.rotated(Vector3.UP, kick_rotate) 
+
+	if kick_vector.length_squared() <= 0: return
+
+	# Если кик не вдоль оси вагона, то менять дамп
+	if kick_rotate < PI / 4:
+		rb.linear_damp = 0.0
+		rb.angular_damp = 0.0
+	else :
+		#TODO можно еще гасить скорости не вдоль вагона, поднять точку кика для возможного переворота.
+		rb.linear_damp = 4.0
+		rb.angular_damp = 4.0
+		
+	# Прикладываем импульс чуть выше центра масс (offset по Y), чтобы вагон попытался перевернуться через колеса, а не просто поехал боком юзом
+	var hit_offset = _data.get("hit_offset", Vector3.ZERO) # Точка удара выше центра
+	
+	rb.apply_impulse(kick_vector , hit_offset)
 
 
 
 func _physics_process(delta: float) -> void:
-	if rb and not rb.freeze: 
+	# 1. Если физика выключена (вагон на рельсах или это гост), выходим
+	if not rb or rb.freeze:
+		return
+
+	if not rb.top_level: 
+		rb.top_level = true
+
+	# 2. РЕЖИМ ПЕРЕТАСКИВАНИЯ (Драг мышью)
+	if is_dragging:
+		if rb.sleeping: 
+			rb.sleeping = false
+
+		var damp_mouse = 30.0 # 5 - soft, 30.0 - hard
+		var limit_speed_to_mouse = 80.0 # ~180 км/ч
 		
-		if not rb.top_level: rb.top_level = true
+		# --- Линейная скорость ---
+		var diff = entity.global_position - rb.global_position
+		rb.linear_velocity = (diff * damp_mouse).limit_length(limit_speed_to_mouse)
 
-		if is_dragging:	# Обязательно будим физику, если взяли спящий вагон
-			if rb.sleeping: rb.sleeping = false
+		# --- Угловая скорость ---
+		var diff_x = angle_difference(rb.global_rotation.x, entity.global_rotation.x)
+		var diff_y = angle_difference(rb.global_rotation.y, entity.global_rotation.y)
+		var diff_z = angle_difference(rb.global_rotation.z, entity.global_rotation.z)
+		
+		var target_angular = (Vector3(diff_x, diff_y, diff_z) * damp_mouse).limit_length(10.0)
+		rb.angular_velocity = rb.angular_velocity.lerp(target_angular, limit_speed_to_mouse * delta)
 
-			# --- 1. ЛИНЕЙНАЯ СКОРОСТЬ С ЛИМИТОМ ---
-			var target_pos = entity.global_position
-			var diff = target_pos - rb.global_position
-			
-			# Умножаем на силу "пружины", но жестко ограничиваем максимальную скорость (например, 50 м/с), 
-			# чтобы вагон не пробивал коллайдеры при резком свайпе мышью
-			rb.linear_velocity = (diff * 15.0).limit_length(50.0)
+	# 3. РЕЖИМ СВОБОДНОГО ПАДЕНИЯ / СХОДА С РЕЛЬС (Физика Godot)
+	else:
+		var chassis = get_comp(C_Chassis)
+		# Если шасси нет или вагон НЕ на рельсах — работает чистая физика
+		if not chassis or not chassis.is_on_rails:
 
-			# --- 2. БЕЗОПАСНАЯ УГЛОВАЯ СКОРОСТЬ ---
-			# Находим кратчайшую разницу в радианах для каждой оси
-			var diff_x = angle_difference(rb.global_rotation.x, entity.global_rotation.x)
-			var diff_y = angle_difference(rb.global_rotation.y, entity.global_rotation.y)
-			var diff_z = angle_difference(rb.global_rotation.z, entity.global_rotation.z)
-			
-			# Формируем целевой вектор вращения
-			var target_angular = Vector3(diff_x, diff_y, diff_z) * 15.0
-			
-			# ‼️вроде лишнее(Опционально) Гасим вращение, чтобы вагон не крутился на курсоре
-			#rb.angular_velocity = lerp(rb.angular_velocity, Vector3.ZERO, 30.0 * delta)
-			
-			# Плавно стремимся к идеальному выравниванию (сглаживает рывки)
-			rb.angular_velocity = rb.angular_velocity.lerp(target_angular, 30.0 * delta)
-			
-		else:
 			if not rb.sleeping:
+				# 3.1. Синхронизируем Entity за падающим RigidBody
 				entity.global_position = rb.global_position
 				entity.global_basis = rb.global_basis
+				
+				# 3.2. ‼️Вертикальный ассист (HO-масштаб)
+				_assist_vertical(true)
 
+
+
+# Вертикальный ассист (HO-масштаб). Проверка движения, чтобы не колбасило в движении
+func _assist_vertical(_check_move := true):
+	
+	## ‼️тест падения с 20м эталон ‼️ : ~0,2с и средняя скорость ~1 м/с. 
+	var scale_factor = 80.0	# ~0,217с и средняя скорость ~0,92 м/с. 
+	#var scale_factor = 90.0	# ~0,2с и средняя скорость ~1,0 м/с. 
+	
+	# Формула учитывает массу, потому что пихаем вниз		
+	var extra_gravity = Vector3.DOWN * mass * 9.81 * (scale_factor - 1.0)
+	
+	if _check_move:
+		# Дополнительная проверка что нет контактов с поверхность. Включить contact_monitor 
+		#var has_no_contacts = rb.get_contact_count() == 0
+		
+		# Если не двигается, то и не считаем
+		var is_falling_down = rb.linear_velocity.length() > 0.01
+		if 	 !is_falling_down:# and has_no_contacts:
+			return
+			
+	rb.apply_central_force(extra_gravity)
+
+
+## Обработка физики схода.
+func on_derailed(_data: Dictionary) -> void:
+	if not rb: return
+	
+	# 1. Подтягиваем физику к кузову
+	rb.global_transform = entity.global_transform
+	rb.freeze = false # Отвязываемся от сплайна
+	rb.sleeping = false
+	
+	# 2. Передаем импульс движения
+	rb.linear_velocity = _data.current_velocity_3d
+
+	# 3. Разделяем логику инерции
+	if entity.has_comp(C_Engine):
+		# Это Локомотив. Питание потеряно -> колеса в блоке (п. 7)
+		# Локомотив: колеса заблокированы
+		#rb.linear_damp = roll_resistance * K_DAMP + 5.0 # Доп. сопротивление мотора
+		#rb.physics_material_override.friction = 0.8 # Сильно трется
+		rb.linear_damp = 0.0  # Сильное трение (скользит юзом)
+		rb.angular_damp = 0.0
+
+	else:
+		#Затухание (linear_damp): Это сопротивление среды. В Godot оно отнимает процент скорости каждый кадр.
+		# Это Вагон. Колеса не заблокированы -> катится по инерции
+		rb.linear_damp = 2.5  # Легкое трение качения
+		rb.angular_damp = 2.5
+		
+	var rot = 0.3
+	rb.angular_velocity = Vector3(randf_range(-rot, rot), randf_range(-rot, rot), randf_range(-rot, rot))
 
 
 
@@ -153,61 +275,12 @@ func on_force_rotate_physics(data: Dictionary) -> void:
 	# дожидаясь окна физического сервера для активного RigidBody
 	await get_tree().physics_frame
 	rb.global_basis = data.basis
-
-
-func on_derailed(_data: Dictionary) -> void:
-	if not rb: return
 	
-	# 1. Подтягиваем физику к визуальному кузову
-	rb.global_transform = entity.global_transform
 	
-	# 2. Размораживаем RigidBody
-	rb.freeze = false
-	if rb.sleeping: rb.sleeping = false
-	
-	# 3. Передаем точный 3D-вектор скорости, с которым вагон ехал по траку
-	var chassis = get_comp(C_Chassis)
-	if chassis:
-		rb.linear_velocity = chassis.current_velocity_3d
-	
-	var rot = 0.3
-	# (Опционально) Добавим легкое закручивание, чтобы вагон эффектнее летел в кусты
-	rb.angular_velocity = Vector3(randf_range(-rot, rot), randf_range(-rot, rot), randf_range(-rot,rot))
-		
 
 
-func _check_derailment() -> void:
-	var chassis = get_comp(C_Chassis)
-	# FIXME здесь snapped_track меняется только при снапе!!! Нужно из боги брать актуал.
-	if not chassis or not chassis.is_on_rails or not is_instance_valid(chassis.snapped_track):
-		return
-
-	var path_comp = chassis.snapped_track.get_comp(C_Path)
-	if not path_comp: return
-	
-	# Если радиус 0 (прямая), сход от центробежной силы невозможен
-	var radius = path_comp.radius
-	if radius <= 0.1: return
-	
-	# F = (m * v^2) / r
-	var centrifugal_force = (mass * pow(current_speed, 2)) / radius
-	
-	if centrifugal_force > max_grip:
-		# Кричим в шину сущности: "Мы падаем!"
-		#print("Мы падаем!")
-		return
-		entity.send_event("on_derailed", {"reason": "speed", "force": centrifugal_force})
-		
-		# Передаем импульс в RigidBody, чтобы вагон улетел по касательной
-		#var rb = entity.get_node_or_null("RigidBody3D")
-		if rb:
-			var tangent_dir = -entity.global_transform.basis.z # Вектор вперед
-			rb.apply_central_impulse(tangent_dir * current_speed * mass)
-
-
-
-# Если это Локомотив, скорость будет приходить от C_Engine.
+# Мы не на рельсах, только это тут интересует
+# Если это Локомотив, скорость не будет приходить от C_Engine.
 # Если вагон — от C_Coupler (тяга соседнего вагона).
 func on_speed_changed(data: Dictionary) -> void:
 	current_speed = data.get("speed", 0.0)
-	_check_derailment()

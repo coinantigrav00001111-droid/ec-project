@@ -1,0 +1,252 @@
+[gd_scene format=3 uid="uid://0gxfmn122rg4"]
+
+[ext_resource type="Script" uid="uid://bf4f4q60ao3aj" path="res://world/objects/tools/speedometer.gd" id="1_y8htd"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_44cwi"]
+size = Vector3(8.004028, 4, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_46idw"]
+size = Vector3(7.953247, 4, 1)
+
+[node name="Speedometer" type="Node3D" unique_id=621479572]
+script = ExtResource("1_y8htd")
+
+[node name="Start" type="Area3D" parent="." unique_id=436775680]
+collision_layer = 0
+collision_mask = 1040
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Start" unique_id=1123174810]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 2, -0.5)
+shape = SubResource("BoxShape3D_44cwi")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Start" unique_id=1406706033]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 2, -0.5)
+mesh = SubResource("BoxMesh_46idw")
+
+[node name="Finish" type="Area3D" parent="." unique_id=292993024]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -20)
+collision_layer = 0
+collision_mask = 1040
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Finish" unique_id=825597112]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 2, -0.5)
+shape = SubResource("BoxShape3D_44cwi")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Finish" unique_id=1532981656]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 2, -0.5)
+mesh = SubResource("BoxMesh_46idw")
+
+[node name="MainSpeedPanel" type="PanelContainer" parent="." unique_id=1447191161]
+unique_name_in_owner = true
+visible = false
+offset_left = 216.0
+offset_top = 25.0
+offset_right = 464.0
+offset_bottom = 104.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="MainSpeedPanel" unique_id=1528125655]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 5
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MainSpeedPanel/MarginContainer" unique_id=1340970390]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="WagonNameLabel" type="Label" parent="MainSpeedPanel/MarginContainer/VBoxContainer" unique_id=1958693527]
+unique_name_in_owner = true
+layout_mode = 2
+text = "wagon name"
+
+[node name="GridContainer0" type="GridContainer" parent="MainSpeedPanel/MarginContainer/VBoxContainer" unique_id=131665012]
+layout_mode = 2
+size_flags_vertical = 0
+columns = 4
+
+[node name="Label" type="Label" parent="MainSpeedPanel/MarginContainer/VBoxContainer/GridContainer0" unique_id=2099835087]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "gdt: м/с"
+
+[node name="Godotmps" type="Label" parent="MainSpeedPanel/MarginContainer/VBoxContainer/GridContainer0" unique_id=101623710]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0"
+horizontal_alignment = 2
+
+[node name="Godotkmh" type="Label" parent="MainSpeedPanel/MarginContainer/VBoxContainer/GridContainer0" unique_id=462226503]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 6.0
+text = "0"
+horizontal_alignment = 2
+
+[node name="Label6" type="Label" parent="MainSpeedPanel/MarginContainer/VBoxContainer/GridContainer0" unique_id=227712361]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "км/ч"
+horizontal_alignment = 2
+
+[node name="Label2" type="Label" parent="MainSpeedPanel/MarginContainer/VBoxContainer/GridContainer0" unique_id=955231094]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "HO: м/с"
+
+[node name="HOmps" type="Label" parent="MainSpeedPanel/MarginContainer/VBoxContainer/GridContainer0" unique_id=390928357]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0"
+horizontal_alignment = 2
+
+[node name="HOkmh" type="Label" parent="MainSpeedPanel/MarginContainer/VBoxContainer/GridContainer0" unique_id=1656513141]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 6.0
+text = "0"
+horizontal_alignment = 2
+
+[node name="Label3" type="Label" parent="MainSpeedPanel/MarginContainer/VBoxContainer/GridContainer0" unique_id=926044131]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "км/ч"
+horizontal_alignment = 2
+
+[node name="Label4" type="Label" parent="MainSpeedPanel/MarginContainer/VBoxContainer/GridContainer0" unique_id=1796537576]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Реал: м/с"
+
+[node name="Realmps" type="Label" parent="MainSpeedPanel/MarginContainer/VBoxContainer/GridContainer0" unique_id=984546141]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0"
+horizontal_alignment = 2
+
+[node name="Realkmh" type="Label" parent="MainSpeedPanel/MarginContainer/VBoxContainer/GridContainer0" unique_id=846415053]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 6.0
+text = "0"
+horizontal_alignment = 2
+
+[node name="Label5" type="Label" parent="MainSpeedPanel/MarginContainer/VBoxContainer/GridContainer0" unique_id=164195490]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "км/ч"
+horizontal_alignment = 2
+
+[node name="SpeedometerContainer" type="GridContainer" parent="MainSpeedPanel/MarginContainer/VBoxContainer" unique_id=434823519]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 8
+columns = 4
+
+[node name="Label9" type="Label" parent="MainSpeedPanel/MarginContainer/VBoxContainer/SpeedometerContainer" unique_id=1336057393]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 0.44313726, 1)
+text = "Длина:"
+horizontal_alignment = 2
+
+[node name="DistanceLabel" type="Label" parent="MainSpeedPanel/MarginContainer/VBoxContainer/SpeedometerContainer" unique_id=2026245264]
+unique_name_in_owner = true
+layout_mode = 2
+text = "0"
+uppercase = true
+
+[node name="Control3" type="Control" parent="MainSpeedPanel/MarginContainer/VBoxContainer/SpeedometerContainer" unique_id=1059331884]
+visible = false
+layout_mode = 2
+
+[node name="RecLabel" type="Label" parent="MainSpeedPanel/MarginContainer/VBoxContainer/SpeedometerContainer" unique_id=1469216149]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.03529412, 0, 1)
+
+[node name="Button" type="Button" parent="MainSpeedPanel/MarginContainer/VBoxContainer/SpeedometerContainer" unique_id=1163752918]
+layout_mode = 2
+size_flags_horizontal = 10
+text = "x"
+
+[node name="Label2" type="Label" parent="MainSpeedPanel/MarginContainer/VBoxContainer/SpeedometerContainer" unique_id=1810501718]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 0.44313726, 1)
+text = "gdt (m/c):"
+
+[node name="SpeedGodotMps" type="Label" parent="MainSpeedPanel/MarginContainer/VBoxContainer/SpeedometerContainer" unique_id=692858492]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(42, 0)
+layout_mode = 2
+text = "    0"
+horizontal_alignment = 2
+
+[node name="Label3" type="Label" parent="MainSpeedPanel/MarginContainer/VBoxContainer/SpeedometerContainer" unique_id=1303138403]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 0.44313726, 1)
+text = "gdt (км/ч):"
+horizontal_alignment = 2
+
+[node name="SpeedGodotKmh" type="Label" parent="MainSpeedPanel/MarginContainer/VBoxContainer/SpeedometerContainer" unique_id=1415699203]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(42, 0)
+layout_mode = 2
+text = "0"
+horizontal_alignment = 2
+
+[node name="Label4" type="Label" parent="MainSpeedPanel/MarginContainer/VBoxContainer/SpeedometerContainer" unique_id=690719732]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 0.44313726, 1)
+text = "HO (м/с):"
+
+[node name="SpeedHoMps" type="Label" parent="MainSpeedPanel/MarginContainer/VBoxContainer/SpeedometerContainer" unique_id=1094064430]
+unique_name_in_owner = true
+layout_mode = 2
+text = "0"
+horizontal_alignment = 2
+
+[node name="Label5" type="Label" parent="MainSpeedPanel/MarginContainer/VBoxContainer/SpeedometerContainer" unique_id=1841366478]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 0.44313726, 1)
+text = "       HO(км/ч):"
+
+[node name="SpeedHoKmh" type="Label" parent="MainSpeedPanel/MarginContainer/VBoxContainer/SpeedometerContainer" unique_id=1732296780]
+unique_name_in_owner = true
+layout_mode = 2
+text = "0"
+horizontal_alignment = 2
+
+[node name="Label7" type="Label" parent="MainSpeedPanel/MarginContainer/VBoxContainer/SpeedometerContainer" unique_id=1424317303]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 0.44313726, 1)
+text = "Реал (м/с):"
+
+[node name="SpeedRealMps" type="Label" parent="MainSpeedPanel/MarginContainer/VBoxContainer/SpeedometerContainer" unique_id=772624836]
+unique_name_in_owner = true
+layout_mode = 2
+text = "0"
+horizontal_alignment = 2
+
+[node name="Label8" type="Label" parent="MainSpeedPanel/MarginContainer/VBoxContainer/SpeedometerContainer" unique_id=2032472629]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 0.44313726, 1)
+text = "       Реал(км/ч):"
+
+[node name="SpeedRealKmh" type="Label" parent="MainSpeedPanel/MarginContainer/VBoxContainer/SpeedometerContainer" unique_id=1537703188]
+unique_name_in_owner = true
+layout_mode = 2
+text = "0"
+horizontal_alignment = 2
+
+[connection signal="body_entered" from="Start" to="." method="_on_start_finish_body_entered"]
+[connection signal="body_entered" from="Finish" to="." method="_on_start_finish_body_entered"]
+[connection signal="pressed" from="MainSpeedPanel/MarginContainer/VBoxContainer/SpeedometerContainer/Button" to="." method="_on_button_pressed"]

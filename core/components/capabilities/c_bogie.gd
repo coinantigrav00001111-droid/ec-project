@@ -13,6 +13,11 @@ class BogieData:
 
 var is_derailed: bool = false
 
+
+
+
+
+
 # Сами боги, их id, конфиги из TrainVisual перекидываются сюда
 var bogies_data: Array[BogieData] = []
 
@@ -35,6 +40,7 @@ func on_added() -> void:
 	
 	# Сортировка от первой тележки к последней
 	bogies_data.sort_custom(func(a, b): return a.pivot.position.z < b.pivot.position.z)
+
 
 
 func _create_bogies_data(_id: int, _config: BogieConfig, bogie:Node3D) -> void:
@@ -224,7 +230,7 @@ func _assist_update_calc_global_pos(bogie: BogieData) -> void:
 	var path_comp = bogie.current_track.get_comp(C_Path)
 	var curve_len = path_comp.curve.get_baked_length()
 	var track_h = bogie.current_track.get_comp(C_Identity).get_config('height', 0.0)
-	var wp_z = bogie.config.wheel_pair_position.z if bogie.config else 0.0
+	var wp_z = bogie.config.wheel_pair_position.z  if bogie.config else 0.0
 	
 	if wp_z > 0.001:
 		# Двухосная тележка: считаем крайние точки колесных пар (front/rear)

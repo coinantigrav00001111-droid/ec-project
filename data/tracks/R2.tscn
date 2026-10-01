@@ -36,6 +36,9 @@ material = SubResource("StandardMaterial3D_s2hwu")
 radius = 0.8
 height = 0.8
 
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_xi8dl"]
+friction = 0.0
+
 [node name="R2" type="Node3D" unique_id=1429557752]
 
 [node name="Mesh" type="MeshInstance3D" parent="." unique_id=813423370]
@@ -52,3 +55,4 @@ collision_mask = 4
 [node name="HeadStaticBody3D" type="StaticBody3D" parent="." unique_id=675281776]
 collision_layer = 4
 collision_mask = 1028
+physics_material_override = SubResource("PhysicsMaterial_xi8dl")

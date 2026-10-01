@@ -24,7 +24,12 @@ func _ready() -> void:
 	##await  get_tree().process_frame
 	#save_game('autosave')
 	
-	
+
+func _unhandled_input(_event: InputEvent) -> void:
+	if Input.is_action_just_pressed("key_ctrl_s"):
+		save_game('autosave')
+
+
 	
 ## Завершение работы
 func _notification(what):
@@ -58,7 +63,6 @@ func save_game(slot_name: String ='savegame') -> void:
 	
 	# 1️⃣ сохраняем камеру через ее метод
 	_saved_game.gimbal = $"/root/GameRoot/Gimbal".save_global_state()
-	
 	#var save_data = {
 		##"game_version": "1.0",
 		##"global_managers": {
@@ -109,7 +113,7 @@ func load_game(slot_name: String  ='savegame') -> void:
 
 	#🚩res все данные игры собраны здесь
 	var _saved_game :SavedGame = load(save_path) as SavedGame #автокомплит
-	
+	if not _saved_game: return
 	# 1️⃣ загружаем камеру вызывая ее метод
 	$"/root/GameRoot/Gimbal".load_global_state(_saved_game.gimbal)
 	var root_node = get_node(world_entities_root)
@@ -154,6 +158,16 @@ func load_game(slot_name: String  ='savegame') -> void:
 
 	# 4. ВАЖНЕЙШИЙ ТАКТ СИНХРОНИЗАЦИИ ФИЗИКИ (см. Критические нюансы ниже)
 	await get_tree().physics_frame
+	
+	# 5. Проходим все вагоны на снап
+	if root_node:
+		# проход по всем ентити 
+		for _entity in root_node.get_children():
+			if _entity is Entity:
+				var _comp = _entity.get_comp(C_Chassis)
+				if _comp:
+					_comp.restore_snap_after_load()
+	
 	
 	#DEBUG повер слой принудительно обновляем
 	PGM.toggle_power_layer(true)

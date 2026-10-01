@@ -36,15 +36,17 @@ cull_mode = 2
 no_depth_test = true
 albedo_texture = ExtResource("2_aw1sy")
 
-[node name="rulette" type="StaticBody3D" unique_id=1234101903 groups=["moveable"]]
-collision_layer = 32768
-collision_mask = 32768
+[node name="rulette" type="Node3D" unique_id=100519712]
 
-[node name="CollisionShape3Dz" type="CollisionShape3D" parent="." unique_id=86522809]
+[node name="Area3D" type="Area3D" parent="." unique_id=2142545024]
+collision_layer = 4
+collision_mask = 1028
+
+[node name="CollisionShape3Dz" type="CollisionShape3D" parent="Area3D" unique_id=86522809]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0.05, -15)
 shape = SubResource("BoxShape3D_mxmbm")
 
-[node name="CollisionShape3Dx" type="CollisionShape3D" parent="." unique_id=1006050890]
+[node name="CollisionShape3Dx" type="CollisionShape3D" parent="Area3D" unique_id=1006050890]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 16, 0.05, 0.5)
 shape = SubResource("BoxShape3D_mxmbm")
 

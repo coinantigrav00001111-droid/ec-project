@@ -29,6 +29,7 @@ func _ready():
 	var _identity = get_comp(C_Identity)
 	name = _identity.get_name_e() + '_01'
 
+	#return
 	#DD делаем метку центра ентити для дебага
 	var center = MeshInstance3D.new()
 	var box_shape = BoxMesh.new()
@@ -71,7 +72,7 @@ func kill_me():
 	var power_clip = get_comp(C_PowerClip)
 	if power_clip:
 		PGM.unregister_clip(power_clip)
-	self.free()
+	self.queue_free()
 
 
 func remove_component(type: Script): 

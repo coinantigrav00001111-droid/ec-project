@@ -37,7 +37,7 @@ func on_added() -> void:
 	bogies_data.sort_custom(func(a, b): return a.pivot.position.z < b.pivot.position.z)
 
 
-func _create_bogies_data(_id: int, _config: BogieConfig, bogie:Node3D):
+func _create_bogies_data(_id: int, _config: BogieConfig, bogie:Node3D) -> void:
 	
 	var data = BogieData.new()
 	data.id = _id
@@ -93,7 +93,7 @@ func set_track_to_bogies_data(track_data: Dictionary, w_flipped: bool) -> Dictio
 ## Главный шаг расчета позиций в physics_process
 # Не используется - is_w_flipped - разворот вагона по отношению к траку не имеет значения - он будет двигаться по полярности питания. 
 # Направление расчитывается от флипа трака относительно направления питания контура
-func calculate_next_positions(delta: float, speed: float) -> Dictionary:#  , is_w_flipped: bool)  -> Dictionary:
+func calculate_next_positions(delta: float, speed: float)  -> Dictionary:#, is_w_flipped: bool)  -> Dictionary:
 	var bogies_pos = {}
 	#var bogies_pos = [] # массив расчетных позиций боги
 	if is_derailed: return bogies_pos
@@ -124,7 +124,7 @@ func _assist_move_bogie(bogie: BogieData, delta: float, speed: float) -> void:
 	# 2️⃣ если трак  развернут, локальное смещение тележки инвертируется относительно сплайна
 	# Разворот трака держит C_PowerTrack
 	var power_track = bogie.current_track.get_comp(C_PowerTrack)
-	
+
 	# Учитываем инверсию  трака 
 	var  dir_sign = 1.0
 	if power_track:
