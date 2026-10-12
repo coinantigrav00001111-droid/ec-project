@@ -18,3 +18,7 @@ const KICK_IMPULSE_K := 2.0
 ## dv за шаг от кулоновского трения. Не даёт трению развернуть скорость.
 static func friction_dv(v: float, mu: float, g: float, dt: float) -> float:
 	return -signf(v) * minf(mu * g * dt, absf(v))
+
+# XX claude-terra
+## Множитель уклона для C_Chassis (incline_force). 1 = "честная" физика, 5 = горка заметна
+const GRADE_K := 5.0

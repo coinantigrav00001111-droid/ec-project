@@ -26,3 +26,16 @@ enum BuildBehavior { GHOST_PLACE, SPAWN_AND_DRAG }
 
 ## Массив сеттингов компонентов объекта
 @export var components :Array[ComponentSettings] = []
+
+# XX claude-terra
+## Слои, по которым рейкаст тулов ищет точку под курсором ('ground','tracks','trains'...).
+## Пусто = значение по умолчанию из категории (см. get_pick_layers)
+@export var pick_layers: Array[StringName] = []
+
+# XX claude-terra
+func get_pick_layers() -> Array:
+	if not pick_layers.is_empty():
+		return pick_layers
+	if category == &'track':
+		return [&'ground']   # трак ставится на уровень над землей, а не на другие траки
+	return [&'ground', &'tracks', &'trains']

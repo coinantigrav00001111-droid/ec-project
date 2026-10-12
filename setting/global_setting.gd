@@ -28,6 +28,24 @@ class_name GlobalSetting extends Resource
 	'offset_x' : 0.0, #смещение влево 
 }
 
+# XX claude-terra
+@export_group("Terrain")
+## T - высота одного слоя (уровня) рельефа и трака, ю. 1.0 = 1 см модели
+@export var layer_height := 1.0
+## Шаг опор эстакады вдоль трака, ю
+@export var support_step := 8.0
+## Если зазор между низом балласта и землей меньше - опоры не нужны, ю
+@export var support_min_clearance := 0.4
+## Допустимый излом стыка по вертикали, градусы (суммарный уклон двух сторон стыка)
+@export var joint_kink_max_deg := 6.0
+## Радиус вертикального магнита к чужому сокету (по горизонтали), ю
+@export var magnet_radius := 3.0
+## Максимальная разница высот, при которой магнит еще срабатывает, ю
+@export var magnet_max_dy := 6.0
+# XX claude-terra
+## Насколько трак может уходить под землю при снапе/магните, ю (больше - снап отклоняется)
+@export var underground_tolerance := 0.1
+
 ## Это не исп. а для справки
 @export_group("Not Used")
 

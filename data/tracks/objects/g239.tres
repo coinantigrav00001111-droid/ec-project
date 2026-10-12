@@ -16,6 +16,7 @@
 [ext_resource type="Script" uid="uid://b7f7dka1i3slu" path="res://core/components/comp_settings/path_setting.gd" id="11_o7fpk"]
 [ext_resource type="Script" uid="uid://cjk51o364xfn" path="res://core/components/comp_settings/powertrack_setting.gd" id="12_t8too"]
 [ext_resource type="Script" uid="uid://b7ds2l6clrm61" path="res://setting/track_config.gd" id="14_lnr61"]
+[ext_resource type="Script" uid="uid://cs257ge2f37bu" path="res://core/components/comp_settings/tracksupport_setting.gd" id="15_bnru1"]
 
 [sub_resource type="Resource" id="Resource_2a3k7"]
 script = ExtResource("14_lnr61")
@@ -65,11 +66,15 @@ metadata/_custom_type_script = "uid://bv065wdiw674c"
 script = ExtResource("12_t8too")
 metadata/_custom_type_script = "uid://cjk51o364xfn"
 
+[sub_resource type="Resource" id="Resource_q37m8"]
+script = ExtResource("15_bnru1")
+metadata/_custom_type_script = "uid://cs257ge2f37bu"
+
 [resource]
 script = ExtResource("3_7vxw7")
-id = 10
-name = "G239 раб тест"
-description = "Прямой трак 23.9см"
+id = 1100
+name = "G239-0"
+description = "Прямой трак 23.9см. Уклон 0°."
 icon = ExtResource("11_0xkto")
-components = Array[ExtResource("1_k7o5x")]([SubResource("Resource_8t2gm"), SubResource("Resource_yfcut"), SubResource("Resource_iqocg"), SubResource("Resource_0xkto"), SubResource("Resource_qqtt6"), SubResource("Resource_o7fpk"), SubResource("Resource_t8too"), SubResource("Resource_vxtmo"), SubResource("Resource_lnr61"), SubResource("Resource_3owqy")])
+components = Array[ExtResource("1_k7o5x")]([SubResource("Resource_8t2gm"), SubResource("Resource_yfcut"), SubResource("Resource_iqocg"), SubResource("Resource_0xkto"), SubResource("Resource_qqtt6"), SubResource("Resource_o7fpk"), SubResource("Resource_t8too"), SubResource("Resource_vxtmo"), SubResource("Resource_lnr61"), SubResource("Resource_3owqy"), SubResource("Resource_q37m8")])
 metadata/_custom_type_script = "uid://do5hjkm3r2pdg"

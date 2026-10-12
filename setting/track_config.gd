@@ -11,6 +11,9 @@ class_name TrackConfig extends ObjectConfig
 @export var radius := 0.0
 @export var deg := 0.0
 @export var height := 0.85
+# XX claude-terra
+## Подъем вдоль трака, ю (только прямые). 0 = ровный. Для пандуса radius = длина ВДОЛЬ уклона
+@export var rise := 0.0
 #@export var align_ends := false # Выравнивание торцов коллизий
 
 #TODO  Возможное развитие разнообразие траков. Не исп здесь пока. 

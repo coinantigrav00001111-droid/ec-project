@@ -31,10 +31,18 @@ func enter():
 		
 
 
+# XX claude-terra
+func _pick_mask() -> int:
+	var identity := target_entity.get_comp(C_Identity) as C_Identity
+	if identity and identity.setting:
+		return Global.active_layers(identity.setting.get_pick_layers())
+	return Global.active_layers(['ground','tracks','trains'])
+
+
 ## ⚡Сигнал(почти) о смене позиции в сущность. Там рзберется драгабл
 func process_tick(_delta):
 	#var hit = controller.get_mouse_ray((1 << 0) | (1 << 2)|(1 << 4))
-	var hit = controller.get_mouse_ray(Global.active_layers(['ground','tracks','trains']))
+	var hit = controller.get_mouse_ray(_pick_mask())   # XX claude-terra слои из EntitySetting.pick_layers
 	if hit:
 		# Отправляем приказ в сущность. Оттуда C_TrackDraggable сам разберется.
 		target_entity.send_event("on_drag_moved", hit)

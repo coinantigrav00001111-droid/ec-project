@@ -32,10 +32,11 @@ func active_layers(data:Array) -> int:
 	var i := 0
 	
 	for d in data:
-		match d:
+		match str(d): # XX claude-terra StringName/String
 			'ground' : i = i | 1 << 0
 			'tracks' : i = i | 1 << 2
 			'sokets' : i = i | 1 << 3
 			'trains' : i = i | 1 << 4
+			'supports' : i = i | 1 << 5  # XX claude-terra опоры эстакады (резерв)
 			'ghost'  : i = i | 1 << 10
 	return i

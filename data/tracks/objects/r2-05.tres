@@ -1,0 +1,84 @@
+[gd_resource type="Resource" script_class="EntitySetting" format=3 uid="uid://veflrfqn27ti"]
+
+[ext_resource type="Script" uid="uid://m4g5jbfwmaa0" path="res://core/component_setting.gd" id="1_6fv40"]
+[ext_resource type="Script" uid="uid://b7ds2l6clrm61" path="res://setting/track_config.gd" id="2_53r2m"]
+[ext_resource type="Script" uid="uid://mpakwrr6lum8" path="res://core/components/comp_settings/identity_setting.gd" id="3_1uyvm"]
+[ext_resource type="PackedScene" uid="uid://djbkhayb44u5g" path="res://data/tracks/R2.tscn" id="4_fbiv1"]
+[ext_resource type="Script" uid="uid://bulwl3x2rykxk" path="res://core/components/comp_settings/trackvisual_setting.gd" id="5_hwkm7"]
+[ext_resource type="Resource" uid="uid://bqss7rh1mwv41" path="res://core/visual/visual_state.tres" id="6_pmfgx"]
+[ext_resource type="Script" uid="uid://b1jwuxb32so7e" path="res://core/components/comp_settings/trackdraggable_setting.gd" id="7_7kvs3"]
+[ext_resource type="Script" uid="uid://djbifkyei01t7" path="res://core/components/comp_settings/pivot_setting.gd" id="8_436f1"]
+[ext_resource type="Script" uid="uid://cuumo0qj7r7gb" path="res://core/components/comp_settings/hoverable_setting.gd" id="9_ii0hs"]
+[ext_resource type="Script" uid="uid://deljgsmo4bpow" path="res://core/components/comp_settings/selectable_setting.gd" id="10_caog1"]
+[ext_resource type="Script" uid="uid://chprgtlxn3aub" path="res://core/components/comp_settings/blockable_setting.gd" id="11_8m0sn"]
+[ext_resource type="Script" uid="uid://b7f7dka1i3slu" path="res://core/components/comp_settings/path_setting.gd" id="12_acldq"]
+[ext_resource type="Script" uid="uid://bv065wdiw674c" path="res://core/components/comp_settings/socked_setting.gd" id="13_behvs"]
+[ext_resource type="Script" uid="uid://cjk51o364xfn" path="res://core/components/comp_settings/powertrack_setting.gd" id="14_nmqy1"]
+[ext_resource type="Script" uid="uid://cs257ge2f37bu" path="res://core/components/comp_settings/tracksupport_setting.gd" id="15_hmekv"]
+[ext_resource type="Texture2D" uid="uid://kg7asogbvkny" path="res://ui/icons/transport/rail_r2.svg" id="16_273pv"]
+[ext_resource type="Script" uid="uid://do5hjkm3r2pdg" path="res://core/entity_setting.gd" id="17_7euqd"]
+
+[sub_resource type="Resource" id="Resource_bnru1"]
+script = ExtResource("2_53r2m")
+radius = 42.2
+deg = 30.0
+rise = 0.5
+metadata/_custom_type_script = "uid://b7ds2l6clrm61"
+
+[sub_resource type="Resource" id="Resource_vxtmo"]
+script = ExtResource("3_1uyvm")
+object_config = SubResource("Resource_bnru1")
+metadata/_custom_type_script = "uid://mpakwrr6lum8"
+
+[sub_resource type="Resource" id="Resource_yfcut"]
+script = ExtResource("5_hwkm7")
+scene = ExtResource("4_fbiv1")
+metadata/_custom_type_script = "uid://bulwl3x2rykxk"
+
+[sub_resource type="Resource" id="Resource_iqocg"]
+script = ExtResource("7_7kvs3")
+metadata/_custom_type_script = "uid://b1jwuxb32so7e"
+
+[sub_resource type="Resource" id="Resource_0xkto"]
+script = ExtResource("8_436f1")
+metadata/_custom_type_script = "uid://djbifkyei01t7"
+
+[sub_resource type="Resource" id="Resource_qqtt6"]
+script = ExtResource("9_ii0hs")
+metadata/_custom_type_script = "uid://cuumo0qj7r7gb"
+
+[sub_resource type="Resource" id="Resource_o7fpk"]
+script = ExtResource("10_caog1")
+metadata/_custom_type_script = "uid://deljgsmo4bpow"
+
+[sub_resource type="Resource" id="Resource_t8too"]
+script = ExtResource("11_8m0sn")
+metadata/_custom_type_script = "uid://chprgtlxn3aub"
+
+[sub_resource type="Resource" id="Resource_5an37"]
+script = ExtResource("12_acldq")
+radius = 42.2
+deg = 30.0
+metadata/_custom_type_script = "uid://b7f7dka1i3slu"
+
+[sub_resource type="Resource" id="Resource_lnr61"]
+script = ExtResource("13_behvs")
+metadata/_custom_type_script = "uid://bv065wdiw674c"
+
+[sub_resource type="Resource" id="Resource_3d062"]
+script = ExtResource("14_nmqy1")
+metadata/_custom_type_script = "uid://cjk51o364xfn"
+
+[sub_resource type="Resource" id="Resource_eg6rk"]
+script = ExtResource("15_hmekv")
+metadata/_custom_type_script = "uid://cs257ge2f37bu"
+
+[resource]
+script = ExtResource("17_7euqd")
+id = 1210
+name = "R2-05"
+description = "Радиусный трак 42,2см"
+tag = &"curve"
+icon = ExtResource("16_273pv")
+components = Array[ExtResource("1_6fv40")]([SubResource("Resource_vxtmo"), SubResource("Resource_yfcut"), SubResource("Resource_iqocg"), SubResource("Resource_0xkto"), SubResource("Resource_qqtt6"), SubResource("Resource_o7fpk"), SubResource("Resource_t8too"), SubResource("Resource_5an37"), SubResource("Resource_lnr61"), SubResource("Resource_3d062"), SubResource("Resource_eg6rk")])
+metadata/_custom_type_script = "uid://do5hjkm3r2pdg"

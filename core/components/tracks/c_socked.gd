@@ -20,6 +20,11 @@ var capsule_height := 1.49
 # Используем on_entity_ready, чтобы гарантировать, что C_TrackVisual 
 # уже добавил свои инстансы (Path3D) в дерево.
 # Вызывается ядром Entity после того, как все компоненты добавлены
+# XX claude-terra
+func on_added() -> void:
+	entity.add_to_group(&"track_socket")   # для вертикального магнита в C_TrackDraggable
+
+
 func on_entity_ready():
 	_parse_paths()
 
@@ -104,25 +109,10 @@ func _add_socked_area(_pos: Vector3, dir: Vector3) -> Area3D:
 	entity.add_child(area)
 	area.add_child(collision)
 	
-	# 1. Позиция
+	# XX claude-terra позиция и поворот вынесены в _orient_area (его же использует on_curve_changed)
 	var piv = entity.get_comp(C_Pivot).offset
-	area.position = (_pos + piv)
-	
-	# 2. ⚡ ВРАЩЕНИЕ (Лечим боковой снап радиусных траков)
-	if not dir.is_zero_approx():
-		# В Godot локальная ось -Z считается направлением "вперед".
-		# Заставляем -Z смотреть строго наружу вдоль вектора dir.
-		var z_axis = -dir.normalized()
-		var x_axis = Vector3.UP.cross(z_axis).normalized()
-		
-		# Защита от коллинеарности (если сокет смотрит ровно в небо)
-		if x_axis.is_zero_approx():
-			x_axis = Vector3.RIGHT.cross(z_axis).normalized()
-			
-		var y_axis = z_axis.cross(x_axis).normalized()
-		
-		# Применяем вычисленный поворот
-		area.transform.basis = Basis(x_axis, y_axis, z_axis)
+	_orient_area(area, _pos + piv, dir)
+
 		
 	# нужные слои (collision_layer / collision_mask)
 	#area.set_collision_layer_value(4, true) # вкл этот слой 
@@ -191,20 +181,15 @@ func _on_socket_area_entered(s_socket: Area3D, d_socket: Area3D) -> void:
 	#if _is_socket_occupied(d_socket):
 		#return
 	#printt('entered',d_socket.name)
-	# --- ВЫЧИСЛЕНИЕ ИДЕАЛЬНОЙ ТОЧКИ СТЫКОВКИ ---
-	var target_socket_global: Transform3D = s_socket.global_transform
-	
-	# Разворачиваем сокеты лицом к лицу (на 180 градусов по Y)
-	var desired_socket_global = target_socket_global.rotated_local(Vector3.UP, PI)
-	
-	# Вычисляем глобальный трансформ для нашей Entity с учетом локального офсета сокета
-	var d_socket_transform: Transform3D = d_socket.transform
-	var target_entity_transform = desired_socket_global * d_socket_transform.inverse()
-	
+	# XX claude-terra снап по "yaw + позиция": трак остается горизонтальным, уклон живет внутри кривой
+	var snap = _snap_transform(s_socket, d_socket)
+	if snap == null:
+		return   # слишком большой излом по вертикали (GlobalSetting.joint_kink_max_deg)
+
 	# Передаем управление в C_TrackDraggable
 	var _comp = entity.get_comp(C_TrackDraggable)
 	if _comp:
-		_comp.start_snap(target_entity_transform)
+		_comp.start_snap(snap)
 
 	# Тут делааем сеть или не делаем
 	PGM.request_recalculate() # пересчет сети
@@ -331,6 +316,72 @@ func _find_paths_recursive(node: Node) -> Array[Path3D]:
 	return result
 	
 	
+
+# XX claude-terra ===== Террейн: снап по yaw, магнит, flex =====
+
+## Ориентирует Area3D сокета: -Z смотрит наружу вдоль dir (dir может иметь наклон по y)
+func _orient_area(area: Area3D, _pos: Vector3, dir: Vector3) -> void:
+	area.position = _pos
+	if dir.is_zero_approx():
+		return
+	var z_axis = -dir.normalized()
+	var x_axis = Vector3.UP.cross(z_axis).normalized()
+	# Защита от коллинеарности (если сокет смотрит ровно в небо)
+	if x_axis.is_zero_approx():
+		x_axis = Vector3.RIGHT.cross(z_axis).normalized()
+	var y_axis = z_axis.cross(x_axis).normalized()
+	area.transform.basis = Basis(x_axis, y_axis, z_axis)
+
+
+## Поза Entity для стыка сокетов (только yaw + позиция) или null, если излом больше допуска.
+## s_socket - стоящий сокет, d_socket - мой (локальный, базис Entity = только yaw)
+func _snap_transform(s_socket: Area3D, d_socket: Area3D) -> Variant:
+	var t_dir := -s_socket.global_basis.z    # "наружу" у стоящего сокета
+	var d_dir := -d_socket.basis.z           # "наружу" у моего, локально
+	# Стык гладкий, если наружные векторы почти противоположны и по вертикали
+	var kink := absf(rad_to_deg(asin(clampf(t_dir.y, -1.0, 1.0)) + asin(clampf(d_dir.y, -1.0, 1.0))))
+	if kink > Global.settings.joint_kink_max_deg:
+		return null
+	var want := Vector2(-t_dir.x, -t_dir.z)
+	var have := Vector2(d_dir.x, d_dir.z)
+	if want.length_squared() < 0.0001 or have.length_squared() < 0.0001:
+		return null
+	# поворот вокруг Y на угол a меняет угол вектора в (x,z) на -a
+	var yaw := have.angle() - want.angle()
+	var b := Basis(Vector3.UP, yaw)
+	var xf := Transform3D(b, s_socket.global_position - b * d_socket.position)
+	# XX claude-terra снап, при котором трак уходит под землю, отклоняем (пандус вниз к траку на столе: развернуть на 180°)
+	var path := get_comp(C_Path) as C_Path
+	if path and path.underground_depth(xf) > Global.settings.underground_tolerance:
+		return null
+	return xf
+
+
+## Публичная проверка для вертикального магнита: сокет свободен (нет стабильного соседа)
+func is_socket_free(area: Area3D) -> bool:
+	return not _is_socket_occupied(area)
+
+
+## Форма пути изменилась (flex): переставляем СУЩЕСТВУЮЩИЕ Area3D, не пересоздаем.
+## Пересоздание сбрасывает overlaps (угроза Infinite Rebuild Loop из TDD).
+func on_curve_changed(_data: Dictionary) -> void:
+	var path_comp := get_comp(C_Path) as C_Path
+	if not path_comp or not path_comp.curve or not path_comp.path_node or sockets.size() < 2:
+		return
+	var c := path_comp.curve
+	var length := c.get_baked_length()
+	var xf := path_comp.path_node.transform
+	var p0 := c.sample_baked(0.0)
+	var p1 := c.sample_baked(length)
+	# наружу: в начале назад по касательной, в конце вперед
+	var d0 := -(-c.sample_baked_with_rotation(0.0).basis.z).normalized()
+	var d1 := (-c.sample_baked_with_rotation(length).basis.z).normalized()
+	var ends := [[p0, d0], [p1, d1]]
+	for i in 2:
+		sockets[i].pos = ends[i][0]
+		sockets[i].out_dir = ends[i][1]
+		_orient_area(sockets[i].socket, xf * ends[i][0], ends[i][1])
+
 
 ## ==== МАРКЕРЫ ====
 

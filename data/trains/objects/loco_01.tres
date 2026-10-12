@@ -44,6 +44,7 @@ metadata/_custom_type_script = "uid://bwaluvayi2o8k"
 script = ExtResource("5_ufx6w")
 mass = 4.0
 suspension = SubResource("Resource_0p1ic")
+has_engine = true
 scene = ExtResource("4_1pi1k")
 offset_mesh_y = 1.66
 bogie_configs = Array[ExtResource("2_xi8dl")]([SubResource("Resource_m448q"), SubResource("Resource_ibl0p")])

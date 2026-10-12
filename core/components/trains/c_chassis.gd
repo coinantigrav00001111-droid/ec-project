@@ -247,17 +247,21 @@ func _assist_speed_correction(delta: float) -> void:
 	# Итоговая активная сила = обрезанная тяга мотора + неограниченный пинок + сцепка
 	var total_active_force = effective_engine_force + external_kick_force + coupling_force
 	
+	# XX claude-terra: уклон считаем ДО направления движения, чтобы трение покоя держало вагон на горке
+	# get_motion_axis() - мировой вектор при current_speed > 0, его y > 0 на подъеме
+	var incline_force = mass * RailPhysics.G_ROLL * RailPhysics.GRADE_K * get_motion_axis().y
+	var drive_force = total_active_force - incline_force
+
 	# 2. Направление движения
 	var movement_sign = sign(current_speed)
 	if movement_sign == 0.0:
-		movement_sign = sign(total_active_force) 
-		
+		movement_sign = sign(drive_force)
+
 	# 3. Базовое сопротивление (Трение)
 	var friction_force = mass * gravity * roll_res * movement_sign
-	var incline_force = 0.0 # Заглушка под уклон
 
 	# 5. Итоговая сила (В ускорение кузова идут обе силы)
-	var net_force = total_active_force - friction_force - incline_force
+	var net_force = drive_force - friction_force
 
 	# 6. Остановка (если стоим и суммарной силы не хватает для старта)	
 	if is_loco and not motor_powered and abs(current_speed) < 0.01 \
@@ -271,7 +275,7 @@ func _assist_speed_correction(delta: float) -> void:
 	var new_speed = current_speed + acceleration * delta
 
 	# 8. Защита от проскакивания нуля при торможении
-	if movement_sign != 0.0 and sign(new_speed) != movement_sign and abs(total_active_force) < abs(friction_force):
+	if movement_sign != 0.0 and sign(new_speed) != movement_sign and abs(drive_force) < abs(friction_force):   # XX claude-terra
 		current_speed = 0.0
 	else:
 		current_speed = new_speed
@@ -317,22 +321,20 @@ func _check_derailment() -> void:
 		return # отсутствие ноды path это сход
 	
 	# --- СЦЕНАРИЙ 1.5: Непроходимый (слишком крутой) радиус ---
-	if abs(path_comp.deg) > 0.01:
-		var min_allowed_radius: float = _kin.min_curve_radius
+	# XX claude-terra радиус берем в точке передней тележки (для flex он меняется по длине)
+	var r = path_comp.radius_at(front_bogie.track_distance)
+	if r < _kin.min_curve_radius:
+		entity.send_event("on_derailed", {"reason": "tight_curve", "radius": r, "current_velocity_3d": current_velocity_3d})
+		return
 
-		# Если радиус рельса меньше минимально допустимого для вагона
-		if path_comp.radius < min_allowed_radius:
-			entity.send_event("on_derailed", {"reason": "tight_curve", "radius": path_comp.radius, "current_velocity_3d": current_velocity_3d})
-			return
-			
-	# Если угол поворота близок к нулю (прямая), сход от центробежной силы невозможен
-	if abs(path_comp.deg) < 0.01: 
+	# Прямая: сход от центробежной силы невозможен
+	if is_inf(r):
 		centrifugal_force = 0.0
 		return
 
-	# СЦЕНАРИЙ 2: Превышение скорости в повороте, если реборда не держит центробежную силу - сход	
+	# СЦЕНАРИЙ 2: Превышение скорости в повороте, если реборда не держит центробежную силу - сход
 	# Формула центробежной силы из архитектуры: F = (m * v^2) / r
-	centrifugal_force = (_kin.mass * current_speed * current_speed) / path_comp.radius
+	centrifugal_force = (_kin.mass * current_speed * current_speed) / r
 	
 	if centrifugal_force > _kin.max_grip:
 		entity.send_event("on_derailed", {"reason": "hi speed", "force": centrifugal_force, "current_velocity_3d": current_velocity_3d})

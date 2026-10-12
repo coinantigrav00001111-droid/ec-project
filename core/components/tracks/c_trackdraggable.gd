@@ -5,12 +5,18 @@ class_name C_TrackDraggable extends IDraggable
 ##################################
 ## способность двигать ентити, когда включено C_Drag 
 ## компонент двигает сущность по евенту из ентити
+##
+# XX claude-terra: трак всегда горизонтален (в Entity только yaw). Высота = уровень (слой) над
+## поверхностью под курсором. R/F меняют уровень. Наклон живет внутри кривой (C_Path.rise / flex).
 
 @export var snap_break_distance := 9.6 # Дистанция срыва снапа (в метрах)
 
 var drag_offset := Vector3.ZERO # смещение мыши
 var rotation_euler := Vector3.ZERO # Храним тут, чтобы не терять при смене тулзов
 var initial_transform: Transform3D # Стартпозиция
+
+# XX claude-terra
+var elevation := 0 # уровень над поверхностью под курсором, в слоях (GlobalSetting.layer_height)
 
 # Состояние снаппинга
 var is_snapped_locked := false # блокировка мыши в снапе
@@ -23,12 +29,16 @@ var snapped_entity_transform := Transform3D()
 func on_drag_started(_data: Dictionary) -> void:
 
 	initial_transform = entity.global_transform
-	#TODO это ломает драг повернутого трака на наклонной. Решить вместе с поворотом на краю
-	#rotation_euler = entity.global_transform.basis.get_euler() # угол для снапа
 	# Берем смещение, но обнуляем Y, чтобы не тащить за собой перепады высот
 	var raw_offset = entity.global_position - _data.position
 	drag_offset = Vector3(raw_offset.x, 0.0, raw_offset.z)
-	
+
+	# XX claude-terra: yaw берем из позы (раньше после загрузки сейва трак при хвате прыгал в yaw = 0),
+	# а высоту сохраняем, иначе стоящий на высоте трак "упадет" на стол при хвате
+	rotation_euler = Vector3(0.0, entity.global_basis.get_euler().y, 0.0)
+	var T: float = Global.settings.layer_height
+	elevation = maxi(0, roundi((entity.global_position.y - _anchor_offset() - _data.position.y) / T))
+
 	is_snapped_locked = false
 
 	if entity.has_comp(C_Snapped):
@@ -37,70 +47,85 @@ func on_drag_started(_data: Dictionary) -> void:
 
 
 # Движение мышью кждый тик
-# Обращать внимание на то какие слои хватает рейкаст
+# Обращать внимание на то какие слои хватает рейкаст (EntitySetting.pick_layers)
 func on_drag_moved(_data: Dictionary) -> void:
-	# Забираем сырые данные от рейкаста из тулза
 	var mouse_pos: Vector3 = _data.position
-	var normal: Vector3 = _data.normal
-	
-	# -Действия для определния вертикальной позиции в точке рейкаста и центра трака-
-	# 1. Проецируем drag_offset на плоскость текущей поверхности. Это математический способ отбросить "старую" высоту, сохранив только горизонтальное смещение относительно нормали.
-	
-	# Сначала считаем, сколько Y содержится в офсете относительно нормали
-	var offset_vertical_part = normal * drag_offset.dot(normal)
-	
-	# Вычитаем вертикальную часть из офсета, получаем "горизонтальный" офсет для текущей плоскости
-	var current_plane_offset = drag_offset - offset_vertical_part
-	
-	# 2. Новая позиция = позиция мыши + очищенный офсет
-	var target_pos = mouse_pos + current_plane_offset
-	# -- --
-	
+	# XX claude-terra: нормаль поверхности больше не используется, трак не наклоняется по земле
+	var target_pos = mouse_pos + drag_offset
+
 	if is_snapped_locked and entity.has_comp(C_Snapped):
-		# Считаем расстояние от виртуальной позиции мыши до текущей точки снапа
-		var distance_to_mouse = target_pos.distance_to(snapped_entity_transform.origin)
+		# Расстояние по горизонтали от виртуальной позиции мыши до точки снапа
+		var snap_o = snapped_entity_transform.origin
+		var distance_to_mouse = Vector2(target_pos.x, target_pos.z).distance_to(Vector2(snap_o.x, snap_o.z))
 
 		if distance_to_mouse > snap_break_distance:
 			# МЫШЬ ОТЪЕХАЛА: срываем снап, убираем компонент-маркер
 			entity.remove_component(C_Snapped)
 			is_snapped_locked = false
-			_apply_regular_movement(target_pos, normal)
+			_apply_regular_movement(target_pos)
 		else:
 			# МЫШЬ РЯДОМ: Жестко удерживаем трансформ снапа, полностью игнорируя мелкие движения
 			entity.global_transform = snapped_entity_transform
 	else:
 		# Снапа нет — обычное движение по поверхности
-		_apply_regular_movement(target_pos, normal)
-		pass
-	
-	
-## Обычное движение по поверхности
-func _apply_regular_movement(target_pos: Vector3, normal: Vector3) -> void:
-	# 1. Берем базовый вектор и крутим только Yaw (Y)
-	var base_forward = Vector3.FORWARD.rotated(Vector3.UP, rotation_euler.y)
-	
-	# 2. Выравниваем по нормали ландшафта
-	var up = normal.normalized()
-	var right = -up.cross(base_forward).normalized()
+		_apply_regular_movement(target_pos)
 
-	# Защита от коллинеарности
-	if abs(up.dot(base_forward)) > 0.99 or right.is_zero_approx():
-		right = up.cross(Vector3.RIGHT).normalized()
-	var final_forward = right.cross(up).normalized()
-	var new_basis = Basis(right, up, final_forward)
-	
-	# 3. Накручиваем Pitch (X) уже на строго выровненный локальный базис
-	# TODO Отменили , потому что на наклонной багует с определением угла.
-	# TODO надо поворачивать трак за край.
-	
-	if rotation_euler.x != 0.0:
-		new_basis = new_basis.rotated(new_basis.x, rotation_euler.x)
-		#pass
-	# 4. Применяем
-	entity.global_transform.basis = new_basis
-	entity.global_position = target_pos
-	
-	
+
+# XX claude-terra
+## Обычное движение: только yaw, высота = поверхность + уровни, затем вертикальный магнит
+func _apply_regular_movement(target_pos: Vector3) -> void:
+	var T: float = Global.settings.layer_height
+	var pos := Vector3(target_pos.x, target_pos.y + elevation * T + _anchor_offset(), target_pos.z)
+	pos = _apply_vertical_magnet(pos)
+	entity.global_transform = Transform3D(Basis(Vector3.UP, rotation_euler.y), pos)
+
+
+# XX claude-terra
+## Origin жесткого трака в середине кривой. У пандуса нижний конец стоит на уровне, центр выше на |rise|/2
+func _anchor_offset() -> float:
+	var p := entity.get_comp(C_Path) as C_Path
+	return absf(p.rise) * 0.5 if (p and p.centered) else 0.0
+
+
+# XX claude-terra
+## Вертикальный магнит: если мой сокет рядом (по горизонтали) со свободным чужим сокетом на другой высоте,
+## поднимаем/опускаем трак на разницу, чтобы сокеты перекрылись и сработал снап
+func _apply_vertical_magnet(pos: Vector3) -> Vector3:
+	if is_snapped_locked:
+		return pos
+	var mine := entity.get_comp(C_Socket) as C_Socket
+	if not mine:
+		return pos
+	var gs = Global.settings
+	var yaw := Basis(Vector3.UP, rotation_euler.y)
+	var best_d: float = gs.magnet_radius
+	var best_dy := 0.0
+	for node in get_tree().get_nodes_in_group(&"track_socket"):
+		var other := node as Entity
+		if other == null or other == entity or other.is_queued_for_deletion() or other.has_comp(C_Ghost):
+			continue
+		var oc := other.get_comp(C_Socket) as C_Socket
+		if not oc:
+			continue
+		for osock in oc.sockets:
+			if not oc.is_socket_free(osock.socket):
+				continue
+			var tp: Vector3 = osock.socket.global_position
+			for msock in mine.sockets:
+				var mp: Vector3 = pos + yaw * msock.socket.position   # где будет мой сокет
+				var d := Vector2(tp.x - mp.x, tp.z - mp.z).length()
+				var dy := tp.y - mp.y
+				if d < best_d and absf(dy) <= gs.magnet_max_dy:
+					best_d = d
+					best_dy = dy
+	# XX claude-terra магнит не должен тянуть трак под землю (пандус вниз к траку на столе)
+	if best_dy != 0.0:
+		var path := entity.get_comp(C_Path) as C_Path
+		if path and path.underground_depth(Transform3D(yaw, Vector3(pos.x, pos.y + best_dy, pos.z))) > gs.underground_tolerance:
+			best_dy = 0.0
+	pos.y += best_dy
+	return pos
+
 
 
 ## 💡Вызывается из C_Socket при успешной коллизии сокетов
@@ -111,7 +136,6 @@ func start_snap(target_global_transform: Transform3D) -> void:
 	rotation_euler = target_global_transform.basis.get_euler()
 
 
-	
 	if not entity.has_comp(C_Snapped):
 		entity.add_component(C_Snapped.new()) # Вешаем маркер стейта
 
@@ -128,19 +152,20 @@ func on_drag_ended(_data: Dictionary) -> void:
 	# Если рельс заблокирован коллизией балласта при отпускании — возвращаем назад
 	if entity.has_comp(C_Blocked):
 		entity.global_transform = initial_transform
-		
+
 	# Запрашиваем пересчет сети после возврата на исходную
 		PGM.request_recalculate()
-		
+
 	# При дропе объекта отключаем логику срыва, чтобы рельс остался лежать в точке снапа
 	is_snapped_locked = false
 
 
 
 func on_rotate_input(data: Dictionary):
-	var rad = deg_to_rad(data.amount)
-	if data.axis == "y": rotation_euler.y += rad
-	if data.axis == "x": rotation_euler.x += rad
+	if data.axis == "y":
+		rotation_euler.y += deg_to_rad(data.amount)
+	if data.axis == "x":   # XX claude-terra: R/F теперь уровень (слой), а не pitch
+		elevation = maxi(0, elevation + int(signf(data.amount)))
 
 
 
@@ -149,10 +174,11 @@ func on_rotate_input(data: Dictionary):
 # Вызывается у Госта в момент клонирования(отдаем данные). см build_tool 
 func on_clone_state_to(data: Dictionary) -> void:
 	var target_entity: Entity = data.target
-	
+
 	# Гост кричит в новую сущность: "Прими мои настройки драга!"
 	target_entity.send_event("on_receive_draggable_state", {
-		"rotation_euler": rotation_euler
+		"rotation_euler": rotation_euler,
+		"elevation": elevation   # XX claude-terra
 		})
 
 
@@ -160,6 +186,8 @@ func on_clone_state_to(data: Dictionary) -> void:
 func on_receive_draggable_state(data: Dictionary) -> void:
 	if data.has("rotation_euler"):
 		rotation_euler = data.rotation_euler
+	if data.has("elevation"):   # XX claude-terra
+		elevation = data.elevation
 
 
 
@@ -167,10 +195,11 @@ func on_receive_draggable_state(data: Dictionary) -> void:
 func on_drag_reset(_data: Dictionary) -> void:
 	# 1. Сбрасываем накопленные игроком углы в ноль
 	rotation_euler = Vector3.ZERO
-	
+
 	# 2. Сбрасываем смещение по высоте
 	drag_offset = Vector3.ZERO
-	
+	elevation = 0   # XX claude-terra
+
 	# 3. Принудительно сбрасываем локальный трансформ самой сущности, 
 	# чтобы визуально она сразу выровнялась до следующего тика on_drag_moved
 	entity.rotation = Vector3.ZERO

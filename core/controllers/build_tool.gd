@@ -38,7 +38,7 @@ func _enter_ghost_place() -> void:
 # XX claude
 func _enter_spawn_and_drag() -> void:
 	controller.entities_root.add_child(ghost)      # сначала в дерево
-	var hit = controller.get_mouse_ray(Global.active_layers(['ground','tracks','trains']))
+	var hit = controller.get_mouse_ray(_pick_mask())   # XX claude-terra
 	if hit:
 		ghost.send_event("on_drag_moved", hit)     # теперь get_tree() есть
 	controller.select_tool.set_selection(ghost)
@@ -169,9 +169,14 @@ func _place_real_object() -> Entity:
 
 
 
+# XX claude-terra
+func _pick_mask() -> int:
+	return Global.active_layers(ghost_setting.get_pick_layers())
+
+
 func process_tick(_delta):
 	#var hit = controller.get_mouse_ray((1 << 0) | (1 << 2)|(1 << 4))
-	var hit = controller.get_mouse_ray(Global.active_layers(['ground','tracks','trains']))
+	var hit = controller.get_mouse_ray(_pick_mask())   # XX claude-terra слои из EntitySetting.pick_layers
 	
 	if hit and ghost:
 		# Отправляем приказ в сущность. Оттуда C_TrackDraggable сам разберется

@@ -29,6 +29,15 @@ var head_node : StaticBody3D #  Статик нода рельсов
 
 var pivot_offset := Vector3.ZERO 
 
+# XX claude-terra --- пандус и подготовка к Flex ---
+var rise := 0.0       # подъем вдоль трака (ю), только прямые
+var pitch := 0.0      # угол наклона инстанса, рад
+## true: origin сущности в середине кривой (жесткие траки). false: в начале (flex)
+var centered := true
+
+var _radii := PackedFloat32Array()   # радиус на каждом шаге baked-кривой (только flex)
+var _radii_step := 1.0
+
 
 
 func on_added():
@@ -43,6 +52,12 @@ func on_entity_ready() -> void:
 
 	radius = identity.get_config('radius', 0.0)
 	deg = identity.get_config('deg', 0.0)
+	# XX claude-terra
+	rise = identity.get_config('rise', 0.0)
+	if absf(deg) > 0.01 and rise != 0.0:
+		push_warning("Пандус на дуге появится вместе с Flex Tracks, rise проигнорирован")
+		rise = 0.0
+	pitch = asin(clampf(rise / maxf(radius, 0.01), -1.0, 1.0)) if rise != 0.0 else 0.0
 	var pivot = get_comp(C_Pivot)
 	if pivot: pivot_offset = pivot.offset
 	
@@ -71,12 +86,15 @@ func _generate_path() -> Path3D:
 	var curve_length = _path_n.curve.get_baked_length()
 
 	# Середина кривой
-	var _new_offset = - _path_n.curve.sample_baked_with_rotation(curve_length/2).origin
+	var _new_offset = Vector3.ZERO   # XX claude-terra
+	if centered:
+		_new_offset = - _path_n.curve.sample_baked_with_rotation(curve_length/2).origin
 	
 	# И пересчет offset по новой кривой
 	_path_n.position = _new_offset
 	entity.send_event('on_offset_changed', {"new_offset": _new_offset}) # В C_Pivot
 	pivot_offset = _new_offset
+	entity.send_event('on_slope_changed', {"pitch": pitch})   # XX claude-terra в C_TrackVisual
 
 	return _path_n
 
@@ -169,7 +187,9 @@ func generate_track_curve(_radius: float, _deg: float) -> Curve3D:
 		# Первая точка в нуле, вторая уходит по оси -Z на расстояние radius (длину)
 		# Ручки строго нулевые, так как это идеальная прямая
 		new_curve.add_point(Vector3.ZERO, Vector3.ZERO, Vector3.ZERO)
-		new_curve.add_point(Vector3(0, 0, -_radius), Vector3.ZERO, Vector3.ZERO)
+		# XX claude-terra _radius = длина вдоль уклона, горизонтальная проекция короче
+		var h_len := sqrt(maxf(_radius * _radius - rise * rise, 0.0))
+		new_curve.add_point(Vector3(0, rise, -h_len), Vector3.ZERO, Vector3.ZERO)
 		
 	else:
 		# --- РАДИУСНЫЙ ТРАК (ДУГА ОКРУЖНОСТИ) ---
@@ -373,6 +393,7 @@ func save_data() -> Dictionary:
 		'comp_path':get_script().resource_path,		# "res://core/components/c_power_clip.gd"
 		'comp_name':get_script().resource_path.get_file().get_basename(),
 		"radius": radius,
+		"rise": rise,   # XX claude-terra
 		"deg": deg
 	}
 
@@ -382,6 +403,65 @@ func load_data(data: Dictionary) -> void:
 		radius = data.radius
 	if data.has("deg"):
 		deg = data.deg
+	if data.has("rise"):   # XX claude-terra
+		rise = data.rise
+
+
+# XX claude-terra ===== Flex-ready API =====
+## Радиус кривой в точке s (расстояние вдоль кривой). INF для прямой
+func radius_at(s: float) -> float:
+	if _radii.is_empty():            # жесткий трак
+		return radius if absf(deg) > 0.01 else INF
+	return _radii[clampi(roundi(s / _radii_step), 0, _radii.size() - 1)]
+
+
+# XX claude-terra
+## Единственная точка, через которую flex меняет форму пути
+func set_curve(c: Curve3D) -> void:
+	curve = c
+	if path_node:
+		path_node.curve = c
+	_bake_radii()
+	entity.send_event("on_curve_changed", {})
+
+
+# XX claude-terra
+func _bake_radii() -> void:
+	_radii = PackedFloat32Array()
+	if not curve:
+		return
+	var length := curve.get_baked_length()
+	if length < 0.01:
+		return
+	var n := maxi(3, ceili(length) + 1)
+	_radii_step = length / float(n - 1)
+	var pts := PackedVector2Array()
+	for i in n:
+		var p := curve.sample_baked(_radii_step * i)
+		pts.append(Vector2(p.x, p.z))
+	_radii = FlexSolver.radii(pts)
+
+
+# XX claude-terra
+## Насколько самая глубокая точка кривой уходит под землю, если Entity стоит в позе xf. 0 = не уходит.
+## Землей считается слой 'ground' (стол, позже листы пенопласта).
+func underground_depth(xf: Transform3D) -> float:
+	if not curve or not path_node or not entity.is_inside_tree():
+		return 0.0
+	var space := entity.get_world_3d().direct_space_state
+	var length := curve.get_baked_length()
+	var n := maxi(2, ceili(length / 4.0) + 1)
+	var worst := 0.0
+	for i in n:
+		var p: Vector3 = xf * (path_node.position + curve.sample_baked(length * i / (n - 1)))
+		var q := PhysicsRayQueryParameters3D.create(Vector3(p.x, 1000.0, p.z), Vector3(p.x, -1000.0, p.z),
+				Global.active_layers(['ground']))
+		var hit := space.intersect_ray(q)
+		var gy := 0.0
+		if not hit.is_empty():
+			gy = hit.position.y
+		worst = maxf(worst, gy - p.y)
+	return worst
 
 
 # -----HELPERS------

@@ -5,6 +5,7 @@ class BogieData:
 	var config: BogieConfig 	# конфиг конкретного боги из identity
 	var pivot: Node3D              # Корневая нода тележки (из сцены)
 	var raycast: RayCast3D          # Датчик рельса под тележкой
+	var ray_home := Vector3.ZERO   # XX claude-terra штатная локальная позиция датчика (луч временно смещаем и возвращаем)
 	var current_track: Entity
 	var track_distance: float = 0.0
 	var calculated_global_pos: Vector3
@@ -51,6 +52,7 @@ func _create_bogies_data(_id: int, _config: BogieConfig, bogie:Node3D) -> void:
 	data.config = _config
 	data.pivot = bogie
 	data.raycast = bogie.get_node('RayCast3D')
+	data.ray_home = data.raycast.position   # XX claude-terra
 	#data.is_front = bogie.position.z < 0.0
 	data.calculated_global_pos = bogie.position
 
@@ -177,13 +179,20 @@ func _assist_check_transition(bogie: BogieData) -> void:
 		# Смещаем луч чуть вперед по вектору, чтобы "перепрыгнуть" пустоту зазора (~0.2)
 		var look_ahead_pos = extrapolated_pos + (global_forward * 0.1)
 		
-		var sensor_pos = bogie.raycast.global_position
-		bogie.raycast.global_position = look_ahead_pos + Vector3(0, sensor_pos.y, 0) # Ставим над рельсом
-		#bogie.raycast.target_position = Vector3(0, -1.0, 0)
+		# XX claude-terra: старт луча = высота поверхности трака в точке экстраполяции + подъем датчика над поверхностью.
+		# Раньше look_ahead_pos + Vector3(0, sensor_pos.y, 0) складывало высоту дважды (на траке выше стола луч
+		# стартовал слишком высоко), а датчик навсегда оставался смещенным относительно тележки.
+		var track_h = bogie.current_track.get_comp(C_Identity).get_config('height', 0.0)
+		var b_off_y = bogie.config.b_offset.y if bogie.config else 0.0
+		var lift = track_h + b_off_y + bogie.ray_home.y
+		bogie.raycast.global_position = Vector3(look_ahead_pos.x, look_ahead_pos.y + lift, look_ahead_pos.z)
 		bogie.raycast.force_raycast_update()
+		var ray_hit = bogie.raycast.is_colliding()
+		var ray_collider = bogie.raycast.get_collider() if ray_hit else null
+		bogie.raycast.position = bogie.ray_home   # возвращаем датчик на место
 
-		if bogie.raycast.is_colliding():
-			var hit_entity = _find_entity_from_collider(bogie.raycast.get_collider())
+		if ray_hit:
+			var hit_entity = _find_entity_from_collider(ray_collider)
 			
 			# Если нащупали новый трак
 			if is_instance_valid(hit_entity) and hit_entity != bogie.current_track and hit_entity.has_comp(C_Path):

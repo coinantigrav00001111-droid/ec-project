@@ -125,6 +125,13 @@ func apply_shader(mesh_instance: MeshInstance3D, _shader: Shader):
 
 
 
+# XX claude-terra
+## Пандус: наклоняем инстанс сцены вокруг начала кривой. Позицию двигает C_Pivot
+func on_slope_changed(data: Dictionary) -> void:
+	if instance:
+		instance.rotation.x = data.pitch
+
+
 # ---- POWER LAYER ---
 
 ## 1️⃣  --- Секция логики слоя ---
