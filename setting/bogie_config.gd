@@ -24,11 +24,11 @@ class_name BogieConfig extends Resource
 											#Vector3(0.0, 0.71, 1.5)]
 
 
-@export_category("Rotation Limits (YAW)")
-@export var max_yaw_deg: float = 25.0    # Максимальный угол поворота тележки
-@export var yaw_spring: float = 5.0      # Сила возвратной пружины (стремление выровняться по оси кузова)
-
-@export_category("Suspension (Travel & Play)")
-@export var vertical_travel_y: float = 0.05#Вертикальный ход пружин(для имитации просадки на стыках)
-@export var lateral_play_x: float = 0.02 #Люфт колесной пары в колее (для поперечной раскачки)
-@export var suspension_stiffness: float = 10.0 # Жесткость амортизаторов
+#@export_category("Rotation Limits (YAW)")
+#@export var max_yaw_deg: float = 25.0    # Максимальный угол поворота тележки
+#@export var yaw_spring: float = 5.0      # Сила возвратной пружины (стремление выровняться по оси кузова)
+#
+#@export_category("Suspension (Travel & Play)")
+#@export var vertical_travel_y: float = 0.05 #Вертикальный ход пружин(для имитации просадки на стыках)
+#@export var lateral_play_x: float = 0.02 #Люфт колесной пары в колее (для поперечной раскачки)
+#@export var suspension_stiffness: float = 10.0 # Жесткость амортизаторов

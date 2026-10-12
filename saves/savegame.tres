@@ -1,10 +1,10 @@
 [gd_resource type="Resource" script_class="SavedGame" format=3]
 
-[ext_resource type="Script" path="res://core/components/c_pivot.gd" id="1_4osg5"]
-[ext_resource type="Script" path="res://core/components/capabilities/c_path.gd" id="2_iskl3"]
-[ext_resource type="Script" path="res://core/components/capabilities/c_power_track.gd" id="3_piikx"]
-[ext_resource type="Script" path="res://core/components/c_power_clip.gd" id="4_iayi8"]
-[ext_resource type="Script" path="res://saves/saved_game.gd" id="5_86elj"]
+[ext_resource type="Script" uid="uid://vhvnetjvr8qk" path="res://core/components/tracks/c_pivot.gd" id="1_4osg5"]
+[ext_resource type="Script" uid="uid://bfo5if55c66vm" path="res://core/components/tracks/c_path.gd" id="2_iskl3"]
+[ext_resource type="Script" uid="uid://b4ysdn64mmeop" path="res://core/components/tracks/c_power_track.gd" id="3_piikx"]
+[ext_resource type="Script" uid="uid://k4li4tf4cckv" path="res://core/components/tracks/c_power_clip.gd" id="4_iayi8"]
+[ext_resource type="Script" uid="uid://da6vguknd6tj" path="res://saves/saved_game.gd" id="5_86elj"]
 
 [resource]
 script = ExtResource("5_86elj")

@@ -19,6 +19,10 @@ class_name EntitySetting extends Resource
 
 @export var hide : bool = false # скрыть кнопку в UI 
 
+enum BuildBehavior { GHOST_PLACE, SPAWN_AND_DRAG }
+
+## Как BuildTool ставит объект: гост + клик, или сразу спавн в драг
+@export var build_behavior: BuildBehavior = BuildBehavior.GHOST_PLACE
 
 ## Массив сеттингов компонентов объекта
 @export var components :Array[ComponentSettings] = []

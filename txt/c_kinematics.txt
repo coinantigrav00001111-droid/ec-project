@@ -16,10 +16,24 @@ var roll_resistance: float # Трение качения
 # --- НОВЫЕ ПАРАМЕТРЫ ---
 var longitudinal_grip: float = 3.0 #  срыва колес в пробуксовку
 var min_curve_radius: float = 0.0 # минимальный проходимый радиус
+
+#"Rotation Limits (YAW)"
+var max_yaw_deg: float = 25.0    # Максимальный угол поворота тележки
+var yaw_spring: float = 5.0      # Сила возвратной пружины (стремление выровняться по оси кузова)
+
+#"Suspension (Travel & Play)"
+var vertical_travel_y: float = 0.05 #Вертикальный ход пружин(для имитации просадки на стыках)
+var lateral_play_x: float = 0.02 #Люфт колесной пары в колее (для поперечной раскачки)
+var suspension_stiffness: float = 10.0 # Жесткость амортизаторов
+
 var max_tractive_force: float = 0.0 # Максимальная сила тяги мотора (Н) # TODO в c_engine она есть
 var max_theoretical_speed: float = 0.0  # Максимальная скорость # TODO в c_engine она есть
 var has_engine: bool = false
 var current_speed: float = 0.0 # Метры в секунду вдоль сплайна
+var wheel_surface_speed : float = 0.0 # Линейная скорость колес не на рельсах
+
+
+
 
 # Физикс тело вагона
 var rb : RigidBody3D
@@ -27,9 +41,21 @@ var rb : RigidBody3D
 # Флаг объект тащат мышью
 var is_dragging: bool = false 
 
+# XX claude
+var slide_friction: float = 0.1   # μ бокового скольжения и скольжения корпусом
 
 func on_added():
 	rb = get_comp(C_TrainVisual).instance
+	rb.mass = mass
+	rb.contact_monitor = true
+	rb.max_contacts_reported = 4
+	var pm := PhysicsMaterial.new()   # bounce из сцены перенеси сюда, если он нужен
+	pm.friction = 0.0
+	rb.physics_material_override = pm
+	
+	
+func on_added_0():
+	rb = get_comp(C_TrainVisual).rb
 	# FIXME масса в конфиге идентити должна ставиться реальная в граммах. А при создании вагона делать ее х10 для устойчивости движка. Или пока как есть - ставить х10
 	rb.mass = mass
 
@@ -55,30 +81,59 @@ func on_is_dragging(_data: Dictionary) -> void:
 			#rb.linear_damp_mode = RigidBody3D.DAMP_MODE_REPLACE
 			#rb.angular_damp_mode = RigidBody3D.DAMP_MODE_REPLACE
 			
-			if vel.length() > 0.1:
-				var forward_dir = rb.global_transform.basis.z.normalized()
-				var move_dir = vel.normalized()
-				var alignment = abs(move_dir.dot(forward_dir))
+			## XX claude замена if-else на
+			rb.linear_damp = 0.0
+			rb.angular_damp = 0.3
+			
+			#if vel.length() > 0.1:
+				#var forward_dir = rb.global_transform.basis.z.normalized()
+				#var move_dir = vel.normalized()
+				#var alignment = abs(move_dir.dot(forward_dir))
+				#
+				## МАГИЯ: Возводим значение в степень 4. 
+				## Теперь только ИДЕАЛЬНО ровный бросок (0.95+) даст низкий дамп.
+				## Бросок под 45 градусов (0.7) превратится в 0.24, что включит жесткий тормоз.
+				#var strict_alignment = pow(alignment, 4)
+				#
+				## Гасим сам импульс скорости: чем кривее бросок, тем больше энергии сгорает сразу
+				#rb.linear_velocity *= lerp(0.1, 1.0, strict_alignment)
+				#
+				## Назначаем дамп на основе нашей строгой кривой
+				#rb.linear_damp = lerp(4.0, 0.0, strict_alignment)
+				#rb.angular_damp = lerp(4.0, 0.0, strict_alignment)
+			#else:
+				#rb.linear_damp = 0.0
+				#rb.angular_damp = 0.0
 				
-				# МАГИЯ: Возводим значение в степень 4. 
-				# Теперь только ИДЕАЛЬНО ровный бросок (0.95+) даст низкий дамп.
-				# Бросок под 45 градусов (0.7) превратится в 0.24, что включит жесткий тормоз.
-				var strict_alignment = pow(alignment, 4)
-				
-				# Гасим сам импульс скорости: чем кривее бросок, тем больше энергии сгорает сразу
-				rb.linear_velocity *= lerp(0.1, 1.0, strict_alignment)
-				
-				# Назначаем дамп на основе нашей строгой кривой
-				rb.linear_damp = lerp(4.0, 0.0, strict_alignment)
-				rb.angular_damp = lerp(4.0, 0.0, strict_alignment)
-			else:
-				rb.linear_damp = 0.0
-				rb.angular_damp = 0.0
+		else: # is_dragging
+			wheel_surface_speed = 0.0
 
+# XX claude добавил ===========================
+func on_train_kicked(data: Dictionary) -> void:
+	var chassis = get_comp(C_Chassis)
+	if not chassis or chassis.is_on_rails: return
+	var power = data.get("power_kick", 0.0)
+	if power == 0.0 or not rb: return
+	var fwd := -rb.global_basis.z
+	fwd.y = 0.0
+	kick_impulse({
+		"dir": fwd.normalized().rotated(Vector3.UP, data.get("angle", 0.0)),
+		"impulse": power * RailPhysics.KICK_IMPULSE_K,
+		"height": data.get("height", 0.0),   # 0 = на уровне ЦМ
+	})
 
+func kick_impulse(d: Dictionary) -> void:
+	var dir: Vector3 = d.get("dir", Vector3.ZERO)
+	var J: float = d.get("impulse", 0.0)
+	if dir.length_squared() < 0.0001 or J == 0.0: return
+	rb.freeze = false
+	rb.sleeping = false
+	rb.apply_impulse(dir.normalized() * J, Vector3.UP * d.get("height", 0.0))
+	
+# конец добавил=========================
 
 # Слушаем событие пинка
-func on_train_kicked(data: Dictionary) -> void:
+func on_train_kicked_0(data: Dictionary) -> void:
 	var chassis = get_comp(C_Chassis)
 	if not chassis or chassis.is_on_rails:
 		return
@@ -105,24 +160,6 @@ func on_train_kicked(data: Dictionary) -> void:
 					'hit_offset':  Vector3(0, 2.0, 0)
 				})
 
-	'''
-	Что влияет на поведение вагона,локо:
-		Редактор:
-			fricton - свободный ход на полу - только в редакторе установка
-			linear_damp - свободный ход на полу, сопротивление среды. Отнимает процент скорости каждый кадр.
-				on_is_dragging пересчет при переключении драг
-				kick_impulse пересчет при кике в бок
-				on_train_snapped в шасси при снапе
-			angular_damp - свободный ход на полу?
-				дубль с линеар, на что влияет не проверил
-			
-		Конфиг вагона:
-			mass - Вертикальный ассист в процесс кинем, центробежная сила в шасси _check_derailment
-			roll_resistance - Трение качения, speed_correction(замедление) в шасси
-			max_grip - сход, если центробежная больше грип в шасси _check_derailment
-	
-	Лежащий вагон должен получить высокий дамп.
-	'''
 
 ## Пинок имеет 2 реализации.
 ## Тестовая - для проверки физики при разных направлениях приложения силы.
@@ -130,7 +167,7 @@ func on_train_kicked(data: Dictionary) -> void:
 
 # Пинок вагону
 # Получает вектор направления вагона, направление в рад, смещение от центра масс
-func kick_impulse(_data: Dictionary):
+func kick_impulse_0(_data: Dictionary):
 	# Пример применения поперечного пинка к уже сошедшему (или сходящему) вагону в C_Kinematics
 	var kick_forward_vector = _data.get("kick_forward_vector", Vector3.ZERO)
 	var kick_rotate = _data.get("kick_rotate", 0)
@@ -155,6 +192,7 @@ func kick_impulse(_data: Dictionary):
 
 
 func _physics_process(delta: float) -> void:
+
 	# 1. Если физика выключена (вагон на рельсах или это гост), выходим
 	if not rb or rb.freeze:
 		return
@@ -195,6 +233,23 @@ func _physics_process(delta: float) -> void:
 				
 				# 3.2. ‼️Вертикальный ассист (HO-масштаб)
 				_assist_vertical(true)
+				# XX claude добавил
+				_assist_ground_friction(delta)
+				_update_wheel_speed()
+
+				# 9. СКОРОСТЬ ВРАЩЕНИЯ КОЛЕС (Для боги)
+				if entity.has_comp(C_Engine): 
+					wheel_surface_speed = 0.0 # Колеса стоят, локо скользит юзом до полной остановки
+				else:
+					# Нормальный зацеп: колеса синхронизированы со скоростью шасси
+					# Получаем локальный вектор "вперед" для текущего поворота вагона
+
+					var forward_vec = -entity.global_transform.basis.z
+					var signed_speed = rb.linear_velocity.length() * sign(rb.linear_velocity.dot(forward_vec))
+					wheel_surface_speed = signed_speed
+				
+
+				
 
 
 
@@ -220,6 +275,59 @@ func _assist_vertical(_check_move := true):
 	rb.apply_central_force(extra_gravity)
 
 
+## XX claude добавил ===============================
+## Колёса на столе: вдоль оси качение (та же формула, что в C_Chassis), поперёк скольжение.
+## Сила прикладывается в точках контакта тележек, поэтому рыскание получается само,
+## и никаких lerp(damp) по alignment^4 не нужно.
+func _assist_ground_friction(delta: float) -> void:
+	if delta <= 0.0 or rb.get_contact_count() == 0:
+		return
+	var v := rb.linear_velocity
+	var v_h := Vector3(v.x, 0.0, v.z)
+	if v_h.length() < 0.01 and rb.angular_velocity.length() < 0.01:
+		return   # даём телу уснуть
+
+	# Лежит на боку/крыше: скользит корпусом
+	if rb.global_basis.y.dot(Vector3.UP) < 0.7:
+		var spd := v_h.length()
+		if spd > 0.01:
+			var dv := minf(slide_friction * RailPhysics.G_SLIDE * delta, spd)
+			rb.apply_central_force(-v_h / spd * (dv / delta) * mass)
+		return
+
+	# На колёсах
+	var bogie_comp := get_comp(C_Bogie) as C_Bogie
+	if not bogie_comp or bogie_comp.bogies_data.is_empty(): return
+
+	var fwd := -rb.global_basis.z
+	fwd.y = 0.0
+	fwd = fwd.normalized()
+	var side := Vector3.UP.cross(fwd)
+
+	# Локо без тяги: колёса стоят. В шасси в этом случае roll_res = longitudinal_grip, здесь так же
+	var mu_long := longitudinal_grip if entity.has_comp(C_Engine) else roll_resistance
+	var share := mass / bogie_comp.bogies_data.size()
+
+	for b in bogie_comp.bogies_data:
+		var r_wheel: float = b.config.wheel_pair_position.y if b.config else 0.7
+		var rel: Vector3 = (b.pivot.global_position - rb.global_basis.y * r_wheel) - rb.global_position
+		var v_p := v + rb.angular_velocity.cross(rel)   # ЦМ ≈ origin тела
+
+		var a_long := RailPhysics.friction_dv(v_p.dot(fwd), mu_long, RailPhysics.G_ROLL, delta) / delta
+		var a_lat := RailPhysics.friction_dv(v_p.dot(side), slide_friction, RailPhysics.G_SLIDE, delta) / delta
+		rb.apply_force((fwd * a_long + side * a_lat) * share, rel)
+
+
+func _update_wheel_speed() -> void:
+	if entity.has_comp(C_Engine):
+		wheel_surface_speed = 0.0
+	else:
+		wheel_surface_speed = rb.linear_velocity.dot(-rb.global_basis.z)  # только продольная часть
+
+## XX claude добавил конец===============================
+
+
+
 ## Обработка физики схода.
 func on_derailed(_data: Dictionary) -> void:
 	if not rb: return
@@ -231,21 +339,25 @@ func on_derailed(_data: Dictionary) -> void:
 	
 	# 2. Передаем импульс движения
 	rb.linear_velocity = _data.current_velocity_3d
-
-	# 3. Разделяем логику инерции
-	if entity.has_comp(C_Engine):
-		# Это Локомотив. Питание потеряно -> колеса в блоке (п. 7)
-		# Локомотив: колеса заблокированы
-		#rb.linear_damp = roll_resistance * K_DAMP + 5.0 # Доп. сопротивление мотора
-		#rb.physics_material_override.friction = 0.8 # Сильно трется
-		rb.linear_damp = 0.0  # Сильное трение (скользит юзом)
-		rb.angular_damp = 0.0
-
-	else:
-		#Затухание (linear_damp): Это сопротивление среды. В Godot оно отнимает процент скорости каждый кадр.
-		# Это Вагон. Колеса не заблокированы -> катится по инерции
-		rb.linear_damp = 2.5  # Легкое трение качения
-		rb.angular_damp = 2.5
+	
+	## XX claude замена if-else на
+	rb.linear_damp = 0.0
+	rb.angular_damp = 0.3
+	## . Damp действует и на вертикаль, поэтому сейчас он портит калибровку «20 м за 0.2 с».
+	
+	## 3. Разделяем логику инерции
+	#if entity.has_comp(C_Engine):
+		## Это Локомотив. Питание потеряно -> колеса в блоке (п. 7)
+		## Локомотив: колеса заблокированы
+		#rb.linear_damp = 0.0  # Сильное трение (скользит юзом)
+		#rb.angular_damp = 0.0
+#
+	#else:
+		##Затухание (linear_damp): Это сопротивление среды. В Godot оно отнимает процент скорости каждый кадр.
+		## Это Вагон. Колеса не заблокированы -> катится по инерции
+		#rb.linear_damp = 2.5  # Легкое трение качения
+		#rb.angular_damp = 2.5
+	
 		
 	var rot = 0.3
 	rb.angular_velocity = Vector3(randf_range(-rot, rot), randf_range(-rot, rot), randf_range(-rot, rot))
@@ -256,28 +368,29 @@ func on_derailed(_data: Dictionary) -> void:
 func on_drag_reset(_data: Dictionary) -> void:
 
 	await get_tree().physics_frame
-	
-	# 1. Сбрасываем углы в ноль
-	rb.rotation = Vector3.ZERO
-	#rb.position.y = 0.1
+	if is_instance_valid(rb):
+		# 1. Сбрасываем углы в ноль
+		rb.rotation = Vector3.ZERO
+		#rb.position.y = 0.1
 
 	# 2. Принудительно сбрасываем локальный трансформ самой сущности, 
 	# чтобы визуально она сразу выровнялась до следующего тика on_drag_moved
 	entity.rotation = Vector3.ZERO
 
 
-# Прилетает при ручном вращении ентити из трдрагабле
+# XX claude
+# Прилетает при ручном вращении ентити из драгабле
 func on_force_rotate_physics(data: Dictionary) -> void:
-	if not rb: 
+	if not rb:
 		return
-		
-	# Синхронизируем физический кузов с логической Entity,
-	# дожидаясь окна физического сервера для активного RigidBody
+	if not is_inside_tree():
+		rb.global_basis = data.basis   # без ожидания, физика ещё не активна
+		return
 	await get_tree().physics_frame
-	rb.global_basis = data.basis
-	
-	
+	if is_instance_valid(rb):
+		rb.global_basis = data.basis
 
+# TODO Побочное замечание: в _snap_to_track каждый тик драга вызывается on_force_rotate_physics с await. Это создаёт новую корутину на каждый кадр, пока вагон над траком. Работает, но можно вместо этого один раз за кадр писать rb.global_basis напрямую, когда вагон в драге: физика всё равно управляется скоростями в _physics_process. Это отдельная оптимизация, не срочная.
 
 # Мы не на рельсах, только это тут интересует
 # Если это Локомотив, скорость не будет приходить от C_Engine.

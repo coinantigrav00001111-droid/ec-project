@@ -1,7 +1,0 @@
-[gd_resource type="Resource" script_class="CurveSettings" format=3 uid="uid://dngcjg17h1xd3"]
-
-[ext_resource type="Script" uid="uid://b0le1at2y781g" path="res://core/components/tracks/curve/curve_setting.gd" id="1_et5op"]
-
-[resource]
-script = ExtResource("1_et5op")
-metadata/_custom_type_script = "uid://b0le1at2y781g"

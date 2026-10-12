@@ -108,19 +108,19 @@ func get_power(_cid: int) -> float:
 
 
 
-# ---Хелпер для связи с C_Visual---
+# ---Хелпер для связи с C_TrackVisual---
 func _update_shader_voltage(cid: int, voltage: float) -> void:
 	# Ищем оба варианта материала в кэше (прямой и перевернутый)
 	var key_normal = str(cid) + "_false"
 	var key_flipped = str(cid) + "_true"
 	
-	if C_Visual.power_materials_cache.has(key_normal):
-		var mat: ShaderMaterial = C_Visual.power_materials_cache[key_normal]
+	if C_TrackVisual.power_materials_cache.has(key_normal):
+		var mat: ShaderMaterial = C_TrackVisual.power_materials_cache[key_normal]
 		# Передаем напряжение в шейдер 
 		mat.set_shader_parameter("scroll_speed", voltage * 0.01) 
 
-	if C_Visual.power_materials_cache.has(key_flipped):
-		var mat_flip: ShaderMaterial = C_Visual.power_materials_cache[key_flipped]
+	if C_TrackVisual.power_materials_cache.has(key_flipped):
+		var mat_flip: ShaderMaterial = C_TrackVisual.power_materials_cache[key_flipped]
 		# Для перевернутых траков инвертируем скорость/направление
 		mat_flip.set_shader_parameter("scroll_speed", -voltage * 0.01)
 
@@ -250,6 +250,7 @@ func _reset_all_tracks() -> void:
 			
 			# 🚧 Гасим визуал перед новым пересчетом
 			track_entity.send_event("on_power_view_changed", {"active": is_power_layer_active})
+						
 
 
 
@@ -377,102 +378,7 @@ func _calc_flip(current_entity: Entity, neighbor_entity: Entity, current_flip: b
 func toggle_power_layer(state: bool):
 	is_power_layer_active = state
 	power_layer_toggled.emit(state)
-
 	# Получаем список всех сущностей с C_PowerTrack
 	var all_tracks = get_tree().get_nodes_in_group("power_track")
 	for track_entity in all_tracks:
 		track_entity.send_event("on_power_view_changed", {"active": state})
-
-
-#region Пока оставим, потом удалить
-
-# алгоритм BFS (поиск в ширину). копия. Держим на всякий.
-func _build_contour_from_clip0(_clip: C_PowerClip) -> void:
-	# 0. Базовые проверки
-	if not _clip.entity or _clip.contour_id == 0: return
-	
-	# 1. Получаем сущность, на которой висит этот клип
-	var start_entity = _clip.entity
-	var target_contour = _clip.contour_id
-	
-	# 2. Инициализируем очередь и словарь посещенных нод (защита от замкнутых колец)
-	var queue: Array[Entity] = []
-	var visited: Dictionary = {}
-	
-	# Помещаем стартовый трак в очередь
-	queue.append(start_entity)
-	visited[start_entity] = true
-
-	# 3. Запускаем обход графа
-	while queue.size() > 0:
-		var current_entity = queue.pop_front()
-
-		# Раздаем питание текущему извлеченному траку
-		var track_comp = current_entity.get_comp(C_PowerTrack)
-		if track_comp:
-			track_comp.contour_id = target_contour
-			## 🚧 Дергаем C_Visual, чтобы он применил цвет контура
-			current_entity.send_event("on_power_view_changed", {"active": is_power_layer_active})
-			
-		# 4. Ищем соседей и планируем их обработку
-		var socket_comp = current_entity.get_comp(C_Socket)
-
-		if socket_comp:
-			await get_tree().physics_frame
-
-			var neighbors = socket_comp.get_connected_entities()
-			
-			for neighbor in neighbors:
-				var neighbor_power = neighbor.get_comp(C_PowerTrack)
-				# Пропускаем, если у соседа нет способности проводить ток
-				if not neighbor.has_comp(C_PowerTrack):
-					continue
-					
-				# Защита от Короткого Замыкания и повторного прохода
-				if neighbor_power.contour_id != 0:
-					if neighbor_power.contour_id != _clip.contour_id:
-						
-						# Вычисляем кого тащат.
-						var _cdrag = current_entity.has_comp(C_Drag)
-						var _ndrag = neighbor.has_comp(C_Drag)
-											
-						var _remove_clip = current_entity if _cdrag else neighbor 
-						
-						print("⚡ АВАРИЯ (КЗ)! Цепь ", current_entity.name, ' ', _cdrag, " столкнулась с цепью ", neighbor.name, ' ', _ndrag)
-						
-						_remove_clip.remove_component(C_PowerClip)
-						
-					
-						# Трак уже под питанием другой цепи. Дальше ток не пускаем.
-						# Опционально: можно здесь кидать alert в UI
-					continue # Трак уже обработан, пропускаем
-					
-				# Если мы у этого соседа еще не были — добавляем в очередь
-				if not visited.has(neighbor):
-					visited[neighbor] = true # Сразу помечаем, чтобы не добавить дважды
-					queue.append(neighbor)
-					
-				#✳️ Случай А: Мы заряжены. Сосед пустой 
-				if track_comp.contour_id != 0 and neighbor_power.contour_id == 0:
-					neighbor_power.contour_id = track_comp.contour_id
-					
-					# 💡 ВСТАВИТЬ ТОЛЬКО ЭТИ ДВЕ СТРОКИ:
-					var calculated_flip = _calc_flip(current_entity,  neighbor, track_comp.is_flipped)
-					#printt('Случай А')
-					neighbor_power.is_flipped = calculated_flip
-					
-					# Заставляем визуал соседа обновиться, используя глобальный флаг видимости слоя 
-					neighbor.send_event("on_power_view_changed", {"active": PGM.is_power_layer_active}) 
-					
-				# ✳️ Случай Б: Сосед заряжен. Мы пустые
-				elif neighbor_power.contour_id!= 0 and track_comp.contour_id== 0:
-					track_comp.contour_id = neighbor_power.contour_id
-					printt('Случай Б')
-					# 💡 ВСТАВИТЬ ТОЛЬКО ЭТИ ДВЕ СТРОКИ:
-					var calculated_flip = _calc_flip(current_entity,  neighbor, track_comp.is_flipped)
-					track_comp.is_flipped = calculated_flip
-			
-					current_entity.send_event("on_power_view_changed", {"active": PGM.is_power_layer_active}) 
-					
-	PGM.power_tab_updated.emit()
-#endregion end

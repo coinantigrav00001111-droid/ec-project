@@ -37,11 +37,17 @@ height = 0.8
 
 [sub_resource type="Curve3D" id="Curve3D_togol"]
 
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_3dq5o"]
-friction = 0.9
+[sub_resource type="BoxShape3D" id="BoxShape3D_togol"]
+size = Vector3(3.1, 0.6, 10.3)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_atfeu"]
-size = Vector3(0.1, 0.25, 10.7)
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_vikvd"]
+friction = 0.0
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_jupbj"]
+size = Vector3(3.1, 0.6, 10.3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_50jlw"]
+size = Vector3(0.2, 0.25, 10.7)
 
 [node name="G107" type="Node3D" unique_id=1734971531]
 
@@ -56,31 +62,30 @@ mesh = SubResource("SphereMesh_togol")
 [node name="Path3D" type="Path3D" parent="." unique_id=1612278490]
 curve = SubResource("Curve3D_togol")
 
-[node name="Ballast" type="Area3D" parent="." unique_id=1106402733]
+[node name="Ballast" type="Area3D" parent="." unique_id=1380381388]
+editor_description = "Area для мышки и режима блокед
+"
 collision_layer = 4
-collision_mask = 4
-input_capture_on_drag = true
+collision_mask = 1028
 
-[node name="HeadL" type="StaticBody3D" parent="." unique_id=2105509020]
-unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
-collision_layer = 1024
-collision_mask = 1024
-physics_material_override = SubResource("PhysicsMaterial_3dq5o")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ballast" unique_id=830109987]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, -5.35)
+shape = SubResource("BoxShape3D_togol")
 
-[node name="CollisionShapeBox" type="CollisionShape3D" parent="HeadL" unique_id=1900219927]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.875, 0.125, -5.35)
-shape = SubResource("BoxShape3D_atfeu")
-debug_color = Color(0, 1, 0.701961, 1)
+[node name="HeadStaticBody3D" type="StaticBody3D" parent="." unique_id=1198631354]
+editor_description = "Статик для вагонов"
+collision_layer = 4
+collision_mask = 1028
+physics_material_override = SubResource("PhysicsMaterial_vikvd")
 
-[node name="HeadR" type="StaticBody3D" parent="." unique_id=1166128200]
-unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
-collision_layer = 1024
-collision_mask = 1024
-physics_material_override = SubResource("PhysicsMaterial_3dq5o")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="HeadStaticBody3D" unique_id=1251812489]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, -5.35)
+shape = SubResource("BoxShape3D_jupbj")
 
-[node name="CollisionShapeBox" type="CollisionShape3D" parent="HeadR" unique_id=1633710040]
-transform = Transform3D(0.9999863, 0, 0.005235964, 0, 1, 0, -0.005235964, 0, 0.9999863, 0.875, 0.125, -5.35)
-shape = SubResource("BoxShape3D_atfeu")
-debug_color = Color(0, 1, 0.701961, 1)
+[node name="CollisionShape3D2" type="CollisionShape3D" parent="HeadStaticBody3D" unique_id=30495728]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.875, 0.725, -5.35)
+shape = SubResource("BoxShape3D_50jlw")
+
+[node name="CollisionShape3D3" type="CollisionShape3D" parent="HeadStaticBody3D" unique_id=2071080823]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.875, 0.725, -5.35)
+shape = SubResource("BoxShape3D_50jlw")

@@ -1,0 +1,11 @@
+[gd_resource type="ShaderMaterial" format=3 uid="uid://frf8kf7xajm3"]
+
+[ext_resource type="Shader" uid="uid://bu73keykb03qm" path="res://core/visual/materials/shader_wheel01_material.gdshader" id="1_tmf6d"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_tmf6d")
+shader_parameter/normal_color = Color(1, 1, 1, 1)
+shader_parameter/slip_color = Color(1, 0, 0, 1)
+shader_parameter/slip_blend = 0.0
+shader_parameter/spoke_count = 2.0

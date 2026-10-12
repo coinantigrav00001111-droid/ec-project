@@ -36,7 +36,7 @@ func process_tick(_delta):
 	#var hit = controller.get_mouse_ray((1 << 0) | (1 << 2)|(1 << 4))
 	var hit = controller.get_mouse_ray(Global.active_layers(['ground','tracks','trains']))
 	if hit:
-		# Отправляем приказ в сущность. Оттуда C_Draggable сам разберется.
+		# Отправляем приказ в сущность. Оттуда C_TrackDraggable сам разберется.
 		target_entity.send_event("on_drag_moved", hit)
 		pass
 	$"../../UI/ModeLabel".text = name

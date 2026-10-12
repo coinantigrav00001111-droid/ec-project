@@ -130,7 +130,7 @@ func load_game(slot_name: String  ='savegame') -> void:
 		var _setting = load(e_data["setting_path"]) as EntitySetting
 		if not _setting: continue
 		
-		## 1️⃣ Базовая сборка сущности: создание инстанса, добавление C_Identity, C_Visual итд
+		## 1️⃣ Базовая сборка сущности: создание инстанса, добавление C_Identity, C_TrackVisual итд
 		var new_entity = entity_factory.create_from_setting(_setting)
 		new_entity.name = _setting.name # имя ентити 
 		# Восстанавливаем трансформацию ДО добавления в дерево
@@ -159,7 +159,7 @@ func load_game(slot_name: String  ='savegame') -> void:
 	# 4. ВАЖНЕЙШИЙ ТАКТ СИНХРОНИЗАЦИИ ФИЗИКИ (см. Критические нюансы ниже)
 	await get_tree().physics_frame
 	
-	# 5. Проходим все вагоны на снап
+	#XX claude  5. Проходим все вагоны на снап (один раз: on_train_snapped асинхронный, повторный вызов только дублирует его)
 	if root_node:
 		# проход по всем ентити 
 		for _entity in root_node.get_children():
@@ -167,10 +167,17 @@ func load_game(slot_name: String  ='savegame') -> void:
 				var _comp = _entity.get_comp(C_Chassis)
 				if _comp:
 					_comp.restore_snap_after_load()
+
+		#XX claude 5б. Сцепки восстанавливаем вторым проходом: нужны финальные позиции ВСЕХ вагонов
+		for _entity in root_node.get_children():
+			if _entity is Entity:
+				var _cp = _entity.get_comp(C_Coupler) as C_Coupler
+				if _cp:
+					_cp.restore_links_after_load()
 	
 	
 	#DEBUG повер слой принудительно обновляем
-	PGM.toggle_power_layer(true)
+	#PGM.toggle_power_layer(true)
 	PGM.request_recalculate()
 	print("Макет успешно загружен!")
 

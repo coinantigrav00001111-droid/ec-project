@@ -13,8 +13,12 @@ class BogieData:
 
 var is_derailed: bool = false
 
+
 # Сами боги, их id, конфиги из TrainVisual перекидываются сюда
 var bogies_data: Array[BogieData] = []
+
+# все колеса {'wheel_node', 'radius'}
+var wheel_nodes: Array[Dictionary] = [] 
 
 
 func on_added() -> void:
@@ -28,6 +32,8 @@ func on_added() -> void:
 	var comp = entity.get_comp(C_TrainVisual)
 	var bogie_nodes = comp.bogie_nodes
 	
+	wheel_nodes = comp.wheel_nodes
+	
 	# Формируем массив данных боги 
 	for i in range(bogie_nodes.size()):
 		var bogie = bogie_nodes[i]
@@ -35,6 +41,7 @@ func on_added() -> void:
 	
 	# Сортировка от первой тележки к последней
 	bogies_data.sort_custom(func(a, b): return a.pivot.position.z < b.pivot.position.z)
+
 
 
 func _create_bogies_data(_id: int, _config: BogieConfig, bogie:Node3D) -> void:
@@ -48,6 +55,7 @@ func _create_bogies_data(_id: int, _config: BogieConfig, bogie:Node3D) -> void:
 	data.calculated_global_pos = bogie.position
 
 	bogies_data.append(data)
+
 
 
 # ==========================================
@@ -153,7 +161,6 @@ func _assist_check_transition(bogie: BogieData) -> void:
 	# 3. Получаем крайнюю точку и глобальный вектор вылета (касательную)
 	var edge_offset = curve_len if is_exiting_end else 0.0
 	
-	
 	var edge_transform = path_comp.curve.sample_baked_with_rotation(edge_offset)
 	var edge_global_pos = path_comp.path_node.to_global(edge_transform.origin)
 	
@@ -224,7 +231,12 @@ func _assist_update_calc_global_pos(bogie: BogieData) -> void:
 	var path_comp = bogie.current_track.get_comp(C_Path)
 	var curve_len = path_comp.curve.get_baked_length()
 	var track_h = bogie.current_track.get_comp(C_Identity).get_config('height', 0.0)
-	var wp_z = bogie.config.wheel_pair_position.z if bogie.config else 0.0
+	var wp_z = bogie.config.wheel_pair_position.z  if bogie.config else 0.0
+	
+	# --- ИСПРАВЛЕНИЕ: Получаем данные о развороте трака ---
+	var power_track = bogie.current_track.get_comp(C_PowerTrack)
+	var is_track_flipped = power_track.is_flipped if power_track else false
+	# --------------------------------------------------------
 	
 	if wp_z > 0.001:
 		# Двухосная тележка: считаем крайние точки колесных пар (front/rear)
@@ -237,6 +249,12 @@ func _assist_update_calc_global_pos(bogie: BogieData) -> void:
 		
 		# Поворот pivot тележки строго по вектору между осями
 		var forward_dir = (front_pos - rear_pos).normalized()
+		
+		# --- ИСПРАВЛЕНИЕ: Инвертируем вектор для 2-осной тележки, если сплайн встречный (1-1) ---
+		if is_track_flipped:
+			forward_dir = -forward_dir
+		# ----------------------------------------------------------------------------------------
+		
 		if is_instance_valid(bogie.pivot) and forward_dir.length_squared() > 0.001:
 			bogie.pivot.global_basis = Basis.looking_at(forward_dir, Vector3.UP)
 	else:
@@ -247,8 +265,60 @@ func _assist_update_calc_global_pos(bogie: BogieData) -> void:
 		if is_instance_valid(bogie.pivot):
 			var transform_baked = path_comp.curve.sample_baked_with_rotation(clampf(bogie.track_distance, 0.0, curve_len))
 			var global_forward = (path_comp.path_node.global_basis * -transform_baked.basis.z).normalized()
+			
+			# --- ИСПРАВЛЕНИЕ: Инвертируем вектор для 1-осной тележки, если сплайн встречный (1-1) ---
+			if is_track_flipped:
+				global_forward = -global_forward
+			# --------------------------------------------------------------------------------
+			
 			if global_forward.length_squared() > 0.001:
 				bogie.pivot.global_basis = Basis.looking_at(global_forward, Vector3.UP)
+				
+				
+				
+
+## ===============================
+func _physics_process(delta: float) -> void:
+	wheel_rotate(delta)
+	
+	
+func wheel_rotate(delta):
+	
+	var comp_chassis = entity.get_comp(C_Chassis) as C_Chassis
+	var comp_kinem = entity.get_comp(C_Kinematics) as C_Kinematics
+	var speed_real = 0.0
+	var wheel_speed = 0.0
+	if comp_chassis.is_on_rails	:
+		speed_real = comp_chassis.current_speed 
+		wheel_speed =  comp_chassis.wheel_surface_speed 
+	else: 
+		speed_real = comp_kinem.rb.linear_velocity.length()
+		wheel_speed = comp_kinem.wheel_surface_speed 
+
+
+	if abs(speed_real) < 0.01: return 
+	for wheel in wheel_nodes:
+		# Диаметр 
+		var _r: float = wheel.radius
+
+		# Переводим линейную скорость колеса в угловую скорость (радианы в секунду)
+		var _angular_velocity = -wheel_speed / _r
+		# Применяем вращение к мешам колесных пар вокруг локальной оси X
+		wheel.wheel_node.rotate_object_local(Vector3.RIGHT, _angular_velocity * delta)
+		
+		# Считаем проскальзывание для шейдера
+		# XX claude замена
+		var slip_amount = abs(abs(speed_real) - abs(wheel_speed))
+		#var slip_amount = abs(speed_real - wheel_speed) 
+		var max_expected_slip = 3.0 # макс скорость, на которую шейдер будет срабатывать
+		
+		# Отправляем параметр slip в материал колеса
+		var slip_normalized = clampf(slip_amount / max_expected_slip, 0.0, 1.0)
+
+		var _mesh = wheel.wheel_node.get_node('WheelPairMesh')
+	
+		_mesh.material_overlay.set_shader_parameter("slip_blend", slip_normalized)
+
 
 
 

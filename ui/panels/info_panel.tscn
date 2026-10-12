@@ -7,9 +7,9 @@
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -251.0
-offset_right = 251.0
-offset_bottom = 243.0
+offset_left = -288.5011
+offset_right = 285.4989
+offset_bottom = 249.0
 grow_horizontal = 2
 script = ExtResource("1_lrlkj")
 
@@ -24,7 +24,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"PanelContainerHeader"
 
-[node name="HeaderLLabel" type="Label" parent="VBoxContainer/HeaderHBoxContainer/PanelContainer" unique_id=1302209384]
+[node name="HeaderLabel" type="Label" parent="VBoxContainer/HeaderHBoxContainer/PanelContainer" unique_id=1302209384]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 22)
 layout_mode = 2
@@ -43,11 +43,13 @@ text = "2222222"
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
-current_tab = 1
+current_tab = 4
 clip_tabs = false
 tab_0/title = "Общее"
 tab_1/title = "Питание"
 tab_2/title = "Положение"
+tab_3/disabled = true
+tab_3/hidden = true
 
 [node name="MainTab" type="VBoxContainer" parent="VBoxContainer/TabContainer" unique_id=1696650871]
 visible = false
@@ -189,6 +191,7 @@ layout_mode = 2
 text = "straight"
 
 [node name="PowerTab" type="VBoxContainer" parent="VBoxContainer/TabContainer" unique_id=834265400]
+visible = false
 layout_mode = 2
 metadata/_tab_index = 1
 metadata/_tab_name = "Питание"
@@ -344,24 +347,6 @@ custom_minimum_size = Vector2(10, 0)
 layout_mode = 2
 size_flags_stretch_ratio = 0.5
 
-[node name="Label2" type="Label" parent="VBoxContainer/TabContainer/PowerTab/PowerTrainTab/HBoxContainer1/GridContainer2" unique_id=696529341]
-layout_mode = 2
-text = "max_tractive_force: "
-
-[node name="MaxTractiveForceLabel" type="Label" parent="VBoxContainer/TabContainer/PowerTab/PowerTrainTab/HBoxContainer1/GridContainer2" unique_id=172380238]
-unique_name_in_owner = true
-layout_mode = 2
-text = "0"
-
-[node name="Label4" type="Label" parent="VBoxContainer/TabContainer/PowerTab/PowerTrainTab/HBoxContainer1/GridContainer2" unique_id=2124212293]
-layout_mode = 2
-text = "max_theoretical_speed: "
-
-[node name="MaxTheoreticalSpeedLabel" type="Label" parent="VBoxContainer/TabContainer/PowerTab/PowerTrainTab/HBoxContainer1/GridContainer2" unique_id=905420389]
-unique_name_in_owner = true
-layout_mode = 2
-text = "0 "
-
 [node name="Label5" type="Label" parent="VBoxContainer/TabContainer/PowerTab/PowerTrainTab/HBoxContainer1/GridContainer2" unique_id=1241153739]
 layout_mode = 2
 text = "centrifugal_force: "
@@ -475,69 +460,93 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "0"
 
-[node name="GridContainer2" type="GridContainer" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3" unique_id=1463815308]
+[node name="WagonKContainer" type="GridContainer" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3" unique_id=1507708990]
 layout_mode = 2
 size_flags_horizontal = 3
-columns = 2
+size_flags_stretch_ratio = 3.0
+theme_override_constants/h_separation = 10
+columns = 4
 
-[node name="Label5" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/GridContainer2" unique_id=428473352]
+[node name="Label6" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/WagonKContainer" unique_id=428473352]
 layout_mode = 2
 text = "Friction:"
 
-[node name="FrictionLabel" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/GridContainer2" unique_id=2118024793]
+[node name="FrictionSpinB" type="SpinBox" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/WagonKContainer" unique_id=1363318583]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
-text = "0"
+step = 0.01
 
-[node name="Label3" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/GridContainer2" unique_id=1236312602]
-layout_mode = 2
-text = "Linear damp:"
-
-[node name="LinearDampLabel" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/GridContainer2" unique_id=887251516]
-unique_name_in_owner = true
-layout_mode = 2
-text = "0"
-
-[node name="Label4" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/GridContainer2" unique_id=170615040]
-layout_mode = 2
-text = "Angular damp:"
-
-[node name="AngularDampLabel" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/GridContainer2" unique_id=786773900]
-unique_name_in_owner = true
-layout_mode = 2
-text = "0"
-
-[node name="GridContainer3" type="GridContainer" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3" unique_id=1507708990]
-layout_mode = 2
-size_flags_horizontal = 3
-columns = 2
-
-[node name="Label5" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/GridContainer3" unique_id=1328777013]
+[node name="Label5" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/WagonKContainer" unique_id=1328777013]
 layout_mode = 2
 text = "Mass:"
 
-[node name="MassWLabel" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/GridContainer3" unique_id=1828902989]
+[node name="MassWSpinB" type="SpinBox" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/WagonKContainer" unique_id=208104664]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
-text = "0"
+step = 0.1
 
-[node name="Label3" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/GridContainer3" unique_id=1818064410]
+[node name="Label7" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/WagonKContainer" unique_id=1236312602]
 layout_mode = 2
-text = "Roll Resist:"
+text = "Linear damp:"
 
-[node name="RollResistanceLabel" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/GridContainer3" unique_id=790217689]
+[node name="LinearDampSpinB" type="SpinBox" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/WagonKContainer" unique_id=373656753]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
-text = "0"
+step = 0.01
 
-[node name="Label4" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/GridContainer3" unique_id=73387717]
+[node name="Label3" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/WagonKContainer" unique_id=1818064410]
 layout_mode = 2
-text = "Max grid:"
+text = "Roll Res:"
 
-[node name="MaxGripLabel" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/GridContainer3" unique_id=1906834941]
+[node name="RollResSpinB" type="SpinBox" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/WagonKContainer" unique_id=467912415]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
-text = "0"
+step = 0.01
+
+[node name="Label8" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/WagonKContainer" unique_id=170615040]
+layout_mode = 2
+text = "Angular damp:"
+
+[node name="AngularDampSpinB" type="SpinBox" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/WagonKContainer" unique_id=189601650]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(75, 0)
+layout_mode = 2
+step = 0.01
+
+[node name="Label4" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/WagonKContainer" unique_id=73387717]
+layout_mode = 2
+text = "Max grip:"
+
+[node name="MaxGripSpinB" type="SpinBox" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/WagonKContainer" unique_id=321397233]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(75, 0)
+layout_mode = 2
+max_value = 1000.0
+
+[node name="Control" type="Control" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/WagonKContainer" unique_id=1320753321]
+layout_mode = 2
+size_flags_stretch_ratio = 0.5
+
+[node name="Control2" type="Control" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/WagonKContainer" unique_id=1168136847]
+layout_mode = 2
+size_flags_stretch_ratio = 0.5
+
+[node name="Label10" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/WagonKContainer" unique_id=501552697]
+layout_mode = 2
+text = "Min rad:"
+
+[node name="MinCurveRadius" type="SpinBox" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/WagonKContainer" unique_id=1346750886]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(77, 0)
+layout_mode = 2
+size_flags_vertical = 0
+min_value = 10.0
+step = 0.1
+value = 32.0
 
 [node name="HBoxContainer4" type="HBoxContainer" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer" unique_id=127040788]
 layout_mode = 2
@@ -581,22 +590,282 @@ custom_minimum_size = Vector2(0, 55)
 layout_mode = 2
 text = "разное"
 
+[node name="HBoxContainer5" type="HBoxContainer" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer" unique_id=1033122765]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Control3" type="Control" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer5" unique_id=1472040715]
+custom_minimum_size = Vector2(10, 0)
+layout_mode = 2
+size_flags_stretch_ratio = 0.5
+
+[node name="GridContainer3" type="GridContainer" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer5" unique_id=55520536]
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 7
+
+[node name="Label5" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer5/GridContainer3" unique_id=992731340]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12360566, 0.5369322, 0.87350684, 1)
+text = "SPEED."
+
+[node name="Label6" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer5/GridContainer3" unique_id=640340542]
+layout_mode = 2
+text = " kinem (mps) :"
+
+[node name="SpeedKLabel" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer5/GridContainer3" unique_id=2024323141]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0"
+
+[node name="Label3" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer5/GridContainer3" unique_id=603125072]
+layout_mode = 2
+text = "(kmh) :"
+
+[node name="SpeedKmhLabel" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer5/GridContainer3" unique_id=1802420349]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0"
+
+[node name="Label4" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer5/GridContainer3" unique_id=1560248698]
+layout_mode = 2
+text = " current (mps) :"
+
+[node name="SpeedSLabel" type="Label" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer5/GridContainer3" unique_id=1620508643]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0"
+
+[node name="Control3" type="Control" parent="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer5/GridContainer3" unique_id=1908389086]
+custom_minimum_size = Vector2(10, 0)
+layout_mode = 2
+size_flags_stretch_ratio = 0.5
+
 [node name="VisualTab" type="VBoxContainer" parent="VBoxContainer/TabContainer" unique_id=1874121866]
 visible = false
 layout_mode = 2
 metadata/_tab_index = 3
 
-[node name="DebugTab" type="RichTextLabel" parent="VBoxContainer/TabContainer" unique_id=317978278]
+[node name="HBoxContainer4" type="HBoxContainer" parent="VBoxContainer/TabContainer/VisualTab" unique_id=139177770]
+layout_mode = 2
+size_flags_vertical = 2
+
+[node name="Control" type="Control" parent="VBoxContainer/TabContainer/VisualTab/HBoxContainer4" unique_id=2101832037]
+layout_mode = 2
+size_flags_stretch_ratio = 0.5
+
+[node name="Control2" type="Control" parent="VBoxContainer/TabContainer/VisualTab/HBoxContainer4" unique_id=1222002451]
+custom_minimum_size = Vector2(10, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.5
+
+[node name="DebugTab" type="VBoxContainer" parent="VBoxContainer/TabContainer" unique_id=2009725718]
+layout_mode = 2
+metadata/_tab_index = 4
+
+[node name="HBoxContainer4" type="HBoxContainer" parent="VBoxContainer/TabContainer/DebugTab" unique_id=518543217]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="DebugEnableContainer" type="VBoxContainer" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4" unique_id=1551004207]
+layout_mode = 2
+
+[node name="CheckBox" type="Label" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugEnableContainer" unique_id=293942066]
+visible = false
+layout_mode = 2
+text = "Suspension"
+vertical_alignment = 1
+
+[node name="EnableSusp" type="CheckBox" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugEnableContainer" unique_id=195802358]
+unique_name_in_owner = true
+layout_mode = 2
+text = "enable"
+
+[node name="EnableVert" type="CheckBox" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugEnableContainer" unique_id=1449596248]
+unique_name_in_owner = true
+layout_mode = 2
+text = "vertical"
+
+[node name="EnablePitch" type="CheckBox" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugEnableContainer" unique_id=1995262585]
+unique_name_in_owner = true
+layout_mode = 2
+text = "pitch"
+
+[node name="EnableRoll" type="CheckBox" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugEnableContainer" unique_id=640549942]
+unique_name_in_owner = true
+layout_mode = 2
+button_pressed = true
+text = "roll"
+
+[node name="EnableLateral" type="CheckBox" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugEnableContainer" unique_id=893603067]
+unique_name_in_owner = true
+layout_mode = 2
+text = "lateral"
+
+[node name="SuspMult" type="SpinBox" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugEnableContainer" unique_id=792527356]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(65, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+min_value = 0.1
+step = 0.1
+value = 10.0
+
+[node name="VSeparator" type="VSeparator" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4" unique_id=786697704]
+custom_minimum_size = Vector2(15, 0)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/VSeparator" unique_id=837739200]
+layout_mode = 0
+offset_left = -17.498901
+offset_top = 159.0
+offset_right = 7.5010986
+offset_bottom = 178.0
+text = "mlt"
+
+[node name="DebugContainer" type="GridContainer" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4" unique_id=973676670]
+layout_mode = 2
+columns = 4
+
+[node name="Label2" type="Label" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer" unique_id=1378764697]
+layout_mode = 2
+text = "longitudinal_grip  "
+
+[node name="LongGrip" type="SpinBox" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer" unique_id=2128320663]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(77, 0)
+layout_mode = 2
+size_flags_vertical = 0
+min_value = 1.0
+step = 0.5
+value = 3.0
+
+[node name="Label4" type="Label" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer" unique_id=573308265]
+layout_mode = 2
+text = "max_yaw_deg"
+
+[node name="MaxYawDeg" type="SpinBox" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer" unique_id=1379869464]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(77, 0)
+layout_mode = 2
+size_flags_vertical = 0
+max_value = 90.0
+value = 25.0
+
+[node name="Label6" type="Label" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer" unique_id=839670859]
+layout_mode = 2
+text = "vertical_travel_y"
+
+[node name="VerticalTravelY" type="SpinBox" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer" unique_id=926517909]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(77, 0)
+layout_mode = 2
+size_flags_vertical = 0
+max_value = 5.0
+step = 0.01
+
+[node name="Label5" type="Label" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer" unique_id=191067136]
+layout_mode = 2
+text = "yaw_spring"
+
+[node name="YawSpring" type="SpinBox" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer" unique_id=652531299]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(77, 0)
+layout_mode = 2
+size_flags_vertical = 0
+value = 5.0
+
+[node name="Label7" type="Label" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer" unique_id=52080279]
+layout_mode = 2
+text = "lateral_play_x"
+
+[node name="LateralPlayX" type="SpinBox" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer" unique_id=283676412]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(77, 0)
+layout_mode = 2
+size_flags_vertical = 0
+max_value = 2.0
+step = 0.01
+
+[node name="Label3" type="Label" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer" unique_id=696529341]
+layout_mode = 2
+text = "max_tractive_force: "
+
+[node name="MaxTractiveForceB" type="SpinBox" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer" unique_id=1054244025]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 10000.0
+value = 1.0
+
+[node name="Label8" type="Label" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer" unique_id=517258060]
+layout_mode = 2
+text = "stiffness"
+
+[node name="SusStiffness" type="SpinBox" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer" unique_id=1677843883]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(77, 0)
+layout_mode = 2
+size_flags_vertical = 0
+max_value = 10000.0
+value = 10.0
+
+[node name="Label9" type="Label" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer" unique_id=2124212293]
+layout_mode = 2
+text = "max_speed: "
+
+[node name="MaxTheoreticalSpeedB" type="SpinBox" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer" unique_id=1387253919]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 1000.0
+
+[node name="WagonCameraButton" type="Button" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer" unique_id=1246743818]
+unique_name_in_owner = true
+layout_mode = 2
+toggle_mode = true
+text = "Wagon camera"
+
+[node name="VSeparator2" type="VSeparator" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4" unique_id=1207037038]
+custom_minimum_size = Vector2(15, 0)
+layout_mode = 2
+
+[node name="DebugText" type="RichTextLabel" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4" unique_id=317978278]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-size_flags_vertical = 3
+size_flags_horizontal = 3
+size_flags_vertical = 2
 bbcode_enabled = true
 text = "[color=yellow]текст[/color]"
 fit_content = true
-metadata/_tab_index = 4
 
 [connection signal="pressed" from="VBoxContainer/TabContainer/PowerTab/PowerTrackTab/HBoxContainer1/GridContainer2/PowerClipButton" to="." method="_on_power_clip_button_pressed"]
 [connection signal="item_selected" from="VBoxContainer/TabContainer/PowerTab/PowerTrackTab/HBoxContainer1/GridContainer2/ClipContourIDButton" to="." method="_on_contour_id_item_selected"]
+[connection signal="draw" from="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/WagonKContainer" to="." method="_on_wagon_k_container_draw"]
+[connection signal="value_changed" from="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/WagonKContainer/FrictionSpinB" to="." method="_on_friction_spin_b_value_changed"]
+[connection signal="value_changed" from="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/WagonKContainer/MassWSpinB" to="." method="_on_mass_w_spin_b_value_changed"]
+[connection signal="value_changed" from="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/WagonKContainer/LinearDampSpinB" to="." method="_on_linear_damp_spin_b_value_changed"]
+[connection signal="value_changed" from="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/WagonKContainer/RollResSpinB" to="." method="_on_roll_res_spin_b_value_changed"]
+[connection signal="value_changed" from="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/WagonKContainer/AngularDampSpinB" to="." method="_on_angular_damp_spin_b_value_changed"]
+[connection signal="value_changed" from="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/WagonKContainer/MaxGripSpinB" to="." method="_on_max_grip_spin_b_value_changed"]
+[connection signal="value_changed" from="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/WagonKContainer/MinCurveRadius" to="." method="_on_min_curve_radius_value_changed"]
 [connection signal="toggled" from="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer4/SpeedometerCheckBox" to="." method="_on_speedometer_check_box_toggled"]
 [connection signal="toggled" from="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer4/SpeedometerVCheck" to="." method="_on_speedometer_vert_toggled"]
+[connection signal="draw" from="VBoxContainer/TabContainer/DebugTab" to="." method="_on_debug_tab_draw"]
+[connection signal="pressed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugEnableContainer/EnableSusp" to="." method="_on_enable_susp_pressed"]
+[connection signal="pressed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugEnableContainer/EnableVert" to="." method="_on_enable_vert_pressed"]
+[connection signal="pressed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugEnableContainer/EnablePitch" to="." method="_on_enable_pitch_pressed"]
+[connection signal="pressed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugEnableContainer/EnableRoll" to="." method="_on_enable_roll_pressed"]
+[connection signal="pressed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugEnableContainer/EnableLateral" to="." method="_on_enable_lateral_pressed"]
+[connection signal="value_changed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugEnableContainer/SuspMult" to="." method="_on_susp_mult_value_changed"]
+[connection signal="value_changed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer/LongGrip" to="." method="_on_long_grip_value_changed"]
+[connection signal="value_changed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer/MaxYawDeg" to="." method="_on_max_yaw_deg_value_changed"]
+[connection signal="value_changed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer/VerticalTravelY" to="." method="_on_vertical_travel_y_value_changed"]
+[connection signal="value_changed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer/YawSpring" to="." method="_on_yaw_spring_value_changed"]
+[connection signal="value_changed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer/LateralPlayX" to="." method="_on_lateral_play_x_value_changed"]
+[connection signal="value_changed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer/SusStiffness" to="." method="_on_sus_stiffness_value_changed"]
+[connection signal="pressed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer/WagonCameraButton" to="." method="_on_wagon_camera_button_pressed"]

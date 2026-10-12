@@ -42,8 +42,8 @@ shadow_mesh = SubResource("ArrayMesh_c4w5k")
 
 [node name="WheelPair" type="Node3D" unique_id=285940213]
 
-[node name="wheel_pair_p01" parent="." unique_id=1263988217 instance=ExtResource("1_pg131")]
-
 [node name="WheelPairMesh" type="MeshInstance3D" parent="." unique_id=920744120]
 visible = false
 mesh = SubResource("ArrayMesh_ie363")
+
+[node name="wheel_pair_p01" parent="." unique_id=1263988217 instance=ExtResource("1_pg131")]

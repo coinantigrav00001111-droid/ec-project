@@ -1,7 +1,0 @@
-[gd_resource type="Resource" script_class="TrackSettings" format=3 uid="uid://i0m38qxst53i"]
-
-[ext_resource type="Script" uid="uid://dd2iemagf4b4f" path="res://core/components/tracks/track_setting.gd" id="1_x3mc6"]
-
-[resource]
-script = ExtResource("1_x3mc6")
-metadata/_custom_type_script = "uid://dd2iemagf4b4f"

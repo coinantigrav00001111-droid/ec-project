@@ -16,9 +16,49 @@ var rmb_pressed_pos := Vector2.ZERO
 # Параметры вращения
 const ROT_STEP := 45.0 # Градусы
 
+#XX claude
+func enter():
+	if ghost: ghost.queue_free()
+	ghost = controller.entity_factory.create_from_setting(ghost_setting)
+
+	match ghost_setting.build_behavior:
+		EntitySetting.BuildBehavior.GHOST_PLACE:
+			_enter_ghost_place()
+		EntitySetting.BuildBehavior.SPAWN_AND_DRAG:
+			_enter_spawn_and_drag()
+
+
+func _enter_ghost_place() -> void:
+	controller.entities_root.add_child(ghost)
+	ghost.name = 'ghost'
+	ghost.add_component(C_Ghost.new())
+	ghost.send_event("on_select_layer", {'enabled': true})
+	controller.info_panel.set_target(ghost)
+
+# XX claude
+func _enter_spawn_and_drag() -> void:
+	controller.entities_root.add_child(ghost)      # сначала в дерево
+	var hit = controller.get_mouse_ray(Global.active_layers(['ground','tracks','trains']))
+	if hit:
+		ghost.send_event("on_drag_moved", hit)     # теперь get_tree() есть
+	controller.select_tool.set_selection(ghost)
+	ghost = null
+	controller.to_drag = true
+	controller.switch_tool(controller.select_tool)
+	
+func _enter_spawn_and_drag_0() -> void:
+	var hit = controller.get_mouse_ray(Global.active_layers(['ground','tracks','trains']))
+	if hit:
+		ghost.send_event("on_drag_moved", hit)
+	controller.entities_root.add_child(ghost)
+	controller.select_tool.set_selection(ghost)
+	ghost = null
+	controller.to_drag = true
+	controller.switch_tool(controller.select_tool)
+
 
 ## 💡 Создаем объект. Запускается в билдконтроллере по кнопке
-func enter():
+func enter_0():
 	if ghost: ghost.queue_free()
 
 	# выбор гост или объект по настройке сеттинга
@@ -81,16 +121,17 @@ func handle_input(event: InputEvent):
 		
 		if not spawned_entity:
 			return
-
-		if ghost_setting.category == &'train':
-			# Одиночная постройка.
-
-			# 1. Сбрасываем гост и очищаем текущий стейт билда
-			exit() 
-			# 2. Переключаем контроллер на SelectTool
-			controller.switch_tool(controller.select_tool)
-			# 3. SelectTool вешает C_Selected на объект и обновляет InfoPanel.
-			controller.select_tool.set_selection(spawned_entity)
+		
+		##XX claude
+		#if ghost_setting.category == &'train':
+			## Одиночная постройка.
+#
+			## 1. Сбрасываем гост и очищаем текущий стейт билда
+			#exit() 
+			## 2. Переключаем контроллер на SelectTool
+			#controller.switch_tool(controller.select_tool)
+			## 3. SelectTool вешает C_Selected на объект и обновляет InfoPanel.
+			#controller.select_tool.set_selection(spawned_entity)
 			
 		#else:
 			# 2. Проверяем, зажат ли Shift
@@ -133,7 +174,7 @@ func process_tick(_delta):
 	var hit = controller.get_mouse_ray(Global.active_layers(['ground','tracks','trains']))
 	
 	if hit and ghost:
-		# Отправляем приказ в сущность. Оттуда C_Draggable сам разберется
+		# Отправляем приказ в сущность. Оттуда C_TrackDraggable сам разберется
 		ghost.send_event("on_drag_moved", hit)
 
 	$"../../UI/ModeLabel".text = name

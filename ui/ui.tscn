@@ -5,7 +5,7 @@
 [ext_resource type="Script" uid="uid://bb1e4f7q4ak76" path="res://ui/panels/mode_panel.gd" id="1_tf0e0"]
 [ext_resource type="Script" uid="uid://cvw0jh02ub51b" path="res://ui/mode_controller.gd" id="2_bi8hs"]
 [ext_resource type="Texture2D" uid="uid://dm07bxms22v1a" path="res://ui/icons/library/bookshelf.svg" id="2_obcwv"]
-[ext_resource type="Texture2D" uid="uid://cmql245p6783u" path="res://ui/icons/tool/film-projector.svg" id="3_bo1jx"]
+[ext_resource type="Texture2D" uid="uid://cmql245p6783u" path="res://ui/icons/electric/film-projector.svg" id="3_bo1jx"]
 [ext_resource type="Texture2D" uid="uid://bykn7sk7nse02" path="res://ui/icons/electric/joystick.svg" id="4_gycre"]
 [ext_resource type="Script" uid="uid://bm2guc8626oc2" path="res://ui/operate_controller.gd" id="4_mf2ns"]
 [ext_resource type="Script" uid="uid://rchslhllkc5n" path="res://ui/build_controller.gd" id="4_x7jpl"]

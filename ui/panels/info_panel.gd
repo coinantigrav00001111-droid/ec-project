@@ -30,29 +30,36 @@ func _process(_delta):
 			var _ontrack = current_target.get_comp(C_Chassis).is_on_rails
 			var _freeze = current_target.get_comp(C_Kinematics).rb.freeze
 			var _friction = current_target.get_comp(C_Kinematics).rb.physics_material_override.friction
-			var _linear_damp = current_target.get_comp(C_Kinematics).rb.linear_damp
-			var _angular_damp = current_target.get_comp(C_Kinematics).rb.angular_damp
-			var _mass = current_target.get_comp(C_Kinematics).rb.mass
 			%OnTrackLabel.text ='On' if _ontrack else 'Off'
 			%FreezeLabel.text = 'On' if _freeze else 'Off'
-			%FrictionLabel.text = "%.2f" % [_friction]
-			%LinearDampLabel.text = "%.2f" % [_linear_damp]
-			%AngularDampLabel.text = "%.2f" % [_angular_damp]
-			%MassWLabel.text = "%.2f" % [_mass]
+			%FrictionSpinB.value = _friction
+			%LinearDampSpinB.value =  current_target.get_comp(C_Kinematics).rb.linear_damp
+			%AngularDampSpinB.value =  current_target.get_comp(C_Kinematics).rb.angular_damp
 			
 			var identity = current_target.get_comp(C_Identity)
 			if identity:
-				#%MassWLabel.text = "%.2f" % [identity.get_config('mass', 0.0)]
-				%RollResistanceLabel.text = "%.2f" % [identity.get_config('roll_resistance', 0.0)]
-				%MaxGripLabel.text = "%.2f" % [identity.get_config('max_grip', 0.0)]
-			
+				%MassWSpinB.value = current_target.get_comp(C_Kinematics).mass
+				%RollResSpinB.value = current_target.get_comp(C_Kinematics).roll_resistance
+				%MaxGripSpinB.value = current_target.get_comp(C_Kinematics).max_grip
+
 			var speed = 0.0
 			if _ontrack:
 				speed = current_target.get_comp(C_Chassis).current_speed
 			else:
-				speed = current_target.get_comp(C_Kinematics).rb.linear_velocity.z
+				speed = current_target.get_comp(C_Kinematics).rb.linear_velocity.length()
 			%SpeedmpsLabel.text = "%0.2f" % [speed] if abs(speed) > 0.05 else '0.0'
-	if visible and current_target and tab_container.current_tab == 4: 
+			
+			var _kinemat_comp = current_target.get_comp(C_Kinematics) as C_Kinematics
+			var _spd_k = current_target.get_comp(C_Kinematics).rb.linear_velocity.length()
+			var _spd_kmh = _spd_k * 0
+			var _spd_s = current_target.get_comp(C_Chassis).current_speed
+			
+			%SpeedKLabel.text = "%0.2f" % [_spd_k] if abs(_spd_k) > 0.05 else '0.0'
+			%SpeedKmhLabel.text = "%0.2f" % [_spd_kmh] if abs(_spd_kmh) > 0.05 else 'no calc'
+			%SpeedSLabel.text = "%0.2f" % [_spd_s] if abs(_spd_s) > 0.05 else '0.0'
+			
+			
+	if visible and current_target and tab_container.current_tab == 4:  # 4 - дебаг 
 		_update_debug_tab()
 	
 	if visible and current_target and tab_container.current_tab == 1: # 1 - Питание
@@ -63,18 +70,22 @@ func _process(_delta):
 
 # Вызывается из SelectTool, когда мы кликаем по объекту
 func set_target(entity: Entity):
-
+	if %WagonCameraButton.button_pressed == true:
+		%WagonCameraButton.press()
+		return
 	# 1. Отписываемся от старого объекта
 	if current_target:
 		current_target.component_added.disconnect(_on_components_changed)
 		current_target.component_removed.disconnect(_on_components_changed)
-		
+
+			
 	current_target = entity
 
 	# 2. Если кликнули в пустоту - прячем панель
 	if not current_target:
 		s_select_entity.emit(null, false,false)
 		hide()
+	
 		return
 		
 	# 3. Подписываемся на новый объект (для обновления Debug-вкладки)
@@ -109,7 +120,7 @@ func _populate_main_tab():
 	if identity:
 		%CategoryLabel.text = identity.get_category()
 		%TagLabel.text =  identity.get_tag()
-		%HeaderLLabel.text = '  ' + identity.get_name_e() 
+		%HeaderLabel.text = '  ' + identity.get_name_e() 
 		%HeaderRLabel.text ='node : ' + current_target.name 
 		%DescriptionLabel.text = identity.get_description()
 		%IconRect.texture = identity.get_icon()
@@ -222,11 +233,11 @@ func _update_power_tab():
 			
 			var _engine_comp = current_target.get_comp(C_Engine) as C_Engine
 			var _chassis_comp = current_target.get_comp(C_Chassis) as C_Chassis
+
 			if _engine_comp:
 				%EngineContourLabel.text = str(_engine_comp.power.contour_id)
 				%TrainVoltageLabel.text = str(_engine_comp.power.voltage)
-				%MaxTractiveForceLabel.text = str(_engine_comp.max_tractive_force)
-				%MaxTheoreticalSpeedLabel.text = str(_engine_comp.max_theoretical_speed)
+
 				
 				
 				var _spd = _chassis_comp.current_speed
@@ -267,13 +278,13 @@ func _on_power_track_updated(_contour : int, _voltage : float) ->void:
 			%TrackVoltageLabel.modulate = Color(1.0, 1.0, 1.0, 1.0)
 
 
-
+##=== DEBUG =====
 
 
 func _update_debug_tab():
 	if not current_target: return
 	
-	# Вместо создания сотен Label.new(), мы просто собираем ОДНУ строку
+	# Cобираем ОДНУ строку
 	var text_dump = "[color=green]Components:[/color]\n"
 	for child in current_target.get_children():
 		if child is Component:
@@ -283,7 +294,158 @@ func _update_debug_tab():
 				text_dump += "- " + child.get_script().get_global_name() + "\n"
 			
 	# Присваиваем текст один раз. Никаких утечек памяти!
-	%DebugTab.text = text_dump
+	%DebugText.text = text_dump
+
+
+# вызывается при обновлении панельки коэф. вагона
+func _on_wagon_k_container_draw() -> void:
+	var _chassis = current_target.get_comp(C_Chassis)
+	var _kinemat = current_target.get_comp(C_Kinematics)
+
+	if not _kinemat: return
+	%RollResSpinB.value = _kinemat.roll_resistance
+	%MassWSpinB.value = _kinemat.mass
+	%MaxGripSpinB.value = _kinemat.max_grip
+	
+
+	
+# вызывается при обновлении дебаг таба
+func _on_debug_tab_draw() -> void:
+	if not current_target: return
+	
+	var _chassis = current_target.get_comp(C_Chassis)
+	var _kinemat = current_target.get_comp(C_Kinematics)
+	var _engine = current_target.get_comp(C_Engine)
+	
+	if not _chassis or not _kinemat or not _engine: return
+	
+	%EnableSusp.button_pressed = _chassis.enable_suspension
+	%EnableVert.button_pressed = _chassis.debug_susp_vertical
+	%EnablePitch.button_pressed = _chassis.debug_susp_pitch
+	%EnableRoll.button_pressed = _chassis.debug_susp_roll
+	%EnableLateral.button_pressed = _chassis.debug_susp_lateral
+	%SuspMult.value = _chassis.effect_multiplier
+	
+	%LongGrip.value = _kinemat.longitudinal_grip
+	%MinCurveRadius.value = _kinemat.min_curve_radius
+	%MaxYawDeg.value = _kinemat.max_yaw_deg
+	%YawSpring.value = _kinemat.yaw_spring
+	%VerticalTravelY.value = _kinemat.vertical_travel_y
+	%LateralPlayX.value = _kinemat.lateral_play_x
+	%SusStiffness.value = _kinemat.suspension_stiffness
+	
+	if _engine: 
+		%MaxTractiveForceB.value = _engine.max_tractive_force
+		%MaxTheoreticalSpeedB.value = _engine.max_theoretical_speed
+	else:
+		%MaxTractiveForceB.value = 0
+		%MaxTheoreticalSpeedB.value = 0
+
+
+## Функция передачи коэф подвески в вагон
+func set_suspension_k(_data: Dictionary):
+	var _chassis = current_target.get_comp(C_Chassis)
+	var _kinemat = current_target.get_comp(C_Kinematics)
+	var _key = _data['key']
+	var _val = _data['value']
+	match _key:
+		'enable_suspension': _chassis.enable_suspension = _val
+		'debug_susp_vertical': _chassis.debug_susp_vertical = _val
+		'debug_susp_pitch': _chassis.debug_susp_pitch = _val
+		'debug_susp_roll': _chassis.debug_susp_roll = _val
+		'debug_susp_lateral': _chassis.debug_susp_lateral = _val
+		'effect_multiplier': _chassis.effect_multiplier = _val
+
+		'longitudinal_grip': _kinemat.longitudinal_grip = _val
+		'min_curve_radius': _kinemat.min_curve_radius = _val
+		'max_yaw_deg': _kinemat.max_yaw_deg = _val
+		'yaw_spring': _kinemat.yaw_spring = _val
+		'vertical_travel_y': _kinemat.vertical_travel_y = _val
+		'lateral_play_x': _kinemat.lateral_play_x = _val
+		'suspension_stiffness': _kinemat.suspension_stiffness = _val
+		
+		'roll_resistance': _kinemat.roll_resistance = _val
+		'mass': _kinemat.mass = _val
+		'max_grip': _kinemat.max_grip = _val
+		
+		'friction': _kinemat.rb.physics_material_override.friction = _val
+		'linear_damp': _kinemat.rb.linear_damp = _val
+		'angular_damp': _kinemat.rb.angular_damp = _val
+
+
+func _on_enable_susp_pressed() -> void:
+	set_suspension_k({'key':'enable_suspension', 'value': %EnableSusp.button_pressed })
+		
+
+func _on_enable_vert_pressed() -> void:
+	set_suspension_k({'key':'debug_susp_vertical', 'value': %EnableVert.button_pressed })
+
+
+func _on_enable_pitch_pressed() -> void:
+	set_suspension_k({'key':'debug_susp_pitch', 'value': %EnablePitch.button_pressed })
+
+
+func _on_enable_roll_pressed() -> void:
+	set_suspension_k({'key':'debug_susp_roll', 'value': %EnableRoll.button_pressed })
+
+
+func _on_enable_lateral_pressed() -> void:
+	set_suspension_k({'key':'debug_susp_lateral', 'value': %EnableLateral.button_pressed })
+
+
+func _on_susp_mult_value_changed(value: float) -> void:
+	set_suspension_k({'key':'effect_multiplier', 'value':value })
+
+
+func _on_long_grip_value_changed(value: float) -> void:
+	set_suspension_k({'key':'longitudinal_grip', 'value': value })
+
+
+func _on_min_curve_radius_value_changed(value: float) -> void:
+	set_suspension_k({'key':'min_curve_radius', 'value': value })
+
+
+func _on_max_yaw_deg_value_changed(value: float) -> void:
+	set_suspension_k({'key':'max_yaw_deg', 'value': value })
+
+
+func _on_yaw_spring_value_changed(value: float) -> void:
+	set_suspension_k({'key':'yaw_spring', 'value': value })
+
+
+func _on_vertical_travel_y_value_changed(value: float) -> void:
+	set_suspension_k({'key':'vertical_travel_y', 'value': value })
+
+
+func _on_lateral_play_x_value_changed(value: float) -> void:
+	set_suspension_k({'key':'lateral_play_x', 'value': value })
+
+
+func _on_sus_stiffness_value_changed(value: float) -> void:
+	set_suspension_k({'key':'suspension_stiffness', 'value': value })
+
+func _on_roll_res_spin_b_value_changed(value: float) -> void:
+	set_suspension_k({'key':'roll_resistance', 'value': value })
+
+func _on_mass_w_spin_b_value_changed(value: float) -> void:
+	set_suspension_k({'key':'mass', 'value': value })
+
+
+func _on_max_grip_spin_b_value_changed(value: float) -> void:
+	set_suspension_k({'key':'max_grip', 'value': value })
+	
+
+func _on_friction_spin_b_value_changed(value: float) -> void:
+	set_suspension_k({'key':'friction', 'value': value })
+
+
+func _on_linear_damp_spin_b_value_changed(value: float) -> void:
+	set_suspension_k({'key':'linear_damp', 'value': value })
+
+func _on_angular_damp_spin_b_value_changed(value: float) -> void:
+	set_suspension_k({'key':'angular_damp', 'value': value })
+
+## ==========
 
 
 
@@ -372,3 +534,14 @@ func _fill_clip_contour_button(_current_contour_id) -> void:
 		if option_button.get_item_id(idx) == current_id:
 			option_button.select(idx)
 			break
+
+
+
+##  ----VISUAL TAB ----
+func _on_wagon_camera_button_pressed() -> void:
+	if %WagonCameraButton.button_pressed:
+		#printt('_on_wagon_camera_button_pressed')
+		current_target.send_event('on_wagon_camera_selected',{'selected': true})
+	else:
+		#printt('_on_wagon_camera_button_pressed')
+		current_target.send_event('on_wagon_camera_selected',{'selected': false})

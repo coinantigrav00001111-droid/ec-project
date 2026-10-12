@@ -48,7 +48,6 @@ size_flags_horizontal = 3
 [node name="PowerSchemaCheck" type="CheckBox" parent="HBoxContainer" unique_id=881057486]
 layout_mode = 2
 size_flags_horizontal = 0
-button_pressed = true
 text = "Power schema"
 
 [connection signal="toggled" from="HBoxContainer/PowerSchemaCheck" to="." method="_on_power_schema_check_toggled"]

@@ -29,7 +29,8 @@ func _physics_process(_delta: float) -> void:
 	
 	var chassis = entity.get_comp(C_Chassis) as C_Chassis
 	if not chassis or not chassis.is_on_rails:
-		entity.send_event('on_force_changed', {'force': 0.0})
+		#XX clade
+		entity.send_event('on_force_changed', {'force': 0.0, 'powered': false})
 		return
 	
 	var bogie_comp = entity.get_comp(C_Bogie) as C_Bogie
@@ -58,27 +59,51 @@ func _physics_process(_delta: float) -> void:
 
 	# Если 0, то выход
 	if active_voltage == 0.0:
-		entity.send_event('on_force_changed', {'force': 0.0})
+		#XX claude
+		entity.send_event('on_force_changed', {'force': 0.0, 'powered': false})
 		return
 
-	# 1. Считаем предел скорости для текущего напряжения (имитация KV мотора)
-	# При 50В максимальная скорость будет в два раза ниже, чем при 100В
-	var voltage_ratio = active_voltage / 100.0 # Нормализуем напряжение (0.0 ... 1.0)
-	var target_max_speed = max_theoretical_speed * voltage_ratio
-	
-	# 2. Узнаем текущую скорость вагона из шасси
-	var current_speed = chassis.current_speed
-	
-	# 3. Имитация ПротивоЭДС: чем ближе текущая скорость к целевой, тем меньше тяга
-	# Если мы стоим, speed_factor = 0. Если достигли предела, speed_factor = 1
-	var speed_factor = 0.0
-	if target_max_speed != 0.0:
-		speed_factor = clamp(current_speed / target_max_speed, 0.0, 1.0)
-	
-	# Формула падающей тяги: F = F_max * (1 - V_cur / V_max)
-	var engine_force = max_tractive_force * (1.0 - speed_factor) * sign(active_voltage)
-	printt('engine_force=',  engine_force)
+	## 1. Считаем предел скорости для текущего напряжения (имитация KV мотора)
+	## При 50В максимальная скорость будет в два раза ниже, чем при 100В
+	#var voltage_ratio = active_voltage / 100.0 # Нормализуем напряжение (0.0 ... 1.0)
+	#var target_max_speed = max_theoretical_speed * voltage_ratio
+	#
+	## 2. Узнаем текущую скорость вагона из шасси
+	#var current_speed = chassis.current_speed
+	#
+	## 3. Имитация ПротивоЭДС: чем ближе текущая скорость к целевой, тем меньше тяга
+	## Если мы стоим, speed_factor = 0. Если достигли предела, speed_factor = 1
+	#var speed_factor = 0.0
+	#if target_max_speed != 0.0:
+		#speed_factor = clamp(current_speed / target_max_speed, 0.0, 1.0)
+	#
+	## Формула падающей тяги: F = F_max * (1 - V_cur / V_max)
+	#var engine_force = max_tractive_force * (1.0 - speed_factor) * sign(active_voltage)
+#
+	## Отправляем рассчитанную силу
+	#entity.send_event('on_force_changed', {'force': engine_force})
+	#
+# 1. Рассчитываем целевую скорость V_target для текущего напряжения (с учётом полярности)
+	var voltage_ratio = active_voltage / 100.0 # Диапазон от -1.0 до +1.0
+	var target_speed = max_theoretical_speed * voltage_ratio
 
-	# Отправляем рассчитанную силу
-	entity.send_event('on_force_changed', {'force': engine_force})
-	
+	# 2. Фактическая скорость шасси
+	var current_speed = chassis.current_speed
+
+	# 3. ЭЛЕКТРОДИНАМИЧЕСКОЕ ТОРМОЖЕНИЕ И ТЯГА (ПротивоЭДС)
+	# Сила пропорциональна разнице скоростей: (V_target - V_current) / V_max
+	var speed_delta_ratio = 0.0
+	if max_theoretical_speed > 0.0:
+		speed_delta_ratio = (target_speed - current_speed) / max_theoretical_speed
+
+	# Ограничиваем пропорцию диапазоном [-1.0, 1.0] (пределы мощности мотора)
+	speed_delta_ratio = clamp(speed_delta_ratio, -1.0, 1.0)
+
+	# Итоговая сила мотора: 
+	# Положительная  => тяга вперёд
+	# Отрицательная  => АКТИВНОЕ торможение мотором (генераторный режим / червяк)
+	var engine_force = max_tractive_force * speed_delta_ratio
+
+	# Отправляем рассчитанную силу в C_Chassis
+	#XX claude
+	entity.send_event('on_force_changed', {'force': engine_force, 'powered': true})
