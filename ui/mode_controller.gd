@@ -83,7 +83,7 @@ func _toggle_off_panel_buttons(_group_name):
 	#
 	### Отключаем категорию
 	##%BuildController.current_cat = &'idle' 
-#
+#    
 	#for _btn in _group:
 		#_btn.button_pressed = false
 	pass

@@ -16,8 +16,12 @@ var rmb_pressed_pos := Vector2.ZERO
 # Параметры вращения
 const ROT_STEP := 45.0 # Градусы
 
-#XX claude
+# XX claude-terra: 0 - ставим начало flex, 1 - тянем конец
+var stretch_phase := 0
+
+
 func enter():
+	stretch_phase = 0
 	if ghost: ghost.queue_free()
 	ghost = controller.entity_factory.create_from_setting(ghost_setting)
 
@@ -26,6 +30,8 @@ func enter():
 			_enter_ghost_place()
 		EntitySetting.BuildBehavior.SPAWN_AND_DRAG:
 			_enter_spawn_and_drag()
+		EntitySetting.BuildBehavior.PLACE_THEN_STRETCH:   # XX claude-terra
+			_enter_ghost_place()
 
 
 func _enter_ghost_place() -> void:
@@ -35,7 +41,8 @@ func _enter_ghost_place() -> void:
 	ghost.send_event("on_select_layer", {'enabled': true})
 	controller.info_panel.set_target(ghost)
 
-# XX claude
+
+
 func _enter_spawn_and_drag() -> void:
 	controller.entities_root.add_child(ghost)      # сначала в дерево
 	var hit = controller.get_mouse_ray(_pick_mask())   # XX claude-terra
@@ -45,46 +52,6 @@ func _enter_spawn_and_drag() -> void:
 	ghost = null
 	controller.to_drag = true
 	controller.switch_tool(controller.select_tool)
-	
-func _enter_spawn_and_drag_0() -> void:
-	var hit = controller.get_mouse_ray(Global.active_layers(['ground','tracks','trains']))
-	if hit:
-		ghost.send_event("on_drag_moved", hit)
-	controller.entities_root.add_child(ghost)
-	controller.select_tool.set_selection(ghost)
-	ghost = null
-	controller.to_drag = true
-	controller.switch_tool(controller.select_tool)
-
-
-## 💡 Создаем объект. Запускается в билдконтроллере по кнопке
-func enter_0():
-	if ghost: ghost.queue_free()
-
-	# выбор гост или объект по настройке сеттинга
-	ghost = controller.entity_factory.create_from_setting(ghost_setting)
-		## 🟡 Классика. Создание госта
-	if ghost_setting.category == &'track':
-		controller.entities_root.add_child(ghost)
-		ghost.name = 'ghost'
-		ghost.add_component(C_Ghost.new())
-		# ⚡Сигнал в с-path о смене слоя
-		ghost.send_event("on_select_layer", {'enabled':true})
-		#INFO ДЕРГАЕМ ПАНЕЛЬ!
-		controller.info_panel.set_target(ghost)
-		
-		## 🟡Одиночная постройка. Переход в селект и драг сразу
-	elif ghost_setting.category == &'train': 
-		# Отправляем в позицию мышки разово, пока не видно тело
-		var hit = controller.get_mouse_ray(Global.active_layers(['ground','tracks','trains']))
-		if hit:
-			ghost.send_event("on_drag_moved", hit)
-			
-		controller.entities_root.add_child(ghost)
-		controller.select_tool.set_selection(ghost)# Задали активный ентити для селект моде
-		ghost = null # гост больше не нужен
-		controller.to_drag = true # Флаг для селекта, чтобы прокинул сразу в драг
-		controller.switch_tool(controller.select_tool) # ушли в селект
 
 
 
@@ -98,7 +65,10 @@ func handle_input(event: InputEvent):
 		else:
 			# Отменяем билд режим если это был короткий клик (не драг камеры)
 			if rmb_pressed_pos.distance_to(event.position) < 5:
-				controller.switch_tool(controller.select_tool)
+				if stretch_phase == 1:   # XX claude-terra: ПКМ в фазе конца - отмена, новый призрак
+					enter()
+				else:
+					controller.switch_tool(controller.select_tool)
 
 	# Транслируем намерение покрутить
 	if Input.is_action_just_pressed("key_q"):
@@ -109,41 +79,36 @@ func handle_input(event: InputEvent):
 		ghost.send_event("on_rotate_input", {"axis": "x", "amount": ROT_STEP})
 	if Input.is_action_just_pressed("key_f"):
 		ghost.send_event("on_rotate_input", {"axis": "x", "amount": -ROT_STEP})
-
+		
+	# Переключатель контроля лимитов flex
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_L:
+		Global.flex_limits = not Global.flex_limits
+		ghost.send_event("on_flex_limits_changed", {})
+		
+		
 	# ЛКМ - Построить
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		
-		if ghost.has_comp(C_Blocked):
-			return # Не строим, если гост красный (пересекается с чем-то)
+		if ghost.has_comp(C_Blocked) or ghost.has_comp(C_Invalid):   # XX claude-terra
+			return # Не строим, если гост красный (пересекается с чем-то / невалидная форма)
+
+		# XX claude-terra: flex ставится в две фазы, тул только шлет события
+		var _stretch := ghost_setting.build_behavior == EntitySetting.BuildBehavior.PLACE_THEN_STRETCH
+		if _stretch and stretch_phase == 0:
+			stretch_phase = 1
+			ghost.send_event("on_stretch_started", {})
+			return
+		if _stretch:
+			ghost.send_event("on_stretch_ended", {})
 
 		# 1. Спавним реальный объект и получаем ссылку на него
 		var spawned_entity = _place_real_object()
+		if _stretch and spawned_entity:
+			enter()   # новый призрак: можно продолжать от свободного конца
+			return
 		
 		if not spawned_entity:
 			return
-		
-		##XX claude
-		#if ghost_setting.category == &'train':
-			## Одиночная постройка.
-#
-			## 1. Сбрасываем гост и очищаем текущий стейт билда
-			#exit() 
-			## 2. Переключаем контроллер на SelectTool
-			#controller.switch_tool(controller.select_tool)
-			## 3. SelectTool вешает C_Selected на объект и обновляет InfoPanel.
-			#controller.select_tool.set_selection(spawned_entity)
-			
-		#else:
-			# 2. Проверяем, зажат ли Shift
-			#if Input.is_key_pressed(KEY_SHIFT):
-				# SHIFT ЗАЖАТ: Режим серийной стройки.
-				# Оставляем гост жить, просто выходим из функции. 
-				#pass
-			#else:
-				 #SHIFT ОТПУЩЕН: Одиночная постройка.
-				 #Переходим в режим Select и передаем фокус на новый объект.
-				#_exit_to_select_and_focus(spawned_entity)
-
 
 
 
@@ -174,13 +139,18 @@ func _pick_mask() -> int:
 	return Global.active_layers(ghost_setting.get_pick_layers())
 
 
+
 func process_tick(_delta):
 	#var hit = controller.get_mouse_ray((1 << 0) | (1 << 2)|(1 << 4))
-	var hit = controller.get_mouse_ray(_pick_mask())   # XX claude-terra слои из EntitySetting.pick_layers
+	# XX claude-terra слои из EntitySetting.pick_layers
+	var hit = controller.get_mouse_ray(_pick_mask()) 
 	
 	if hit and ghost:
 		# Отправляем приказ в сущность. Оттуда C_TrackDraggable сам разберется
-		ghost.send_event("on_drag_moved", hit)
+		if stretch_phase == 1:   # XX claude-terra
+			ghost.send_event("on_stretch_moved", hit)
+		else:
+			ghost.send_event("on_drag_moved", hit)
 
 	$"../../UI/ModeLabel".text = name
 

@@ -183,7 +183,9 @@ func _assist_check_transition(bogie: BogieData) -> void:
 		# Раньше look_ahead_pos + Vector3(0, sensor_pos.y, 0) складывало высоту дважды (на траке выше стола луч
 		# стартовал слишком высоко), а датчик навсегда оставался смещенным относительно тележки.
 		var track_h = bogie.current_track.get_comp(C_Identity).get_config('height', 0.0)
-		var b_off_y = bogie.config.b_offset.y if bogie.config else 0.0
+		
+		## моя‼️Замена b_offset на b_offset_z
+		var b_off_y = bogie.config.wheel_pair_position.y if bogie.config else 0.0
 		var lift = track_h + b_off_y + bogie.ray_home.y
 		bogie.raycast.global_position = Vector3(look_ahead_pos.x, look_ahead_pos.y + lift, look_ahead_pos.z)
 		bogie.raycast.force_raycast_update()

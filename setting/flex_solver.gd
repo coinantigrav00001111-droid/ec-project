@@ -8,11 +8,12 @@ class_name FlexSolver extends RefCounted
 
 
 class Limits:
-	var r_min := 32.0     # = min_curve_radius вагонов
+	var r_min := 25.0     # = минимум физически выгибаемого flex, не равен проходимости вагона
 	var l_min := 10.0
 	var l_max := 90.0
 	var max_grade := 0.045
 
+const CHAIN_KS := [0.33, 0.4, 0.5, 0.6, 0.8, 1.0]
 
 ## Свободный конец: дуга, касательная к началу. Решается в замкнутом виде, конец "упирается" в пределы.
 ## Возвращает {points, radii, length, radius}
@@ -69,11 +70,13 @@ static func hermite_chain(wp: Array[Vector2], t0: Vector2, t1: Vector2, k: float
 
 
 ## Перебирает k и берет вариант с наибольшим минимальным радиусом.
+## k_fixed > 0: брать только этот масштаб касательных (больше = плавнее вокруг изгиба)
 ## Возвращает {points, radii, k, min_radius, length, valid}
-static func best_chain(wp: Array[Vector2], t0: Vector2, t1: Vector2, lim: Limits, step := 1.0) -> Dictionary:
+static func best_chain(wp: Array[Vector2], t0: Vector2, t1: Vector2, lim: Limits, step := 1.0, k_fixed := 0.0) -> Dictionary:
 	var best := {}
 	var best_r := -1.0
-	for k in [0.33, 0.4, 0.5, 0.6]:
+	var ks: Array = [k_fixed] if k_fixed > 0.0 else CHAIN_KS
+	for k in ks:
 		var pts := hermite_chain(wp, t0, t1, k, step)
 		var r := radii(pts)
 		var min_r := INF
@@ -154,3 +157,55 @@ static func to_curve3d(pts: PackedVector2Array, y0: float, y1: float, m0: float,
 		var h := (nxt - prev) / (3.0 if (i == 0 or i == n - 1) else 6.0)
 		curve.add_point(p3[i], -h, h)
 	return {"curve": curve, "max_grade": max_g, "length": L}
+
+
+# XX claude-terra (F2)
+const HERMITE_KS := [0.2, 0.3, 0.45, 0.6, 0.8, 1.0]
+
+
+## Один кубик Эрмита между двумя позами. k0 / k1 - масштаб касательных на концах
+static func hermite2(p0: Vector2, t0: Vector2, p1: Vector2, t1: Vector2, k0: float, k1: float, step := 1.0) -> PackedVector2Array:
+	var d := p0.distance_to(p1)
+	var m0 := t0 * d * k0
+	var m1 := t1 * d * k1
+	var n := maxi(3, ceili(d * 1.2 / step))
+	var out := PackedVector2Array()
+	for j in n:
+		var u := float(j) / n
+		var u2 := u * u
+		var u3 := u2 * u
+		out.append((2.0 * u3 - 3.0 * u2 + 1.0) * p0 + (u3 - 2.0 * u2 + u) * m0
+				+ (-2.0 * u3 + 3.0 * u2) * p1 + (u3 - u2) * m1)
+	out.append(p1)
+	return out
+
+
+## Конец у свободного сокета: поза начала (p0, t0) и конца (p1, t1, t1 - направление ДВИЖЕНИЯ в конце).
+## Перебирает k0 / k1 и берет вариант с наибольшим минимальным радиусом (при равенстве - короче).
+## Возвращает {points, radii, length, radius (минимальный), k0, k1, valid}
+static func best_hermite(p0: Vector2, t0: Vector2, p1: Vector2, t1: Vector2, lim: Limits, step := 1.0) -> Dictionary:
+	var bk0 := 0.5
+	var bk1 := 0.5
+	var best := -INF
+	for k0 in HERMITE_KS:
+		for k1 in HERMITE_KS:
+			var pc := hermite2(p0, t0, p1, t1, k0, k1, 2.0)
+			var min_r := 1000.0
+			for v in radii(pc):
+				min_r = minf(min_r, v)
+			var l := path_length(pc)
+			var score := min_r - l * 0.05
+			if l > lim.l_max:
+				score -= (l - lim.l_max) * 10.0
+			if score > best:
+				best = score
+				bk0 = k0
+				bk1 = k1
+	var pts := hermite2(p0, t0, p1, t1, bk0, bk1, step)
+	var rr := radii(pts)
+	var mr := INF
+	for v in rr:
+		mr = minf(mr, v)
+	var L := path_length(pts)
+	return {"points": pts, "radii": rr, "length": L, "radius": mr, "k0": bk0, "k1": bk1,
+			"valid": mr >= lim.r_min * 0.98 and L >= lim.l_min and L <= lim.l_max}

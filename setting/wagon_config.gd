@@ -11,13 +11,16 @@ class_name WagonConfig extends ObjectConfig
 # Kinematics
 # Данные заполняются в редакторе, в массиве сеттингов
 @export_category("Kinematics (Физика)")
-@export var mass: float = 2.0 # Кг
-@export var max_grip: float = 200.0 #Макс. поперечная сила до схода (реборда)
-@export var roll_resistance: float = 0.05 # Трение качения
-
-# --- НОВЫЕ ПАРАМЕТРЫ ФИЗИКИ ---
-@export var longitudinal_grip: float = 3.0 # Предел продольного сцепления для пробуксовки
-@export var min_curve_radius: float = 32.0 # Минимальный радиус сплайна (м), который проходит вагон
+## Масса в кг соответствует реальной х10. 2.0 - это 0.2 кг реальной модели
+@export var mass: float = 2.0 
+## Макс. поперечная сила до схода (реборда)
+@export var max_grip: float = 200.0 
+## Трение качения
+@export var roll_resistance: float = 0.05 
+## Предел продольного сцепления для пробуксовки
+@export var longitudinal_grip: float = 3.0 
+## Минимальный радиус сплайна (м), который проходит вагон без дерейла
+@export var min_curve_radius: float = 25.0 
 
 ## μ бокового юза колёс и скольжения лежащим корпусом (на столе)
 @export var slide_friction: float = 0.1
@@ -26,8 +29,10 @@ class_name WagonConfig extends ObjectConfig
 @export var locked_wheel_friction: float = 3.0
 
 @export_category("Rotation Limits (YAW)")
-@export var max_yaw_deg: float = 25.0    # Максимальный угол поворота тележки
-@export var yaw_spring: float = 5.0      # Сила возвратной пружины (стремление выровняться по оси кузова)
+## Максимальный угол поворота тележки
+@export var max_yaw_deg: float = 25.0    
+## Сила возвратной пружины (стремление выровняться по оси кузова)
+@export var yaw_spring: float = 5.0      
 
 @export_category("Suspension (Travel & Play)")
 ## Подвеска кузова (частоты, упоры, стыки, hunting). Пусто - значения по умолчанию из SuspensionConfig.
@@ -41,7 +46,7 @@ class_name WagonConfig extends ObjectConfig
 
 
 @export_category("Engine Settings (Мотор)")
-@export var has_engine: bool = false # Флаг, локомотив ли это # TODO лишний 
+@export var has_engine: bool = false # Флаг, локомотив ли это # TODO лишний?
 @export var max_tractive_force: float = 400.0 # Макс. стартовая тяга мотора в Ньютонах
 @export var max_theoretical_speed: float = 40.0 # Макс. скорость мотора без нагрузки (KV)
 
@@ -49,6 +54,7 @@ class_name WagonConfig extends ObjectConfig
 @export var scene = preload("res://data/trains/default_wagon.tscn")
 @export var offset_mesh_y: float = 1.2 # Смещение меша от пола (меньше диаметра колеса на ~0.2)
 @export var bogie_configs: Array[BogieConfig] = []
+
 
 @export_category("Coupler (Сцепка)")
 @export var coupler_offset: float = 6.0          # от центра вагона до торца (сцепки), м
@@ -59,3 +65,5 @@ class_name WagonConfig extends ObjectConfig
 @export var coupler_strength: float = 600.0                # сила разрыва сцепки, Н
 @export var couple_speed_max: float = 50.0    # макс. скорость, при которой сцепляемся, м/с
 @export var impact_dv_limit: float = 50.0# Δv от удара, после которого вагон сходит, м/с
+@export_category("Mechanisms")
+@export var mechanisms: Array[MechanismConfig] = []

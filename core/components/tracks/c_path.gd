@@ -23,10 +23,6 @@ var curve: Curve3D
 var ballast_node: Area3D
 var head_node : StaticBody3D #  Статик нода рельсов
 
-# TODO Ноды рельсов надо\можно или удалить за счет балласта или продулюровать коллизии балласта
-#var headl_node: StaticBody3D
-#var headr_node: StaticBody3D
-
 var pivot_offset := Vector3.ZERO 
 
 # XX claude-terra --- пандус и подготовка к Flex ---

@@ -55,7 +55,6 @@ Challenge задаёт **что должно быть достигнуто**, н
 - Evaluation
 - Optional Goals
 
-Подробная спецификация находится в [ChallengeSystem.md](ChallengeSystem.md).
 
 ## 6. Success and Failure
 Успех может оцениваться как:
@@ -92,7 +91,7 @@ Challenge задаёт **что должно быть достигнуто**, н
 - **Питание:** DC (аналог, приоритетно) и DCC (цифра, перспективно) — подробности в TDD, здесь важно только то, как это ощущается игроком: подключил клип — задал полярность — дорога под напряжением.
 - **Терраформинг:** создание поверхностей, водоёмов, туннелей под макет.
 
-Подробности реализации находятся в [TDD.md](TDD.md), а связанные игровые задачи — в [ChallengeSystem.md](ChallengeSystem.md).
+Подробности реализации находятся в [TDD.md](TDD.md).
 
 ## 9. Progression & Meta
 
@@ -157,6 +156,8 @@ Build UI, Operate UI, InfoPanel, Power Layer, диагностические п�
 9. [ ] Система автодорог.
 10. [ ] Timetable, POV-камера, погодный слой — из раздела "новые идеи" выше
 
-## 16. Related Documents
-- [TDD.md](TDD.md) — техническая архитектура и реализация.
-- [ChallengeSystem.md](ChallengeSystem.md) — Challenge, scoring, evaluation и генерация задач.
+## Related Documents
+- [ATTN_GDD.md](ATTN_GDD.md) — game vision, core loop, modes, progression.
+- [ATTN_TDD.md](ATTN_TDD.md) — техническая архитектура и реализация.
+- [ATTN_13_TerrainTools.md](ATTN_13_terraintools.md) — Конструктор рельефа (Terrain Tools)
+[ATTN_14_observe_room.md.md](ATTN_14_observe_room.md.md) — Observe: атмосфера, свет и комната

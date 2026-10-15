@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://be7il350r4fss" path="res://data/trains/wheel_pair_01.tscn" id="5_n280y"]
 [ext_resource type="Script" uid="uid://bicjny5dv1h3s" path="res://setting/wagon_config.gd" id="5_ufx6w"]
 [ext_resource type="Script" uid="uid://mpakwrr6lum8" path="res://core/components/comp_settings/identity_setting.gd" id="6_n280y"]
+[ext_resource type="Script" uid="uid://gv2lrhu17dtf" path="res://setting/mechanism_config.gd" id="6_yrtcf"]
 [ext_resource type="Script" uid="uid://b830vi2lx3hl5" path="res://core/components/comp_settings/trainvisual_setting.gd" id="7_i4jyf"]
 [ext_resource type="Script" uid="uid://bwaluvayi2o8k" path="res://setting/suspension_config.gd" id="8_i4jyf"]
 [ext_resource type="Resource" uid="uid://bqss7rh1mwv41" path="res://core/visual/visual_state.tres" id="8_yrtcf"]
@@ -23,17 +24,17 @@
 [ext_resource type="Script" uid="uid://do5hjkm3r2pdg" path="res://core/entity_setting.gd" id="17_y6u2v"]
 [ext_resource type="Script" uid="uid://d4advxi3tkwvc" path="res://core/components/comp_settings/camera_target_setting.gd" id="19_ufx6w"]
 [ext_resource type="Script" uid="uid://mqrnwkjfweqr" path="res://core/components/comp_settings/coupler_setting.gd" id="20_n280y"]
+[ext_resource type="Script" uid="uid://bxslu65eeehv0" path="res://core/components/comp_settings/dropmarker_setting.gd" id="23_maqnf"]
 
 [sub_resource type="Resource" id="Resource_m448q"]
 script = ExtResource("2_xi8dl")
-b_offset = Vector3(0, 0.765, -2.43)
 wheel_pair_scene = ExtResource("4_ro1wj")
 wheel_pair_position = Vector3(0, 0.765, 1.5)
 metadata/_custom_type_script = "uid://7vuxuiiysiji"
 
 [sub_resource type="Resource" id="Resource_ibl0p"]
 script = ExtResource("2_xi8dl")
-b_offset = Vector3(0, 0.71, 2.43)
+b_offset_z = 2.43
 metadata/_custom_type_script = "uid://7vuxuiiysiji"
 
 [sub_resource type="Resource" id="Resource_0p1ic"]
@@ -102,6 +103,10 @@ metadata/_custom_type_script = "uid://d4advxi3tkwvc"
 script = ExtResource("20_n280y")
 metadata/_custom_type_script = "uid://mqrnwkjfweqr"
 
+[sub_resource type="Resource" id="Resource_kqxpk"]
+script = ExtResource("23_maqnf")
+metadata/_custom_type_script = "uid://bxslu65eeehv0"
+
 [resource]
 script = ExtResource("17_y6u2v")
 id = 2510
@@ -111,5 +116,5 @@ category = &"train"
 tag = &"loco"
 icon = ExtResource("16_ovl4u")
 build_behavior = 1
-components = Array[ExtResource("1_1pi1k")]([SubResource("Resource_ldqha"), SubResource("Resource_y13in"), SubResource("Resource_2odj0"), SubResource("Resource_4lulw"), SubResource("Resource_ii5fe"), SubResource("Resource_ywat7"), SubResource("Resource_bbw2b"), SubResource("Resource_d4y6m"), SubResource("Resource_ivg4w"), SubResource("Resource_keywu"), SubResource("Resource_saak8"), SubResource("Resource_nex2q")])
+components = Array[ExtResource("1_1pi1k")]([SubResource("Resource_ldqha"), SubResource("Resource_y13in"), SubResource("Resource_2odj0"), SubResource("Resource_4lulw"), SubResource("Resource_ii5fe"), SubResource("Resource_ywat7"), SubResource("Resource_bbw2b"), SubResource("Resource_d4y6m"), SubResource("Resource_ivg4w"), SubResource("Resource_keywu"), SubResource("Resource_saak8"), SubResource("Resource_nex2q"), SubResource("Resource_kqxpk")])
 metadata/_custom_type_script = "uid://do5hjkm3r2pdg"

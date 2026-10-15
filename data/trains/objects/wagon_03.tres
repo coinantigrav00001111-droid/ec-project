@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://7vuxuiiysiji" path="res://setting/bogie_config.gd" id="2_6wqf0"]
 [ext_resource type="PackedScene" uid="uid://dpl2u278hhocd" path="res://data/trains/bogie_03.tscn" id="3_t6luf"]
 [ext_resource type="PackedScene" uid="uid://gwsdt87qd0o8" path="res://data/trains/wheel_pair_03.tscn" id="4_6wqf0"]
+[ext_resource type="Script" uid="uid://gv2lrhu17dtf" path="res://setting/mechanism_config.gd" id="5_6wqf0"]
 [ext_resource type="PackedScene" uid="uid://dm1ns1cmqg4da" path="res://data/trains/wagon_03.tscn" id="5_t6luf"]
 [ext_resource type="Script" uid="uid://bicjny5dv1h3s" path="res://setting/wagon_config.gd" id="6_pj1o1"]
 [ext_resource type="Script" uid="uid://bwaluvayi2o8k" path="res://setting/suspension_config.gd" id="7_b01de"]
@@ -20,10 +21,11 @@
 [ext_resource type="Script" uid="uid://mqrnwkjfweqr" path="res://core/components/comp_settings/coupler_setting.gd" id="18_sjug1"]
 [ext_resource type="Texture2D" uid="uid://c7opn7g5dyq4d" path="res://ui/icons/transport/coal-wagon.svg" id="19_xv52f"]
 [ext_resource type="Script" uid="uid://do5hjkm3r2pdg" path="res://core/entity_setting.gd" id="20_1e1go"]
+[ext_resource type="Script" uid="uid://brbladjp7pfki" path="res://core/components/comp_settings/mechanisms_setting.gd" id="20_hqhm7"]
 
 [sub_resource type="Resource" id="Resource_u60jt"]
 script = ExtResource("2_6wqf0")
-b_offset = Vector3(0, 0.526, -4.5)
+b_offset_z = -5.4
 scene = ExtResource("3_t6luf")
 wheel_pair_scene = ExtResource("4_6wqf0")
 wheel_pair_position = Vector3(0, 0.526, 0.8)
@@ -31,11 +33,26 @@ metadata/_custom_type_script = "uid://7vuxuiiysiji"
 
 [sub_resource type="Resource" id="Resource_6ly6f"]
 script = ExtResource("2_6wqf0")
-b_offset = Vector3(0, 0.526, 4.5)
+b_offset_z = 5.4
 scene = ExtResource("3_t6luf")
 wheel_pair_scene = ExtResource("4_6wqf0")
 wheel_pair_position = Vector3(0, 0.526, 0.8)
 metadata/_custom_type_script = "uid://7vuxuiiysiji"
+
+[sub_resource type="Resource" id="Resource_c2b1p"]
+script = ExtResource("5_6wqf0")
+title = "Дверь L"
+part_role = &"door_l"
+axis = Vector3(0, 0, 1)
+metadata/_custom_type_script = "uid://gv2lrhu17dtf"
+
+[sub_resource type="Resource" id="Resource_m4bxq"]
+script = ExtResource("5_6wqf0")
+id = &"door_right"
+title = "Дверь R"
+part_role = &"door_r"
+axis = Vector3(0, 0, -1)
+metadata/_custom_type_script = "uid://gv2lrhu17dtf"
 
 [sub_resource type="Resource" id="Resource_yrtcf"]
 script = ExtResource("7_b01de")
@@ -45,7 +62,10 @@ metadata/_custom_type_script = "uid://bwaluvayi2o8k"
 script = ExtResource("6_pj1o1")
 suspension = SubResource("Resource_yrtcf")
 scene = ExtResource("5_t6luf")
+offset_mesh_y = 1.15
 bogie_configs = Array[ExtResource("2_6wqf0")]([SubResource("Resource_u60jt"), SubResource("Resource_6ly6f")])
+coupler_offset = 8.0
+mechanisms = Array[ExtResource("5_6wqf0")]([SubResource("Resource_c2b1p"), SubResource("Resource_m4bxq")])
 metadata/_custom_type_script = "uid://bicjny5dv1h3s"
 
 [sub_resource type="Resource" id="Resource_lvfb0"]
@@ -89,6 +109,10 @@ metadata/_custom_type_script = "uid://b5kx0oyxhiaux"
 script = ExtResource("18_sjug1")
 metadata/_custom_type_script = "uid://mqrnwkjfweqr"
 
+[sub_resource type="Resource" id="Resource_mk2dv"]
+script = ExtResource("20_hqhm7")
+metadata/_custom_type_script = "uid://brbladjp7pfki"
+
 [resource]
 script = ExtResource("20_1e1go")
 id = 2030
@@ -98,5 +122,5 @@ category = &"train"
 tag = &"boxcar"
 icon = ExtResource("19_xv52f")
 build_behavior = 1
-components = Array[ExtResource("1_t6luf")]([SubResource("Resource_lvfb0"), SubResource("Resource_wjam3"), SubResource("Resource_s3hn0"), SubResource("Resource_aqgj4"), SubResource("Resource_j3fkf"), SubResource("Resource_tip3w"), SubResource("Resource_mqnqg"), SubResource("Resource_6hxcd"), SubResource("Resource_1pi1k"), SubResource("Resource_h3v5j")])
+components = Array[ExtResource("1_t6luf")]([SubResource("Resource_lvfb0"), SubResource("Resource_wjam3"), SubResource("Resource_s3hn0"), SubResource("Resource_aqgj4"), SubResource("Resource_j3fkf"), SubResource("Resource_tip3w"), SubResource("Resource_mqnqg"), SubResource("Resource_6hxcd"), SubResource("Resource_1pi1k"), SubResource("Resource_h3v5j"), SubResource("Resource_mk2dv")])
 metadata/_custom_type_script = "uid://do5hjkm3r2pdg"

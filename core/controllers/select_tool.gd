@@ -15,6 +15,10 @@ var clicked_entity: Entity = null
 var lmb_start_pos := Vector2.ZERO
 var rmb_start_pos := Vector2.ZERO
 
+# флаги точек флекс-трака
+var lmb_consumed := false   # нажатие забрал компонент (ручка / добавление изгиба)
+var rmb_consumed := false
+var handle_dragging := false
 
 func enter():
 
@@ -30,7 +34,10 @@ func enter():
 
 
 func process_tick(_delta):
-	_update_hover()
+	if handle_dragging and selected_entity:
+		selected_entity.send_event("on_handle_drag", controller.get_mouse_ray_vec())
+	else:
+		_update_hover()
 	$"../../UI/ModeLabel".text = name
 
 
@@ -40,8 +47,11 @@ func handle_input(event: InputEvent):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
 		if event.pressed:
 			rmb_start_pos = event.position
+			rmb_consumed = _try_handle_remove()
 		else:
-			# Снимаем селект ТОЛЬКО если мышь почти не двигалась (это был клик)
+			if rmb_consumed:
+				rmb_consumed = false
+				return
 			if rmb_start_pos.distance_to(event.position) < 5:
 				_clear_selection()
 		return
@@ -50,12 +60,19 @@ func handle_input(event: InputEvent):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
 			lmb_start_pos = event.position
+			lmb_consumed = _try_handle_press()
+			if lmb_consumed:
+				return
 			clicked_entity = _get_entity_under_mouse()
 			if clicked_entity:
 				set_selection(clicked_entity)
-				
 		else:
-			# Отпустили ЛКМ: если кликнули в пустоту и не тащили — снимаем выбор
+			if lmb_consumed:
+				if handle_dragging and selected_entity:
+					selected_entity.send_event("on_handle_released", {})
+				handle_dragging = false
+				lmb_consumed = false
+				return
 			if not clicked_entity and lmb_start_pos.distance_to(event.position) < 5:
 				_clear_selection()
 			clicked_entity = null
@@ -143,6 +160,35 @@ func _update_hover():
 
 
 
+## Flex
+## ЛКМ: ручка или Shift+клик по кривой выбранного flex. Тул компонентов не знает
+func _try_handle_press() -> bool:
+	if not selected_entity:
+		return false
+	# выбранный объект лежит на слое ghost (on_select_layer), поэтому ghost тоже в маске
+	var hit = controller.get_mouse_ray(Global.active_layers(['handles', 'tracks', 'ghost']))
+	if hit.is_empty():
+		return false
+	var data := {"collider": hit.collider, "position": hit.position,
+			"shift": Input.is_key_pressed(KEY_SHIFT), "consumed": false, "drag": false}
+	selected_entity.send_event("on_pointer_pressed", data)
+	handle_dragging = data.drag
+	return data.consumed
+
+
+func _try_handle_remove() -> bool:
+	if not selected_entity:
+		return false
+	var hit = controller.get_mouse_ray(Global.active_layers(['handles']))
+	if hit.is_empty():
+		return false
+	var data := {"collider": hit.collider, "consumed": false}
+	selected_entity.send_event("on_handle_remove", data)
+	return data.consumed
+	
+	
+
+
 # Снимает селекшн при лкм пкм без драга
 func _clear_selection():
 	if selected_entity: 
@@ -172,11 +218,9 @@ func exit(_to_drag : bool = false):
 		selected_entity.remove_component(C_Hovered)
 		if !_to_drag: # если выход не в драг, то убираем селект полностью
 			_clear_selection()
-			#if selected_entity.has_comp(C_Selected):
-				#selected_entity.remove_component(C_Selected)
-			#selected_entity.send_event("on_select_layer", {'enabled':false})
-			#selected_entity = null
 			#INFO Очищаем панель
 			controller.info_panel.set_target(null) 
 		
 	if hovered_entity: 	hovered_entity = null
+	
+	handle_dragging = false

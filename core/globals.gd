@@ -19,6 +19,9 @@ var debug_mode := true
 ## Текущий режим из : &'build' &'operate' &'observe' &'library'
 var current_mode :StringName = &'build' 
 
+## F2: контроль лимитов flex (R, L, уклон, "под землёй"). Переключается клавишей L в BuildTool
+var flex_limits := false
+
 
 ######### TRACK ##############
  
@@ -38,5 +41,7 @@ func active_layers(data:Array) -> int:
 			'sokets' : i = i | 1 << 3
 			'trains' : i = i | 1 << 4
 			'supports' : i = i | 1 << 5  # XX claude-terra опоры эстакады (резерв)
+			'handles' : i = i | 1 << 6   # ручки flex (бит 5 занят опорами)
 			'ghost'  : i = i | 1 << 10
+			## Слои 16-21 заняты контурами			
 	return i

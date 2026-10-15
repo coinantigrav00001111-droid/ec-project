@@ -1,0 +1,63 @@
+[gd_resource type="Resource" script_class="EntitySetting" format=3 uid="uid://6oo0842vm53w"]
+
+[ext_resource type="Script" uid="uid://m4g5jbfwmaa0" path="res://core/component_setting.gd" id="1_kat8n"]
+[ext_resource type="Script" uid="uid://b7ds2l6clrm61" path="res://setting/track_config.gd" id="2_moa55"]
+[ext_resource type="Script" uid="uid://mpakwrr6lum8" path="res://core/components/comp_settings/identity_setting.gd" id="3_e3juc"]
+[ext_resource type="Script" uid="uid://cfevyekcq7aco" path="res://core/components/comp_settings/flex_setting.gd" id="4_kat8n"]
+[ext_resource type="Resource" uid="uid://bqss7rh1mwv41" path="res://core/visual/visual_state.tres" id="5_nl16b"]
+[ext_resource type="Script" uid="uid://b1jwuxb32so7e" path="res://core/components/comp_settings/trackdraggable_setting.gd" id="6_1o3pu"]
+[ext_resource type="Script" uid="uid://djbifkyei01t7" path="res://core/components/comp_settings/pivot_setting.gd" id="7_56mfv"]
+[ext_resource type="Script" uid="uid://cuumo0qj7r7gb" path="res://core/components/comp_settings/hoverable_setting.gd" id="8_tema6"]
+[ext_resource type="Script" uid="uid://deljgsmo4bpow" path="res://core/components/comp_settings/selectable_setting.gd" id="9_c063b"]
+[ext_resource type="Script" uid="uid://chprgtlxn3aub" path="res://core/components/comp_settings/blockable_setting.gd" id="10_ardyb"]
+[ext_resource type="Script" uid="uid://bv065wdiw674c" path="res://core/components/comp_settings/socked_setting.gd" id="11_tfc3s"]
+[ext_resource type="Script" uid="uid://cjk51o364xfn" path="res://core/components/comp_settings/powertrack_setting.gd" id="12_f5s3t"]
+[ext_resource type="Script" uid="uid://cs257ge2f37bu" path="res://core/components/comp_settings/tracksupport_setting.gd" id="13_w4tr7"]
+[ext_resource type="Texture2D" uid="uid://c8tndy1lksot8" path="res://ui/icons/transport/rail-road.svg" id="14_hbuij"]
+[ext_resource type="Script" uid="uid://do5hjkm3r2pdg" path="res://core/entity_setting.gd" id="15_sxh47"]
+
+[sub_resource type="Resource" id="Resource_cfg"]
+script = ExtResource("2_moa55")
+radius = 10.0
+
+[sub_resource type="Resource" id="Resource_id"]
+script = ExtResource("3_e3juc")
+object_config = SubResource("Resource_cfg")
+
+[sub_resource type="Resource" id="Resource_flex"]
+script = ExtResource("4_kat8n")
+
+[sub_resource type="Resource" id="Resource_drag"]
+script = ExtResource("6_1o3pu")
+
+[sub_resource type="Resource" id="Resource_piv"]
+script = ExtResource("7_56mfv")
+
+[sub_resource type="Resource" id="Resource_hov"]
+script = ExtResource("8_tema6")
+
+[sub_resource type="Resource" id="Resource_sel"]
+script = ExtResource("9_c063b")
+
+[sub_resource type="Resource" id="Resource_blk"]
+script = ExtResource("10_ardyb")
+
+[sub_resource type="Resource" id="Resource_sock"]
+script = ExtResource("11_tfc3s")
+
+[sub_resource type="Resource" id="Resource_pwr"]
+script = ExtResource("12_f5s3t")
+
+[sub_resource type="Resource" id="Resource_sup"]
+script = ExtResource("13_w4tr7")
+
+[resource]
+script = ExtResource("15_sxh47")
+id = 1300
+name = "Flex"
+description = "Гибкий трак. Клик - начало, второй клик - конец. L 10-90, R от 32."
+tag = &"flex"
+icon = ExtResource("14_hbuij")
+build_behavior = 2
+components = Array[ExtResource("1_kat8n")]([SubResource("Resource_id"), SubResource("Resource_flex"), SubResource("Resource_drag"), SubResource("Resource_piv"), SubResource("Resource_hov"), SubResource("Resource_sel"), SubResource("Resource_blk"), SubResource("Resource_sock"), SubResource("Resource_pwr"), SubResource("Resource_sup")])
+metadata/_custom_type_script = "uid://do5hjkm3r2pdg"

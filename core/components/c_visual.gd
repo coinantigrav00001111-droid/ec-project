@@ -10,11 +10,14 @@ var instance: Node3D
 var scene: PackedScene
 var visual_settings: VisualStateSettings
 var mesh_nodes: Array[MeshInstance3D] = []
+var parts: PartRegistry
 
+var _outline_state := -1
 
 func on_added() -> void:
 	instance = scene.instantiate() as Node3D
 	entity.add_child(instance)
+	parts = PartRegistry.build(instance)   # новое
 	_collect_meshes()
 	_on_instance_ready()   # хук для наследников
 
@@ -34,7 +37,8 @@ func on_component_removed(_type: Script) -> void:
 
 ## Наследник может расширить: super(_removing_type) + свой блок
 func update_visual(_removing_type: Script = null) -> void:
-	if has_comp(C_Blocked) and _removing_type != C_Blocked:
+	# XX claude-terra: C_Invalid (невалидная форма flex) красим как blocked
+	if (has_comp(C_Blocked) and _removing_type != C_Blocked) or (has_comp(C_Invalid) and _removing_type != C_Invalid):
 		_set_overlay(visual_settings.blocked_material)
 	elif has_comp(C_Ghost) and _removing_type != C_Ghost:
 		_set_overlay(visual_settings.ghost_material)
@@ -44,6 +48,48 @@ func update_visual(_removing_type: Script = null) -> void:
 		_set_overlay(visual_settings.hover_material)
 	else:
 		_set_overlay(null)
+	
+	_update_outline(_removing_type)
+	
+
+### ====Outline====
+func _pick_outline_state(removing: Script) -> int:
+	if (has_comp(C_Blocked) and removing != C_Blocked) or (has_comp(C_Invalid) and removing != C_Invalid):
+		return Outline.S.BLOCKED
+	if has_comp(C_Ghost) and removing != C_Ghost:
+		return Outline.S.GHOST
+	# TODO мультиселект: if has_comp(C_MultiSelected) and removing != C_MultiSelected: return Outline.S.MULTI
+	if has_comp(C_Selected) and removing != C_Selected:
+		return Outline.S.SELECTED
+	if has_comp(C_Hovered) and removing != C_Hovered:
+		return Outline.S.HOVER
+	return -1
+
+func _update_outline(removing: Script) -> void:
+	var s := _pick_outline_state(removing)
+	if s == _outline_state:
+		return
+	if instance and _outline_state >= 0:
+		_set_outline_layer(instance, Outline.layer_of(_outline_state), false)
+	_outline_state = s
+	if instance and s >= 0:
+		_set_outline_layer(instance, Outline.layer_of(s), true)
+	Outline.set_owner_state(self, s)
+
+
+func _set_outline_layer(node: Node, layer: int, on: bool) -> void:
+	if node is GeometryInstance3D:
+		(node as GeometryInstance3D).set_layer_mask_value(layer, on)
+	for c in node.get_children():
+		_set_outline_layer(c, layer, on)
+
+
+func _exit_tree() -> void:
+	Outline.set_owner_state(self, -1)
+	
+
+### ====Outline END====
+
 
 
 func _set_overlay(mat: Material) -> void:

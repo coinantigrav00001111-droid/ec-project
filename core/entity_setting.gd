@@ -8,6 +8,7 @@ class_name EntitySetting extends Resource
 ## UI накидывает кнопки по категориям для каждого объекта папок /objects/
 
 #@export_category("Main & UI")
+#TODO а если id строковый сделать?
 @export var id :int = 0 # сортировка в панели кнопок
 @export var name :String = ''
 @export var description :String = 'Прямой трак 1,5см'
@@ -19,7 +20,8 @@ class_name EntitySetting extends Resource
 
 @export var hide : bool = false # скрыть кнопку в UI 
 
-enum BuildBehavior { GHOST_PLACE, SPAWN_AND_DRAG }
+# XX claude-terra: PLACE_THEN_STRETCH - flex: клик ставит начало, второй клик ставит конец
+enum BuildBehavior { GHOST_PLACE, SPAWN_AND_DRAG, PLACE_THEN_STRETCH }
 
 ## Как BuildTool ставит объект: гост + клик, или сразу спавн в драг
 @export var build_behavior: BuildBehavior = BuildBehavior.GHOST_PLACE

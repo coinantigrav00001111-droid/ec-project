@@ -46,6 +46,26 @@ class_name GlobalSetting extends Resource
 ## Насколько трак может уходить под землю при снапе/магните, ю (больше - снап отклоняется)
 @export var underground_tolerance := 0.1
 
+# XX claude-terra
+@export_group("Flex")
+## Минимальный радиус flex (= min_curve_radius вагонов), ю
+@export var flex_r_min := 25.0
+@export var flex_l_min := 10.0
+@export var flex_l_max := 190.0
+## Максимальный уклон flex (доля)
+@export var flex_max_grade := 0.045
+@export var flex_max_bends := 2
+## Длина одного сегмента коллизии flex, ю
+@export var flex_collision_step := 20.0
+## Не чаще одной пересборки меша/коллизий за этот период, с
+@export var flex_rebuild_period := 0.05
+## Радиус (по горизонтали от курсора), в котором конец flex цепляется к свободному сокету, ю
+@export var flex_snap_radius := 8.0
+## Масштаб касательных в изгибах. 0 = авто (лучший радиус из перебора 0.33-1.0).
+## Больше (0.8-1.0) = изгиб растягивается по длине, меньше (0.33) = резче у ручки
+@export var flex_bend_k := 0.0
+
+
 ## Это не исп. а для справки
 @export_group("Not Used")
 

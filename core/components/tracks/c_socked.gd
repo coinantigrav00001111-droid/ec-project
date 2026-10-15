@@ -383,6 +383,20 @@ func on_curve_changed(_data: Dictionary) -> void:
 		_orient_area(sockets[i].socket, xf * ends[i][0], ends[i][1])
 
 
+# XX claude-terra
+## Включает/выключает конкретный сокет (index 0 начало, 1 конец, -1 все). Шлет flex-призрак:
+## пока ставится начало/тянется конец, сокеты не должны сами снапить призрак.
+func on_socket_enabled(data: Dictionary) -> void:
+	var idx: int = data.get("index", -1)
+	var on: bool = data.get("enabled", true)
+	for k in sockets.size():
+		if idx >= 0 and k != idx:
+			continue
+		var a: Area3D = sockets[k].socket
+		a.set_deferred("monitoring", on)
+		a.set_deferred("monitorable", on)
+
+
 ## ==== МАРКЕРЫ ====
 
 # Шарик 

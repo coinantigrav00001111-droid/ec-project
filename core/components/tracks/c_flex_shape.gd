@@ -1,0 +1,562 @@
+class_name C_FlexShape extends ICapability
+
+# XX claude-terra (новый файл, F2)
+####################
+## Способность. Хозяин данных формы flex-трака.
+####################
+## Два режима конца:
+##  - свободный: дуга, касательная к началу (FlexSolver.arc_to), высота конца = уровни R/F, уклон 0;
+##  - снап: в радиусе flex_snap_radius от курсора есть свободный сокет другого трака -> конец берет его
+##    позицию, касательную и высоту, форма = кубик Эрмита (FlexSolver.best_hermite), профиль высоты
+##    Эрмит по длине с уклонами соседей на обоих концах.
+## Считает форму, отдает кривую в C_Path.set_curve. Меш и коллизии строит C_VisualFlex по on_curve_changed.
+## Невозможная форма (r < r_min, L вне [l_min, l_max], уклон > max_grade, уход под землю) -> C_Invalid.
+##
+## События (шлет BuildTool, он компонентов не знает):
+##   on_stretch_started  - начало зафиксировано, дальше тянем конец
+##   on_stretch_moved    - {position} точка под курсором (мир)
+##   on_stretch_ended    - конец зафиксирован
+##   on_rotate_input     - R/F в фазе конца меняют уровень свободного конца
+##   on_clone_state_to / on_receive_flex_state - перенос формы призрака в реальный объект
+## Метку "L · R · dY (уклон)" над призраком держит этот компонент (Label3D, создается только у призрака).
+
+const STEP := 1.0
+const LABEL_PIXEL_SIZE := 0.0015   # размер метки на экране, подбирать по вкусу
+const LABEL_FONT_SIZE := 32
+const NEIGHBOR_EPS := 0.6          # сокет ближе - считаем его стыком начала
+const SNAP_HYST := 0.7             # удерживаем уже выбранный сокет (множитель расстояния)
+const GROUND_PERIOD_MS := 120      # проверка "под землей" не чаще
+
+# --- состояние формы (сохраняется) ---
+var target := Vector2(0.0, 10.0)   # свободный конец, плоскость начала (x вправо, y вперед)
+var end_levels := 0                # уровни свободного конца относительно начала
+var snapped_end := false
+var end_pos := Vector2.ZERO        # конец у сокета (плоскость начала)
+var end_tan := Vector2(0.0, 1.0)   # направление ДВИЖЕНИЯ в конце (плоскость)
+var end_dy := 0.0                  # высота конца у сокета относительно начала
+var end_slope := 0.0               # dy/ds движения в конце у сокета
+var start_slope := 0.0             # dy/ds движения в начале (уклон соседа начала)
+
+# --- производные ---
+var length := 10.0
+var radius := INF
+var grade := 0.0
+var dy := 0.0
+var end_local := Vector3(0.0, 0.0, -10.0)
+var stretching := false
+var invalid := false
+
+var _label: Label3D
+var _last_key: Array = []
+var _snap_id := 0
+
+# XX bug
+const FREE_R_MIN := 4.0            # жесткий пол при выключенном контроле (балласт ±1.6)
+var relaxed := false               # форма построена без лимитов (сохраняется)
+var _issues: Array[String] = []    # какие лимиты нарушены (по реальным пределам)
+#var _geom_valid := true
+#==
+
+var _ground_bad := false
+var _ground_ms := 0
+var _ground_pending := false
+
+const BEND_MIN_GAP := 3.0          # изгиб не ближе к началу/концу, ю
+
+var bends: Array[Vector2] = []     # изгибы в плоскости начала (сохраняются), максимум flex_max_bends
+var editing := false
+var _snapshot: Dictionary = {}
+
+
+func _init() -> void:
+	set_process(false)
+
+
+func on_entity_ready() -> void:
+	_apply(true)   # начальная короткая прямая через общий путь set_curve
+
+
+func on_component_added(type: Script) -> void:
+	if type == C_Ghost:
+		relaxed = not Global.flex_limits
+		_ensure_label()
+		# пока ставится начало, конец не должен снапить призрак
+		entity.send_event("on_socket_enabled", {"index": 1, "enabled": false})
+
+
+# ==========================================
+# События построения
+# ==========================================
+
+func on_stretch_started(_d: Dictionary) -> void:
+	stretching = true
+	snapped_end = false
+	_snap_id = 0
+	end_levels = 0
+	start_slope = _neighbor_slope()
+	entity.send_event("on_socket_enabled", {"index": -1, "enabled": false})
+	if _label:
+		_label.visible = true
+	_apply(true)
+	_validate()
+
+
+func on_stretch_moved(data: Dictionary) -> void:
+	if not stretching or not data.has("position"):
+		return
+	var world: Vector3 = data.position
+	var sock := _find_end_socket(world)
+	if sock.is_empty():
+		snapped_end = false
+		_snap_id = 0
+		var p: Vector3 = entity.to_local(world)
+		target = Vector2(p.x, -p.z)
+	else:
+		_snap_to(sock)
+	_apply()
+	_validate()
+
+
+## R/F в фазе конца: уровень свободного конца (у сокета высоту задает сокет)
+func on_rotate_input(data: Dictionary) -> void:
+	if not stretching or data.get("axis", "") != "x":
+		return
+	end_levels += int(signf(data.get("amount", 0.0)))
+	_apply(true)
+	_validate()
+
+
+func on_stretch_ended(_d: Dictionary) -> void:
+	stretching = false
+	if _label:
+		_label.visible = false
+	entity.send_event("on_flex_final", {})
+
+
+## Призрак отдает форму новому реальному объекту
+func on_clone_state_to(data: Dictionary) -> void:
+	var t: Entity = data.target
+	t.send_event("on_receive_flex_state", {"flex_state": _state()})
+
+
+func on_receive_flex_state(data: Dictionary) -> void:
+	_set_state(data.get("flex_state", {}))
+	_apply(true)
+	entity.send_event("on_flex_final", {})
+
+
+func set_target(t: Vector2) -> void:
+	target = t
+	_apply()
+
+
+# ==========================================
+# Расчет формы
+# ==========================================
+func on_flex_limits_changed(_d: Dictionary) -> void:
+	relaxed = not Global.flex_limits
+	_apply(true)
+	_validate()
+
+
+## real = true: настоящие пределы (для проверки), иначе те, по которым решаем форму
+func _limits(real := false) -> FlexSolver.Limits:
+	var gs = Global.settings
+	var lim := FlexSolver.Limits.new()
+	if real or not relaxed:
+		lim.r_min = gs.flex_r_min
+		lim.l_min = gs.flex_l_min
+		lim.l_max = gs.flex_l_max
+		lim.max_grade = gs.flex_max_grade
+	else:
+		lim.r_min = FREE_R_MIN
+		lim.l_min = 2.0
+		lim.l_max = 500.0
+		lim.max_grade = 1.0
+	return lim
+
+
+func _apply(force := false) -> void:
+	if entity == null:
+		return
+	var key := [snapped_end, _snap_id, end_pos, target.snapped(Vector2(0.05, 0.05)), end_levels, start_slope, relaxed, bends.duplicate()]
+	#var key := [snapped_end, _snap_id, end_pos, target.snapped(Vector2(0.05, 0.05)), end_levels, start_slope, relaxed]
+	if not force and key == _last_key:
+		return
+	_last_key = key
+	var path := get_comp(C_Path) as C_Path
+	if not path:
+		return
+	var lim := _limits()
+	var res: Dictionary
+	var y1 := 0.0
+	var m1 := 0.0
+	
+	#Вставлено для ручек
+	if not bends.is_empty():
+		var p_end: Vector2 = end_pos if snapped_end else target
+		var t_end := end_tan
+		if not snapped_end:
+			t_end = (p_end - bends.back()).normalized()   # у свободного конца касательная от последнего изгиба
+			if t_end.is_zero_approx():
+				t_end = Vector2(0.0, 1.0)
+		var wp: Array[Vector2] = [Vector2.ZERO]
+		wp.append_array(bends)
+		wp.append(p_end)
+		res = FlexSolver.best_chain(wp, Vector2(0.0, 1.0), t_end, lim, STEP, Global.settings.flex_bend_k)
+		#res = FlexSolver.best_chain(wp, Vector2(0.0, 1.0), t_end, lim, STEP)
+		res["radius"] = res.min_radius
+		y1 = end_dy if snapped_end else end_levels * Global.settings.layer_height
+		m1 = end_slope if snapped_end else 0.0
+	elif snapped_end:
+		res = FlexSolver.best_hermite(Vector2.ZERO, Vector2(0.0, 1.0), end_pos, end_tan, lim, STEP)
+		y1 = end_dy
+		m1 = end_slope
+	else:
+		res = FlexSolver.arc_to(target, lim, STEP)
+		y1 = end_levels * Global.settings.layer_height
+		
+	var pts: PackedVector2Array = res.points
+	radius = res.radius
+	var cv: Dictionary = FlexSolver.to_curve3d(pts, 0.0, y1, start_slope, m1)
+	path.set_curve(cv.curve)   # шлет on_curve_changed: сокеты, опоры, меш
+	length = cv.length
+	grade = cv.max_grade
+	dy = y1
+
+	# Нарушения считаем по РЕАЛЬНЫМ пределам, блокируют они или нет решает _refresh_state
+	var real := _limits(true)
+	_issues.clear()
+	if radius < real.r_min * 0.98:
+		_issues.append("R")
+	if length < real.l_min or length > real.l_max:
+		_issues.append("L")
+	if grade > real.max_grade:
+		_issues.append("уклон")
+
+	var last: Vector2 = pts[pts.size() - 1]
+	end_local = Vector3(last.x, y1, -last.y)
+	_update_label()
+	
+	entity.send_event("on_bends_changed", {})
+
+
+
+
+## Земля - лучи, поэтому не чаще GROUND_PERIOD_MS. Не зависит от остальных проверок
+func _validate() -> void:
+	if not stretching and not editing:
+		return
+	if not stretching:
+		return
+	var now := Time.get_ticks_msec()
+	if now - _ground_ms >= GROUND_PERIOD_MS:
+		_ground_ms = now
+		_ground_pending = false
+		var path := get_comp(C_Path) as C_Path
+		_ground_bad = path != null and path.underground_depth(entity.global_transform) > Global.settings.underground_tolerance
+	else:
+		_ground_pending = true
+		set_process(true)
+	_refresh_state()
+
+
+## Блокирует постановку (C_Invalid) только при включенном контроле
+func _refresh_state() -> void:
+	var violated := not _issues.is_empty() or _ground_bad
+	_set_invalid(violated and not relaxed)
+
+
+func _set_invalid(v: bool) -> void:
+	if v != invalid:
+		invalid = v
+		if v:
+			entity.add_component(C_Invalid.new())
+		else:
+			entity.remove_component(C_Invalid)
+	_update_label()
+
+
+func _update_label() -> void:
+	if not _label:
+		return
+	var mid := Vector3(end_local.x * 0.5, end_local.y * 0.5, end_local.z * 0.5)
+	var path := get_comp(C_Path) as C_Path
+	if path and path.curve:
+		mid = path.curve.sample_baked(path.curve.get_baked_length() * 0.5)
+	_label.position = mid + Vector3(0.0, 6.0, 0.0)
+	
+	var r_txt := "∞" if is_inf(radius) else str(roundi(radius))
+	var txt := "L %.1f · R %s · %+.1f (%.2f%%)" % [length, r_txt, dy, grade * 100.0]
+	var reasons: Array[String] = _issues.duplicate()
+	if _ground_bad:
+		reasons.append("ground")
+	if not reasons.is_empty():
+		txt += "  ✗ " + ", ".join(PackedStringArray(reasons))
+	if relaxed:
+		txt += "  [лимиты выкл, L]"
+	_label.text = txt
+	if invalid:
+		_label.modulate = Color(1.0, 0.35, 0.35)      # блокирует постановку
+	elif not reasons.is_empty():
+		_label.modulate = Color(1.0, 0.85, 0.3)       # нарушение, но контроль выключен
+	else:
+		_label.modulate = Color.WHITE
+
+
+func _process(_delta: float) -> void:
+	if not _ground_pending or not (stretching or editing):
+		set_process(false)
+		return
+	#if not _ground_pending or not stretching:
+		#set_process(false)
+		#return
+	if Time.get_ticks_msec() - _ground_ms >= GROUND_PERIOD_MS:
+		_validate()
+
+
+#
+# ==========================================
+# Поиск сокета для конца
+# ==========================================
+
+## Ближайший свободный сокет чужого трака (по горизонтали от курсора).
+## Возвращает {area, pos, out} или {}
+func _find_end_socket(world: Vector3) -> Dictionary:
+	var radius_max: float = Global.settings.flex_snap_radius
+	var start_w := entity.global_position
+	var best := {}
+	var best_d := radius_max
+	for node in entity.get_tree().get_nodes_in_group(&"track_socket"):
+		var other := node as Entity
+		if other == null or other == entity or other.is_queued_for_deletion() or other.has_comp(C_Ghost):
+			continue
+		var oc := other.get_comp(C_Socket) as C_Socket
+		if not oc:
+			continue
+		for s in oc.sockets:
+			var a: Area3D = s.socket
+			var sp := a.global_position
+			if sp.distance_to(start_w) < NEIGHBOR_EPS:
+				continue   # стык моего начала
+			var d := Vector2(sp.x - world.x, sp.z - world.z).length()
+			if a.get_instance_id() == _snap_id:
+				d *= SNAP_HYST
+			if d >= best_d:
+				continue
+			if not oc.is_socket_free(a):
+				continue
+			best_d = d
+			best = {"area": a, "pos": sp, "out": -a.global_basis.z}
+	return best
+
+
+func _snap_to(sock: Dictionary) -> void:
+	var o: Vector3 = sock.out
+	var oh := Vector2(o.x, o.z)
+	if oh.length() < 0.001:
+		snapped_end = false
+		return
+	var local: Vector3 = entity.to_local(sock.pos)
+	var d_loc: Vector3 = entity.global_basis.inverse() * (-o)   # движение в конце = против "наружу" соседа
+	snapped_end = true
+	_snap_id = (sock.area as Area3D).get_instance_id()
+	end_pos = Vector2(local.x, -local.z)
+	end_tan = Vector2(d_loc.x, -d_loc.z).normalized()
+	end_dy = local.y
+	end_slope = -o.y / oh.length()
+
+
+## Уклон соседа в моем начале (dy/ds движения от соседа ко мне). Нет соседа - 0
+func _neighbor_slope() -> float:
+	var start_w := entity.global_position
+	var fwd := -entity.global_basis.z
+	for node in entity.get_tree().get_nodes_in_group(&"track_socket"):
+		var other := node as Entity
+		if other == null or other == entity or other.is_queued_for_deletion() or other.has_comp(C_Ghost):
+			continue
+		var oc := other.get_comp(C_Socket) as C_Socket
+		if not oc:
+			continue
+		for s in oc.sockets:
+			var a: Area3D = s.socket
+			if a.global_position.distance_to(start_w) >= NEIGHBOR_EPS:
+				continue
+			var o := -a.global_basis.z
+			var h := Vector2(o.x, o.z).length()
+			if h > 0.001 and o.dot(fwd) > 0.0:
+				return o.y / h
+	return 0.0
+
+
+# ==========================================
+# Метка над призраком
+# ==========================================
+
+func _ensure_label() -> void:
+	if _label:
+		return
+	_label = Label3D.new()
+	_label.name = "FlexLabel"
+	_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_label.fixed_size = true
+	_label.no_depth_test = true
+	_label.pixel_size = LABEL_PIXEL_SIZE
+	_label.font_size = LABEL_FONT_SIZE
+	_label.outline_size = 8
+	_label.visible = false
+	entity.add_child(_label)
+
+# ==========================================
+# F3: изгибы (события шлет C_FlexHandle)
+# ==========================================
+
+func on_bend_edit_begin(_d: Dictionary) -> void:
+	_begin_edit()
+
+
+func on_bend_edit_end(_d: Dictionary) -> void:
+	_end_edit()
+
+
+func on_bend_moved(d: Dictionary) -> void:
+	var i: int = d.get("index", -1)
+	if not editing or i < 0 or i >= bends.size():
+		return
+	var p: Vector2 = d.pos
+	if p.length() < BEND_MIN_GAP or p.distance_to(_end_plane()) < BEND_MIN_GAP:
+		return
+	bends[i] = p
+	_apply()
+	_validate()
+
+
+func on_bend_add(d: Dictionary) -> void:
+	var path := get_comp(C_Path) as C_Path
+	if not path or not path.curve or bends.size() >= Global.settings.flex_max_bends:
+		return
+	var p: Vector3 = entity.to_local(d.position)
+	var q := Vector2(p.x, -p.z)
+	if q.length() < BEND_MIN_GAP or q.distance_to(_end_plane()) < BEND_MIN_GAP:
+		return
+	_begin_edit()
+	if bends.is_empty() and not snapped_end:
+		target = Vector2(end_local.x, -end_local.z)   # фиксируем реальный конец дуги (он мог упереться в лимит)
+	var s := path.curve.get_closest_offset(p)
+	var idx := 0
+	for i in bends.size():
+		if path.curve.get_closest_offset(bend_local(i)) < s:
+			idx += 1
+	bends.insert(idx, q)
+	_apply(true)
+	_validate()
+	_end_edit()
+
+
+func on_bend_remove(d: Dictionary) -> void:
+	var i: int = d.get("index", -1)
+	if i < 0 or i >= bends.size():
+		return
+	_begin_edit()
+	bends.remove_at(i)
+	_apply(true)
+	_validate()
+	_end_edit()
+
+
+func _begin_edit() -> void:
+	if editing:
+		return
+	editing = true
+	_snapshot = _state()
+	_ensure_label()
+	_label.visible = true
+	entity.send_event("on_flex_edit_started", {})
+
+
+## Невалидная правка (лимиты при включенном контроле, под землей, пересечение) откатывается
+func _end_edit() -> void:
+	if not editing:
+		return
+	var path := get_comp(C_Path) as C_Path
+	_ground_bad = path != null and path.underground_depth(entity.global_transform) > Global.settings.underground_tolerance
+	var bad := (not relaxed and (not _issues.is_empty() or _ground_bad)) or has_comp(C_Blocked)
+	editing = false
+	if bad:
+		_set_state(_snapshot)
+		_apply(true)
+	_ground_bad = false
+	_set_invalid(false)
+	if _label:
+		_label.visible = false
+	entity.send_event("on_flex_final", {})
+	entity.send_event("on_bends_changed", {})
+
+
+func _end_plane() -> Vector2:
+	if snapped_end:
+		return end_pos
+	return target if not bends.is_empty() else Vector2(end_local.x, -end_local.z)
+
+
+## Положение ручки i в осях Entity: точка кривой, ближайшая к изгибу в плане (там же высота)
+func bend_local(i: int) -> Vector3:
+	var q := bends[i]
+	var best := Vector3(q.x, 0.0, -q.y)
+	var path := get_comp(C_Path) as C_Path
+	if path == null or path.curve == null:
+		return best
+	var bd := INF
+	for p in path.curve.get_baked_points():
+		var d := Vector2(p.x - q.x, -p.z - q.y).length_squared()
+		if d < bd:
+			bd = d
+			best = p
+	return best
+	
+
+# ==========================================
+# SAVE\LOAD / клонирование
+# ==========================================
+
+func _state() -> Dictionary:
+	return {
+		"target": target,
+		"end_levels": end_levels,
+		"snapped_end": snapped_end,
+		"end_pos": end_pos,
+		"end_tan": end_tan,
+		"end_dy": end_dy,
+		"end_slope": end_slope,
+		"start_slope": start_slope,
+		"relaxed": relaxed,
+		"bends": bends.duplicate(),
+	}
+
+
+func _set_state(d: Dictionary) -> void:
+	if d.has("target"): target = d.target
+	if d.has("end_levels"): end_levels = d.end_levels
+	if d.has("snapped_end"): snapped_end = d.snapped_end
+	if d.has("end_pos"): end_pos = d.end_pos
+	if d.has("end_tan"): end_tan = d.end_tan
+	if d.has("end_dy"): end_dy = d.end_dy
+	if d.has("end_slope"): end_slope = d.end_slope
+	if d.has("start_slope"): start_slope = d.start_slope
+	if d.has("relaxed"): relaxed = d.relaxed
+	if d.has("bends"):
+		bends.clear()
+		for b in d.bends:
+			bends.append(b)
+
+
+func save_data() -> Dictionary:
+	var d := _state()
+	d['comp_path'] = get_script().resource_path
+	d['comp_name'] = get_script().resource_path.get_file().get_basename()
+	return d
+
+
+func load_data(data: Dictionary) -> void:
+	_set_state(data)
+	_apply(true)

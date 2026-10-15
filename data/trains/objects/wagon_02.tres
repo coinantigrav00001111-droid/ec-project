@@ -2,8 +2,8 @@
 
 [ext_resource type="Script" uid="uid://m4g5jbfwmaa0" path="res://core/component_setting.gd" id="1_h3v5j"]
 [ext_resource type="Script" uid="uid://7vuxuiiysiji" path="res://setting/bogie_config.gd" id="2_hp0cg"]
-[ext_resource type="PackedScene" uid="uid://cl6t7b6265rj" path="res://data/trains/default_bogie.tscn" id="3_ek6gf"]
-[ext_resource type="PackedScene" uid="uid://be7il350r4fss" path="res://data/trains/wheel_pair_01.tscn" id="4_40tj6"]
+[ext_resource type="PackedScene" uid="uid://dpl2u278hhocd" path="res://data/trains/bogie_03.tscn" id="3_hp0cg"]
+[ext_resource type="PackedScene" uid="uid://gwsdt87qd0o8" path="res://data/trains/wheel_pair_03.tscn" id="4_ek6gf"]
 [ext_resource type="PackedScene" uid="uid://drd21qffg53gs" path="res://data/trains/wagon_02.tscn" id="5_h3v5j"]
 [ext_resource type="Script" uid="uid://bicjny5dv1h3s" path="res://setting/wagon_config.gd" id="6_dmkgj"]
 [ext_resource type="Script" uid="uid://bwaluvayi2o8k" path="res://setting/suspension_config.gd" id="7_hp0cg"]
@@ -23,12 +23,18 @@
 
 [sub_resource type="Resource" id="Resource_u60jt"]
 script = ExtResource("2_hp0cg")
-b_offset = Vector3(0, 0.71, -4.5)
+b_offset_z = -4.0
+scene = ExtResource("3_hp0cg")
+wheel_pair_scene = ExtResource("4_ek6gf")
+wheel_pair_position = Vector3(0, 0.526, 0.8)
 metadata/_custom_type_script = "uid://7vuxuiiysiji"
 
 [sub_resource type="Resource" id="Resource_6ly6f"]
 script = ExtResource("2_hp0cg")
-b_offset = Vector3(0, 0.71, 4.5)
+b_offset_z = 4.0
+scene = ExtResource("3_hp0cg")
+wheel_pair_scene = ExtResource("4_ek6gf")
+wheel_pair_position = Vector3(0, 0.526, 0.8)
 metadata/_custom_type_script = "uid://7vuxuiiysiji"
 
 [sub_resource type="Resource" id="Resource_yrtcf"]
@@ -39,7 +45,9 @@ metadata/_custom_type_script = "uid://bwaluvayi2o8k"
 script = ExtResource("6_dmkgj")
 suspension = SubResource("Resource_yrtcf")
 scene = ExtResource("5_h3v5j")
+offset_mesh_y = 1.52
 bogie_configs = Array[ExtResource("2_hp0cg")]([SubResource("Resource_u60jt"), SubResource("Resource_6ly6f")])
+coupler_offset = 6.5
 metadata/_custom_type_script = "uid://bicjny5dv1h3s"
 
 [sub_resource type="Resource" id="Resource_lvfb0"]

@@ -14,7 +14,9 @@ func _ready():
 	PGM.power_tab_updated.connect(_update_power_tab)
 	PGM.power_updated.connect(_on_power_track_updated)
 	#PGM.neighbor_updated.connect(_on_neighbor_updated)
-
+	
+	# Таб механизмы создается кодом
+	_build_mech_tab()
 
 
 # Для TransformTab (если нужны живые координаты)
@@ -112,7 +114,8 @@ func _populate_data():
 	_update_power_tab()
 	# Вкладка Debug
 	_update_debug_tab()
-
+	# Вкладка механизмы 
+	_rebuild_mech_tab()
 
 
 func _populate_main_tab():
@@ -504,6 +507,159 @@ func _on_power_clip_button_pressed() -> void:
 	# Обновляем UI, чтобы игрок сразу визуально увидел, какой контур ему выдали
 	%ClipContourIDButton.selected = _contour
 	_update_power_tab()
+
+
+
+## === MECHANISMS 
+
+##===========================================================================
+## ВКЛАДКА "МЕХАНИЗМЫ" 
+## Строится кодом, живёт в TabContainer последней вкладкой, видна только у сущностей с C_Mechanisms.
+## Определяется по контролу (_mech_tab), а не по номеру, поэтому индексы других вкладок не важны.
+## ======================================================================
+
+var _mech_tab: VBoxContainer
+var _mech_list: VBoxContainer
+var _mech_rows: Dictionary = {}      # StringName -> {slider, check, enabled, status}
+var _mech_drag: StringName = &""     # id механизма, чей слайдер тянут сейчас
+
+
+func _build_mech_tab() -> void:
+	_mech_tab = VBoxContainer.new()
+	_mech_tab.name = "Механизмы"
+	tab_container.add_child(_mech_tab)
+	var margin := MarginContainer.new()
+	for side in ["left", "right", "top", "bottom"]:
+		margin.add_theme_constant_override("margin_" + side, 10)
+	_mech_tab.add_child(margin)
+	_mech_list = VBoxContainer.new()
+	margin.add_child(_mech_list)
+	_set_mech_tab_visible(false)
+
+
+func _set_mech_tab_visible(on: bool) -> void:
+	var idx = tab_container.get_tab_idx_from_control(_mech_tab)
+	tab_container.set_tab_hidden(idx, not on)
+	if not on and tab_container.current_tab == idx:
+		tab_container.current_tab = 0
+
+
+func _get_mech_comp() -> C_Mechanisms:
+	if current_target == null or current_target.has_comp(C_Ghost):
+		return null
+	return current_target.get_comp(C_Mechanisms) as C_Mechanisms
+
+
+## Пересобирает строки. Вызывать при смене цели и при добавлении/удалении C_Mechanisms / C_Ghost
+func _rebuild_mech_tab() -> void:
+	for c in _mech_list.get_children():
+		_mech_list.remove_child(c)
+		c.queue_free()
+	_mech_rows.clear()
+	_mech_drag = &""
+
+	var comp := _get_mech_comp()
+	if comp == null:
+		_set_mech_tab_visible(false)
+		return
+	_set_mech_tab_visible(true)
+
+	for item in comp.get_list():
+		_add_mech_row(item)
+
+	var all_row := HBoxContainer.new()
+	var b_open := Button.new()
+	b_open.text = "Открыть всё"
+	b_open.pressed.connect(_on_mech_all.bind(1.0))
+	var b_close := Button.new()
+	b_close.text = "Закрыть всё"
+	b_close.pressed.connect(_on_mech_all.bind(0.0))
+	all_row.add_child(b_open)
+	all_row.add_child(b_close)
+	_mech_list.add_child(all_row)
+	_update_mech_tab()
+
+
+func _add_mech_row(item: Dictionary) -> void:
+	var id: StringName = item.id
+	var row := HBoxContainer.new()
+
+	var title := Label.new()
+	title.text = item.title
+	title.custom_minimum_size.x = 110
+	row.add_child(title)
+
+	var slider := HSlider.new()
+	slider.min_value = 0.0
+	slider.max_value = 1.0
+	slider.step = 0.01
+	slider.custom_minimum_size.x = 140
+	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	slider.drag_started.connect(func(): _mech_drag = id)
+	slider.drag_ended.connect(func(_changed): _mech_drag = &"")
+	slider.value_changed.connect(func(v): if _mech_drag == id: _send_mech(id, v))
+	row.add_child(slider)
+
+	var check := CheckButton.new()
+	check.text = "Открыто"
+	check.toggled.connect(func(on): _send_mech(id, 1.0 if on else 0.0))
+	row.add_child(check)
+
+	var en := CheckBox.new()
+	en.text = "вкл"
+	en.tooltip_text = "Выключенный механизм не реагирует на команды"
+	en.toggled.connect(func(on):
+		var comp := _get_mech_comp()
+		if comp: comp.set_enabled(id, on))
+	row.add_child(en)
+
+	var status := Label.new()
+	status.custom_minimum_size.x = 70
+	row.add_child(status)
+
+	_mech_list.add_child(row)
+	_mech_rows[id] = {"slider": slider, "check": check, "enabled": en, "status": status}
+
+
+## Каждый кадр, пока вкладка открыта. Только синхронизация вида, команд не шлёт (set_*_no_signal)
+func _update_mech_tab() -> void:
+	var comp := _get_mech_comp()
+	if comp == null:
+		return
+	for item in comp.get_list():
+		var r: Dictionary = _mech_rows.get(item.id, {})
+		if r.is_empty():
+			continue
+		var usable: bool = item.enabled and item.found
+		if _mech_drag != item.id:
+			r.slider.set_value_no_signal(item.t)
+		r.slider.editable = usable
+		r.check.set_pressed_no_signal(item.target > 0.5)
+		r.check.disabled = not usable
+		r.enabled.set_pressed_no_signal(item.enabled)
+		r.enabled.disabled = not item.found
+		if not item.found:
+			r.status.text = "нет части"
+			r.status.modulate = Color(1.0, 0.302, 0.043)
+		else:
+			r.status.text = "..." if item.moving else "%d%%" % roundi(item.t * 100.0)
+			r.status.modulate = Color.WHITE
+
+
+func _send_mech(id: StringName, state: float) -> void:
+	if current_target:
+		current_target.send_event("on_mechanism_set", {"id": id, "state": state})
+
+
+func _on_mech_all(state: float) -> void:
+	var comp := _get_mech_comp()
+	if comp == null:
+		return
+	for item in comp.get_list():
+		_send_mech(item.id, state)
+
+## ======================================================================
 
 
 

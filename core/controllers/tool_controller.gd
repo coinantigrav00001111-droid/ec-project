@@ -128,6 +128,12 @@ func get_mouse_ray(mask: int = -1) -> Dictionary:
 
 
 
+## Луч из камеры в мир (для драга по плоскости, считает сам компонент)
+func get_mouse_ray_vec() -> Dictionary:
+	var mouse_pos := get_viewport().get_mouse_position()
+	var camera := get_viewport().get_camera_3d()
+	return {"from": camera.project_ray_origin(mouse_pos), "dir": camera.project_ray_normal(mouse_pos)}
+	
 
 
 ## 💡--------------Меняем режим ---------------------------------

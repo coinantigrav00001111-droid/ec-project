@@ -318,16 +318,17 @@ func _sample(i: int, b: C_Bogie.BogieData, speed_abs: float) -> Vector2:
 		m.track_id = 0
 		return Vector2.ZERO
 
-	var tr: Entity = b.current_track
+	# моя замена tr на _tr
+	var _tr: Entity = b.current_track
 	var s := b.track_distance
-	var id := tr.get_instance_id()
+	var id := _tr.get_instance_id()
 	var moving := speed_abs > MOVING_SPEED
 	var spacing := cfg.joint_spacing
 
 	if id != m.track_id:
 		var had_track := m.track_id != 0       # после reset() первая привязка - не стык
 		m.track_id = id
-		m.noise_off = _noise_offset(tr)
+		m.noise_off = _noise_offset(_tr)
 		m.idx = floori(s / spacing) if spacing > 0.0 else 0
 		if had_track and moving:
 			_joint(i, JOINT_TRACK, speed_abs, m)
@@ -370,8 +371,8 @@ func _joint(i: int, kind: StringName, speed_abs: float, m: Mem) -> void:
 	rail_joint.emit(i, kind, strength)
 
 
-func _noise_offset(tr: Entity) -> float:
-	var p := tr.global_position
+func _noise_offset(_tr: Entity) -> float: # моя замена tr на _tr
+	var p := _tr.global_position
 	var h := hash(Vector3i(roundi(p.x * 10.0), roundi(p.y * 10.0), roundi(p.z * 10.0)))
 	return float(h & 0xFFFF) * 0.31
 

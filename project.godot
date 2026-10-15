@@ -25,6 +25,7 @@ driver/driver="Dummy"
 
 Global="*uid://cuyqabojk5lbh"
 PGM="*uid://cs6t1pamqjrbq"
+Outline="*uid://bsgvq8tlldjvo"
 
 [display]
 
@@ -33,7 +34,7 @@ window/size/viewport_height=900
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/Todo_Manager/plugin.cfg", "res://addons/fancy_folder_colors/plugin.cfg", "res://addons/kanban_tasks/plugin.cfg")
+enabled=PackedStringArray("res://addons/Todo_Manager/plugin.cfg", "res://addons/fancy_folder_colors/plugin.cfg", "res://addons/godot_context_exporter/plugin.cfg", "res://addons/kanban_tasks/plugin.cfg")
 
 [file_customization]
 
@@ -441,7 +442,14 @@ key_ctrl_s={
 3d_physics/layer_3="tracks"
 3d_physics/layer_4="sockets"
 3d_physics/layer_5="trains"
+3d_physics/layer_6="supports"
+3d_physics/layer_7="flex_handle"
 3d_physics/layer_11="ghost"
+3d_physics/layer_16="outline"
+3d_physics/layer_17="outline"
+3d_physics/layer_18="outline"
+3d_physics/layer_19="outline"
+3d_physics/layer_20="outline"
 
 [physics]
 

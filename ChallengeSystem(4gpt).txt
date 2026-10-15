@@ -1,0 +1,341 @@
+# Challenge System — Simulator of Tabletop Railway
+
+## 1. Purpose
+Challenge System превращает набор строительных и симуляционных механик в gameplay.
+
+Challenge должен заставлять игрока проектировать, строить, проверять и улучшать работающую систему.
+
+Он использует существующие игровые системы:
+- Track;
+- Switch;
+- Train;
+- Wagon;
+- Power;
+- DC;
+- DCC;
+- Terrain;
+- Physics;
+- Environment;
+- Automation;
+- Observe / Diagnose.
+
+Основной игровой контекст описан в [GDD.md](GDD.md). Технические зависимости описаны в [TDD.md](TDD.md).
+
+## 2. Challenge Formula
+**Goal + Constraints + Systems + Consequence + Freedom**
+
+- **Goal** — что получить.
+- **Constraints** — что ограничивает.
+- **Systems** — какие системы взаимодействуют.
+- **Consequence** — что происходит при ошибке.
+- **Freedom** — возможность нескольких решений.
+
+## 3. Challenge Structure
+Каждый Challenge содержит:
+- Environment
+- Objective
+- Constraints
+- Resources
+- Conditions
+- Evaluation
+- Optional Goals
+
+## 4. Основные типы
+
+### Construction
+Геометрия, track, площадь, радиусы, высоты и препятствия.
+
+### Electrical
+DCController, PowerClip, Contours, polarity.
+
+### Operation
+Управление локомотивами, стрелками и маршрутами.
+
+### Train
+Масса, длина состава, тяга, сцепки.
+
+### Physics
+Уклон, радиус, скорость, проскальзывание, derailment.
+
+### Space
+Ограниченная площадь и фиксированные точки.
+
+### Scenic
+Композиция, terrain, здания, декорации, освещение.
+
+### Restoration
+Диагностика неисправного существующего макета.
+
+### Optimization
+Улучшение уже работающего решения.
+
+### Automation
+DCC, датчики, маршруты, автоматические стрелки.
+
+## 5. Difficulty
+Сложность растёт количеством взаимодействующих систем:
+
+1. Track + Train
+2. Track + Power + Train
+3. Track + Switch + Power + Train
+4. Track + Physics + Train
+5. Power + Multiple Trains
+6. Diagnosis + Power + Track + Train
+7. Automation + DCC + Switch + Sensor
+8. Master — все системы одновременно
+
+## 6. Constraints
+Ограничения могут касаться:
+- площади;
+- высоты;
+- запрещённых зон;
+- точек подключения;
+- количества track;
+- типов track;
+- радиуса;
+- количества switch;
+- локомотивов;
+- массы состава;
+- Controller;
+- Contours;
+- PowerClip;
+- бюджета.
+
+Budget является опциональной системой и не должен ограничивать Sandbox.
+
+## 7. Evaluation
+Challenge оценивается не только по факту выполнения.
+
+Основные измерения:
+
+### Completion
+Основная задача выполнена.
+
+### Efficiency
+Насколько эффективно использованы ресурсы.
+
+### Reliability
+Насколько стабильно работает система.
+
+### Complexity
+Насколько сложную систему игрок создал.
+
+### Aesthetics
+Визуальное качество макета.
+
+### Elegance
+Насколько простым и чистым получилось решение.
+
+## 8. Layout Quality Score
+Качество макета может быть представлено как набор независимых оценок, а не одной цифрой.
+
+Пример:
+
+| Metric | Meaning |
+|---|---|
+| Completion | Выполнена ли задача |
+| Efficiency | Ресурсная эффективность |
+| Reliability | Стабильность работы |
+| Engineering | Качество технического решения |
+| Aesthetics | Визуальное качество |
+| Elegance | Простота решения |
+
+Итоговый результат может показывать профиль:
+
+**Engineering: 92**
+**Reliability: 81**
+**Efficiency: 74**
+**Aesthetics: 96**
+**Elegance: 67**
+
+Это позволяет разным решениям быть успешными по-разному.
+
+## 9. Оценка не должна навязывать один solution
+Пример:
+
+### Solution A
+Прямая короткая линия:
+- дешёвая;
+- компактная;
+- работает;
+- низкая эстетика.
+
+### Solution B
+Большой scenic layout:
+- дорогой;
+- сложный;
+- работает;
+- высокая эстетика.
+
+### Solution C
+Минимальная инженерная схема:
+- очень компактная;
+- высокая эффективность;
+- высокая надёжность;
+- низкая эстетика.
+
+Все три решения могут выполнить основной Objective.
+
+## 10. Optional Goals
+После выполнения основной задачи игрок может улучшать результат:
+
+- меньше track;
+- меньше PowerClip;
+- один Controller;
+- без Flex Track;
+- без ручного управления;
+- заданная scenic score;
+- отсутствие derailment.
+
+## 11. Failure Philosophy
+Failure не должен автоматически означать Game Over.
+
+Ошибка создаёт диагностическую ситуацию.
+
+Примеры:
+- поезд не получает питание;
+- контур разомкнут;
+- неправильная полярность;
+- неправильная стрелка;
+- слишком маленький радиус;
+- слишком большой уклон;
+- derailment;
+- разрыв сцепки.
+
+Игрок использует Observe, Power Layer и InfoPanel для поиска причины.
+
+## 12. Challenge Chains
+Пример обучающей цепочки:
+
+1. Build a Loop
+2. Add Power
+3. Run the Train
+4. Reverse
+5. Split the Layout
+6. Two Trains
+7. Add a Switch
+8. Route
+9. Diagnose
+10. Automate
+
+Новая система вводится тогда, когда она становится необходимой для решения следующей задачи.
+
+## 13. Example Challenges
+
+### First Railway
+Построить петлю и запустить локомотив.
+
+### Wrong Polarity
+Исправить направление движения через диагностику полярности.
+
+### Two Contours
+Обеспечить независимое управление двумя локомотивами.
+
+### Long Train
+Провести длинный состав по ограниченному маршруту без derailment.
+
+### Mountain Railway
+Соединить станции через склон, мост и тоннель.
+
+### Broken Layout
+Найти неисправность в готовом макете.
+
+### Find the Fault
+Найти несколько независимых проблем.
+
+### Minimal Railway
+Соединить A и B с минимальным количеством track / switch / PowerClip.
+
+### Beautiful Railway
+Создать scenic layout с заданными объектами и визуальными требованиями.
+
+### No Touch
+После запуска не вмешиваться вручную и добиться выполнения маршрута.
+
+### Exhibition
+Создать законченный макет в заданном помещении.
+
+## 14. Procedural Challenge Generator
+В перспективе Challenge может задаваться параметрами:
+
+```text
+Environment:
+    Room 3x4
+
+Objective:
+    Connect A -> B
+
+Required:
+    Station
+    Locomotive
+
+Constraints:
+    Max 14 tracks
+    Max 2 switches
+    1 controller
+
+Optional:
+    < 10 tracks
+    No Flex Track
+    Scenic score > 70
+```
+
+Параметры генератора:
+- размер помещения;
+- положения A/B;
+- высоты;
+- препятствия;
+- количество track;
+- switch;
+- trains;
+- locomotive;
+- масса;
+- contours;
+- power;
+- тип питания.
+
+## 15. Generator Validation
+Сгенерированный Challenge должен проверяться:
+
+- **Is Solvable?**
+- **Is Understandable?**
+- **Is Interesting?**
+- **Is Different?**
+
+Генератор не должен создавать задачи, которые требуют недоступных объектов, имеют только одно решение или вводят неизвестную игроку механику.
+
+## 16. Master Challenge
+Поздняя игра может предоставить Master Layout:
+
+Большое помещение + полный набор оборудования + глобальные цели.
+
+Например:
+- несколько поездов;
+- независимое питание;
+- автоматические маршруты;
+- высокая надёжность;
+- scenic quality;
+- отсутствие derailment.
+
+Игрок самостоятельно проектирует систему.
+
+## 17. Design Goal
+Challenge System должна создавать переход:
+
+**«Я хочу построить железную дорогу.»**
+
+→ **«Я хочу, чтобы поезд по ней ездил.»**
+
+→ **«Почему он не ездит?»**
+
+→ **«Я понял, в чём проблема.»**
+
+→ **«Теперь я могу сделать систему сложнее.»**
+
+→ **«Я хочу, чтобы она работала сама.»**
+
+→ **«Я хочу построить красивый живой мир.»**
+
+## 18. Related Documents
+- [GDD.md](GDD.md) — vision, design pillars, core loop, game modes, progression.
+- [TDD.md](TDD.md) — Entity/Component architecture, railway, physics, power and diagnostics.

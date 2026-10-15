@@ -35,7 +35,6 @@ func _on_instance_ready() -> void:
 ## уже создаёт instance, собирает меши и вызывает _on_instance_ready().
 
 
-
 # XX claude функция вместо скрипта в on_added()
 func _build_bogies():
 	# достраиваем боги
@@ -45,14 +44,17 @@ func _build_bogies():
 	for bogie in bogie_configs: 
 		# 1. Создаем сцену боги
 		var b_scene = bogie.scene.instantiate() 
-		b_scene.position = bogie.b_offset  # У боги своя независимая позиция в конфиге
+		## моя‼️Замена b_offset на b_offset_z
+		b_scene.position.y = bogie.wheel_pair_position.y  # У боги своя независимая позиция в конфиге
+		b_scene.position.z = bogie.b_offset_z  # У боги своя независимая позиция в конфиге
 		
 		# 2. Добавляем 1 колесо
 		var wp_z = bogie.wheel_pair_position.z 
 		var wp_scene = bogie.wheel_pair_scene.instantiate() # Создаем сцену колеса
 		b_scene.add_child(wp_scene)
 		wp_scene.position.z = wp_z # Смещение вперед\назад
-		wheel_nodes.append({'wheel_node':wp_scene, 'radius': bogie.b_offset.y} )
+		## моя‼️Замена b_offset на b_offset_z
+		wheel_nodes.append({'wheel_node':wp_scene, 'radius': bogie.wheel_pair_position.y} )
 		
 		# 3. Двухосная тележка?: добавляем еще колесо
 		## XX claude тележка??
@@ -62,7 +64,8 @@ func _build_bogies():
 			b_scene.add_child(wp_scene)
 			wp_scene.position.z = -wp_z # Смещение вперед\назад
 			# В массив колес добаляем колесо и радиус
-			wheel_nodes.append({'wheel_node':wp_scene, 'radius': bogie.b_offset.y})
+			## моя‼️Замена b_offset на b_offset_z
+			wheel_nodes.append({'wheel_node':wp_scene, 'radius': bogie.wheel_pair_position.y})
 
 		# 4. Перестраиваем коллизию боги c колесами к вагону
 		var bg_collision = CollisionShape3D.new()
@@ -105,7 +108,8 @@ func on_select_layer(_data) -> void:
 		rb.collision_layer = Global.active_layers(['trains'])
 		rb.collision_mask = Global.active_layers(['ground','tracks','trains','ghost'])
 		
-		
+
+
 ## -----Сбор нод с коллизиями (Area3D, StaticBody3D, RigidBody3D)-------
 
 func _collect_collision_nodes():
