@@ -182,7 +182,8 @@ func _assist_check_transition(bogie: BogieData) -> void:
 		# XX claude-terra: старт луча = высота поверхности трака в точке экстраполяции + подъем датчика над поверхностью.
 		# Раньше look_ahead_pos + Vector3(0, sensor_pos.y, 0) складывало высоту дважды (на траке выше стола луч
 		# стартовал слишком высоко), а датчик навсегда оставался смещенным относительно тележки.
-		var track_h = bogie.current_track.get_comp(C_Identity).get_config('height', 0.0)
+		#var track_h = bogie.current_track.get_comp(C_Identity).get_config('height', 0.0)
+		var track_h = path_comp.head_height()
 		
 		## моя‼️Замена b_offset на b_offset_z
 		var b_off_y = bogie.config.wheel_pair_position.y if bogie.config else 0.0
@@ -241,7 +242,8 @@ func _assist_update_calc_global_pos(bogie: BogieData) -> void:
 	
 	var path_comp = bogie.current_track.get_comp(C_Path)
 	var curve_len = path_comp.curve.get_baked_length()
-	var track_h = bogie.current_track.get_comp(C_Identity).get_config('height', 0.0)
+	#var track_h = bogie.current_track.get_comp(C_Identity).get_config('height', 0.0)
+	var track_h = path_comp.head_height()
 	var wp_z = bogie.config.wheel_pair_position.z  if bogie.config else 0.0
 	
 	# --- ИСПРАВЛЕНИЕ: Получаем данные о развороте трака ---

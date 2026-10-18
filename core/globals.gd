@@ -14,6 +14,7 @@ var settings: Resource = preload("res://setting/global_setting.tres")
 
 #DD Дебаги вкл
 var debug_mode := true
+var active_ui_category := 1
 
 
 ## Текущий режим из : &'build' &'operate' &'observe' &'library'

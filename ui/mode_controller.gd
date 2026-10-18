@@ -29,11 +29,12 @@ func _ready() -> void:
 	_controller.animate_wrapper(_panel)# Показывает lvl2 контейнеры
 	#%OperateController.animate_wrapper(%OperatePanel)# Показывает lvl2 контейнеры
 	get_node("../ModePanel/VBoxContainer/" + _mode + 'Button').button_pressed = true
-	#DD дебаг Запускаем категорию тракс
+	
+	#DD дебаг Запускаем активную категорию 
 	if Global.debug_mode:
 		var _container = get_node('%' + _mode + 'BtnLvl2Container')
-		_container.get_child(0)._on_pressed()
-		#%OperateBtnLvl2Container.get_child(0)._on_pressed()
+		_container.get_child(Global.active_ui_category)._on_pressed()
+
 
 
 

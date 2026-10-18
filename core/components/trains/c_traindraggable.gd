@@ -19,13 +19,85 @@ var current_curve_point: float = 0.0 # Смещение на кривой
 var is_snapped_to_track := false # Флаг привязки к траку
 var is_flipped_on_track := false # Флаг: смотрит ли вагон мордой к началу трака
 
+## --Mark--
+const MARK_SHADER := preload("res://core/visual/materials/shader_drop_marker.gdshader")
+const MARK_WIDTH := 3.4
+const MARK_DEPTH := 1.2        # толщина объема проекции
+const MARK_TOP := 0.08         # верх объема над точкой попадания луча (краска не должна лечь на колеса)
+
+var _mark: MeshInstance3D
+var _mark_mat: ShaderMaterial
+var _mark_k := 0.0             # 0 - над столом, 1 - притянут к траку
 
 
-func on_drag_started(_data: Dictionary) -> void:
-	#var _comp = entity.get_comp(C_CameraTarget)
-	#printt(_comp and _comp.camera_instance, _comp,  _comp.camera_instance)
-	#if _comp and _comp.camera_instance: return
+func _init() -> void:
+	set_process(false)
+
+
+func _mark_start() -> void:
+	if _mark:
+		return
+	var identity := get_comp(C_Identity) as C_Identity
+	var length = 2.0 * (identity.get_config('coupler_offset', 6.0) if identity else 6.0)
+	var margin := 1.0   # запас под ореол
+	var size := Vector3(MARK_WIDTH + 2.0 * margin, MARK_DEPTH, length + 2.0 * margin)
+
+	_mark_mat = ShaderMaterial.new()
+	_mark_mat.shader = MARK_SHADER
+	_mark_mat.set_shader_parameter("half_size", size * 0.5)
+	_mark_mat.set_shader_parameter("body_half", Vector2(MARK_WIDTH, length) * 0.5)
+
+	var box := BoxMesh.new()
+	box.size = size
+	_mark = MeshInstance3D.new()
+	_mark.name = "DropMarker"
+	_mark.mesh = box
+	_mark.material_override = _mark_mat
+	_mark.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_mark.top_level = true
+	_mark.visible = false
+	entity.add_child(_mark)
+	_mark_k = 0.0
+	set_process(true)
+
+
+func _mark_stop() -> void:
+	set_process(false)
+	if _mark:
+		_mark.queue_free()
+		_mark = null
+
+
+func _process(delta: float) -> void:
+	if not _mark or not entity.is_inside_tree():
+		return
+	var from := entity.global_position + Vector3.UP * 3.0
+	var q := PhysicsRayQueryParameters3D.create(from, from + Vector3.DOWN * 500.0,
+			Global.active_layers(['ground', 'tracks']))
+	q.collide_with_areas = true   # балласт - Area3D
+	var hit := entity.get_world_3d().direct_space_state.intersect_ray(q)
+	_mark.visible = not hit.is_empty()
+	if hit.is_empty():
+		return
+
+	var fwd := -entity.global_basis.z
+	fwd.y = 0.0
+	if fwd.length_squared() < 0.0001:
+		return
+	var b := Basis.looking_at(fwd.normalized(), Vector3.UP)
+	_mark.global_transform = Transform3D(b, hit.position + Vector3.UP * (MARK_TOP - MARK_DEPTH * 0.5))
+
+	_mark_k = move_toward(_mark_k, 1.0 if is_snapped_to_track else 0.0, delta * 6.0)
+	var c0: Color = Outline.STYLE[Outline.S.HOVER].color
+	var c1: Color = Outline.STYLE[Outline.S.GHOST].color
+	_mark_mat.set_shader_parameter("col", c0.lerp(c1, _mark_k))
+	_mark_mat.set_shader_parameter("snap", _mark_k)
 	
+	
+	
+	
+func on_drag_started(_data: Dictionary) -> void:
+	_mark_start()          # первой строкой, до await
 	initial_transform = entity.global_transform
 
 	var track_h = Vector3(0,  Global.settings.get_track_height() + 0.15, 0) 
@@ -78,6 +150,7 @@ func on_drag_moved(_data: Dictionary) -> void:
 
 
 func on_drag_ended(_data: Dictionary) -> void:
+	_mark_stop()           # первой строкой
 	if is_snapped_to_track and current_track:
 		# Успешная посадка на рельсы
 		# Передаем данные в тележки (C_Chassis), чтобы они закрепились на кривой
@@ -156,8 +229,8 @@ func _snap_to_track(track_entity: Entity, world_mouse_pos: Vector3) -> void:
 		final_forward = -track_forward
 
 	# 6. Устанавливаем позицию и выравниваем базис (поворот).Прибавляем высоту от drag_offset
-	entity.global_position = global_point_pos + Vector3(0,  Global.settings.get_track_height(), 0) 
-	
+	#entity.global_position = global_point_pos + Vector3(0,  Global.settings.get_track_height(), 0) 
+	entity.global_position = global_point_pos + Vector3(0, path_comp.head_height(), 0)
 	# Защита от коллинеарности с вектором UP (если рельсы идут строго вертикально)
 	if abs(final_forward.dot(Vector3.UP)) < 0.99:
 		entity.global_transform.basis = Basis.looking_at(final_forward, Vector3.UP)

@@ -320,11 +320,17 @@ func _process(_delta: float) -> void:
 # Поиск сокета для конца
 # ==========================================
 
+func _head_h() -> float:
+	var p := get_comp(C_Path) as C_Path
+	return p.head_height() if p else 0.0
+	
+	
 ## Ближайший свободный сокет чужого трака (по горизонтали от курсора).
 ## Возвращает {area, pos, out} или {}
 func _find_end_socket(world: Vector3) -> Dictionary:
 	var radius_max: float = Global.settings.flex_snap_radius
-	var start_w := entity.global_position
+	#var start_w := entity.global_position
+	var start_w := entity.global_position + Vector3(0.0, _head_h(), 0.0)
 	var best := {}
 	var best_d := radius_max
 	for node in entity.get_tree().get_nodes_in_group(&"track_socket"):
@@ -363,13 +369,15 @@ func _snap_to(sock: Dictionary) -> void:
 	_snap_id = (sock.area as Area3D).get_instance_id()
 	end_pos = Vector2(local.x, -local.z)
 	end_tan = Vector2(d_loc.x, -d_loc.z).normalized()
-	end_dy = local.y
+	#end_dy = local.y
+	end_dy = local.y - _head_h()   # кривая у основания, сокет соседа на поверхности катания
 	end_slope = -o.y / oh.length()
 
 
 ## Уклон соседа в моем начале (dy/ds движения от соседа ко мне). Нет соседа - 0
 func _neighbor_slope() -> float:
-	var start_w := entity.global_position
+	#var start_w := entity.global_position
+	var start_w := entity.global_position + Vector3(0.0, _head_h(), 0.0)
 	var fwd := -entity.global_basis.z
 	for node in entity.get_tree().get_nodes_in_group(&"track_socket"):
 		var other := node as Entity

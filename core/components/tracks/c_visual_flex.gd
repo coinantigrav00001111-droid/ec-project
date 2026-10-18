@@ -6,25 +6,19 @@ class_name C_VisualFlex extends C_TrackVisual
 ## (Mesh, Sleepers, Ballast Area3D, HeadStaticBody3D), структура как у обычного трака,
 ## поэтому C_Path / C_Blockable / C_Socket работают по тем же правилам.
 ###################################
-## Свип-меш по кривой C_Path: поверхность 0 - балласт, поверхность 1 - рельсы
-## (rail_surface_index = 1 в C_TrackVisual, power layer работает). Шпалы - MultiMesh.
-## Коллизии: сегменты ~flex_collision_step, пул CollisionShape3D, Area3D балласта не пересоздается
-## (C_Blockable подписан на него один раз). Пересборка не чаще flex_rebuild_period, финал - on_flex_final.
+## Геометрию и высоты задает TrackStyle (рельсы, шпалы, балласт). Здесь только построение:
+##  - свип-меш по кривой C_Path: балласт (если есть) и рельсы. Индекс поверхности рельсов
+##    лежит в rail_surface_index (1 с балластом, 0 без), power layer работает по нему;
+##  - шпалы: MultiMesh, равномерный шаг по длине кривой;
+##  - коллизии: сегменты ~flex_collision_step, пул CollisionShape3D, Area3D балласта не пересоздается
+##    (C_Blockable подписан на него один раз). Пересборка не чаще flex_rebuild_period, финал - on_flex_final.
+## Высоту поверхности катания отдает C_Path.head_height(), число берется из style.head_height().
 
-const BALLAST_W_BOTTOM := 1.6
-const BALLAST_W_TOP := 1.1
-const BALLAST_H := 0.6
-const RAIL_X := 0.875
-const RAIL_HALF := 0.1
-const RAIL_TOP := 0.85
 const MESH_STEP := 1.0
 const MESH_STEP_PREVIEW := 2.0   # пока тянем конец, меш грубее
 const UV_V_SCALE := 0.1
-const SLEEPER_STEP := 0.4
-const SLEEPER_SIZE := Vector3(2.4, 0.15, 0.3)
 const COL_END_INSET := 0.2
 const COL_OVERLAP := 0.1
-const COL_BALLAST_W := 3.2
 
 class Fr extends RefCounted:
 	var p: Vector3
@@ -35,7 +29,9 @@ class Fr extends RefCounted:
 static var _mat_ballast: StandardMaterial3D
 static var _mat_rail: StandardMaterial3D
 static var _mat_sleeper: StandardMaterial3D
-static var _sleeper_mesh: BoxMesh
+
+## Задает FlexSetting. null = TrackStyle по умолчанию (как раньше: балласт, 0.85)
+var style: TrackStyle
 
 var mesh_node: MeshInstance3D
 var sleepers: MultiMeshInstance3D
@@ -57,12 +53,24 @@ func _init() -> void:
 
 ## Базовый C_Visual.on_added инстанцирует сцену; у flex сцены нет
 func on_added() -> void:
+	
+	if style == null:
+		style = TrackStyle.new()
+	rail_surface_index = 1 if style.ballast_enabled else 0
+	
 	_period_ms = int(Global.settings.flex_rebuild_period * 1000.0)
 	instance = _build_instance()
 	entity.add_child(instance)
 	parts = PartRegistry.build(instance)   # новое
 	_collect_meshes()
 	_on_instance_ready()   # C_TrackVisual: area_nodes, static_node
+
+
+## C_Path уже в Entity (а его on_entity_ready еще впереди): отдаем ему высоту поверхности катания
+func on_entity_ready() -> void:
+	var path := get_comp(C_Path) as C_Path
+	if path:
+		path.set_head_height(style.head_height())
 
 
 func _set_overlay(mat: Material) -> void:
@@ -120,8 +128,6 @@ static func _ensure_materials() -> void:
 	_mat_sleeper = StandardMaterial3D.new()
 	_mat_sleeper.albedo_color = Color(0.30, 0.20, 0.13)
 	_mat_sleeper.roughness = 0.9
-	_sleeper_mesh = BoxMesh.new()
-	_sleeper_mesh.size = SLEEPER_SIZE
 
 
 func _new_shape(size: Vector3) -> CollisionShape3D:
@@ -145,9 +151,16 @@ func _build_instance() -> Node3D:
 	sleepers.name = "Sleepers"
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
-	mm.mesh = _sleeper_mesh
+	if style.sleeper_mesh:
+		mm.mesh = style.sleeper_mesh
+		if style.sleeper_material:
+			sleepers.material_override = style.sleeper_material
+	else:
+		var bm := BoxMesh.new()
+		bm.size = style.sleeper_size
+		mm.mesh = bm
+		sleepers.material_override = style.sleeper_material if style.sleeper_material else _mat_sleeper
 	sleepers.multimesh = mm
-	sleepers.material_override = _mat_sleeper
 	root.add_child(sleepers)
 
 	# Слои как у G239: треки = слой 3, видят треки и призраков
@@ -223,31 +236,37 @@ func _rebuild_mesh(curve: Curve3D, L: float) -> void:
 
 	var am := ArrayMesh.new()
 
-	# Поверхность 0: балласт (трапеция)
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	st.set_material(_mat_ballast)
-	_sweep(st, fr, [
-		Vector2(-BALLAST_W_BOTTOM, 0.0), Vector2(-BALLAST_W_TOP, BALLAST_H),
-		Vector2(BALLAST_W_TOP, BALLAST_H), Vector2(BALLAST_W_BOTTOM, 0.0)], L)
-	st.commit(am)
+	# Балласт (необязательный): поверхность 0
+	if style.ballast_enabled and style.ballast_profile.size() >= 2:
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		st.set_material(style.ballast_material if style.ballast_material else _mat_ballast)
+		var chain: Array = []
+		var hw := 0.01
+		for p in style.ballast_profile:
+			chain.append(p)
+			hw = maxf(hw, absf(p.x))
+		_sweep(st, fr, chain, L, hw)
+		st.commit(am)
 
-	# Поверхность 1: два рельса (индекс = rail_surface_index для power layer)
-	st = SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	st.set_material(_mat_rail)
+	# Рельсы: поверхность rail_surface_index (1 с балластом, 0 без)
+	var rst := SurfaceTool.new()
+	rst.begin(Mesh.PRIMITIVE_TRIANGLES)
+	rst.set_material(style.rail_material if style.rail_material else _mat_rail)
+	var base := style.base_height()
 	for sx in [-1.0, 1.0]:
-		var c: float = sx * RAIL_X
-		_sweep(st, fr, [
-			Vector2(c - RAIL_HALF, BALLAST_H), Vector2(c - RAIL_HALF, RAIL_TOP),
-			Vector2(c + RAIL_HALF, RAIL_TOP), Vector2(c + RAIL_HALF, BALLAST_H)], L)
-	st.commit(am)
+		var c: float = sx * style.rail_x
+		var chain: Array = []
+		for p in style.rail_profile:
+			chain.append(Vector2(c + p.x, base + p.y))
+		_sweep(rst, fr, chain, L, style.rail_x + style.rail_width())
+	rst.commit(am)
 
 	mesh_node.mesh = am
 
 
-## Протягивает ломаную профиля (слева направо поверх) вдоль реперов
-func _sweep(st: SurfaceTool, fr: Array, chain: Array, L: float) -> void:
+## Протягивает ломаную профиля (слева направо поверх) вдоль реперов. hw - полуширина для UV поперек
+func _sweep(st: SurfaceTool, fr: Array, chain: Array, L: float, hw: float) -> void:
 	var n := fr.size()
 	for j in chain.size() - 1:
 		var a: Vector2 = chain[j]
@@ -256,8 +275,8 @@ func _sweep(st: SurfaceTool, fr: Array, chain: Array, L: float) -> void:
 		if d.length_squared() < 1e-8:
 			continue
 		var nrm := Vector2(-d.y, d.x).normalized()   # наружу
-		var ua := (a.x + BALLAST_W_BOTTOM) / (2.0 * BALLAST_W_BOTTOM)
-		var ub := (b.x + BALLAST_W_BOTTOM) / (2.0 * BALLAST_W_BOTTOM)
+		var ua := (a.x + hw) / (2.0 * hw)
+		var ub := (b.x + hw) / (2.0 * hw)
 		for i in n - 1:
 			var f0: Fr = fr[i]
 			var f1: Fr = fr[i + 1]
@@ -289,16 +308,21 @@ func _quad(st: SurfaceTool, p: Array, nm: Array, uv: Array) -> void:
 		st.add_vertex(p[k])
 
 
+## Шпалы: целое число с равномерным шагом (шаг чуть подстраивается под длину), каждая в центре своей доли.
+## Две доли по half-step на стыке двух траков дают тот же шаг, что и внутри трака.
 func _rebuild_sleepers(curve: Curve3D, L: float) -> void:
 	var mm := sleepers.multimesh
-	var sstep := SLEEPER_STEP * (2.0 if _preview else 1.0)
-	var count := maxi(0, floori((L - 0.3) / sstep) + 1)
-	if mm.instance_count != count:
-		mm.instance_count = count
-	for k in count:
-		var f := _frame(curve, 0.15 + k * sstep, L)
+	var n := maxi(1, roundi(L / style.sleeper_step()))
+	var step := L / float(n)
+	if mm.instance_count != n:
+		mm.instance_count = n
+	var y0 := style.sleeper_bottom()
+	if style.sleeper_mesh == null:
+		y0 += style.sleeper_size.y * 0.5   # BoxMesh центрирован по высоте
+	for k in n:
+		var f := _frame(curve, (k + 0.5) * step, L)
 		var b := Basis(f.r, f.u, f.r.cross(f.u))
-		mm.set_instance_transform(k, Transform3D(b, f.p + f.u * (BALLAST_H + SLEEPER_SIZE.y * 0.5)))
+		mm.set_instance_transform(k, Transform3D(b, f.p + f.u * y0))
 
 
 # --- коллизии: пул сегментов, Area3D не трогаем ---
@@ -309,21 +333,23 @@ func _rebuild_collision(curve: Curve3D, L: float) -> void:
 	var cuts := _collision_cuts(curve, L, span)
 	var nseg := cuts.size() - 1
 	_resize_pool(nseg)
-	var rail_h := RAIL_TOP - BALLAST_H
+	var base_h := style.base_height()       # основание: балласт + шпалы
+	var rail_h := style.rail_height()
+	var rail_w := style.rail_width()
 	for i in nseg:
 		var s0 := cuts[i]
 		var s1 := cuts[i + 1]
 		var f := _frame(curve, (s0 + s1) * 0.5, L)
 		var chord := curve.sample_baked(s0).distance_to(curve.sample_baked(s1)) + COL_OVERLAP
 		var b := Basis(f.r, f.u, f.r.cross(f.u))
-		var ballast_xf := Transform3D(b, f.p + f.u * (BALLAST_H * 0.5))
-		var ballast_size := Vector3(COL_BALLAST_W, BALLAST_H, chord)
+		var ballast_xf := Transform3D(b, f.p + f.u * (base_h * 0.5))
+		var ballast_size := Vector3(style.collision_width, base_h, chord)
 		_set_box(_ballast_shapes[i], ballast_size, ballast_xf)
 		_set_box(_head_shapes[3 * i], ballast_size, ballast_xf)
-		var rail_size := Vector3(RAIL_HALF * 2.0, rail_h, chord)
-		var rail_c := f.p + f.u * (BALLAST_H + rail_h * 0.5)
-		_set_box(_head_shapes[3 * i + 1], rail_size, Transform3D(b, rail_c - f.r * RAIL_X))
-		_set_box(_head_shapes[3 * i + 2], rail_size, Transform3D(b, rail_c + f.r * RAIL_X))
+		var rail_size := Vector3(rail_w, rail_h, chord)
+		var rail_c := f.p + f.u * (base_h + rail_h * 0.5)
+		_set_box(_head_shapes[3 * i + 1], rail_size, Transform3D(b, rail_c - f.r * style.rail_x))
+		_set_box(_head_shapes[3 * i + 2], rail_size, Transform3D(b, rail_c + f.r * style.rail_x))
 
 
 #############

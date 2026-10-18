@@ -71,7 +71,7 @@ func _parse_curve(c: Curve3D, p: Path3D):
 
 
 
-##TODO  Сокет можно добавлять через размеры и градусы!!
+
 # Добавляем сокет в массив, только если в этой точке его еще нет (слияние для стрелок)
 func _add_socket_if_unique(pos: Vector3, dir: Vector3):
 	for s in sockets:
@@ -111,7 +111,8 @@ func _add_socked_area(_pos: Vector3, dir: Vector3) -> Area3D:
 	
 	# XX claude-terra позиция и поворот вынесены в _orient_area (его же использует on_curve_changed)
 	var piv = entity.get_comp(C_Pivot).offset
-	_orient_area(area, _pos + piv, dir)
+	#_orient_area(area, _pos + piv, dir)
+	_orient_area(area, _pos + piv + Vector3(0.0, _surface_lift(), 0.0), dir)
 
 		
 	# нужные слои (collision_layer / collision_mask)
@@ -145,14 +146,15 @@ func _on_socket_area_entered(s_socket: Area3D, d_socket: Area3D) -> void:
 	
 	var neighbor_entity = _find_entity_from_collider(s_socket)
 
-
-
 	## Добавляем соседа в список. Предохранители:
 	# 1. Сущность найдена и это не мы сами. 2. Сущность не является призраком 3. Мы еще не добавили ее в массив.
 
 	if neighbor_entity and neighbor_entity != entity:
 		if not neighbor_entity.has_comp(C_Ghost) and not connected_entities.has(neighbor_entity):
 			connected_entities.append(neighbor_entity)
+			# новый реальный стык (flex встаёт из призрака, выхода из сокета не будет): пересчитать сеть
+			if not entity.has_comp(C_Ghost):
+				PGM.request_recalculate()
 
 	# Снаппинг обрабатывается только той сущностью, которую СЕЙЧАС ТАЩАТ
 	if not (entity.has_comp(C_Drag) or entity.has_comp(C_Ghost)):
@@ -162,7 +164,7 @@ func _on_socket_area_entered(s_socket: Area3D, d_socket: Area3D) -> void:
 	if entity.has_comp(C_Snapped):
 		return
 
-	# Стац ентити. Проверка стац не есть драг(бред?)
+	# Стац ентити. Проверка стац не есть драг
 	var s_entity = _find_entity_from_collider(s_socket)
 	if not s_entity or s_entity == entity:
 		return
@@ -380,8 +382,8 @@ func on_curve_changed(_data: Dictionary) -> void:
 	for i in 2:
 		sockets[i].pos = ends[i][0]
 		sockets[i].out_dir = ends[i][1]
-		_orient_area(sockets[i].socket, xf * ends[i][0], ends[i][1])
-
+		#_orient_area(sockets[i].socket, xf * ends[i][0], ends[i][1])
+		_orient_area(sockets[i].socket, xf * ends[i][0] + Vector3(0.0, _surface_lift(), 0.0), ends[i][1])
 
 # XX claude-terra
 ## Включает/выключает конкретный сокет (index 0 начало, 1 конец, -1 все). Шлет flex-призрак:
@@ -396,7 +398,11 @@ func on_socket_enabled(data: Dictionary) -> void:
 		a.set_deferred("monitoring", on)
 		a.set_deferred("monitorable", on)
 
-
+## Сокеты на поверхности катания, не у основания: стык двух стилей выравнивается по рельсам
+func _surface_lift() -> float:
+	var p := get_comp(C_Path) as C_Path
+	return p.head_height() if p else 0.0
+	
 ## ==== МАРКЕРЫ ====
 
 # Шарик 

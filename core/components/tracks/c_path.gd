@@ -34,7 +34,25 @@ var centered := true
 var _radii := PackedFloat32Array()   # радиус на каждом шаге baked-кривой (только flex)
 var _radii_step := 1.0
 
+## Замена из багнутой
+## Высота поверхности катания над origin пути, ю. Все, кто ездит по траку или садится на него, читают только это.
+var _head_h := -1.0   # < 0: не задана, берём из конфига при первом обращении
 
+
+## Высота поверхности катания над origin пути, ю. Все, кто ездит по траку или садится на него, читают только это.
+func head_height() -> float:
+	if _head_h < 0.0:
+		var nominal: float = Global.settings.get_track_height()
+		var identity := get_comp(C_Identity) as C_Identity
+		_head_h = float(identity.get_config('height', nominal)) if identity else nominal
+	return _head_h
+
+
+## Для стиля (шаг 2): TrackStyle переопределяет высоту
+func set_head_height(h: float) -> void:
+	_head_h = h
+	
+## =======================
 
 func on_added():
 	pass
@@ -50,6 +68,9 @@ func on_entity_ready() -> void:
 	deg = identity.get_config('deg', 0.0)
 	# XX claude-terra
 	rise = identity.get_config('rise', 0.0)
+	# Защита от нулевой длины: radius у прямой это её длина (flex стартует прямой 10)
+	if absf(deg) < 0.01 and radius < 0.49:
+		radius =0.5
 	if absf(deg) > 0.01 and rise != 0.0:
 		push_warning("Пандус на дуге появится вместе с Flex Tracks, rise проигнорирован")
 		rise = 0.0
@@ -69,6 +90,11 @@ func on_entity_ready() -> void:
 	# Синхронизируем коллизии рельсов с нодами сцены
 	# Здесь или в отдельной функции делаем статик
 	_sync_with_visual_heads()
+## Замена из багнутой
+	if absf(head_height() - Global.settings.get_track_height()) > 0.001:
+		push_warning("%s: head_height %.2f != номинал %.2f" % [entity.name, head_height(), Global.settings.get_track_height()])
+	
+
 
 
 # Генерируем ноду Path3D и новый оффсет в C_Pivot 

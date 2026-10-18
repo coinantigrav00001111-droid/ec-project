@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://cfevyekcq7aco" path="res://core/components/comp_settings/flex_setting.gd" id="4_kat8n"]
 [ext_resource type="Resource" uid="uid://bqss7rh1mwv41" path="res://core/visual/visual_state.tres" id="5_nl16b"]
 [ext_resource type="Script" uid="uid://b1jwuxb32so7e" path="res://core/components/comp_settings/trackdraggable_setting.gd" id="6_1o3pu"]
+[ext_resource type="Script" uid="uid://cfpx56q1cgoy5" path="res://core/components/tracks/track_style.gd" id="6_moa55"]
 [ext_resource type="Script" uid="uid://djbifkyei01t7" path="res://core/components/comp_settings/pivot_setting.gd" id="7_56mfv"]
 [ext_resource type="Script" uid="uid://cuumo0qj7r7gb" path="res://core/components/comp_settings/hoverable_setting.gd" id="8_tema6"]
 [ext_resource type="Script" uid="uid://deljgsmo4bpow" path="res://core/components/comp_settings/selectable_setting.gd" id="9_c063b"]
@@ -18,14 +19,21 @@
 
 [sub_resource type="Resource" id="Resource_cfg"]
 script = ExtResource("2_moa55")
-radius = 10.0
 
 [sub_resource type="Resource" id="Resource_id"]
 script = ExtResource("3_e3juc")
 object_config = SubResource("Resource_cfg")
 
+[sub_resource type="Resource" id="Resource_moa55"]
+script = ExtResource("6_moa55")
+rail_profile = null
+ballast_enabled = false
+ballast_profile = null
+metadata/_custom_type_script = "uid://cfpx56q1cgoy5"
+
 [sub_resource type="Resource" id="Resource_flex"]
 script = ExtResource("4_kat8n")
+style = SubResource("Resource_moa55")
 
 [sub_resource type="Resource" id="Resource_drag"]
 script = ExtResource("6_1o3pu")
