@@ -24,6 +24,7 @@ driver/driver="Dummy"
 [autoload]
 
 Global="*uid://cuyqabojk5lbh"
+GraphicsManager="*uid://ibw0xeowgtvh"
 PGM="*uid://cs6t1pamqjrbq"
 Outline="*uid://bsgvq8tlldjvo"
 

@@ -15,6 +15,7 @@
 [ext_resource type="PackedScene" uid="uid://b6bt6i4wh1nk2" path="res://ui/debug/entity_debugger.tscn" id="10_4pdep"]
 [ext_resource type="PackedScene" uid="uid://0gxfmn122rg4" path="res://data/tools/speedometer_h.tscn" id="12_4pdep"]
 [ext_resource type="PackedScene" uid="uid://b5a0jw0b12rtr" path="res://data/tools/rulette.tscn" id="13_bc160"]
+[ext_resource type="Script" uid="uid://bcb1ssgahu3n4" path="res://core/graphics/environment_root.gd" id="15_35vuu"]
 [ext_resource type="Script" uid="uid://ctds4lgyuysse" path="res://data/scenes/room_builder.gd" id="16_5q6to"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_igrpr"]
@@ -106,10 +107,10 @@ unique_name_in_owner = true
 
 [node name="World" type="Node3D" parent="." unique_id=673274676]
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="World" unique_id=1097786845]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="World" unique_id=1097786845 groups=["gfx_env"]]
 environment = SubResource("Environment_igrpr")
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="World/WorldEnvironment" unique_id=584191741]
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="World/WorldEnvironment" unique_id=584191741 groups=["gfx_sun"]]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 20, 0)
 
 [node name="WoodFloor" type="MeshInstance3D" parent="World/WorldEnvironment" unique_id=863018642]
@@ -139,6 +140,10 @@ shape = SubResource("BoxShape3D_4pdep")
 [node name="SpeedometerH" parent="World" unique_id=1582218133 instance=ExtResource("12_4pdep")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.085447, -3.8146973e-06, -13.054375)
 visible = false
+
+[node name="EnvironmentRoot" type="Node3D" parent="World" unique_id=1872818937]
+script = ExtResource("15_35vuu")
+metadata/_custom_type_script = "uid://bcb1ssgahu3n4"
 
 [node name="RoomBuilder" type="Node3D" parent="." unique_id=1882698511]
 script = ExtResource("16_5q6to")
