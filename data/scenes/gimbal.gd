@@ -429,11 +429,11 @@ func load_global_state(data: Dictionary) -> void:
 	if data.has("pivot"):
 		set_view(data.pivot, data.yaw, data.pitch, data.dist, true)
 	elif data.has("transform"):
-		var tr: Transform3D = data.transform
+		var _tr: Transform3D = data.transform
 		var pitch := t_pitch
 		var dist := t_dist
 		if data.has("elevation"):
 			pitch = (data.elevation as Transform3D).basis.get_euler().x
 		if data.has("camera"):
 			dist = (data.camera as Transform3D).origin.z
-		set_view(tr.origin, tr.basis.get_euler().y, pitch, dist, true)
+		set_view(_tr.origin, _tr.basis.get_euler().y, pitch, dist, true)
