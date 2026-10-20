@@ -337,6 +337,7 @@ Observe это созерцательная награда за Build/Operate: �
 | 2 | **Вагон при спавне из кнопки, если курсор над UI вне зоны стола, встаёт в центр (0, 0, 0), его `RigidBody3D` не следует за `Entity`** | После перехода на конечный стол луч по `ground` вне стола пуст. `BuildTool._enter_spawn_and_drag` и `DragTool.enter` отправляют `on_drag_moved` / `on_drag_started` только `if hit:`. Без `on_drag_started` `C_TrainDraggable` не шлёт `on_is_dragging`, `C_Kinematics` не снимает `rb.freeze` | Fallback: пересечение луча с плоскостью y = 0 (хелпер `ToolController.get_mouse_plane_hit()`), использовать в обоих местах. Проверить спавн с кнопки при курсоре над панелью, у края стола и над полом |
 | 3 | **Gimbal: рефакторинг и оптимизация** (`gimbal.gd` уже в проекте) | см. ниже | см. ниже |
 
+
 ### 15.1. Gimbal
 
 - **Скорость зума и панорамы от расстояния.** Сейчас ступенька: до `mult_distance` / `speed_mult_distance` (15) множитель 1, выше ×5. Заменить на непрерывную зависимость: зум экспоненциальный (шаг пропорционален расстоянию до цели), панорама в мировых единицах на пиксель по FOV и расстоянию камеры, чтобы смещение под курсором было одинаковым на любом приближении.
@@ -385,4 +386,4 @@ Observe это созерцательная награда за Build/Operate: �
 - [ATTN_GDD.md](ATTN_GDD.md) — game vision, core loop, modes, progression.
 - [ATTN_TDD.md](ATTN_TDD.md) — техническая архитектура и реализация.
 - [ATTN_13_TerrainTools.md](ATTN_13_terraintools.md) — Конструктор рельефа (Terrain Tools)
-- [ATTN_14_observe_room.md.md](ATTN_14_observe_room.md.md) — Observe: атмосфера, свет и комната
+- [ATTN_14_observe_room.md](ATTN_14_observe_room.md) — Observe: атмосфера, свет и комната
