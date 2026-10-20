@@ -7,7 +7,7 @@ class_name ToolController extends Node3D
 ## Переключает текущий инструмент - билд, селект, драг
 
 #@onready var GR : GameRoot = $".."
-@onready var world: World = $"../World"
+#@onready var world: World = $"../World"
 
 @onready var entity_factory: EntityFactory = $"../EntityFactory"
 @onready var entities_root: Node3D = %EntitiesRoot # Здесь лежат сущности
@@ -19,6 +19,7 @@ class_name ToolController extends Node3D
 @onready var build_tool: BuildTool = %BuildTool
 @onready var select_tool = %SelectTool
 @onready var drag_tool: DragTool = %DragTool
+@onready var observe_tool = get_node_or_null('%ObserveTool')
 #@onready var save_controller: SaveManager = %SaveManager
 
 
@@ -124,7 +125,13 @@ func get_mouse_ray(mask: int = -1) -> Dictionary:
 	#TODO Нужен не только 3 леер
 	query.collision_mask = (1) if mask == -1 else mask # Земля (1) и Траки (3-й слой -> маска 4)
 	
-	return get_world_3d().direct_space_state.intersect_ray(query)
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	# Боковая грань и кромка стола (слой ground) не поверхность: иначе трак или вагон встанет ниже столешницы
+	if not hit.is_empty() and hit.collider is CollisionObject3D \
+			and (hit.collider.collision_layer & Global.active_layers(['ground'])) != 0 \
+			and hit.normal.y < 0.7:
+		return {}
+	return hit
 
 
 
@@ -140,6 +147,12 @@ func get_mouse_ray_vec() -> Dictionary:
 
 func on_current_mode_changed(_new_mode):
 	Global.current_mode = _new_mode
+	# Observe: инструмент без выбора и драга. Выход из прежнего инструмента сам снимает выделение и призрака
+	if observe_tool:
+		if _new_mode == &'observe':
+			switch_tool(observe_tool)
+		elif active_tool == observe_tool:
+			switch_tool(select_tool)
 	update_info.emit() 
 
 

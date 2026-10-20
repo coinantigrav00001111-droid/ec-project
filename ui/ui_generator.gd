@@ -25,6 +25,10 @@ class_name UIGenerator extends Node
 
 @onready var build_controller: BuildController = %BuildController
 @onready var operate_controller: OperateController = %OperateController
+@onready var observe_controller: ObserveController = get_node_or_null('%ObserveController')
+
+## режим (как в имени контроллера и панелей) -> контроллер
+var controllers := {}
 
 ## Словарь ССЫЛОК на ресурсы category → tag → objects
 var data := {} 
@@ -73,6 +77,7 @@ var object_dirs = Global.object_dirs
 						
 ## Заполняет контейнер кнопками 2 lvl. 
 func _ready() -> void:
+	controllers = {'Build': build_controller, 'Operate': operate_controller, 'Observe': observe_controller}
 
 	var _object_list := _collect_data() 	# Собрали список объектов
 
@@ -80,6 +85,8 @@ func _ready() -> void:
 	# создаем кнопки объектов билд
 	create_btn_categories(build_controller)
 	create_btn_categories(operate_controller)
+	if observe_controller:
+		create_btn_categories(observe_controller)
 
 	# Задержка, чтобы создались кнопки, иначе нулевые размеры врапперов
 	await get_tree().process_frame
@@ -87,6 +94,9 @@ func _ready() -> void:
 	%BuildObjectsContainer.hide()
 	#$'../MainControl/BuildObjectsContainer'.hide()
 	%BuildPanel.hide()
+	if observe_controller:
+		%ObserveObjectsContainer.hide()
+		%ObservePanel.hide()
 
 
 
@@ -149,10 +159,11 @@ func create_btn_tags(_cat : StringName, _mode: String):
 		get_node(_panel).add_child(btn)
 
 		# подключение сигнала кнопки к контроллеру
-		var _controller  
-		match _mode:
-			'Build':_controller = build_controller
-			'Operate':_controller = operate_controller
+		var _controller = controllers.get(_mode)
+		if _controller == null:
+			push_error('UIGenerator: нет контроллера для режима ' + _mode)
+			btn.queue_free()
+			return
 			
 		btn.tag_selected.connect(_controller.on_tag_selected)	
 		

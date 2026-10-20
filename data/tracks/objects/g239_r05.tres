@@ -74,7 +74,7 @@ metadata/_custom_type_script = "uid://cs257ge2f37bu"
 [resource]
 script = ExtResource("17_gaseo")
 id = 1110
-name = "G239-0.5"
+name = "G239-05"
 description = "Прямой трак 23.9см. Уклон  0.5°"
 icon = ExtResource("16_xrv25")
 components = Array[ExtResource("1_npqww")]([SubResource("Resource_8t2gm"), SubResource("Resource_yfcut"), SubResource("Resource_iqocg"), SubResource("Resource_0xkto"), SubResource("Resource_qqtt6"), SubResource("Resource_o7fpk"), SubResource("Resource_t8too"), SubResource("Resource_vxtmo"), SubResource("Resource_lnr61"), SubResource("Resource_3owqy"), SubResource("Resource_q37m8")])

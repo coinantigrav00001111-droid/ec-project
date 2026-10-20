@@ -10,6 +10,8 @@ class_name TopPanel extends PanelContainer
 # UI не должен знать про тулзы
 @onready var tool_controller: ToolController = $"../../ToolController"
 @onready var save_manager: SaveManager = $"../../SaveManager"
+## Чекбокс слоя питания
+@onready var power_schema_check: CheckBox = %PowerSchemaCheck
 # ⚡Сигнал для ToolController
 #signal menu_button_pressed 
 
@@ -18,6 +20,9 @@ class_name TopPanel extends PanelContainer
 func _ready() -> void:
 	# попап меню, которое вываливается по кнопке, посылает этот сигнал
 	menu_button.get_popup().id_pressed.connect(_on_menu_button_pressed)
+	# Слой питания могут переключить не из чекбокса (Observe при входе/выходе): держим вид в синхроне
+	PGM.power_layer_toggled.connect(_on_power_layer_toggled)
+	power_schema_check.set_pressed_no_signal(PGM.is_power_layer_active)
 
 
 
@@ -55,5 +60,11 @@ func _on_menu_button_pressed(_index : int) -> void:
 ## Включение Cлоя power (11) на камере. Режим повер 2лвл
 func _on_power_schema_check_toggled(toggled_on: bool) -> void:
 	#$/root/GameRoot/Gimbal/Elevation/Camera.set_cull_mask_value(3, toggled_on)	
+
 	# Дергаем менеджер питания
 	PGM.toggle_power_layer(toggled_on)
+
+
+## ⚡Сигнал из PGM: слой питания переключён. Двигаем чекбокс без повторного сигнала
+func _on_power_layer_toggled(is_active: bool) -> void:
+	power_schema_check.set_pressed_no_signal(is_active)

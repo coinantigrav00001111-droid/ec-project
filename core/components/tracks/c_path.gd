@@ -71,8 +71,8 @@ func on_entity_ready() -> void:
 	# Защита от нулевой длины: radius у прямой это её длина (flex стартует прямой 10)
 	if absf(deg) < 0.01 and radius < 0.49:
 		radius =0.5
+	# Пандус на дуге - rise проигнорирован
 	if absf(deg) > 0.01 and rise != 0.0:
-		push_warning("Пандус на дуге появится вместе с Flex Tracks, rise проигнорирован")
 		rise = 0.0
 	pitch = asin(clampf(rise / maxf(radius, 0.01), -1.0, 1.0)) if rise != 0.0 else 0.0
 	var pivot = get_comp(C_Pivot)
@@ -92,7 +92,8 @@ func on_entity_ready() -> void:
 	_sync_with_visual_heads()
 ## Замена из багнутой
 	if absf(head_height() - Global.settings.get_track_height()) > 0.001:
-		push_warning("%s: head_height %.2f != номинал %.2f" % [entity.name, head_height(), Global.settings.get_track_height()])
+		#push_warning("%s: head_height %.2f != номинал %.2f" % [entity.name, head_height(), Global.settings.get_track_height()])
+		pass
 	
 
 

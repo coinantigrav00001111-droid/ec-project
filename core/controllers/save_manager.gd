@@ -5,10 +5,14 @@ class_name SaveManager  #это в автолоад прописано
 ############################
 #TODO Занести в автолоад
 
-const SAVE_DIR = "res://saves/"
+# В экспортированной игре res:// только для чтения, сейвы пишем в user://
+const SAVE_DIR = "user://saves/"
+# Старое место сейвов (разовый перенос) и эталонная диорама (шаблон только для чтения, грузится по F9 в debug)
+const LEGACY_SAVE_DIR = "res://saves/"
+const REFERENCE_DIR = "res://data/debug/"
 
 # Ссылка на узел дерева, где лежат все рельсы
-@onready var world_entities_root = "/root/GameRoot/World/EntitiesRoot"
+@onready var world_entities_root = "/root/GameRoot/EntitiesRoot"
 @onready var entity_factory: EntityFactory = $"/root/GameRoot/EntityFactory"
 @onready var info_panel: InfoPanel = $"/root/GameRoot/UI/InfoPanel"
 
@@ -17,8 +21,20 @@ func _ready() -> void:
 	#await  get_tree().process_frame
 	# Откладывает вызов функции до тех пор, пока дерево полностью не построится
 	#load_game.call_deferred('autosave')
+	DirAccess.make_dir_recursive_absolute(SAVE_DIR)
+	_migrate_legacy_saves()
 	load_game('autosave')
 	pass
+
+
+## Разово копирует сейвы из res://saves/ в user://saves/ (только то, чего там еще нет)
+func _migrate_legacy_saves() -> void:
+	if not DirAccess.dir_exists_absolute(LEGACY_SAVE_DIR):
+		return
+	for f in DirAccess.get_files_at(LEGACY_SAVE_DIR):
+		if not f.ends_with('.tres') or FileAccess.file_exists(SAVE_DIR + f):
+			continue
+		DirAccess.copy_absolute(LEGACY_SAVE_DIR + f, SAVE_DIR + f)
 
 #func _exit_tree() -> void:
 	##await  get_tree().process_frame
@@ -28,6 +44,9 @@ func _ready() -> void:
 func _unhandled_input(_event: InputEvent) -> void:
 	if Input.is_action_just_pressed("key_ctrl_s"):
 		save_game('autosave')
+	# F9 (debug): загрузить эталонную диораму
+	if Global.debug_mode and _event is InputEventKey and _event.pressed and not _event.echo and _event.keycode == KEY_F9:
+		load_game('reference', REFERENCE_DIR)
 
 
 	
@@ -87,7 +106,10 @@ func save_game(slot_name: String ='savegame') -> void:
 	
 	# Запись
 	var _save_path = SAVE_DIR + slot_name + ".tres"	
-	ResourceSaver.save(_saved_game, _save_path )
+	var _err := ResourceSaver.save(_saved_game, _save_path)
+	if _err != OK:
+		push_error("Не удалось сохранить игру: %s (код %d)" % [_save_path, _err])
+		return
 	print("Игра успешно сохранена в: ", _save_path)
 
 
@@ -108,8 +130,10 @@ func clear_scene() -> void:
 
 
 #-------LOAD----------
-func load_game(slot_name: String  ='savegame') -> void:
-	var save_path = SAVE_DIR + slot_name + ".tres"
+func load_game(slot_name: String  ='savegame', dir: String = SAVE_DIR) -> void:
+	var save_path = dir + slot_name + ".tres"
+	if not FileAccess.file_exists(save_path):
+		return
 
 	#🚩res все данные игры собраны здесь
 	var _saved_game :SavedGame = load(save_path) as SavedGame #автокомплит

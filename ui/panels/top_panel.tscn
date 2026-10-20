@@ -46,6 +46,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="PowerSchemaCheck" type="CheckBox" parent="HBoxContainer" unique_id=881057486]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 0
 text = "Power schema"

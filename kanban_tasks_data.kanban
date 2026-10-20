@@ -63,8 +63,6 @@
 			"tasks": [
 				"1bdea74b-2ef0-48de-94c3-43f45b91a67d",
 				"0c7c66a3-ed32-4045-b2e6-322e4c722831",
-				"907c3250-49ff-463a-bd12-52f38bc4a2ae",
-				"0a2f0007-721d-4983-a08a-c0096866cb32",
 				"5457bb93-0deb-40e0-9653-4bb80d9a7fb8"
 			]
 		},
@@ -74,8 +72,7 @@
 			"tasks": [
 				"c9518725-a1fc-4454-884a-26f5c9febb9b",
 				"bf78136f-cb36-4783-a60d-3d56ebfbec0b",
-				"c250b768-076e-4194-aa2e-a084846f870d",
-				"0d9905d4-dcb8-4425-903b-78e44e8b8068"
+				"c250b768-076e-4194-aa2e-a084846f870d"
 			]
 		},
 		{
@@ -83,12 +80,8 @@
 			"title": "Patch",
 			"tasks": [
 				"c3d65b49-5533-46e9-b6ef-dce81c18deb6",
-				"e93d0435-fc2b-42cc-8673-038d55a8cac4",
-				"5891ae87-e9cc-4475-bda2-32b97c590f0a",
-				"f6982df0-c908-46ce-a8f4-5c88be1c8446",
 				"a5000c49-b31e-41d6-ab52-4d2660910631",
 				"9f90edf4-d314-48c4-bf48-e5cac23ba348",
-				"3c3e46f9-8063-4296-bc7f-ba1964604faf",
 				"079b6dce-586d-417b-8e84-7af75da6ab55",
 				"fb06345d-0266-4ee6-a59e-42ef826fb139",
 				"5072b8a6-6a55-4d20-b8c9-d33a4d0521ab"
@@ -139,24 +132,10 @@
 			"steps": []
 		},
 		{
-			"uuid": "e93d0435-fc2b-42cc-8673-038d55a8cac4",
-			"title": "Создать меш подсветки",
-			"description": "",
-			"category": "50f9c949-da71-4afd-beb9-f08415f2f066",
-			"steps": []
-		},
-		{
 			"uuid": "3d4d271e-04ca-4a72-83f7-ae54306c5a70",
 			"title": "прыгает на себя селектед- слои опять",
 			"description": "",
 			"category": "31a5ac59-e2b4-4e46-a327-067210b7ca4b",
-			"steps": []
-		},
-		{
-			"uuid": "f6982df0-c908-46ce-a8f4-5c88be1c8446",
-			"title": "Можно сделать отдельный ховер для селект-трака",
-			"description": "",
-			"category": "50f9c949-da71-4afd-beb9-f08415f2f066",
 			"steps": []
 		},
 		{
@@ -178,13 +157,6 @@
 			"title": "Врежиме ховер выводить окошко с инфой объекта",
 			"description": "",
 			"category": "50f9c949-da71-4afd-beb9-f08415f2f066",
-			"steps": []
-		},
-		{
-			"uuid": "5891ae87-e9cc-4475-bda2-32b97c590f0a",
-			"title": "в фабрике созавать траки с компонетами ,чтобы не заполнять сеттинг",
-			"description": "",
-			"category": "91f41b95-cfcd-4026-a09a-48fb304f9a00",
 			"steps": []
 		},
 		{
@@ -235,26 +207,6 @@
 			"description": "",
 			"category": "50f9c949-da71-4afd-beb9-f08415f2f066",
 			"steps": []
-		},
-		{
-			"uuid": "0a2f0007-721d-4983-a08a-c0096866cb32",
-			"title": "настройки разных переменных в одно место?",
-			"description": "",
-			"category": "af31571d-f162-41be-9c9c-7b15a2004d2c",
-			"steps": [
-				{
-					"details": "расстояние срыва снапа",
-					"done": false
-				},
-				{
-					"details": "размер сокета",
-					"done": false
-				},
-				{
-					"details": "кол- и размер балласта",
-					"done": false
-				}
-			]
 		},
 		{
 			"uuid": "bed7a3ee-9e8e-4e8f-9e60-b5103e9f7e8b",
@@ -355,13 +307,6 @@
 			"steps": []
 		},
 		{
-			"uuid": "907c3250-49ff-463a-bd12-52f38bc4a2ae",
-			"title": "надо поворачивать трак за край.",
-			"description": "",
-			"category": "50f9c949-da71-4afd-beb9-f08415f2f066",
-			"steps": []
-		},
-		{
 			"uuid": "2e299622-0552-4f50-a2f0-73b4888598c7",
 			"title": "blocked как делать для вагона, если ригид во фризе",
 			"description": "",
@@ -371,13 +316,6 @@
 		{
 			"uuid": "4b3facb9-4e21-4283-890e-37b567aebc14",
 			"title": "В движении не драгается.",
-			"description": "",
-			"category": "8d041509-442f-4442-9d1d-a60528722dfe",
-			"steps": []
-		},
-		{
-			"uuid": "0d9905d4-dcb8-4425-903b-78e44e8b8068",
-			"title": "тень под вагоном при драге и визуал при снапе",
 			"description": "",
 			"category": "8d041509-442f-4442-9d1d-a60528722dfe",
 			"steps": []

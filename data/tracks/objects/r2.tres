@@ -75,7 +75,7 @@ metadata/_custom_type_script = "uid://cs257ge2f37bu"
 [resource]
 script = ExtResource("17_be0vs")
 id = 1200
-name = "R2-0"
+name = "R2"
 description = "Радиусный трак 42,2см"
 tag = &"curve"
 icon = ExtResource("16_lv5gl")

@@ -1,4 +1,4 @@
-class_name C_VisualFlex extends C_TrackVisual
+class_name C_FlexVisual extends C_TrackVisual
 
 # XX claude-terra (новый файл)
 ###################################

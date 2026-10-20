@@ -6,7 +6,8 @@ extends Node
 ##
 ###########################
 var object_dirs := [	"res://data/tracks/objects/", 
-						"res://data/trains/objects/"]
+						"res://data/trains/objects/", 
+						"res://data/buildings/objects/"]
 						#"res://ui/dc_controllers/objects/"]
 
 # Настройки объектов
@@ -14,6 +15,14 @@ var settings: Resource = preload("res://setting/global_setting.tres")
 
 #DD Дебаги вкл
 var debug_mode := true
+
+## Отладочные маркеры в кадре: куб над Entity, конусы и шарики сокетов. Отдельно от debug_mode,
+## тот включён по умолчанию и держит другие отладочные вещи
+var debug_markers := false
+
+## Visual layer комнаты (номер 1..20 для set_layer_mask_value / cull_mask). 15-20 заняты контурами Outline
+const ROOM_VISUAL_LAYER := 12
+
 var active_ui_category := 1
 
 
@@ -43,6 +52,7 @@ func active_layers(data:Array) -> int:
 			'trains' : i = i | 1 << 4
 			'supports' : i = i | 1 << 5  # XX claude-terra опоры эстакады (резерв)
 			'handles' : i = i | 1 << 6   # ручки flex (бит 5 занят опорами)
+			'room'   : i = i | 1 << 7    # пол, стены, мебель комнаты (Observe)
 			'ghost'  : i = i | 1 << 10
-			## Слои 16-21 заняты контурами			
+			## Контуры Outline это visual layers 15-20 (cull_mask), к физике не относятся
 	return i

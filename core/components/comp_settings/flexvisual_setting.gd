@@ -1,7 +1,7 @@
-class_name FlexSetting extends ComponentSettings
+class_name FlexVisualSetting extends ComponentSettings
 
 # XX claude-terra (новый файл)
-## Собирает flex-трак одним компонентом настроек: C_VisualFlex, C_Path (centered = false), C_FlexShape.
+## Собирает flex-трак одним компонентом настроек: C_FlexVisual, C_Path (centered = false), C_FlexShape.
 ## Порядок в массиве компонентов .tres: Identity, FlexSetting, Draggable, Pivot, Hoverable, Selectable,
 ## Blockable, Socket, PowerTrack, TrackSupport. Identity: TrackConfig с radius = 10 (начальная прямая).
 
@@ -12,11 +12,11 @@ class_name FlexSetting extends ComponentSettings
 
 func create_component(entity: Entity) -> Component:
 	# 1. Визуал (строит ноды Ballast / HeadStaticBody3D в коде)
-	var vis := C_VisualFlex.new()
+	var vis := C_FlexVisual.new()
 	vis.visual_settings = settings
 	vis.style = style
 
-	vis.name = 'C_VisualFlex'
+	vis.name = 'C_FlexVisual'
 	entity.add_component(vis)
 
 	# 2. Путь: origin в начале кривой

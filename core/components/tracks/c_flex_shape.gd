@@ -9,7 +9,7 @@ class_name C_FlexShape extends ICapability
 ##  - снап: в радиусе flex_snap_radius от курсора есть свободный сокет другого трака -> конец берет его
 ##    позицию, касательную и высоту, форма = кубик Эрмита (FlexSolver.best_hermite), профиль высоты
 ##    Эрмит по длине с уклонами соседей на обоих концах.
-## Считает форму, отдает кривую в C_Path.set_curve. Меш и коллизии строит C_VisualFlex по on_curve_changed.
+## Считает форму, отдает кривую в C_Path.set_curve. Меш и коллизии строит C_FlexVisual по on_curve_changed.
 ## Невозможная форма (r < r_min, L вне [l_min, l_max], уклон > max_grade, уход под землю) -> C_Invalid.
 ##
 ## События (шлет BuildTool, он компонентов не знает):

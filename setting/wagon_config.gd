@@ -57,7 +57,8 @@ class_name WagonConfig extends ObjectConfig
 
 
 @export_category("Coupler (Сцепка)")
-@export var coupler_offset: float = 6.0          # от центра вагона до торца (сцепки), м
+##[b] На сплайне:[/b] от центра вагона до торца (сцепки) , м 
+@export var coupler_offset: float = 6.0         
 @export var coupler_front: StringName = &"nem"  # "" - механизма нет (буфер остаётся)
 @export var coupler_rear: StringName = &"nem"
 @export var coupler_slack: float = 0.15			# свободный ход сцепки, м

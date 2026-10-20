@@ -24,7 +24,7 @@ class_name TrackStyle extends Resource
 @export var rail_x := 0.875
 @export var rail_profile := PackedVector2Array([
 	Vector2(-0.1, 0.0), Vector2(-0.1, 0.25), Vector2(0.1, 0.25), Vector2(0.1, 0.0)])
-## null = общий материал рельсов из C_VisualFlex
+## null = общий материал рельсов из C_FlexVisual
 @export var rail_material: Material
 
 @export_category("Sleepers")

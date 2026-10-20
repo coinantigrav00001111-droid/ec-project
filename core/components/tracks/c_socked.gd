@@ -407,6 +407,8 @@ func _surface_lift() -> float:
 
 # Шарик 
 func _add_marker(_node, _color = Color.RED):
+	if not Global.debug_markers:
+		return
 	# Визуальный маркер (шарик)
 	var marker := MeshInstance3D.new()
 	var sphere := SphereMesh.new()
@@ -428,6 +430,8 @@ func _add_marker(_node, _color = Color.RED):
 
 # Конус
 func _add_cone(_pos, _color = Color.BURLYWOOD):
+	if not Global.debug_markers:
+		return
 	var marker := MeshInstance3D.new()
 
 	var cone := CylinderMesh.new()

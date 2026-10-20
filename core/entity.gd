@@ -29,7 +29,8 @@ func _ready():
 	var _identity = get_comp(C_Identity)
 	name = _identity.get_name_e() + '_01'
 
-	#return
+	if not Global.debug_markers:
+		return
 	#DD делаем метку центра ентити для дебага
 	var center = MeshInstance3D.new()
 	var box_shape = BoxMesh.new()

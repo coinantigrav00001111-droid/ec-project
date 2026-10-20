@@ -43,12 +43,14 @@ metadata/_custom_type_script = "uid://bwaluvayi2o8k"
 [sub_resource type="Resource" id="Resource_ybgll"]
 script = ExtResource("5_ufx6w")
 mass = 4.0
+max_grip = 400.0
 suspension = SubResource("Resource_0p1ic")
 has_engine = true
+max_theoretical_speed = 50.0
 scene = ExtResource("4_1pi1k")
 offset_mesh_y = 1.66
 bogie_configs = Array[ExtResource("2_xi8dl")]([SubResource("Resource_m448q"), SubResource("Resource_ibl0p")])
-coupler_offset = 5.0
+coupler_offset = 5.5
 coupler_travel = 0.05
 coupler_strength = 120.0
 metadata/_custom_type_script = "uid://bicjny5dv1h3s"

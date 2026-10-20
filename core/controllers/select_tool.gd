@@ -221,6 +221,9 @@ func exit(_to_drag : bool = false):
 			#INFO Очищаем панель
 			controller.info_panel.set_target(null) 
 		
-	if hovered_entity: 	hovered_entity = null
+	if hovered_entity:
+		if is_instance_valid(hovered_entity):
+			hovered_entity.remove_component(C_Hovered)
+		hovered_entity = null
 	
 	handle_dragging = false
