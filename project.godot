@@ -27,6 +27,7 @@ Global="*uid://cuyqabojk5lbh"
 GraphicsManager="*uid://ibw0xeowgtvh"
 PGM="*uid://cs6t1pamqjrbq"
 Outline="*uid://bsgvq8tlldjvo"
+TGM="*res://core/controllers/terrain_manager.gd"
 
 [display]
 
