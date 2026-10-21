@@ -45,6 +45,9 @@ class_name GlobalSetting extends Resource
 # XX claude-terra
 ## Насколько трак может уходить под землю при снапе/магните, ю (больше - снап отклоняется)
 @export var underground_tolerance := 0.1
+# XX claude-terra
+## Шаг сетки привязки листов пенопласта по XZ, ю
+@export var terrain_grid_step := 1.0
 
 # XX claude-terra
 @export_group("Flex")

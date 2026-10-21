@@ -40,4 +40,6 @@ func get_pick_layers() -> Array:
 		return pick_layers
 	if category == &'track':
 		return [&'ground']   # трак ставится на уровень над землей, а не на другие траки
+	if category == &'terrain':
+		return [&'ground']   # лист пенопласта ставится на стол или на верх другого листа
 	return [&'ground', &'tracks', &'trains']
