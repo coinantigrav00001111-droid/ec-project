@@ -100,49 +100,15 @@ func _process(_delta: float) -> void:
 # Ноды
 # ==========================================
 
-func _new_shape(size: Vector3) -> CollisionShape3D:
-	var cs := CollisionShape3D.new()
-	var bx := BoxShape3D.new()
-	bx.size = size
-	cs.shape = bx
-	return cs
-
-
 func _build_instance() -> Node3D:
-	TrackMeshBuilder.ensure_materials()
-	var root := Node3D.new()
-	root.name = "FlexTrack"
-
-	mesh_node = MeshInstance3D.new()
-	mesh_node.name = "Mesh"
-	root.add_child(mesh_node)
-
-	sleepers = TrackMeshBuilder.create_sleepers_node(style)
-	root.add_child(sleepers)
-
-	# Слои как у G239: треки = слой 3, видят треки и призраков
-	ballast = Area3D.new()
-	ballast.name = "Ballast"
-	ballast.collision_layer = 1 << 2
-	ballast.collision_mask = (1 << 2) | (1 << 10)
-	root.add_child(ballast)
-	# Заглушка: C_Path генерирует свои коллизии, только если у Ballast/Head нет детей
-	var b0 := _new_shape(Vector3(0.01, 0.01, 0.01))
-	ballast.add_child(b0)
-	_ballast_shapes.append(b0)
-
-	head = StaticBody3D.new()
-	head.name = "HeadStaticBody3D"
-	head.collision_layer = 1 << 2
-	head.collision_mask = (1 << 2) | (1 << 10)
-	var pm := PhysicsMaterial.new()
-	pm.friction = 0.0
-	head.physics_material_override = pm
-	root.add_child(head)
-	var h0 := _new_shape(Vector3(0.01, 0.01, 0.01))
-	head.add_child(h0)
-	_head_shapes.append(h0)
-	return root
+	var sk := TrackMeshBuilder.build_skeleton(style, "FlexTrack")
+	mesh_node = sk.mesh_node
+	sleepers = sk.sleepers
+	ballast = sk.ballast
+	head = sk.head
+	_ballast_shapes.append(sk.ballast_dummy)
+	_head_shapes.append(sk.head_dummy)
+	return sk.root
 
 
 # ==========================================
@@ -173,31 +139,24 @@ func _rebuild_collision(curve: Curve3D, L: float) -> void:
 	_resize_pool(nseg)
 	for i in nseg:
 		var bx := TrackMeshBuilder.segment_boxes(style, curve, L, cuts[i], cuts[i + 1])
-		_set_box(_ballast_shapes[i], bx.ballast_size, bx.ballast_xf)
-		_set_box(_head_shapes[3 * i], bx.ballast_size, bx.ballast_xf)
-		_set_box(_head_shapes[3 * i + 1], bx.rail_size, bx.rail_l_xf)
-		_set_box(_head_shapes[3 * i + 2], bx.rail_size, bx.rail_r_xf)
+		TrackMeshBuilder.set_box(_ballast_shapes[i], bx.ballast_size, bx.ballast_xf)
+		TrackMeshBuilder.set_box(_head_shapes[3 * i], bx.ballast_size, bx.ballast_xf)
+		TrackMeshBuilder.set_box(_head_shapes[3 * i + 1], bx.rail_size, bx.rail_l_xf)
+		TrackMeshBuilder.set_box(_head_shapes[3 * i + 2], bx.rail_size, bx.rail_r_xf)
 
 
 func _resize_pool(nseg: int) -> void:
 	while _ballast_shapes.size() < nseg:
-		var cs := _new_shape(Vector3.ONE)
+		var cs := TrackMeshBuilder.new_shape(Vector3.ONE)
 		ballast.add_child(cs)
 		_ballast_shapes.append(cs)
 	while _ballast_shapes.size() > nseg:
 		var old: CollisionShape3D = _ballast_shapes.pop_back()
 		old.queue_free()
 	while _head_shapes.size() < nseg * 3:
-		var cs := _new_shape(Vector3.ONE)
+		var cs := TrackMeshBuilder.new_shape(Vector3.ONE)
 		head.add_child(cs)
 		_head_shapes.append(cs)
 	while _head_shapes.size() > nseg * 3:
 		var old2: CollisionShape3D = _head_shapes.pop_back()
 		old2.queue_free()
-
-
-func _set_box(cs: CollisionShape3D, size: Vector3, xf: Transform3D) -> void:
-	var bx := cs.shape as BoxShape3D
-	if not bx.size.is_equal_approx(size):
-		bx.size = size
-	cs.transform = xf

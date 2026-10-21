@@ -26,6 +26,64 @@ static var _mat_rail: StandardMaterial3D
 static var _mat_sleeper: StandardMaterial3D
 
 
+## Пустая геометрия коллизии-заглушки: C_Path генерирует свои коллизии, только если
+## у Ballast/Head нет детей. Заглушка не даёт этому сработать, пока реальные боксы не готовы.
+static func new_shape(size: Vector3 = Vector3(0.01, 0.01, 0.01)) -> CollisionShape3D:
+	var cs := CollisionShape3D.new()
+	var bx := BoxShape3D.new()
+	bx.size = size
+	cs.shape = bx
+	return cs
+
+
+static func set_box(cs: CollisionShape3D, size: Vector3, xf: Transform3D) -> void:
+	var bx := cs.shape as BoxShape3D
+	if not bx.size.is_equal_approx(size):
+		bx.size = size
+	cs.transform = xf
+
+
+## Каркас визуала трака из стиля: Mesh, Sleepers, Ballast (Area3D), HeadStaticBody3D.
+## Ballast/Head получают по одной заглушке коллизии (см. new_shape). Слои как у G239:
+## треки = слой 3, видят треки и призраков. Используют C_FlexVisual и C_StyleVisual,
+## чтобы структура сцены была одинаковой для C_Path / C_Blockable / C_Socket.
+static func build_skeleton(style: TrackStyle, root_name: String) -> Dictionary:
+	ensure_materials()
+	var root := Node3D.new()
+	root.name = root_name
+
+	var mesh_node := MeshInstance3D.new()
+	mesh_node.name = "Mesh"
+	root.add_child(mesh_node)
+
+	var sleepers := create_sleepers_node(style)
+	root.add_child(sleepers)
+
+	var ballast := Area3D.new()
+	ballast.name = "Ballast"
+	ballast.collision_layer = 1 << 2
+	ballast.collision_mask = (1 << 2) | (1 << 10)
+	root.add_child(ballast)
+	var b0 := new_shape()
+	ballast.add_child(b0)
+
+	var head := StaticBody3D.new()
+	head.name = "HeadStaticBody3D"
+	head.collision_layer = 1 << 2
+	head.collision_mask = (1 << 2) | (1 << 10)
+	var pm := PhysicsMaterial.new()
+	pm.friction = 0.0
+	head.physics_material_override = pm
+	root.add_child(head)
+	var h0 := new_shape()
+	head.add_child(h0)
+
+	return {
+		"root": root, "mesh_node": mesh_node, "sleepers": sleepers,
+		"ballast": ballast, "head": head, "ballast_dummy": b0, "head_dummy": h0,
+	}
+
+
 static func ensure_materials() -> void:
 	if _mat_ballast:
 		return
