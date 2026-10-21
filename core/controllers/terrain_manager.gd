@@ -44,7 +44,8 @@ func notify_changed(aabb: AABB) -> void:
 
 ## --- Аналитические запросы ---
 
-## Верх земли под точкой (x, z): самый высокий верх листа, не выше y_max. Нет листа - стол (0).
+## Верх земли под точкой (x, z): самый высокий верх сплошного участка листа (с учетом вырезов),
+## не выше y_max. Нет листа - стол (0).
 ## exclude: лист, который не учитываем (например, тот, что двигаем)
 func surface_y(x: float, z: float, y_max: float = INF, exclude: Entity = null) -> float:
 	var best := 0.0
@@ -55,10 +56,11 @@ func surface_y(x: float, z: float, y_max: float = INF, exclude: Entity = null) -
 		var l := e.get_comp(C_TerrainLayer) as C_TerrainLayer
 		if l == null:
 			continue
-		var top := l.top_y()
-		if top <= best or top > y_max + EPS:
-			continue
-		if Geometry2D.is_point_in_polygon(pt, l.world_polygon()):
+		# сплошные участки над точкой с учетом вырезов: окно пропускает, ниша дает дно ниши
+		for iv: Vector2 in l.solid_intervals_at(pt):
+			var top := iv.y
+			if top <= best or top > y_max + EPS:
+				continue
 			best = top
 	return best
 
@@ -75,11 +77,10 @@ func depth_in_solid(p: Vector3, exclude: Entity = null) -> float:
 		var l := e.get_comp(C_TerrainLayer) as C_TerrainLayer
 		if l == null:
 			continue
-		var top := l.top_y()
-		if p.y <= l.base_y() + EPS or p.y >= top:
-			continue
-		if Geometry2D.is_point_in_polygon(pt, l.world_polygon()):
-			best = maxf(best, top - p.y)
+		for iv: Vector2 in l.solid_intervals_at(pt):
+			if p.y <= iv.x + EPS or p.y >= iv.y:
+				continue
+			best = maxf(best, iv.y - p.y)
 	return best
 
 
@@ -97,13 +98,14 @@ func layers_overlapping(polygon: PackedVector2Array, y_from: float, y_to: float,
 			continue
 		if l.base_y() >= y_to - EPS or l.top_y() <= y_from + EPS:
 			continue
-		if _overlap_area(polygon, l.world_polygon()) > MIN_OVERLAP_AREA:
+		# по блокам слоев листа: вырезы (ниша, окно, тоннель) свободны для других листов
+		if l.overlaps(polygon, y_from, y_to):
 			res.append(e)
 	return res
 
 
 ## Площадь пересечения двух полигонов
-func _overlap_area(a: PackedVector2Array, b: PackedVector2Array) -> float:
+func overlap_area(a: PackedVector2Array, b: PackedVector2Array) -> float:
 	var s := 0.0
 	for poly: PackedVector2Array in Geometry2D.intersect_polygons(a, b):
 		s += absf(C_Contour.signed_area(poly))
