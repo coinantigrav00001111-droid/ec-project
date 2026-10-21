@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="GraphicsPreset" format=3]
+
+[ext_resource type="Script" path="res://core/graphics/graphics_preset.gd" id="1_xblb6"]
+
+[resource]
+script = ExtResource("1_xblb6")
+id = &"toy"
+title = "Toy"
+brightness = 1.02
+contrast = 1.08
+saturation = 1.28
+glow_enabled = true
+glow_intensity = 0.35
+background_color = Color(0.78, 0.84, 0.92, 1)
+ambient_color = Color(0.66, 0.72, 0.84, 1)
+ssao_enabled = true
+ssao_radius = 0.9
+ssao_intensity = 2.6
+ssao_power = 1.6
+ssao_light_affect = 0.15
+ao_multibounce = true
+sun_shadow_blur = 1.6
+contact_shadows = true
+tilt_shift = 0.6
+vignette = 0.15

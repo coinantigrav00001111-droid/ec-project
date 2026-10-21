@@ -116,7 +116,7 @@ func _overlap_area(a: PackedVector2Array, b: PackedVector2Array) -> float:
 func _unhandled_input(event: InputEvent) -> void:
 	if not Global.debug_mode:
 		return
-	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F8:
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F7:
 		_debug_print_surface()
 
 
@@ -132,9 +132,9 @@ func _debug_print_surface() -> void:
 	q.collision_mask = Global.active_layers(['ground'])
 	var hit := vp.get_world_3d().direct_space_state.intersect_ray(q)
 	if hit.is_empty():
-		print("[TGM] F8: луч по ground ничего не нашел")
+		print("[TGM] F7: луч по ground ничего не нашел")
 		return
 	var p: Vector3 = hit.position
 	# y_max чуть выше точки попадания: верх листа, на который попал луч, должен пройти фильтр
 	var ys := surface_y(p.x, p.z, p.y + 0.01)
-	print("[TGM] F8: луч y=%.3f, surface_y=%.3f, разница=%.4f, листов=%d" % [p.y, ys, absf(p.y - ys), get_layers().size()])
+	print("[TGM] F7: луч y=%.3f, surface_y=%.3f, разница=%.4f, листов=%d" % [p.y, ys, absf(p.y - ys), get_layers().size()])

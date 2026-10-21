@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="GraphicsPreset" format=3]
+
+[ext_resource type="Script" path="res://core/graphics/graphics_preset.gd" id="1_x18c7"]
+
+[resource]
+script = ExtResource("1_x18c7")
+id = &"clean"
+title = "Clean"
+background_color = Color(0.85, 0.85, 0.87, 1)
+ambient_color = Color(0.8, 0.8, 0.82, 1)
+probe_intensity = 0.3
