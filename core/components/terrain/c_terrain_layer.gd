@@ -6,19 +6,30 @@ class_name C_TerrainLayer extends C_Visual
 ###################################
 ## Лист = призма: контур C_Contour в плане на высоту levels * layer_height.
 ## Origin Entity = низ листа, поэтому лист на столе стоит на y = 0, а лист на листе на его верху.
-##  - меш: верх, низ и стенки (SurfaceTool), нормали плоские;
-##  - коллизия: StaticBody3D на слое ground, контур раскладывается на выпуклые куски;
+##  - вырезы (FoamCut, T4): окно, ниша, тоннель. Лист строится блоками слоев: подряд идущие слои
+##    с одинаковым набором вырезов склеиваются в один блок (призму). Без вырезов лист один блок;
+##  - меш: верх, низ и стенки каждого блока (SurfaceTool), нормали плоские;
+##  - коллизия: StaticBody3D на слое ground, полигоны блока раскладываются на выпуклые куски;
 ##  - призрак (C_Ghost) и драг (C_Drag): тело уезжает на слой ghost, иначе луч драга попадет в сам лист
 ##    (так же, как у трака в C_Path.on_select_layer). Выбор слой не меняет: выбранный лист остается землей;
 ##  - событие terrain_changed в TGM: лист поставлен, сдвинут, удален, поменял форму.
-## Сейв: levels. Контур сохраняет C_Contour, поза лежит в transform Entity.
+## Сейв: levels, cuts. Контур сохраняет C_Contour, поза лежит в transform Entity.
+
+## Площадь, меньше которой кусок после клиппинга считаем мусором (ю²)
+const MIN_PIECE_AREA := 0.0001
 
 ## Толщина в слоях (GlobalSetting.layer_height). Целое, минимум 1
 var levels := 1
 
+## Вырезы (локальные полигоны + диапазон слоев). Менять через add_cut / remove_last_cut / clear_cuts
+var cuts: Array[FoamCut] = []
+
 var mesh_node: MeshInstance3D
 var body: StaticBody3D
 
+## Блоки слоев: {"y0": int, "y1": int, "polys": Array[PackedVector2Array]}.
+## Слои [y0, y1), полигоны простые (без дыр), обход против часовой, локальные координаты листа
+var _blocks: Array[Dictionary] = []
 var _shapes: Array[CollisionShape3D] = []
 var _last_aabb := AABB()
 static var _mat_raw: StandardMaterial3D
@@ -95,6 +106,81 @@ func _apply_collision_layers(removing: Script = null) -> void:
 	body.collision_mask = 0   # статическое тело само ничего не ищет
 
 
+## --- Вырезы ---
+
+## Вырезать полигон (локальные XZ листа) из слоев [from_level, to_level). Слои считаем от низа листа
+func add_cut(polygon: PackedVector2Array, from_level: int, to_level: int) -> void:
+	if polygon.size() < 3:
+		return
+	var lv := maxi(1, levels)
+	var c := FoamCut.new()
+	c.polygon = polygon
+	c.from_level = clampi(from_level, 0, lv)
+	c.to_level = clampi(to_level, 0, lv)
+	if c.to_level <= c.from_level:
+		return
+	cuts.append(c)
+	_rebuild()
+
+
+func remove_last_cut() -> void:
+	if cuts.is_empty():
+		return
+	cuts.pop_back()
+	_rebuild()
+
+
+func clear_cuts() -> void:
+	if cuts.is_empty():
+		return
+	cuts.clear()
+	_rebuild()
+
+
+## Отладка (Global.debug_mode), выбранный лист. F7: ниша (верхний слой). Shift+F7: окно (все слои).
+## Alt+F7: тоннель (нижний слой, полоса поперек листа). Ctrl+F7: убрать последний вырез
+func _unhandled_input(event: InputEvent) -> void:
+	if not Global.debug_mode or entity == null or not entity.is_inside_tree():
+		return
+	if has_comp(C_Ghost) or not has_comp(C_Selected):
+		return
+	var k := event as InputEventKey
+	if k == null or not k.pressed or k.echo or k.keycode != KEY_F7:
+		return
+	get_viewport().set_input_as_handled()
+	if k.ctrl_pressed:
+		remove_last_cut()
+		return
+	var b := _contour_bounds()
+	var c := b.get_center()
+	var lv := maxi(1, levels)
+	if k.shift_pressed:
+		add_cut(_rect(c, b.size * 0.4), 0, lv)
+	elif k.alt_pressed:
+		add_cut(_rect(c, Vector2(b.size.x + 2.0, 4.0)), 0, 1)
+	else:
+		add_cut(_rect(c, b.size * 0.4), lv - 1, lv)
+
+
+func _contour_bounds() -> Rect2:
+	var contour := get_comp(C_Contour) as C_Contour
+	if contour == null or contour.points.is_empty():
+		return Rect2()
+	var lo := contour.points[0]
+	var hi := contour.points[0]
+	for p in contour.points:
+		lo = lo.min(p)
+		hi = hi.max(p)
+	return Rect2(lo, hi - lo)
+
+
+func _rect(center: Vector2, size: Vector2) -> PackedVector2Array:
+	var h := size * 0.5
+	return PackedVector2Array([
+		center + Vector2(-h.x, -h.y), center + Vector2(h.x, -h.y),
+		center + Vector2(h.x, h.y), center + Vector2(-h.x, h.y)])
+
+
 ## --- Построение ---
 
 func _rebuild() -> void:
@@ -104,34 +190,164 @@ func _rebuild() -> void:
 	if contour == null or contour.points.size() < 3:
 		return
 	var pts := contour.normalized_points()
-	var h = float(maxi(1, levels)) * Global.settings.layer_height
 
-	var tris := Geometry2D.triangulate_polygon(pts)
-	if tris.is_empty():
+	if Geometry2D.triangulate_polygon(pts).is_empty():
 		push_warning("[C_TerrainLayer] контур не триангулируется (вырожденный или самопересекающийся), лист не построен")
+		_blocks.clear()
 		mesh_node.mesh = null
 		_clear_shapes()
 		return
 
-	mesh_node.mesh = _build_mesh(pts, tris, h)
-	_build_collision(pts, h)
+	_blocks = _compute_blocks(pts)
+	mesh_node.mesh = _build_mesh()
+	_build_collision()
 	_notify()
 
 
-func _build_mesh(pts: PackedVector2Array, tris: PackedInt32Array, h: float) -> ArrayMesh:
+## Блоки слоев: подряд идущие слои с одним набором вырезов склеиваем в одну призму
+func _compute_blocks(pts: PackedVector2Array) -> Array[Dictionary]:
+	var res: Array[Dictionary] = []
+	var lv := maxi(1, levels)
+	var start := 0
+	var sig := _cut_signature(0)
+	for k in range(1, lv + 1):
+		var cur := _cut_signature(k) if k < lv else ""
+		if k < lv and cur == sig:
+			continue
+		var polys := _slab_polygons(pts, _cuts_at(start))
+		if not polys.is_empty():
+			res.append({"y0": start, "y1": k, "polys": polys})
+		start = k
+		sig = cur
+	return res
+
+
+## Какие вырезы (по номерам) покрывают слой: строка-подпись набора
+func _cut_signature(level: int) -> String:
+	var s := ""
+	for i in cuts.size():
+		if cuts[i].covers(level):
+			s += str(i) + ","
+	return s
+
+
+func _cuts_at(level: int) -> Array[FoamCut]:
+	var res: Array[FoamCut] = []
+	for c in cuts:
+		if c.covers(level):
+			res.append(c)
+	return res
+
+
+## Контур минус вырезы слоя -> простые полигоны (без дыр), обход против часовой.
+## Triangulate и decompose Godot дыры не понимают, поэтому контур заранее режется вертикальными полосами
+## через центр (по X) каждого выреза: вырез в такой полосе всегда выходит на границу полосы,
+## а значит дыры внутри полигона не остается. Полосы стыкуются по общим вершинам
+func _slab_polygons(contour: PackedVector2Array, active: Array[FoamCut]) -> Array[PackedVector2Array]:
+	var res: Array[PackedVector2Array] = []
+	if active.is_empty():
+		res.append(contour)
+		return res
+
+	var lo := contour[0]
+	var hi := contour[0]
+	for p in contour:
+		lo = lo.min(p)
+		hi = hi.max(p)
+	var xs: Array[float] = [lo.x, hi.x]
+	for c in active:
+		if c.polygon.size() < 3:
+			continue
+		var cl := c.polygon[0]
+		var ch := c.polygon[0]
+		for p in c.polygon:
+			cl = cl.min(p)
+			ch = ch.max(p)
+		xs.append((cl.x + ch.x) * 0.5)
+	xs.sort()
+
+	for i in xs.size() - 1:
+		var xa := xs[i]
+		var xb := xs[i + 1]
+		if xb - xa < 0.001:
+			continue
+		var band := PackedVector2Array([
+			Vector2(xa, lo.y - 1.0), Vector2(xb, lo.y - 1.0),
+			Vector2(xb, hi.y + 1.0), Vector2(xa, hi.y + 1.0)])
+		var pieces: Array[PackedVector2Array] = []
+		for sp: PackedVector2Array in Geometry2D.intersect_polygons(contour, band):
+			pieces.append(sp)
+		for c in active:
+			var next: Array[PackedVector2Array] = []
+			for p in pieces:
+				for r: PackedVector2Array in Geometry2D.clip_polygons(p, c.polygon):
+					next.append(r)
+			pieces = next
+		res.append_array(_outer_only(pieces))
+	return res
+
+
+## Оставляет внешние контуры (обход против часовой), мусор и дыры отбрасывает.
+## Внешние контуры после Clipper имеют одну ориентацию, дыры противоположную. Самый большой по площади
+## полигон всегда внешний (дыра лежит строго внутри внешнего), по нему и определяем ориентацию
+func _outer_only(polys: Array[PackedVector2Array]) -> Array[PackedVector2Array]:
+	var res: Array[PackedVector2Array] = []
+	var ref := 0.0
+	var best := 0.0
+	for p in polys:
+		var a := C_Contour.signed_area(p)
+		if absf(a) > best:
+			best = absf(a)
+			ref = a
+	if best < MIN_PIECE_AREA:
+		return res
+	for p in polys:
+		var s := C_Contour.signed_area(p)
+		if absf(s) < MIN_PIECE_AREA:
+			continue
+		if (s > 0.0) != (ref > 0.0):
+			push_warning("[C_TerrainLayer] вырез дал дыру внутри листа, она не построена")
+			continue
+		var q := p.duplicate()
+		if s < 0.0:
+			q.reverse()
+		res.append(q)
+	return res
+
+
+func _build_mesh() -> ArrayMesh:
+	if _blocks.is_empty():
+		return null
+	var T: float = Global.settings.layer_height
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	st.set_material(_material())
+	var any := false
+	for b in _blocks:
+		var y0: float = float(b["y0"]) * T
+		var y1: float = float(b["y1"]) * T
+		for poly: PackedVector2Array in b["polys"]:
+			var tris := Geometry2D.triangulate_polygon(poly)
+			if tris.is_empty():
+				continue
+			any = true
+			_add_prism(st, poly, tris, y0, y1)
+	if not any:
+		return null
+	return st.commit()
 
+
+## Призма: верх (y1), низ (y0) и стенки. poly обходится против часовой (area > 0)
+func _add_prism(st: SurfaceTool, pts: PackedVector2Array, tris: PackedInt32Array, y0: float, y1: float) -> void:
 	# верх и низ
 	for i in range(0, tris.size(), 3):
 		var a := pts[tris[i]]
 		var b := pts[tris[i + 1]]
 		var c := pts[tris[i + 2]]
-		_tri(st, Vector3(a.x, h, a.y), Vector3(b.x, h, b.y), Vector3(c.x, h, c.y), Vector3.UP)
-		_tri(st, Vector3(a.x, 0.0, a.y), Vector3(b.x, 0.0, b.y), Vector3(c.x, 0.0, c.y), Vector3.DOWN)
+		_tri(st, Vector3(a.x, y1, a.y), Vector3(b.x, y1, b.y), Vector3(c.x, y1, c.y), Vector3.UP)
+		_tri(st, Vector3(a.x, y0, a.y), Vector3(b.x, y0, b.y), Vector3(c.x, y0, c.y), Vector3.DOWN)
 
-	# стенки. pts обходится против часовой (area > 0), наружу от ребра d это (d.y, -d.x)
+	# стенки. Наружу от ребра d это (d.y, -d.x)
 	var n := pts.size()
 	for i in n:
 		var p0 := pts[i]
@@ -140,14 +356,12 @@ func _build_mesh(pts: PackedVector2Array, tris: PackedInt32Array, h: float) -> A
 		if d.length_squared() < 0.000001:
 			continue
 		var outward := Vector3(d.y, 0.0, -d.x).normalized()
-		var a0 := Vector3(p0.x, 0.0, p0.y)
-		var a1 := Vector3(p1.x, 0.0, p1.y)
-		var b0 := Vector3(p0.x, h, p0.y)
-		var b1 := Vector3(p1.x, h, p1.y)
+		var a0 := Vector3(p0.x, y0, p0.y)
+		var a1 := Vector3(p1.x, y0, p1.y)
+		var b0 := Vector3(p0.x, y1, p0.y)
+		var b1 := Vector3(p1.x, y1, p1.y)
 		_tri(st, a0, a1, b1, outward)
 		_tri(st, a0, b1, b0, outward)
-
-	return st.commit()
 
 
 ## Треугольник, лицевая сторона которого смотрит в nrm. Лицевая грань в Godot идет по часовой стрелке:
@@ -165,22 +379,27 @@ func _tri(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, nrm: Vector3) -> 
 	st.add_vertex(c)
 
 
-func _build_collision(pts: PackedVector2Array, h: float) -> void:
+func _build_collision() -> void:
 	_clear_shapes()
-	var pieces: Array = Geometry2D.decompose_polygon_in_convex(pts)
-	if pieces.is_empty():
-		pieces = [pts]   # разбить не вышло: пробуем контур целиком (если он выпуклый, это сработает)
-	for piece: PackedVector2Array in pieces:
-		var v := PackedVector3Array()
-		for p: Vector2 in piece:
-			v.append(Vector3(p.x, 0.0, p.y))
-			v.append(Vector3(p.x, h, p.y))
-		var shape := ConvexPolygonShape3D.new()
-		shape.points = v
-		var cs := CollisionShape3D.new()
-		cs.shape = shape
-		body.add_child(cs)
-		_shapes.append(cs)
+	var T: float = Global.settings.layer_height
+	for b in _blocks:
+		var y0: float = float(b["y0"]) * T
+		var y1: float = float(b["y1"]) * T
+		for poly: PackedVector2Array in b["polys"]:
+			var pieces: Array = Geometry2D.decompose_polygon_in_convex(poly)
+			if pieces.is_empty():
+				pieces = [poly]   # разбить не вышло: пробуем полигон целиком (если он выпуклый, это сработает)
+			for piece: PackedVector2Array in pieces:
+				var v := PackedVector3Array()
+				for p: Vector2 in piece:
+					v.append(Vector3(p.x, y0, p.y))
+					v.append(Vector3(p.x, y1, p.y))
+				var shape := ConvexPolygonShape3D.new()
+				shape.points = v
+				var cs := CollisionShape3D.new()
+				cs.shape = shape
+				body.add_child(cs)
+				_shapes.append(cs)
 
 
 func _clear_shapes() -> void:
@@ -216,21 +435,72 @@ func top_y() -> float:
 	return base_y() + height()
 
 
-## Контур листа в мире: Vector2(x = X, y = Z), обход против часовой стрелки
+## Контур листа в мире: Vector2(x = X, y = Z), обход против часовой стрелки.
+## Без вырезов: это внешняя граница листа
 func world_polygon() -> PackedVector2Array:
 	var res := PackedVector2Array()
 	var contour := get_comp(C_Contour) as C_Contour
 	if contour == null:
 		return res
-	var xf := entity.global_transform
-	for p in contour.normalized_points():
+	return _to_world(contour.normalized_points(), entity.global_transform)
+
+
+func _to_world(poly: PackedVector2Array, xf: Transform3D) -> PackedVector2Array:
+	var res := PackedVector2Array()
+	for p in poly:
 		var w := xf * Vector3(p.x, 0.0, p.y)
 		res.append(Vector2(w.x, w.z))
 	return res
 
 
+## Сплошные участки листа над точкой pt (мировые x, z): интервалы Vector2(низ, верх) по мировой Y.
+## Подряд идущие слои склеены, поэтому верх интервала это настоящая поверхность.
+## Окно дает пустой список, ниша и тоннель дают интервал ниже ниши или над тоннелем
+func solid_intervals_at(pt: Vector2) -> Array[Vector2]:
+	var res: Array[Vector2] = []
+	if entity == null or not entity.is_inside_tree():
+		return res
+	var loc := entity.global_transform.affine_inverse() * Vector3(pt.x, 0.0, pt.y)
+	var lp := Vector2(loc.x, loc.z)
+	var T: float = Global.settings.layer_height
+	var base := base_y()
+	for b in _blocks:
+		var inside := false
+		for poly: PackedVector2Array in b["polys"]:
+			if Geometry2D.is_point_in_polygon(lp, poly):
+				inside = true
+				break
+		if not inside:
+			continue
+		var lo: float = base + float(b["y0"]) * T
+		var hi: float = base + float(b["y1"]) * T
+		var last := res.size() - 1
+		if last >= 0 and absf(res[last].y - lo) < TGM.EPS:
+			res[last] = Vector2(res[last].x, hi)
+		else:
+			res.append(Vector2(lo, hi))
+	return res
+
+
+## Занимает ли лист (с вырезами) ту же область, что polygon (мировой) в диапазоне высот (y_from, y_to)
+func overlaps(polygon: PackedVector2Array, y_from: float, y_to: float) -> bool:
+	var T: float = Global.settings.layer_height
+	var base := base_y()
+	var xf := entity.global_transform
+	for b in _blocks:
+		var lo: float = base + float(b["y0"]) * T
+		var hi: float = base + float(b["y1"]) * T
+		if lo >= y_to - TGM.EPS or hi <= y_from + TGM.EPS:
+			continue
+		for poly: PackedVector2Array in b["polys"]:
+			if TGM.overlap_area(polygon, _to_world(poly, xf)) > TGM.MIN_OVERLAP_AREA:
+				return true
+	return false
+
+
 ## Лист не должен занимать то же место, что другой лист (D6): иначе C_Invalid (красный призрак,
-## BuildTool не ставит, DragTool откатит). Вызывает C_TerrainDraggable после каждого движения
+## BuildTool не ставит, DragTool откатит). Вызывает C_TerrainDraggable после каждого движения.
+## Свои вырезы не учитываем (проверяем внешнюю призму): лист в нише другого листа пока красный
 func update_validity() -> void:
 	var bad := not TGM.layers_overlapping(world_polygon(), base_y(), top_y(), entity).is_empty()
 	if bad and not has_comp(C_Invalid):
@@ -266,9 +536,15 @@ func _notify() -> void:
 
 ## --- Сейв ---
 func save_data() -> Dictionary:
-	return {"levels": levels}
+	var arr: Array = []
+	for c in cuts:
+		arr.append(c.to_dict())
+	return {"levels": levels, "cuts": arr}
 
 
 func load_data(data: Dictionary) -> void:
 	levels = maxi(1, int(data.get("levels", levels)))
+	cuts.clear()
+	for d in data.get("cuts", []):
+		cuts.append(FoamCut.from_dict(d))
 	_rebuild()
