@@ -1,28 +1,37 @@
 extends Node
 # class_name не задаём: это синглтон TGM (autoload), как PGM
 ###########################
-## 💡 TGM - Системный сервис (autoload). Рельеф: реестр листов пенопласта и события об изменениях.
+## 💡 TGM - Системный сервис (autoload). Рельеф: реестр листов пенопласта, аналитические запросы
+## по полигонам и события об изменениях.
 ############################
 # XX claude-terra (новый файл)
 ##
 ## Лист пенопласта = Entity с C_TerrainLayer. Отдельного списка не ведем: лист при готовности
-## входит в группу GROUP, а get_layers() отфильтровывает призраков и удаляемые листы.
-## Аналитические запросы по полигонам (верх земли под точкой, "внутри листа") добавляются в T2
-## (см. ATTN_13_1_3_TerrainPlan.md). Физические лучи остаются для тулов, опор и вагонов.
+## входит в группу GROUP, а get_layers() отфильтровывает призраков, листы в драге и удаляемые.
+## Физические лучи остаются для тулов, опор и вагонов. Аналитика (ниже) нужна там, где ждать
+## физический кадр нельзя или луч не подходит: проверка перекрытия листов, снап, тоннели.
+## Все высоты мировые (Y), полигоны мировые (Vector2: x = X, y = Z).
 
 ## Лист изменился (поставлен, сдвинут, удален, поменял форму). aabb - мировая область изменения.
 ## Слушают опоры эстакады и все, кому важна земля под ними
 signal terrain_changed(aabb: AABB)
 
 const GROUP := &'terrain_layer'
+## Допуск по высоте, ю: касание верха одного листа с низом другого не считается пересечением
+const EPS := 0.001
+## Пересечение меньше этой площади (ю²) считаем касанием по ребру, а не наложением
+const MIN_OVERLAP_AREA := 0.01
 
 
-## Живые листы: без призраков и без тех, что уже удаляются
+## Живые листы: без призраков, без листов в драге (они на слое ghost и землей не являются)
+## и без тех, что уже удаляются
 func get_layers() -> Array[Entity]:
 	var res: Array[Entity] = []
 	for n in get_tree().get_nodes_in_group(GROUP):
 		var e := n as Entity
-		if e == null or not e.is_inside_tree() or e.is_queued_for_deletion() or e.has_comp(C_Ghost):
+		if e == null or not e.is_inside_tree() or e.is_queued_for_deletion():
+			continue
+		if e.has_comp(C_Ghost) or e.has_comp(C_Drag):
 			continue
 		res.append(e)
 	return res
@@ -31,3 +40,101 @@ func get_layers() -> Array[Entity]:
 ## Вызывает C_TerrainLayer. Сообщает, что земля в этой области изменилась
 func notify_changed(aabb: AABB) -> void:
 	terrain_changed.emit(aabb)
+
+
+## --- Аналитические запросы ---
+
+## Верх земли под точкой (x, z): самый высокий верх листа, не выше y_max. Нет листа - стол (0).
+## exclude: лист, который не учитываем (например, тот, что двигаем)
+func surface_y(x: float, z: float, y_max: float = INF, exclude: Entity = null) -> float:
+	var best := 0.0
+	var pt := Vector2(x, z)
+	for e in get_layers():
+		if e == exclude:
+			continue
+		var l := e.get_comp(C_TerrainLayer) as C_TerrainLayer
+		if l == null:
+			continue
+		var top := l.top_y()
+		if top <= best or top > y_max + EPS:
+			continue
+		if Geometry2D.is_point_in_polygon(pt, l.world_polygon()):
+			best = top
+	return best
+
+
+## Насколько точка p (мировая) лежит внутри листов: расстояние вниз от верха листа до точки.
+## 0 - точка вне листов или на самой поверхности. Нависающие листы и тоннели работают так же,
+## как физический луч "сверху вниз", но без задержки на физический кадр
+func depth_in_solid(p: Vector3, exclude: Entity = null) -> float:
+	var best := 0.0
+	var pt := Vector2(p.x, p.z)
+	for e in get_layers():
+		if e == exclude:
+			continue
+		var l := e.get_comp(C_TerrainLayer) as C_TerrainLayer
+		if l == null:
+			continue
+		var top := l.top_y()
+		if p.y <= l.base_y() + EPS or p.y >= top:
+			continue
+		if Geometry2D.is_point_in_polygon(pt, l.world_polygon()):
+			best = maxf(best, top - p.y)
+	return best
+
+
+## Листы, которые занимают ту же область, что polygon в диапазоне высот (y_from, y_to):
+## пересекаются и по площади, и по высоте. Касание (верх одного = низ другого, общее ребро) не в счет
+func layers_overlapping(polygon: PackedVector2Array, y_from: float, y_to: float, exclude: Entity = null) -> Array[Entity]:
+	var res: Array[Entity] = []
+	if polygon.size() < 3:
+		return res
+	for e in get_layers():
+		if e == exclude:
+			continue
+		var l := e.get_comp(C_TerrainLayer) as C_TerrainLayer
+		if l == null:
+			continue
+		if l.base_y() >= y_to - EPS or l.top_y() <= y_from + EPS:
+			continue
+		if _overlap_area(polygon, l.world_polygon()) > MIN_OVERLAP_AREA:
+			res.append(e)
+	return res
+
+
+## Площадь пересечения двух полигонов
+func _overlap_area(a: PackedVector2Array, b: PackedVector2Array) -> float:
+	var s := 0.0
+	for poly: PackedVector2Array in Geometry2D.intersect_polygons(a, b):
+		s += absf(C_Contour.signed_area(poly))
+	return s
+
+
+## --- Отладка (Global.debug_mode) ---
+
+## F8: сверить аналитику с физическим лучом под курсором
+func _unhandled_input(event: InputEvent) -> void:
+	if not Global.debug_mode:
+		return
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F8:
+		_debug_print_surface()
+
+
+func _debug_print_surface() -> void:
+	var vp := get_viewport()
+	var cam := vp.get_camera_3d()
+	if cam == null:
+		return
+	var mp := vp.get_mouse_position()
+	var from := cam.project_ray_origin(mp)
+	var to := from + cam.project_ray_normal(mp) * 1000.0
+	var q := PhysicsRayQueryParameters3D.create(from, to)
+	q.collision_mask = Global.active_layers(['ground'])
+	var hit := vp.get_world_3d().direct_space_state.intersect_ray(q)
+	if hit.is_empty():
+		print("[TGM] F8: луч по ground ничего не нашел")
+		return
+	var p: Vector3 = hit.position
+	# y_max чуть выше точки попадания: верх листа, на который попал луч, должен пройти фильтр
+	var ys := surface_y(p.x, p.z, p.y + 0.01)
+	print("[TGM] F8: луч y=%.3f, surface_y=%.3f, разница=%.4f, листов=%d" % [p.y, ys, absf(p.y - ys), get_layers().size()])

@@ -39,11 +39,23 @@ func on_drag_moved(data: Dictionary) -> void:
 	var y: float = snappedf(data.position.y, T) + elevation * T
 	var pos := Vector3(snappedf(target.x, step), y, snappedf(target.z, step))
 	entity.global_transform = Transform3D(Basis(Vector3.UP, rotation_euler.y), pos)
+	_check_validity()
 
 
-## Драг закончен: пересчет земли делает C_TerrainLayer.on_drag_ended (этот же ивент)
+## Драг закончен. Лист на месте, где он занимает чужую площадь (C_Invalid), возвращаем туда, откуда взяли,
+## затем сообщаем C_TerrainLayer, что лист окончательно встал (пересчет земли)
 func on_drag_ended(_data: Dictionary) -> void:
-	pass
+	if entity.has_comp(C_Invalid):
+		entity.global_transform = initial_transform
+		_check_validity()   # на исходном месте лист валиден, красный флаг снимется
+	entity.send_event("on_terrain_moved", {})
+
+
+## Перекрытие с другими листами (D6). Лист сам решает, что он невалиден
+func _check_validity() -> void:
+	var layer := entity.get_comp(C_TerrainLayer) as C_TerrainLayer
+	if layer:
+		layer.update_validity()
 
 
 func on_rotate_input(data: Dictionary) -> void:

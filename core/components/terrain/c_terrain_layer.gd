@@ -66,8 +66,14 @@ func on_component_removed(type: Script) -> void:
 		_apply_collision_layers(type)
 
 
-## Драг закончен: лист на новом месте, землю под ним надо пересчитать
-func on_drag_ended(_d: Dictionary) -> void:
+## Драг начался: лист уходит с места (C_Drag уже висит, get_layers() его не отдаст), землю под ним надо пересчитать
+func on_drag_started(_d: Dictionary) -> void:
+	_notify()
+
+
+## Лист окончательно встал (шлет C_TerrainDraggable после проверки перекрытия и возможного возврата
+## на исходное место). Не on_drag_ended: порядок компонентов не гарантирует, что откат уже сделан
+func on_terrain_moved(_d: Dictionary) -> void:
 	_notify()
 
 
@@ -190,6 +196,47 @@ func _material() -> Material:
 		_mat_raw.albedo_color = Color(0.93, 0.62, 0.72)   # розовый пенопласт
 		_mat_raw.roughness = 1.0
 	return _mat_raw
+
+
+## --- Геометрия для запросов TGM ---
+
+## Нижняя отметка листа в мире (origin Entity = низ листа)
+func base_y() -> float:
+	return entity.global_position.y
+
+
+## Толщина листа, ю
+func height() -> float:
+	var T: float = Global.settings.layer_height
+	return float(maxi(1, levels)) * T
+
+
+## Верхняя отметка листа в мире
+func top_y() -> float:
+	return base_y() + height()
+
+
+## Контур листа в мире: Vector2(x = X, y = Z), обход против часовой стрелки
+func world_polygon() -> PackedVector2Array:
+	var res := PackedVector2Array()
+	var contour := get_comp(C_Contour) as C_Contour
+	if contour == null:
+		return res
+	var xf := entity.global_transform
+	for p in contour.normalized_points():
+		var w := xf * Vector3(p.x, 0.0, p.y)
+		res.append(Vector2(w.x, w.z))
+	return res
+
+
+## Лист не должен занимать то же место, что другой лист (D6): иначе C_Invalid (красный призрак,
+## BuildTool не ставит, DragTool откатит). Вызывает C_TerrainDraggable после каждого движения
+func update_validity() -> void:
+	var bad := not TGM.layers_overlapping(world_polygon(), base_y(), top_y(), entity).is_empty()
+	if bad and not has_comp(C_Invalid):
+		entity.add_component(C_Invalid.new())
+	elif not bad and has_comp(C_Invalid):
+		entity.remove_component(C_Invalid)
 
 
 ## --- Помощники ---
