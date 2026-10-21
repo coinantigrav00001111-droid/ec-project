@@ -28,7 +28,7 @@ var active_ui_category := 1
 
 
 ## Текущий режим из : &'build' &'operate' &'observe' &'library'
-var current_mode :StringName = &'observe' 
+var current_mode :StringName = &'build' 
 
 ## F2: контроль лимитов flex (R, L, уклон, "под землёй"). Переключается клавишей L в BuildTool
 var flex_limits := false
