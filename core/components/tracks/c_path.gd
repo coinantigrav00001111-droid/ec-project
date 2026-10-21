@@ -487,6 +487,47 @@ func underground_depth(xf: Transform3D) -> float:
 	return worst
 
 
+# XX claude-terra T5
+## Плоский горизонтальный трак: без уклона и не flex. Только такой трак подгоняет под себя листы
+## пенопласта (магнит верха листа и обрезка под балласт). У пандусов и flex низ балласта наклонный
+func is_flat() -> bool:
+	return rise == 0.0 and pitch == 0.0 and not has_comp(C_FlexShape)
+
+
+# XX claude-terra T5
+## Низ балласта в мире. Origin плоского трака = низ балласта
+func bottom_y() -> float:
+	return entity.global_position.y
+
+
+# XX claude-terra T5
+## Контур балласта в плане (мировые x, z): полоса шириной с балласт вдоль кривой.
+## Для обрезки листа под балласт и магнита листа. Вершины идут вдоль левого края вперед, вдоль правого назад
+func footprint_world() -> PackedVector2Array:
+	var res := PackedVector2Array()
+	if not curve or not path_node or not entity.is_inside_tree():
+		return res
+	var half: float = Global.settings.track_ballast_segment.size.x * 0.5
+	var length := curve.get_baked_length()
+	var n := maxi(2, ceili(length / 2.0))
+	var left := PackedVector2Array()
+	var right := PackedVector2Array()
+	for i in n + 1:
+		var t := curve.sample_baked_with_rotation(length * i / n)
+		var p := path_node.to_global(t.origin)
+		var fwd := path_node.global_basis * -t.basis.z
+		fwd.y = 0.0
+		if fwd.length_squared() < 0.0001:
+			continue
+		var side := Vector3.UP.cross(fwd.normalized())
+		left.append(Vector2(p.x + side.x * half, p.z + side.z * half))
+		right.append(Vector2(p.x - side.x * half, p.z - side.z * half))
+	right.reverse()
+	res.append_array(left)
+	res.append_array(right)
+	return res
+
+
 # -----HELPERS------
 ### Универсальный рекурсивный поиск ноды по имени
 func _find_node_recursive(node: Node, target_name: String) -> Node:

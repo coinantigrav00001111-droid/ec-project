@@ -12,7 +12,9 @@ class_name C_TerrainLayer extends C_Visual
 ##  - коллизия: StaticBody3D на слое ground, полигоны блока раскладываются на выпуклые куски;
 ##  - призрак (C_Ghost) и драг (C_Drag): тело уезжает на слой ghost, иначе луч драга попадет в сам лист
 ##    (так же, как у трака в C_Path.on_select_layer). Выбор слой не меняет: выбранный лист остается землей;
-##  - событие terrain_changed в TGM: лист поставлен, сдвинут, удален, поменял форму.
+##  - событие terrain_changed в TGM: лист поставлен, сдвинут, удален, поменял форму;
+##  - T5, траки: магнит верха листа к низу балласта плоского трака (snap_to_tracks) и канава под
+##    балласт, если трак стоит внутри высоты листа (автовырезы FoamCut.auto, recompute_auto_cuts).
 ## Сейв: levels, cuts. Контур сохраняет C_Contour, поза лежит в transform Entity.
 
 ## Площадь, меньше которой кусок после клиппинга считаем мусором (ю²)
@@ -30,6 +32,7 @@ var body: StaticBody3D
 ## Блоки слоев: {"y0": int, "y1": int, "polys": Array[PackedVector2Array]}.
 ## Слои [y0, y1), полигоны простые (без дыр), обход против часовой, локальные координаты листа
 var _blocks: Array[Dictionary] = []
+var _recomputing := false   # защита от повторного входа: пересчет канав сам шлет terrain_changed
 var _shapes: Array[CollisionShape3D] = []
 var _last_aabb := AABB()
 static var _mat_raw: StandardMaterial3D
@@ -59,6 +62,17 @@ func on_entity_ready() -> void:
 	entity.add_to_group(TGM.GROUP)
 	_rebuild()
 	update_visual()
+	TGM.terrain_changed.connect(_on_terrain_changed)
+	# трак мог стоять под местом, куда поставили лист. После загрузки сейва здесь пусто, а канавы
+	# вернет load_data
+	recompute_auto_cuts()
+
+
+## Что-то изменилось рядом (поставили, сдвинули или убрали трак): пересчитать канаву под балласт
+func _on_terrain_changed(aabb: AABB) -> void:
+	if _last_aabb.size == Vector3.ZERO or not aabb.intersects(_last_aabb.grow(0.1)):
+		return
+	recompute_auto_cuts()
 
 
 func on_contour_changed(_d: Dictionary) -> void:
@@ -69,6 +83,10 @@ func on_component_added(type: Script) -> void:
 	super(type)
 	if type == C_Ghost or type == C_Drag:
 		_apply_collision_layers()
+	if type == C_Ghost:
+		# призрак канавы не показывает: она считается в точке спавна, а не там, где призрак окажется
+		var none: Array[FoamCut] = []
+		set_auto_cuts(none)
 
 
 func on_component_removed(type: Script) -> void:
@@ -85,6 +103,7 @@ func on_drag_started(_d: Dictionary) -> void:
 ## Лист окончательно встал (шлет C_TerrainDraggable после проверки перекрытия и возможного возврата
 ## на исходное место). Не on_drag_ended: порядок компонентов не гарантирует, что откат уже сделан
 func on_terrain_moved(_d: Dictionary) -> void:
+	recompute_auto_cuts()   # лист встал на новое место: канавы под тракты заново
 	_notify()
 
 
@@ -123,11 +142,13 @@ func add_cut(polygon: PackedVector2Array, from_level: int, to_level: int) -> voi
 	_rebuild()
 
 
+## Убрать последний ручной вырез (автовырезы под траки пересчитываются сами)
 func remove_last_cut() -> void:
-	if cuts.is_empty():
-		return
-	cuts.pop_back()
-	_rebuild()
+	for i in range(cuts.size() - 1, -1, -1):
+		if not cuts[i].auto:
+			cuts.remove_at(i)
+			_rebuild()
+			return
 
 
 func clear_cuts() -> void:
@@ -135,6 +156,98 @@ func clear_cuts() -> void:
 		return
 	cuts.clear()
 	_rebuild()
+
+
+## --- Траки (T5) ---
+
+## Канава под балласт. Плоский трак, чей низ лежит внутри высоты листа (лист поставили поверх трака),
+## прорезает лист по контуру балласта от низа балласта вверх. Трак, стоящий на листе (низ у верха листа
+## в пределах underground_tolerance), лист не режет. Пандусы и flex не учитываются (низ наклонный).
+## Слои режем целиком: если низ балласта не кратен слою, под балластом остается зазор не больше слоя
+func recompute_auto_cuts() -> void:
+	if _recomputing or entity == null or not entity.is_inside_tree() or entity.is_queued_for_deletion():
+		return
+	if has_comp(C_Ghost) or has_comp(C_Drag):
+		return
+	_recomputing = true
+	var T: float = Global.settings.layer_height
+	var tol: float = Global.settings.underground_tolerance
+	var th: float = Global.settings.get_track_height()
+	var base := base_y()
+	var top := top_y()
+	var mine := world_polygon()
+	var inv := entity.global_transform.affine_inverse()
+	var lv := maxi(1, levels)
+	var res: Array[FoamCut] = []
+	for t in TGM.get_flat_tracks():
+		var path := t.get_comp(C_Path) as C_Path
+		var tb := path.bottom_y()
+		# трак целиком выше листа (стоит на нем) или целиком ниже его низа: не пересекаются по высоте
+		if tb >= top - tol or tb + th <= base + TGM.EPS:
+			continue
+		var fp := path.footprint_world()
+		if TGM.overlap_area(mine, fp) <= TGM.MIN_OVERLAP_AREA:
+			continue
+		var local := PackedVector2Array()
+		for p in fp:
+			var l := inv * Vector3(p.x, 0.0, p.y)
+			local.append(Vector2(l.x, l.z))
+		var c := FoamCut.new()
+		c.polygon = local
+		c.from_level = clampi(floori((tb - base) / T + 0.001), 0, lv - 1)
+		c.to_level = lv
+		c.auto = true
+		res.append(c)
+	set_auto_cuts(res)
+	_recomputing = false
+
+
+## Заменить автовырезы на new_cuts. Перестроение только если набор изменился
+func set_auto_cuts(new_cuts: Array[FoamCut]) -> void:
+	if _auto_signature(cuts) == _auto_signature(new_cuts):
+		return
+	var keep: Array[FoamCut] = []
+	for c in cuts:
+		if not c.auto:
+			keep.append(c)
+	keep.append_array(new_cuts)
+	cuts = keep
+	_rebuild()
+
+
+## Подпись набора автовырезов: слои и хеш полигона (одинаковые входы дают одинаковый результат)
+func _auto_signature(list: Array[FoamCut]) -> String:
+	var s := ""
+	for c in list:
+		if c.auto:
+			s += "%d:%d:%d;" % [c.from_level, c.to_level, hash(c.polygon)]
+	return s
+
+
+## Вертикальный магнит (T5). Если верх листа ближе terrain_snap_dy к низу балласта плоского трака,
+## под которым (или внутри которого) лежит лист, поднимаем или опускаем лист, чтобы верх встал вплотную.
+## y_floor: ниже этой отметки лист опускать нельзя (поверхность под курсором). Вызывает C_TerrainDraggable
+func snap_to_tracks(y_floor: float) -> void:
+	var dy_max: float = Global.settings.terrain_snap_dy
+	var mine := world_polygon()
+	var top := top_y()
+	var best := INF
+	var best_dy := 0.0
+	for t in TGM.get_flat_tracks():
+		var path := t.get_comp(C_Path) as C_Path
+		var d := path.bottom_y() - top
+		if absf(d) > dy_max or absf(d) >= best:
+			continue
+		if TGM.overlap_area(mine, path.footprint_world()) <= TGM.MIN_OVERLAP_AREA:
+			continue
+		best = absf(d)
+		best_dy = d
+	if best == INF or best_dy == 0.0:
+		return
+	var new_y := base_y() + best_dy
+	if new_y < y_floor - TGM.EPS:
+		return
+	entity.global_position.y = new_y
 
 
 ## Отладка (Global.debug_mode), выбранный лист. F7: ниша (верхний слой). Shift+F7: окно (все слои).

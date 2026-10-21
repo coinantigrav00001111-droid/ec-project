@@ -10,8 +10,9 @@ class_name C_TerrainDraggable extends IDraggable
 ##  - в Entity только yaw, лист всегда горизонтален;
 ##  - XZ привязываются к сетке GlobalSetting.terrain_grid_step;
 ##  - Y = верх поверхности под курсором + elevation уровней (layer_height). Под курсором стол
-##    или верх другого листа, свой лист луч не видит (он на слое ghost, пока драг/призрак).
-## Снапа к сокетам и вертикального магнита у листа нет: они нужны только траку.
+##    или верх другого листа, свой лист луч не видит (он на слое ghost, пока драг/призрак);
+##  - T5: вертикальный магнит к низу балласта плоского трака (C_TerrainLayer.snap_to_tracks).
+## Снапа к сокетам у листа нет: он нужен только траку.
 
 var drag_offset := Vector3.ZERO     # смещение лист - мышь (только XZ)
 var rotation_euler := Vector3.ZERO  # храним тут, чтобы не терять при смене тулов
@@ -39,6 +40,10 @@ func on_drag_moved(data: Dictionary) -> void:
 	var y: float = snappedf(data.position.y, T) + elevation * T
 	var pos := Vector3(snappedf(target.x, step), y, snappedf(target.z, step))
 	entity.global_transform = Transform3D(Basis(Vector3.UP, rotation_euler.y), pos)
+	# T5: верх листа прилипает к низу балласта плоского трака. Ниже поверхности под курсором лист не опускаем
+	var layer := entity.get_comp(C_TerrainLayer) as C_TerrainLayer
+	if layer:
+		layer.snap_to_tracks(snappedf(data.position.y, T))
 	_check_validity()
 
 

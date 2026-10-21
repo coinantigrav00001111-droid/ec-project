@@ -12,6 +12,9 @@ class_name FoamCut extends RefCounted
 var polygon := PackedVector2Array()
 var from_level := 0
 var to_level := 1
+## true: вырез построен автоматически (канава под балласт трака, T5). Такие вырезы пересчитываются
+## при изменении траков, ручные (терморезак, отладка) не трогаются
+var auto := false
 
 
 ## Вырез занимает этот слой (0 = нижний слой листа)
@@ -20,7 +23,7 @@ func covers(level: int) -> bool:
 
 
 func to_dict() -> Dictionary:
-	return {"polygon": polygon, "from": from_level, "to": to_level}
+	return {"polygon": polygon, "from": from_level, "to": to_level, "auto": auto}
 
 
 static func from_dict(d: Dictionary) -> FoamCut:
@@ -28,4 +31,5 @@ static func from_dict(d: Dictionary) -> FoamCut:
 	c.polygon = d.get("polygon", PackedVector2Array())
 	c.from_level = int(d.get("from", 0))
 	c.to_level = int(d.get("to", 1))
+	c.auto = bool(d.get("auto", false))
 	return c
