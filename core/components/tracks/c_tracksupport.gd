@@ -7,6 +7,8 @@ class_name C_TrackSupport extends ICapability
 ## Семплирует кривую C_Path, бросает лучи вниз и ставит опоры (ригель + столб), где зазор до земли
 ## больше GlobalSetting.support_min_clearance. Под чужим траком опоры не ставятся (пролет).
 ## Владеет MultiMeshInstance3D. НЕ сохраняется: считается из пути и земли.
+## Земля = стол или верх листа пенопласта (13.1.3). Лист ставят и убирают под готовым траком:
+## пересчет по TGM.terrain_changed сразу, а не через REFRESH_PERIOD.
 
 const DRAG_PERIOD := 0.05    # с, не чаще при движении призрака/трака
 const REFRESH_PERIOD := 0.5  # с, фоновая проверка (удалили трак под эстакадой и т.п.)
@@ -24,6 +26,14 @@ var _last_xf: Array[Transform3D] = []
 func on_entity_ready() -> void:
 	_dirty = true
 	_cooldown = 0.3
+	TGM.terrain_changed.connect(_on_terrain_changed)   # XX claude-terra T3
+
+
+## Лист пенопласта поставлен, сдвинут или убран: земля под опорами могла измениться.
+## Не фильтруем по области: событие редкое (дроп, постановка, удаление), пересчет дешевый
+func _on_terrain_changed(_aabb: AABB) -> void:
+	_dirty = true
+	_cooldown = 0.0
 
 
 func on_drag_ended(_d: Dictionary) -> void:
@@ -106,7 +116,10 @@ func _rebuild() -> void:
 		mm.set_instance_transform(i, xf[i])
 
 
-## NAN: под нами чужой трак, значит пролет без опоры. Нет попадания: стол (y = 0)
+## NAN: под нами чужой трак, значит пролет без опоры. Нет попадания: стол (y = 0).
+## Лист пенопласта берем еще и аналитически (TGM.surface_y): луч стартует на 0,02 ниже балласта,
+## и если балласт заглублен в лист (в пределах underground_tolerance), старт оказывается внутри
+## выпуклого шейпа листа, и луч проходит насквозь. Аналитика не зависит от физического кадра
 func _ground_y(space: PhysicsDirectSpaceState3D, p: Vector3, path: C_Path) -> float:
 	var q := PhysicsRayQueryParameters3D.create(p - Vector3(0, 0.02, 0), p - Vector3(0, 500, 0),
 			Global.active_layers(['ground', 'tracks']))
@@ -118,12 +131,14 @@ func _ground_y(space: PhysicsDirectSpaceState3D, p: Vector3, path: C_Path) -> fl
 		own.append(path.head_node.get_rid())
 	q.exclude = own
 	var hit := space.intersect_ray(q)
-	if hit.is_empty():
-		return 0.0
-	var e := _entity_of(hit.collider)
-	if e and e != entity and e.has_comp(C_Path):
-		return NAN
-	return hit.position.y
+	var y := 0.0
+	if not hit.is_empty():
+		var e := _entity_of(hit.collider)
+		if e and e != entity and e.has_comp(C_Path):
+			return NAN
+		y = hit.position.y
+	var tol: float = Global.settings.underground_tolerance
+	return maxf(y, TGM.surface_y(p.x, p.z, p.y + tol))
 
 
 func _ensure_nodes() -> void:
