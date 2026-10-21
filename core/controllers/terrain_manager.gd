@@ -27,6 +27,8 @@ const MIN_OVERLAP_AREA := 0.01
 ## и без тех, что уже удаляются
 func get_layers() -> Array[Entity]:
 	var res: Array[Entity] = []
+	if not is_inside_tree():
+		return res
 	for n in get_tree().get_nodes_in_group(GROUP):
 		var e := n as Entity
 		if e == null or not e.is_inside_tree() or e.is_queued_for_deletion():
@@ -37,9 +39,28 @@ func get_layers() -> Array[Entity]:
 	return res
 
 
-## Вызывает C_TerrainLayer. Сообщает, что земля в этой области изменилась
+## Вызывает C_TerrainLayer и траки (C_TrackSupport). Сообщает, что земля или трак в этой области изменились
 func notify_changed(aabb: AABB) -> void:
 	terrain_changed.emit(aabb)
+
+
+## Плоские горизонтальные траки (C_Path.is_flat), настоящие: без призраков, траков в драге и удаляемых.
+## Только они подгоняют под себя листы: см. C_TerrainLayer.snap_to_tracks и recompute_auto_cuts
+func get_flat_tracks() -> Array[Entity]:
+	var res: Array[Entity] = []
+	if not is_inside_tree():
+		return res
+	for n in get_tree().get_nodes_in_group(&"track_socket"):
+		var e := n as Entity
+		if e == null or not e.is_inside_tree() or e.is_queued_for_deletion():
+			continue
+		if e.has_comp(C_Ghost) or e.has_comp(C_Drag):
+			continue
+		var p := e.get_comp(C_Path) as C_Path
+		if p == null or not p.is_flat():
+			continue
+		res.append(e)
+	return res
 
 
 ## --- Аналитические запросы ---

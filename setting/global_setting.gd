@@ -48,6 +48,10 @@ class_name GlobalSetting extends Resource
 # XX claude-terra
 ## Шаг сетки привязки листов пенопласта по XZ, ю
 @export var terrain_grid_step := 1.0
+# XX claude-terra
+## Вертикальный магнит листа к плоскому траку: если верх листа ближе этой высоты к низу балласта, лист прилипает вплотную, ю
+## (меньше layer_height, чтобы лист не перескакивал через целый уровень)
+@export var terrain_snap_dy := 0.6
 
 # XX claude-terra
 @export_group("Flex")

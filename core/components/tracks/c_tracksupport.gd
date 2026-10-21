@@ -27,6 +27,8 @@ func on_entity_ready() -> void:
 	_dirty = true
 	_cooldown = 0.3
 	TGM.terrain_changed.connect(_on_terrain_changed)   # XX claude-terra T3
+	# T5: трак встал, листы под ним пересчитают канаву. Отложено: призрак получает C_Ghost после готовности
+	call_deferred("_notify_terrain")
 
 
 ## Лист пенопласта поставлен, сдвинут или убран: земля под опорами могла измениться.
@@ -39,12 +41,39 @@ func _on_terrain_changed(_aabb: AABB) -> void:
 func on_drag_ended(_d: Dictionary) -> void:
 	_dirty = true
 	_cooldown = 0.0
+	_notify_terrain()   # T5: трак сдвинули, листам пересчитать канаву
 
 
 ## flex поменял форму
 func on_curve_changed(_d: Dictionary) -> void:
 	_dirty = true
 	_cooldown = 0.0
+
+
+func _exit_tree() -> void:
+	_notify_terrain()   # T5: трак убрали, канава под ним больше не нужна
+
+
+## T5. Сообщает листам, что плоский трак встал, сдвинулся или убран. Область = контур балласта по высоте трака.
+## Призраки и траки в драге не сообщают. Удаляемый трак сообщает (TGM.get_flat_tracks его уже не отдаст)
+func _notify_terrain() -> void:
+	if not is_instance_valid(TGM) or entity == null or not entity.is_inside_tree():
+		return
+	if entity.has_comp(C_Ghost) or entity.has_comp(C_Drag):
+		return
+	var path := get_comp(C_Path) as C_Path
+	if path == null or not path.is_flat():
+		return
+	var fp := path.footprint_world()
+	if fp.size() < 3:
+		return
+	var lo := fp[0]
+	var hi := fp[0]
+	for p in fp:
+		lo = lo.min(p)
+		hi = hi.max(p)
+	var th: float = Global.settings.get_track_height()
+	TGM.notify_changed(AABB(Vector3(lo.x, path.bottom_y(), lo.y), Vector3(hi.x - lo.x, th, hi.y - lo.y)))
 
 
 func on_component_added(_t: Script) -> void:
