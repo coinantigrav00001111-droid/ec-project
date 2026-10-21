@@ -1,0 +1,244 @@
+class_name TrackMeshBuilder extends RefCounted
+
+# XX claude-terra
+###################################
+## Общий построитель визуала трака по TrackStyle и кривой. Без состояния и без нод компонента:
+## только чистые функции (репер кривой, свип профиля, шпалы, границы и боксы коллизии).
+## Пользуются C_FlexVisual и (позже) визуал жестких траков, чтобы не держать два кода.
+## Все координаты в системе кривой C_Path (origin пути), Area3D / StaticBody3D и пул
+## CollisionShape3D остаются у компонента-владельца.
+###################################
+
+const MESH_STEP := 1.0
+const MESH_STEP_PREVIEW := 2.0   # пока тянем конец, меш грубее
+const UV_V_SCALE := 0.1
+const COL_END_INSET := 0.2
+const COL_OVERLAP := 0.1
+
+class Fr extends RefCounted:
+	var p: Vector3
+	var r: Vector3
+	var u: Vector3
+	var f: Vector3
+
+static var _mat_ballast: StandardMaterial3D
+static var _mat_rail: StandardMaterial3D
+static var _mat_sleeper: StandardMaterial3D
+
+
+static func ensure_materials() -> void:
+	if _mat_ballast:
+		return
+	_mat_ballast = StandardMaterial3D.new()
+	_mat_ballast.albedo_color = Color(0.42, 0.40, 0.37)
+	_mat_ballast.roughness = 1.0
+	_mat_rail = StandardMaterial3D.new()
+	_mat_rail.albedo_color = Color(0.65, 0.66, 0.70)
+	_mat_rail.metallic = 0.5
+	_mat_rail.roughness = 0.4
+	_mat_sleeper = StandardMaterial3D.new()
+	_mat_sleeper.albedo_color = Color(0.30, 0.20, 0.13)
+	_mat_sleeper.roughness = 0.9
+
+
+# ==========================================
+# Репер кривой
+# ==========================================
+
+## Локальный репер кривой в точке s: right, up, forward (вперед = -Z на прямой)
+static func frame(curve: Curve3D, s: float, L: float) -> Fr:
+	var fr := Fr.new()
+	fr.p = curve.sample_baked(clampf(s, 0.0, L))
+	var a := curve.sample_baked(clampf(s - 0.25, 0.0, L))
+	var b := curve.sample_baked(clampf(s + 0.25, 0.0, L))
+	var fwd := b - a
+	if fwd.length_squared() < 1e-6:
+		fwd = Vector3(0, 0, -1)
+	fwd = fwd.normalized()
+	var right := fwd.cross(Vector3.UP)
+	if right.length_squared() < 1e-6:
+		right = Vector3.RIGHT
+	right = right.normalized()
+	fr.f = fwd
+	fr.r = right
+	fr.u = right.cross(fwd).normalized()
+	return fr
+
+
+# ==========================================
+# Меш: балласт (поверхность 0, если есть) и рельсы (rail_surface_index)
+# ==========================================
+
+static func build_mesh(style: TrackStyle, curve: Curve3D, L: float, preview: bool) -> ArrayMesh:
+	ensure_materials()
+	var n := maxi(2, ceili(L / (MESH_STEP_PREVIEW if preview else MESH_STEP)) + 1)
+	var fr: Array = []
+	for i in n:
+		fr.append(frame(curve, L * i / float(n - 1), L))
+
+	var am := ArrayMesh.new()
+
+	# Балласт (необязательный): поверхность 0
+	if style.ballast_enabled and style.ballast_profile.size() >= 2:
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		st.set_material(style.ballast_material if style.ballast_material else _mat_ballast)
+		var chain: Array = []
+		var hw := 0.01
+		for p in style.ballast_profile:
+			chain.append(p)
+			hw = maxf(hw, absf(p.x))
+		sweep(st, fr, chain, L, hw)
+		st.commit(am)
+
+	# Рельсы: поверхность rail_surface_index (1 с балластом, 0 без)
+	var rst := SurfaceTool.new()
+	rst.begin(Mesh.PRIMITIVE_TRIANGLES)
+	rst.set_material(style.rail_material if style.rail_material else _mat_rail)
+	var base := style.base_height()
+	for sx in [-1.0, 1.0]:
+		var c: float = sx * style.rail_x
+		var chain: Array = []
+		for p in style.rail_profile:
+			chain.append(Vector2(c + p.x, base + p.y))
+		sweep(rst, fr, chain, L, style.rail_x + style.rail_width())
+	rst.commit(am)
+	return am
+
+
+## Протягивает ломаную профиля (слева направо поверх) вдоль реперов. hw - полуширина для UV поперек
+static func sweep(st: SurfaceTool, fr: Array, chain: Array, L: float, hw: float) -> void:
+	var n := fr.size()
+	for j in chain.size() - 1:
+		var a: Vector2 = chain[j]
+		var b: Vector2 = chain[j + 1]
+		var d := b - a
+		if d.length_squared() < 1e-8:
+			continue
+		var nrm := Vector2(-d.y, d.x).normalized()   # наружу
+		var ua := (a.x + hw) / (2.0 * hw)
+		var ub := (b.x + hw) / (2.0 * hw)
+		for i in n - 1:
+			var f0: Fr = fr[i]
+			var f1: Fr = fr[i + 1]
+			var v0 := -L * i / float(n - 1) * UV_V_SCALE
+			var v1 := -L * (i + 1) / float(n - 1) * UV_V_SCALE
+			var n0 := (f0.r * nrm.x + f0.u * nrm.y).normalized()
+			var n1 := (f1.r * nrm.x + f1.u * nrm.y).normalized()
+			var p := [
+				f0.p + f0.r * a.x + f0.u * a.y,
+				f0.p + f0.r * b.x + f0.u * b.y,
+				f1.p + f1.r * b.x + f1.u * b.y,
+				f1.p + f1.r * a.x + f1.u * a.y]
+			var nm := [n0, n0, n1, n1]
+			# U вдоль трака, V поперек (шейдер тока едет по U)
+			var uv := [Vector2(v0, ua), Vector2(v0, ub), Vector2(v1, ub), Vector2(v1, ua)]
+			quad(st, p, nm, uv)
+
+
+## Godot: лицевая сторона - по часовой. Порядок вершин выбираем по ожидаемой нормали
+static func quad(st: SurfaceTool, p: Array, nm: Array, uv: Array) -> void:
+	var geo: Vector3 = (p[1] - p[0]).cross(p[2] - p[0])
+	var avg: Vector3 = nm[0] + nm[1] + nm[2] + nm[3]
+	var idx: Array = [0, 1, 2, 0, 2, 3]
+	if geo.dot(avg) > 0.0:
+		idx = [0, 2, 1, 0, 3, 2]
+	for k in idx:
+		st.set_normal(nm[k])
+		st.set_uv(uv[k])
+		st.add_vertex(p[k])
+
+
+# ==========================================
+# Шпалы
+# ==========================================
+
+## Нода MultiMeshInstance3D для шпал стиля (меш и материал из стиля или по умолчанию)
+static func create_sleepers_node(style: TrackStyle) -> MultiMeshInstance3D:
+	ensure_materials()
+	var node := MultiMeshInstance3D.new()
+	node.name = "Sleepers"
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	if style.sleeper_mesh:
+		mm.mesh = style.sleeper_mesh
+		if style.sleeper_material:
+			node.material_override = style.sleeper_material
+	else:
+		var bm := BoxMesh.new()
+		bm.size = style.sleeper_size
+		mm.mesh = bm
+		node.material_override = style.sleeper_material if style.sleeper_material else _mat_sleeper
+	node.multimesh = mm
+	return node
+
+
+## Шпалы: целое число с равномерным шагом (шаг чуть подстраивается под длину), каждая в центре своей доли.
+## Две доли по half-step на стыке двух траков дают тот же шаг, что и внутри трака.
+static func place_sleepers(mm: MultiMesh, style: TrackStyle, curve: Curve3D, L: float) -> void:
+	var n := maxi(1, roundi(L / style.sleeper_step()))
+	var step := L / float(n)
+	if mm.instance_count != n:
+		mm.instance_count = n
+	var y0 := style.sleeper_bottom()
+	if style.sleeper_mesh == null:
+		y0 += style.sleeper_size.y * 0.5   # BoxMesh центрирован по высоте
+	for k in n:
+		var f := frame(curve, (k + 0.5) * step, L)
+		var b := Basis(f.r, f.u, f.r.cross(f.u))
+		mm.set_instance_transform(k, Transform3D(b, f.p + f.u * y0))
+
+
+# ==========================================
+# Коллизии: границы сегментов и боксы
+# ==========================================
+
+## Границы сегментов коллизии: по накопленному углу касательной и по макс. длине.
+## Торцы короче трака на COL_END_INSET, чтобы стык соседей не давал overlap балласта.
+static func collision_cuts(curve: Curve3D, L: float, preview: bool) -> PackedFloat32Array:
+	var span := maxf(L - 2.0 * COL_END_INSET, 0.2)
+	var gs = Global.settings
+	var k := 2.0 if preview else 1.0
+	var deg_max := deg_to_rad(gs.track_ballast_segment.deg_per_segment) * k
+	var len_max: float = gs.flex_collision_step * k
+	var s_end := COL_END_INSET + span
+	var cuts := PackedFloat32Array([COL_END_INSET])
+	var seg_start := COL_END_INSET
+	var acc := 0.0
+	var prev: Vector3 = frame(curve, seg_start, L).f
+	var s := seg_start
+	while s < s_end - 0.001:
+		s = minf(s + 1.0, s_end)
+		var cur: Vector3 = frame(curve, s, L).f
+		acc += prev.angle_to(cur)
+		prev = cur
+		if acc >= deg_max or s - seg_start >= len_max:
+			cuts.append(s)
+			seg_start = s
+			acc = 0.0
+	var last := cuts[cuts.size() - 1]
+	if last < s_end - 0.001:
+		if cuts.size() > 1 and s_end - last < 2.0:
+			cuts[cuts.size() - 1] = s_end   # короткий хвост приклеиваем к предыдущему
+		else:
+			cuts.append(s_end)
+	return cuts
+
+
+## Боксы одного сегмента [s0, s1]: основание (балласт + шпалы) и два рельса.
+## Размеры это контракт трака (collision_width, base_height, rail_*), а не косметика.
+## Возвращает: ballast_size, ballast_xf, rail_size, rail_l_xf, rail_r_xf
+static func segment_boxes(style: TrackStyle, curve: Curve3D, L: float, s0: float, s1: float) -> Dictionary:
+	var base_h := style.base_height()
+	var rail_h := style.rail_height()
+	var f := frame(curve, (s0 + s1) * 0.5, L)
+	var chord := curve.sample_baked(s0).distance_to(curve.sample_baked(s1)) + COL_OVERLAP
+	var b := Basis(f.r, f.u, f.r.cross(f.u))
+	var rail_c := f.p + f.u * (base_h + rail_h * 0.5)
+	return {
+		"ballast_size": Vector3(style.collision_width, base_h, chord),
+		"ballast_xf": Transform3D(b, f.p + f.u * (base_h * 0.5)),
+		"rail_size": Vector3(style.rail_width(), rail_h, chord),
+		"rail_l_xf": Transform3D(b, rail_c - f.r * style.rail_x),
+		"rail_r_xf": Transform3D(b, rail_c + f.r * style.rail_x),
+	}
