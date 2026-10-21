@@ -98,7 +98,7 @@ func _rebuild() -> void:
 	if contour == null or contour.points.size() < 3:
 		return
 	var pts := contour.normalized_points()
-	var h := float(maxi(1, levels)) * Global.settings.layer_height
+	var h = float(maxi(1, levels)) * Global.settings.layer_height
 
 	var tris := Geometry2D.triangulate_polygon(pts)
 	if tris.is_empty():
@@ -210,7 +210,7 @@ func _notify() -> void:
 	var contour := get_comp(C_Contour) as C_Contour
 	if contour == null or contour.points.size() < 3:
 		return
-	var h := float(maxi(1, levels)) * Global.settings.layer_height
+	var h = float(maxi(1, levels)) * Global.settings.layer_height
 	# сообщаем и старую область: лист мог сдвинуться, там земля тоже изменилась
 	var old := _last_aabb
 	_last_aabb = _world_aabb(contour.normalized_points(), h)

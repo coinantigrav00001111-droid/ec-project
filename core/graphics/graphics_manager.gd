@@ -232,9 +232,9 @@ func _discover_features() -> void:
 	_p_contact_env = _find_bool_prop(_env, ["contact"])
 	_p_contact_sun = _find_bool_prop(_sun, ["contact"])
 	if Global.debug_mode:
-		print("[GFX] multi-bounce AO: ", _p_ao_multibounce if _p_ao_multibounce != &"" else "НЕ НАЙДЕНО",
-				" | contact shadows env: ", _p_contact_env if _p_contact_env != &"" else "НЕ НАЙДЕНО",
-				" | contact shadows sun: ", _p_contact_sun if _p_contact_sun != &"" else "НЕ НАЙДЕНО")
+		print("[GFX] multi-bounce AO: ", str(_p_ao_multibounce) if _p_ao_multibounce != &"" else "НЕ НАЙДЕНО",
+				" | contact shadows env: ", str(_p_contact_env) if _p_contact_env != &"" else "НЕ НАЙДЕНО",
+				" | contact shadows sun: ", str(_p_contact_sun) if _p_contact_sun != &"" else "НЕ НАЙДЕНО")
 	if _p_ao_multibounce == &"" or _p_contact_env == &"" or (_sun and _p_contact_sun == &""):
 		push_warning("GFX: часть свойств Godot 4.8 не найдена. Вызовите GFX.dump_props() и пришлите вывод")
 		dump_props()
