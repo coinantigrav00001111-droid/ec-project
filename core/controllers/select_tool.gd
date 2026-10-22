@@ -91,6 +91,10 @@ func handle_input(event: InputEvent):
 		#INFO ДЕРГАЕМ ПАНЕЛЬ!
 		controller.info_panel.set_target(null)
 		
+	# XX claude-terra T6: тоннельный флаг выбранного трака (у не-траков события никто не слушает)
+	if selected_entity and event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_U:
+		selected_entity.send_event("on_tunnel_toggle", {})
+
 	if selected_entity and Input.is_action_just_pressed("ui_page_up"):
 		selected_entity.send_event("on_train_kicked", {"power_kick": 10.0}) # Пинок силой 10m\s
 	if selected_entity and Input.is_action_just_pressed("ui_page_down"):

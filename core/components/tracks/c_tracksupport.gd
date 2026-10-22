@@ -48,32 +48,49 @@ func on_drag_ended(_d: Dictionary) -> void:
 func on_curve_changed(_d: Dictionary) -> void:
 	_dirty = true
 	_cooldown = 0.0
+	_notify_terrain()   # T6: форма flex поменялась, листам пересчитать канаву или тоннель
+
+
+## T6: тоннельный флаг включили или выключили (C_Tunnel). Отложено: компонент в момент события еще
+## (при снятии) числится в Entity
+func on_tunnel_changed(_d: Dictionary) -> void:
+	call_deferred("_notify_terrain")
 
 
 func _exit_tree() -> void:
 	_notify_terrain()   # T5: трак убрали, канава под ним больше не нужна
 
 
-## T5. Сообщает листам, что плоский трак встал, сдвинулся или убран. Область = контур балласта по высоте трака.
-## Призраки и траки в драге не сообщают. Удаляемый трак сообщает (TGM.get_flat_tracks его уже не отдаст)
+## T5, T6. Сообщает листам, что трак встал, сдвинулся, поменял форму или флаг, либо убран.
+## Область = контур балласта от низа балласта до верха трака (у тоннельного еще и габарит).
+## Призраки и траки в драге не сообщают. Удаляемый трак сообщает (TGM.get_tracks его уже не отдаст)
 func _notify_terrain() -> void:
 	if not is_instance_valid(TGM) or entity == null or not entity.is_inside_tree():
 		return
 	if entity.has_comp(C_Ghost) or entity.has_comp(C_Drag):
 		return
 	var path := get_comp(C_Path) as C_Path
-	if path == null or not path.is_flat():
+	if path == null:
 		return
-	var fp := path.footprint_world()
-	if fp.size() < 3:
+	var s := path.ballast_samples()
+	if s.size() < 2:
 		return
-	var lo := fp[0]
-	var hi := fp[0]
-	for p in fp:
-		lo = lo.min(p)
-		hi = hi.max(p)
-	var th: float = Global.settings.get_track_height()
-	TGM.notify_changed(AABB(Vector3(lo.x, path.bottom_y(), lo.y), Vector3(hi.x - lo.x, th, hi.y - lo.y)))
+	var lo := Vector2(INF, INF)
+	var hi := Vector2(-INF, -INF)
+	var y_lo := INF
+	var y_hi := -INF
+	for d in s:
+		var l: Vector2 = d["l"]
+		var r: Vector2 = d["r"]
+		lo = lo.min(l).min(r)
+		hi = hi.max(l).max(r)
+		var y: float = d["y"]
+		y_lo = minf(y_lo, y)
+		y_hi = maxf(y_hi, y)
+	var top: float = y_hi + Global.settings.get_track_height()
+	if path.allows_underground():
+		top += Global.settings.tunnel_clearance
+	TGM.notify_changed(AABB(Vector3(lo.x, y_lo, lo.y), Vector3(hi.x - lo.x, top - y_lo, hi.y - lo.y)))
 
 
 func on_component_added(_t: Script) -> void:

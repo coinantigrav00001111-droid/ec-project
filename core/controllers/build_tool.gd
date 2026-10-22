@@ -19,6 +19,9 @@ const ROT_STEP := 45.0 # Градусы
 # XX claude-terra: 0 - ставим начало flex, 1 - тянем конец
 var stretch_phase := 0
 
+# XX claude-terra T6: тоннельный режим (клавиша U). Новые призраки траков получают C_Tunnel, режим запоминается
+var tunnel_mode := false
+
 
 func enter():
 	stretch_phase = 0
@@ -39,6 +42,8 @@ func _enter_ghost_place() -> void:
 	ghost.name = 'ghost'
 	ghost.add_component(C_Ghost.new())
 	ghost.send_event("on_select_layer", {'enabled': true})
+	if tunnel_mode:   # XX claude-terra T6: у не-траков события никто не слушает
+		ghost.send_event("on_tunnel_set", {"on": true})
 	controller.info_panel.set_target(ghost)
 
 
@@ -80,6 +85,11 @@ func handle_input(event: InputEvent):
 	if Input.is_action_just_pressed("key_f"):
 		ghost.send_event("on_rotate_input", {"axis": "x", "amount": -ROT_STEP})
 		
+	# XX claude-terra T6: тоннельный режим. Трак с флагом может уходить под листы пенопласта
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_U and ghost.has_comp(C_Path):
+		tunnel_mode = not tunnel_mode
+		ghost.send_event("on_tunnel_set", {"on": tunnel_mode})
+
 	# Переключатель контроля лимитов flex
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_L:
 		Global.flex_limits = not Global.flex_limits

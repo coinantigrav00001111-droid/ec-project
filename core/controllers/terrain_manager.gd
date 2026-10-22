@@ -44,6 +44,22 @@ func notify_changed(aabb: AABB) -> void:
 	terrain_changed.emit(aabb)
 
 
+## Все настоящие траки (с C_Path): без призраков, траков в драге и удаляемых.
+## Листы режутся под них (C_TerrainLayer.recompute_auto_cuts): канавой или тоннелем
+func get_tracks() -> Array[Entity]:
+	var res: Array[Entity] = []
+	if not is_inside_tree():
+		return res
+	for n in get_tree().get_nodes_in_group(&"track_socket"):
+		var e := n as Entity
+		if e == null or not e.is_inside_tree() or e.is_queued_for_deletion():
+			continue
+		if e.has_comp(C_Ghost) or e.has_comp(C_Drag) or not e.has_comp(C_Path):
+			continue
+		res.append(e)
+	return res
+
+
 ## Плоские горизонтальные траки (C_Path.is_flat), настоящие: без призраков, траков в драге и удаляемых.
 ## Только они подгоняют под себя листы: см. C_TerrainLayer.snap_to_tracks и recompute_auto_cuts
 func get_flat_tracks() -> Array[Entity]:
