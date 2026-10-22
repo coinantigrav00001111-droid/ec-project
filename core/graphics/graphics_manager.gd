@@ -152,17 +152,37 @@ func save_builtin_looks() -> void:
 		print("[GFX] сохранён ", path, " (код ", err, ")")
 
 
-## Печатает свойства Environment и DirectionalLight3D, относящиеся к AO и contact shadows (Godot 4.8)
+## Диагностика Godot 4.8: печатает всё, что относится к multi-bounce AO и contact shadows.
+## Ищет по классам, настройкам проекта и методам RenderingServer (где живет переключатель, заранее неизвестно)
 func dump_props() -> void:
-	for pair in [["Environment", _env], ["DirectionalLight3D", _sun]]:
-		var obj: Object = pair[1]
-		if obj == null:
-			continue
-		print("[GFX] ", pair[0], ":")
-		for pr in obj.get_property_list():
-			var n: String = String(pr.name).to_lower()
-			if n.contains("contact") or n.contains("bounce") or n.begins_with("ssao"):
-				print("    ", pr.name, " : ", type_string(pr.type))
+	var kw := ["contact", "bounce", "multi"]
+	print("[GFX] --- свойства классов ---")
+	for cls in ["Environment", "WorldEnvironment", "Light3D", "DirectionalLight3D", "CameraAttributes",
+			"CameraAttributesPractical", "CameraAttributesPhysical", "Camera3D", "Viewport", "SubViewport"]:
+		for pr in ClassDB.class_get_property_list(cls, true):
+			if _has_kw(String(pr.name), kw):
+				print("    ", cls, ".", pr.name, " : ", type_string(pr.type))
+	print("[GFX] --- настройки проекта ---")
+	for pr in ProjectSettings.get_property_list():
+		var n := String(pr.name)
+		if n.to_lower().contains("ssao") or _has_kw(n, kw):
+			print("    ", n, " = ", ProjectSettings.get_setting(n))
+	print("[GFX] --- методы RenderingServer ---")
+	for m in ClassDB.class_get_method_list("RenderingServer", true):
+		var n := String(m.name)
+		if n.to_lower().contains("ssao") or _has_kw(n, kw):
+			var args: Array = []
+			for a in m.args:
+				args.append(String(a.name))
+			print("    ", n, "(", ", ".join(args), ")")
+
+
+func _has_kw(n: String, kw: Array) -> bool:
+	var l := n.to_lower()
+	for k in kw:
+		if l.contains(k):
+			return true
+	return false
 
 
 # ==========================================
@@ -228,16 +248,16 @@ func _find_bool_prop(obj: Object, keys: Array) -> StringName:
 
 
 func _discover_features() -> void:
+	# Multi-bounce AO в 4.8 beta 1 встроен в SSAO без переключателя (в Environment свойства нет).
+	# Поиск оставлен молча на случай, если в stable появится свойство
 	_p_ao_multibounce = _find_bool_prop(_env, ["multibounce", "multi_bounce"])
 	_p_contact_env = _find_bool_prop(_env, ["contact"])
-	_p_contact_sun = _find_bool_prop(_sun, ["contact"])
+	_p_contact_sun = _find_bool_prop(_sun, ["contact_shadows_allow", "contact"])
 	if Global.debug_mode:
-		print("[GFX] multi-bounce AO: ", str(_p_ao_multibounce) if _p_ao_multibounce != &"" else "НЕ НАЙДЕНО",
-				" | contact shadows env: ", str(_p_contact_env) if _p_contact_env != &"" else "НЕ НАЙДЕНО",
-				" | contact shadows sun: ", str(_p_contact_sun) if _p_contact_sun != &"" else "НЕ НАЙДЕНО")
-	if _p_ao_multibounce == &"" or _p_contact_env == &"" or (_sun and _p_contact_sun == &""):
-		push_warning("GFX: часть свойств Godot 4.8 не найдена. Вызовите GFX.dump_props() и пришлите вывод")
-		dump_props()
+		print("[GFX] contact shadows (sun): ", str(_p_contact_sun) if _p_contact_sun != &"" else "НЕ НАЙДЕНО",
+				" | multi-bounce AO переключатель: ", str(_p_ao_multibounce) if _p_ao_multibounce != &"" else "нет (встроен в SSAO)")
+	if _sun and _p_contact_sun == &"":
+		push_warning("GFX: свойство contact shadows на DirectionalLight3D не найдено (GFX.dump_props() покажет кандидатов)")
 
 
 func _set_feature(obj: Object, prop: StringName, on: bool) -> void:

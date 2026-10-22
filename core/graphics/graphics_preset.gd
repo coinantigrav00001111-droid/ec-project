@@ -40,7 +40,8 @@ class_name GraphicsPreset extends Resource
 @export var ssao_intensity := 2.0
 @export var ssao_power := 1.5
 @export var ssao_light_affect := 0.0
-## Godot 4.8: аппроксимация переотражений в AO (меньше грязных углов)
+## Godot 4.8: multi-bounce AO. В beta 1 встроен в SSAO без переключателя, поле применяется только если
+## в Environment появится такое свойство (см. GFX._discover_features)
 @export var ao_multibounce := false
 
 @export_category("Sun")

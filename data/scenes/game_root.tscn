@@ -26,7 +26,17 @@ sky_material = SubResource("ProceduralSkyMaterial_igrpr")
 [sub_resource type="Environment" id="Environment_igrpr"]
 background_mode = 2
 sky = SubResource("Sky_bc160")
-glow_enabled = true
+ambient_light_energy = 16.0
+ssao_enabled = true
+ssao_radius = 7.69
+ssao_intensity = 6.47
+ssao_power = 1.0606601
+ssao_horizon = 0.84
+ssao_sharpness = 1.0
+ssao_light_affect = 0.55
+ssao_ao_channel_affect = 0.56
+ssil_enabled = true
+sdfgi_enabled = true
 
 [sub_resource type="BoxMesh" id="BoxMesh_igrpr"]
 material = ExtResource("1_4pdep")
