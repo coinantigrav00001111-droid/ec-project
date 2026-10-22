@@ -31,7 +31,6 @@ ssao_enabled = true
 ssao_intensity = 2.37
 ssao_power = 3.105794
 ssil_enabled = true
-sdfgi_enabled = true
 
 [sub_resource type="BoxMesh" id="BoxMesh_igrpr"]
 material = ExtResource("1_4pdep")
@@ -117,6 +116,7 @@ environment = SubResource("Environment_igrpr")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="World/WorldEnvironment" unique_id=584191741 groups=["gfx_sun"]]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 20, 0)
+shadow_enabled = true
 
 [node name="WoodFloor" type="MeshInstance3D" parent="World/WorldEnvironment" unique_id=863018642]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
