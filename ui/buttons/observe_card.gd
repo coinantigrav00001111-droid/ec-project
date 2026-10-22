@@ -31,6 +31,8 @@ func config(_cat: StringName, _data: Dictionary, _group: ButtonGroup = null) -> 
 	if _group:
 		button_group = _group
 
+	if _data.has("tip"):
+		tooltip_text = str(_data.tip)
 	if _data.get("locked", false):
 		disabled = true
 		tooltip_text = "Скоро"

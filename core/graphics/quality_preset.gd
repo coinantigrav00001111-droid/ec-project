@@ -35,6 +35,11 @@ class_name QualityPreset extends Resource
 ## SSIL (непрямое освещение в экранном пространстве)
 @export var ssil := false
 
+@export_category("Global illumination")
+## SDFGI сильно просаживает fps при движении камеры (каскады следуют за камерой). По умолчанию выкл на всех tier.
+## Включать только осознанно в .tres (например, для отдельного tier Ultra)
+@export var sdfgi := false
+
 @export_category("Contact shadows (Godot 4.8)")
 @export var contact_shadows := false
 

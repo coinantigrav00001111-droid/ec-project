@@ -57,8 +57,53 @@ var _p_contact_sun: StringName = &""
 
 var _tween: Tween
 
+# --- Миниатюра (S8) ---
+var _mini_layer: CanvasLayer
+var _mini_rect: ColorRect
+var _mini_mat: ShaderMaterial
+var _cam_attr: CameraAttributesPractical
+var _observe_active := false   # tilt-shift, DOF и виньетка работают только в Observe
+var _dof_on := false
+
+## Tilt-shift и виньетка одним полноэкранным проходом по картинке 3D (CanvasLayer -2: под контурами и UI).
+## Размытие через mip-уровни экрана, поэтому дёшево. pitch_scale ослабляет эффект при взгляде не сверху
+const MINI_SHADER := """
+shader_type canvas_item;
+uniform sampler2D screen_tex : hint_screen_texture, repeat_disable, filter_linear_mipmap;
+uniform float strength : hint_range(0.0, 1.0) = 0.0;
+uniform float pitch_scale : hint_range(0.0, 1.0) = 1.0;
+uniform float focus_y : hint_range(0.0, 1.0) = 0.55;
+uniform float band : hint_range(0.0, 0.5) = 0.16;
+uniform float falloff : hint_range(0.01, 0.8) = 0.32;
+uniform float max_lod = 3.5;
+uniform float vignette : hint_range(0.0, 1.0) = 0.0;
+
+void fragment() {
+	vec2 uv = SCREEN_UV;
+	float d = max(abs(uv.y - focus_y) - band, 0.0);
+	float m = smoothstep(0.0, falloff, d) * strength * pitch_scale;
+	float lod = m * max_lod;
+	vec3 c = textureLod(screen_tex, uv, lod).rgb;
+	if (lod > 0.25) {
+		float rad = lod * 1.3;
+		vec3 acc = c;
+		for (int i = 0; i < 8; i++) {
+			float a = float(i) * 0.785398;
+			acc += textureLod(screen_tex, uv + vec2(cos(a), sin(a)) * rad * SCREEN_PIXEL_SIZE, lod).rgb;
+		}
+		c = acc / 9.0;
+	}
+	vec2 q = (uv - vec2(0.5)) * vec2(1.0, 0.85);
+	float v = smoothstep(0.35, 0.85, length(q) * 1.25);
+	c *= 1.0 - v * vignette;
+	COLOR = vec4(c, 1.0);
+}
+"""
+
 
 func _ready() -> void:
+	set_process(false)
+	_build_miniature()
 	_load_presets()
 	_load_settings()
 	# EnvironmentRoot, RoomBuilder и ObserveController встают в группы в своих _ready
@@ -106,14 +151,16 @@ func apply_time(id: StringName, duration := DEFAULT_TRANSITION) -> void:
 
 
 ## Применить уровень качества (low / medium / high)
-func apply_quality(id: StringName, duration := 0.3) -> void:
+## persist = false: временно (фоторежим), в settings.cfg не пишется
+func apply_quality(id: StringName, duration := 0.3, persist := true) -> void:
 	if not qualities.has(id):
 		push_warning("GFX: нет пресета Quality '%s'" % id)
 		return
 	state.quality = id
 	_apply_quality_settings()
 	_apply_all(duration)
-	_save_settings()
+	if persist:
+		_save_settings()
 	quality_changed.emit(id)
 
 
@@ -211,6 +258,7 @@ func _apply_all(duration: float) -> void:
 	_flag(e, &"fog_enabled", look.fog_enabled, later)
 	_flag(e, &"ssao_enabled", look.ssao_enabled and q.ssao, later)
 	_flag(e, &"ssil_enabled", look.ssil and q.ssil, later)
+	_flag(e, &"sdfgi_enabled", q.sdfgi, later)   # в сцене может быть включён: тяжёлый, выключаем по умолчанию
 	_to(e, &"tonemap_exposure", look.tonemap_exposure, duration)
 	_to(e, &"tonemap_white", look.tonemap_white, duration)
 	_to(e, &"adjustment_brightness", look.brightness, duration)
@@ -232,6 +280,7 @@ func _apply_all(duration: float) -> void:
 
 	# --- Солнце: Look дает множитель и мягкость, Time дает цвет, угол и энергию ---
 	if _sun:
+		_sun.shadow_enabled = true   # в сцене по умолчанию выключены
 		_to(_sun, &"light_color", tod.sun_color, duration)
 		_to(_sun, &"light_energy", _sun_base_energy * look.sun_energy_mul * tod.sun_energy, duration)
 		_to(_sun, &"shadow_blur", look.sun_shadow_blur, duration)
@@ -257,6 +306,19 @@ func _apply_all(duration: float) -> void:
 		else:
 			later.append(func(): _lamp.visible = false)
 		_to(_lamp, &"light_energy", look.lamp_energy if lamp_on else 0.0, duration)
+
+	# --- Миниатюра (S8): только в Observe, Quality режет tilt-shift и DOF ---
+	var ts := look.tilt_shift if (_observe_active and q.tilt_shift) else 0.0
+	var vg := look.vignette if _observe_active else 0.0
+	if ts > 0.0 or vg > 0.0:
+		_mini_rect.visible = true
+	else:
+		later.append(func(): _mini_rect.visible = false)
+	_to(_mini_mat, &"shader_parameter/strength", ts, duration)
+	_to(_mini_mat, &"shader_parameter/vignette", vg, duration)
+	_dof_on = _observe_active and q.dof and look.tilt_shift > 0.0
+	_apply_dof(look, duration, later)
+	set_process(ts > 0.0 or _dof_on)
 
 	if _tween:
 		_tween.finished.connect(func(): _run(later))
@@ -317,6 +379,71 @@ func _sync_cards() -> void:
 	_oc.set_group_state(&"time", state.time)
 	_oc.set_group_state(&"quality", state.quality)
 	_oc.set_toggle_state(&"lamp", _lamp_is_on)
+
+
+# ==========================================
+# МИНИАТЮРА (S8)
+# ==========================================
+
+func _build_miniature() -> void:
+	_mini_layer = CanvasLayer.new()
+	_mini_layer.name = "MiniatureLayer"
+	_mini_layer.layer = -2   # под контурами (-1) и UI (0)
+	add_child(_mini_layer)
+	var sh := Shader.new()
+	sh.code = MINI_SHADER
+	_mini_mat = ShaderMaterial.new()
+	_mini_mat.shader = sh
+	_mini_rect = ColorRect.new()
+	_mini_rect.material = _mini_mat
+	_mini_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_mini_rect.visible = false
+	_mini_layer.add_child(_mini_rect)
+	_mini_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+
+
+## Observe включает и выключает миниатюру плавно
+func _set_observe(on: bool) -> void:
+	_observe_active = on
+	_apply_all(0.5)
+
+
+## Настоящий DOF (CameraAttributesPractical) на High: фокус на точке стола в центре кадра, см. _process
+func _apply_dof(look: GraphicsPreset, duration: float, later: Array[Callable]) -> void:
+	if _world_env == null:
+		return
+	if _dof_on:
+		if _cam_attr == null:
+			_cam_attr = CameraAttributesPractical.new()
+		_world_env.camera_attributes = _cam_attr
+		_cam_attr.dof_blur_far_enabled = true
+		_cam_attr.dof_blur_near_enabled = true
+		_to(_cam_attr, &"dof_blur_amount", 0.15 * look.tilt_shift, duration)
+	elif _cam_attr:
+		_to(_cam_attr, &"dof_blur_amount", 0.0, duration)
+		later.append(func():
+			_cam_attr.dof_blur_far_enabled = false
+			_cam_attr.dof_blur_near_enabled = false)
+
+
+## Включается только пока работает tilt-shift или DOF: сила tilt-shift по наклону камеры, фокус DOF по расстоянию
+func _process(_delta: float) -> void:
+	var cam := get_viewport().get_camera_3d()
+	if cam == null:
+		return
+	var fwd := -cam.global_basis.z
+	# взгляд сверху (fwd.y -> -1) даёт полный эффект миниатюры, горизонтальный ослабляет
+	_mini_mat.set_shader_parameter("pitch_scale", lerpf(0.35, 1.0, clampf(-fwd.y, 0.0, 1.0)))
+	if _dof_on and _cam_attr:
+		var d := 200.0
+		var hit = Plane(Vector3.UP, 0.0).intersects_ray(cam.global_position, fwd)
+		if hit != null:
+			d = cam.global_position.distance_to(hit)
+		d = clampf(d, 5.0, 400.0)
+		_cam_attr.dof_blur_far_distance = d * 1.15
+		_cam_attr.dof_blur_far_transition = d * 0.9
+		_cam_attr.dof_blur_near_distance = d * 0.85
+		_cam_attr.dof_blur_near_transition = d * 0.6
 
 
 # ==========================================
@@ -445,6 +572,8 @@ func _connect_observe() -> void:
 	_oc = get_tree().get_first_node_in_group(&"observe_controller")
 	if _oc:
 		_oc.observe_action.connect(_on_observe_action)
+		_oc.observe_entered.connect(func(): _set_observe(true))
+		_oc.observe_exited.connect(func(): _set_observe(false))
 		_sync_cards()
 	else:
 		push_warning("GFX: ObserveController не найден, карточки Look и Light не работают")

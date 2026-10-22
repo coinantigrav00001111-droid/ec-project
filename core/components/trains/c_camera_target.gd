@@ -31,10 +31,13 @@ func on_wagon_camera_selected(_data: Dictionary) -> void:
 		# Включаем камеру вагона
 		camera_instance.activate()
 		
-	elif  is_instance_valid(previous_camera):#выкл камера 
-		# Возвращаем вид на старый Gimbal
-		previous_camera.make_current()
-		camera_instance.queue_free()
+	else:
+		# Выкл камера: возвращаем вид и освобождаем камеру вагона (раньше ссылка оставалась)
+		if is_instance_valid(previous_camera):
+			previous_camera.make_current()
+		if is_instance_valid(camera_instance):
+			camera_instance.queue_free()
+		camera_instance = null
 
 
 # Вызывается при снятии выделения (например, send_event("on_wagon_deselected"))
