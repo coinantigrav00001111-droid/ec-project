@@ -14,6 +14,9 @@ class_name TrackConfig extends ObjectConfig
 # XX claude-terra
 ## Подъем вдоль трака, ю (только прямые). 0 = ровный. Для пандуса radius = длина ВДОЛЬ уклона
 @export var rise := 0.0
+# XX claude-terra
+## Трак тоннельный сразу при постановке (C_Tunnel): может уходить под листы пенопласта. Обычно включается клавишей U
+@export var allow_underground := false
 #@export var align_ends := false # Выравнивание торцов коллизий
 
 #TODO  Возможное развитие разнообразие траков. Не исп здесь пока. 

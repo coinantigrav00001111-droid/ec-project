@@ -1,0 +1,42 @@
+[gd_resource type="Resource" script_class="EntitySetting" format=3]
+
+[ext_resource type="Script" path="res://core/component_setting.gd" id="1_cs"]
+[ext_resource type="Script" path="res://core/entity_setting.gd" id="2_es"]
+[ext_resource type="Script" path="res://core/components/comp_settings/identity_setting.gd" id="3_id"]
+[ext_resource type="Script" path="res://setting/terrain_config.gd" id="4_tc"]
+[ext_resource type="Script" path="res://core/components/comp_settings/terrainlayer_setting.gd" id="5_tl"]
+[ext_resource type="Script" path="res://core/components/comp_settings/terraindraggable_setting.gd" id="6_td"]
+[ext_resource type="Script" path="res://core/components/comp_settings/hoverable_setting.gd" id="7_hv"]
+[ext_resource type="Script" path="res://core/components/comp_settings/selectable_setting.gd" id="8_sl"]
+[ext_resource type="Texture2D" path="res://ui/icons/resize.svg" id="9_ic"]
+
+[sub_resource type="Resource" id="Resource_cfg"]
+script = ExtResource("4_tc")
+size = Vector2(20, 20)
+levels = 8
+
+[sub_resource type="Resource" id="Resource_id"]
+script = ExtResource("3_id")
+object_config = SubResource("Resource_cfg")
+
+[sub_resource type="Resource" id="Resource_layer"]
+script = ExtResource("5_tl")
+
+[sub_resource type="Resource" id="Resource_drag"]
+script = ExtResource("6_td")
+
+[sub_resource type="Resource" id="Resource_hov"]
+script = ExtResource("7_hv")
+
+[sub_resource type="Resource" id="Resource_sel"]
+script = ExtResource("8_sl")
+
+[resource]
+script = ExtResource("2_es")
+id = 6006
+name = "foam_20x20_h8"
+description = "Лист пенопласта 20x20, толщина 8 слоев (холм для тоннеля)"
+category = &"terrain"
+tag = &"foam"
+icon = ExtResource("9_ic")
+components = Array[ExtResource("1_cs")]([SubResource("Resource_id"), SubResource("Resource_layer"), SubResource("Resource_drag"), SubResource("Resource_hov"), SubResource("Resource_sel")])

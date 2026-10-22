@@ -160,46 +160,94 @@ func clear_cuts() -> void:
 
 ## --- Траки (T5) ---
 
-## Канава под балласт. Плоский трак, чей низ лежит внутри высоты листа (лист поставили поверх трака),
-## прорезает лист по контуру балласта от низа балласта вверх. Трак, стоящий на листе (низ у верха листа
-## в пределах underground_tolerance), лист не режет. Пандусы и flex не учитываются (низ наклонный).
-## Слои режем целиком: если низ балласта не кратен слою, под балластом остается зазор не больше слоя
+## Автовырезы под траки (T5 канава, T6 тоннель). Для каждого настоящего трака, чей балласт заходит
+## в высоту листа, лист прорезается по контуру балласта:
+##  - обычный трак: канава от низа балласта до верха листа (лист поставили поверх трака);
+##  - тоннельный трак (C_Tunnel): проход высотой th + TunnelClearance, над ним остается свод.
+## Трак, стоящий на листе (низ у верха листа в пределах underground_tolerance), лист не режет.
+## Трак режется по образцам кривой: подряд идущие участки с одинаковым диапазоном слоев дают один вырез,
+## поэтому пандус и flex режутся ступенями. Слои режем целиком: если низ балласта не кратен слою,
+## под балластом остается зазор не больше слоя
 func recompute_auto_cuts() -> void:
 	if _recomputing or entity == null or not entity.is_inside_tree() or entity.is_queued_for_deletion():
 		return
 	if has_comp(C_Ghost) or has_comp(C_Drag):
 		return
 	_recomputing = true
+	var mine := world_polygon()
+	var inv := entity.global_transform.affine_inverse()
+	var res: Array[FoamCut] = []
+	for t in TGM.get_tracks():
+		res.append_array(_track_cuts(t.get_comp(C_Path) as C_Path, mine, inv))
+	set_auto_cuts(res)
+	_recomputing = false
+
+
+## Вырезы одного трака. mine: контур листа в мире, inv: из мира в локальные координаты листа
+func _track_cuts(path: C_Path, mine: PackedVector2Array, inv: Transform3D) -> Array[FoamCut]:
+	var res: Array[FoamCut] = []
+	var s := path.ballast_samples()
+	var n := s.size() - 1
+	if n < 1:
+		return res
 	var T: float = Global.settings.layer_height
 	var tol: float = Global.settings.underground_tolerance
 	var th: float = Global.settings.get_track_height()
+	var clearance: float = Global.settings.tunnel_clearance
+	var tunnel := path.allows_underground()
+	var body := th + clearance if tunnel else th   # высота, которую занимает трак над низом балласта
 	var base := base_y()
 	var top := top_y()
-	var mine := world_polygon()
-	var inv := entity.global_transform.affine_inverse()
 	var lv := maxi(1, levels)
-	var res: Array[FoamCut] = []
-	for t in TGM.get_flat_tracks():
-		var path := t.get_comp(C_Path) as C_Path
-		var tb := path.bottom_y()
-		# трак целиком выше листа (стоит на нем) или целиком ниже его низа: не пересекаются по высоте
-		if tb >= top - tol or tb + th <= base + TGM.EPS:
+
+	# диапазон слоев для каждого участка между образцами; -1: участок листа не касается
+	var from_l: Array[int] = []
+	var to_l: Array[int] = []
+	for i in n:
+		var y0: float = s[i]["y"]
+		var y1: float = s[i + 1]["y"]
+		var lo := minf(y0, y1)
+		var hi := maxf(y0, y1)
+		if lo >= top - tol or hi + body <= base + TGM.EPS:
+			from_l.append(-1)
+			to_l.append(-1)
 			continue
-		var fp := path.footprint_world()
-		if TGM.overlap_area(mine, fp) <= TGM.MIN_OVERLAP_AREA:
+		var f := clampi(floori((lo - base) / T + 0.001), 0, lv - 1)
+		var e := lv
+		if tunnel:
+			e = clampi(ceili((hi + body - base) / T - 0.001), f + 1, lv)
+		from_l.append(f)
+		to_l.append(e)
+
+	# подряд идущие участки с одним диапазоном слоев склеиваем в один вырез
+	var k := 0
+	while k < n:
+		if from_l[k] < 0:
+			k += 1
 			continue
-		var local := PackedVector2Array()
-		for p in fp:
-			var l := inv * Vector3(p.x, 0.0, p.y)
-			local.append(Vector2(l.x, l.z))
-		var c := FoamCut.new()
-		c.polygon = local
-		c.from_level = clampi(floori((tb - base) / T + 0.001), 0, lv - 1)
-		c.to_level = lv
-		c.auto = true
-		res.append(c)
-	set_auto_cuts(res)
-	_recomputing = false
+		var j := k
+		while j + 1 < n and from_l[j + 1] == from_l[k] and to_l[j + 1] == to_l[k]:
+			j += 1
+		var poly := PackedVector2Array()
+		for q in range(k, j + 2):
+			var lq: Vector2 = s[q]["l"]
+			poly.append(lq)
+		for q in range(j + 1, k - 1, -1):
+			var rq: Vector2 = s[q]["r"]
+			poly.append(rq)
+		if TGM.overlap_area(mine, poly) > TGM.MIN_OVERLAP_AREA:
+			var local := PackedVector2Array()
+			for p in poly:
+				var l := inv * Vector3(p.x, 0.0, p.y)
+				local.append(Vector2(l.x, l.z))
+			var c := FoamCut.new()
+			c.polygon = local
+			c.from_level = from_l[k]
+			c.to_level = to_l[k]
+			c.auto = true
+			res.append(c)
+		k = j + 1
+	return res
 
 
 ## Заменить автовырезы на new_cuts. Перестроение только если набор изменился

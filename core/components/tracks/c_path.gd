@@ -94,6 +94,9 @@ func on_entity_ready() -> void:
 	if absf(head_height() - Global.settings.get_track_height()) > 0.001:
 		#push_warning("%s: head_height %.2f != номинал %.2f" % [entity.name, head_height(), Global.settings.get_track_height()])
 		pass
+	# XX claude-terra T6: трак тоннельный по конфигу (.tres)
+	if bool(identity.get_config('allow_underground', false)) and not has_comp(C_Tunnel):
+		entity.add_component(C_Tunnel.new())
 	
 
 
@@ -475,8 +478,13 @@ func underground_depth(xf: Transform3D) -> float:
 	var length := curve.get_baked_length()
 	var n := maxi(2, ceili(length / 4.0) + 1)
 	var worst := 0.0
+	var tunnel := allows_underground()
 	for i in n:
 		var p: Vector3 = xf * (path_node.position + curve.sample_baked(length * i / (n - 1)))
+		if tunnel:
+			# XX claude-terra T6: тоннельный трак листы землей не считает, только стол (y = 0)
+			worst = maxf(worst, 0.0 - p.y)
+			continue
 		var q := PhysicsRayQueryParameters3D.create(Vector3(p.x, 1000.0, p.z), Vector3(p.x, -1000.0, p.z),
 				Global.active_layers(['ground']))
 		var hit := space.intersect_ray(q)
@@ -500,18 +508,42 @@ func bottom_y() -> float:
 	return entity.global_position.y
 
 
-# XX claude-terra T5
-## Контур балласта в плане (мировые x, z): полоса шириной с балласт вдоль кривой.
-## Для обрезки листа под балласт и магнита листа. Вершины идут вдоль левого края вперед, вдоль правого назад
-func footprint_world() -> PackedVector2Array:
-	var res := PackedVector2Array()
+# XX claude-terra T6
+## Тоннельный трак (C_Tunnel): может уходить под листы пенопласта
+func allows_underground() -> bool:
+	return has_comp(C_Tunnel)
+
+
+# XX claude-terra T6
+## Событие: переключить тоннельный флаг. Шлют SelectTool (выбранный трак) и BuildTool (призрак)
+func on_tunnel_toggle(_d: Dictionary) -> void:
+	if has_comp(C_Tunnel):
+		entity.remove_component(C_Tunnel)
+	else:
+		entity.add_component(C_Tunnel.new())
+
+
+# XX claude-terra T6
+## Событие: задать тоннельный флаг явно {"on": bool}. BuildTool применяет режим к новому призраку
+func on_tunnel_set(d: Dictionary) -> void:
+	var on := bool(d.get("on", false))
+	if on and not has_comp(C_Tunnel):
+		entity.add_component(C_Tunnel.new())
+	elif not on and has_comp(C_Tunnel):
+		entity.remove_component(C_Tunnel)
+
+
+# XX claude-terra T5, T6
+## Образцы вдоль кривой для обрезки листов: края балласта в плане и низ балласта в мире.
+## Каждый элемент: {"l": Vector2, "r": Vector2, "y": float} (мировые x, z левого и правого края, мировая Y).
+## Шаг по умолчанию 2 ю
+func ballast_samples(step: float = 2.0) -> Array[Dictionary]:
+	var res: Array[Dictionary] = []
 	if not curve or not path_node or not entity.is_inside_tree():
 		return res
 	var half: float = Global.settings.track_ballast_segment.size.x * 0.5
 	var length := curve.get_baked_length()
-	var n := maxi(2, ceili(length / 2.0))
-	var left := PackedVector2Array()
-	var right := PackedVector2Array()
+	var n := maxi(2, ceili(length / step))
 	for i in n + 1:
 		var t := curve.sample_baked_with_rotation(length * i / n)
 		var p := path_node.to_global(t.origin)
@@ -520,11 +552,23 @@ func footprint_world() -> PackedVector2Array:
 		if fwd.length_squared() < 0.0001:
 			continue
 		var side := Vector3.UP.cross(fwd.normalized())
-		left.append(Vector2(p.x + side.x * half, p.z + side.z * half))
-		right.append(Vector2(p.x - side.x * half, p.z - side.z * half))
-	right.reverse()
-	res.append_array(left)
-	res.append_array(right)
+		res.append({
+			"l": Vector2(p.x + side.x * half, p.z + side.z * half),
+			"r": Vector2(p.x - side.x * half, p.z - side.z * half),
+			"y": p.y})
+	return res
+
+
+# XX claude-terra T5
+## Контур балласта в плане (мировые x, z): полоса шириной с балласт вдоль кривой.
+## Для магнита листа и уведомлений. Вершины идут вдоль левого края вперед, вдоль правого назад
+func footprint_world() -> PackedVector2Array:
+	var res := PackedVector2Array()
+	var s := ballast_samples()
+	for d in s:
+		res.append(d["l"])
+	for i in range(s.size() - 1, -1, -1):
+		res.append(s[i]["r"])
 	return res
 
 
