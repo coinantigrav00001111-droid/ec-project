@@ -57,6 +57,12 @@ func on_tunnel_changed(_d: Dictionary) -> void:
 	call_deferred("_notify_terrain")
 
 
+## XX claude-switch: стрелка получила маршруты
+func on_routes_changed(_d: Dictionary) -> void:
+	_dirty = true
+	_cooldown = 0.0
+
+
 func _exit_tree() -> void:
 	_notify_terrain()   # T5: трак убрали, канава под ним больше не нужна
 
@@ -126,29 +132,30 @@ func _rebuild() -> void:
 		return
 	var gs = Global.settings
 	var space := entity.get_world_3d().direct_space_state
-	var length := path.curve.get_baked_length()
-	var n := maxi(1, ceili(length / gs.support_step))
 	var inv := entity.global_transform.affine_inverse()
 	var xf: Array[Transform3D] = []
 
-	for i in n + 1:
-		var t := path.curve.sample_baked_with_rotation(length * i / n)
-		var p := path.path_node.to_global(t.origin)          # низ балласта
-		var fwd := path.path_node.global_basis * -t.basis.z
-		fwd.y = 0.0
-		if fwd.length_squared() < 0.0001:
-			continue
-		var yaw := Basis.looking_at(fwd.normalized(), Vector3.UP)
-		var ground := _ground_y(space, p, path)
-		if is_nan(ground) or p.y - ground < gs.support_min_clearance:
-			continue
-		var col_h := p.y - ground - 0.3
-		# ригель под балластом
-		xf.append(inv * Transform3D(yaw * Basis.from_scale(Vector3(3.0, 0.3, 0.8)), p - Vector3(0, 0.15, 0)))
-		# столб
-		if col_h > 0.05:
-			xf.append(inv * Transform3D(yaw * Basis.from_scale(Vector3(1.0, col_h, 0.8)),
-					Vector3(p.x, ground + col_h * 0.5, p.z)))
+	for crv in path.all_curves():   # XX claude-switch: у стрелки опоры под всеми маршрутами
+		var length := crv.get_baked_length()
+		var n := maxi(1, ceili(length / gs.support_step))
+		for i in n + 1:
+			var t := crv.sample_baked_with_rotation(length * i / n)
+			var p := path.path_node.to_global(t.origin)          # низ балласта
+			var fwd := path.path_node.global_basis * -t.basis.z
+			fwd.y = 0.0
+			if fwd.length_squared() < 0.0001:
+				continue
+			var yaw := Basis.looking_at(fwd.normalized(), Vector3.UP)
+			var ground := _ground_y(space, p, path)
+			if is_nan(ground) or p.y - ground < gs.support_min_clearance:
+				continue
+			var col_h := p.y - ground - 0.3
+			# ригель под балластом
+			xf.append(inv * Transform3D(yaw * Basis.from_scale(Vector3(3.0, 0.3, 0.8)), p - Vector3(0, 0.15, 0)))
+			# столб
+			if col_h > 0.05:
+				xf.append(inv * Transform3D(yaw * Basis.from_scale(Vector3(1.0, col_h, 0.8)),
+						Vector3(p.x, ground + col_h * 0.5, p.z)))
 
 	if xf == _last_xf:
 		return

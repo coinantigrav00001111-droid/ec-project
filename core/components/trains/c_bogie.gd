@@ -14,6 +14,9 @@ class BogieData:
 
 var is_derailed: bool = false
 
+# XX claude-switch: вагоны с тележками в группе, по ней C_Switch проверяет замок (стрелку под вагоном не переложить)
+const GROUP := &"bogie_owner"
+
 
 # Сами боги, их id, конфиги из TrainVisual перекидываются сюда
 var bogies_data: Array[BogieData] = []
@@ -23,6 +26,7 @@ var wheel_nodes: Array[Dictionary] = []
 
 
 func on_added() -> void:
+	entity.add_to_group(GROUP)   # XX claude-switch
 	#Собираем массив данных боги
 	var identity = entity.get_comp(C_Identity)
 	var bogie_configs
@@ -198,7 +202,9 @@ func _assist_check_transition(bogie: BogieData) -> void:
 			var hit_entity = _find_entity_from_collider(ray_collider)
 			
 			# Если нащупали новый трак
-			if is_instance_valid(hit_entity) and hit_entity != bogie.current_track and hit_entity.has_comp(C_Path):
+			# XX claude-switch: стрелка пускает только со стороны концов активного маршрута
+			if is_instance_valid(hit_entity) and hit_entity != bogie.current_track and hit_entity.has_comp(C_Path) \
+					and hit_entity.get_comp(C_Path).accepts_entry(extrapolated_pos):
 				var next_path = hit_entity.get_comp(C_Path)
 				
 				# Переводим глобальную точку полета в локальную систему нового трака

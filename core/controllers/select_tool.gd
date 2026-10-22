@@ -60,7 +60,7 @@ func handle_input(event: InputEvent):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
 			lmb_start_pos = event.position
-			lmb_consumed = _try_handle_press()
+			lmb_consumed = _try_press_lever() or _try_handle_press()   # XX claude-switch: рычаг стрелки
 			if lmb_consumed:
 				return
 			clicked_entity = _get_entity_under_mouse()
@@ -177,6 +177,20 @@ func _try_handle_press() -> bool:
 			"shift": Input.is_key_pressed(KEY_SHIFT), "consumed": false, "drag": false}
 	selected_entity.send_event("on_pointer_pressed", data)
 	handle_dragging = data.drag
+	return data.consumed
+
+
+## XX claude-switch. Рычаг стрелки (слой handles) работает без выделения: клик по рычагу перекладывает стрелку.
+## Забираем нажатие, чтобы клик не выбрал и не потащил трак
+func _try_press_lever() -> bool:
+	var hit = controller.get_mouse_ray(Global.active_layers(['handles']))
+	if hit.is_empty():
+		return false
+	var e := _find_entity(hit.collider)
+	if e == null or not e.has_comp(C_Switch):
+		return false
+	var data := {"collider": hit.collider, "consumed": false}
+	e.send_event("on_lever_pressed", data)
 	return data.consumed
 
 

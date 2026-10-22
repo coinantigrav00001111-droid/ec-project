@@ -1,0 +1,77 @@
+[gd_resource type="Resource" script_class="EntitySetting" format=3]
+
+[ext_resource type="Script" path="res://core/component_setting.gd" id="1_cs"]
+[ext_resource type="Script" path="res://core/entity_setting.gd" id="2_es"]
+[ext_resource type="Script" path="res://setting/switch_config.gd" id="3_cfg"]
+[ext_resource type="Script" path="res://core/components/comp_settings/identity_setting.gd" id="4_id"]
+[ext_resource type="Script" path="res://core/components/comp_settings/switchvisual_setting.gd" id="5_vis"]
+[ext_resource type="Script" path="res://core/components/comp_settings/trackdraggable_setting.gd" id="6_drag"]
+[ext_resource type="Script" path="res://core/components/comp_settings/pivot_setting.gd" id="7_piv"]
+[ext_resource type="Script" path="res://core/components/comp_settings/hoverable_setting.gd" id="8_hov"]
+[ext_resource type="Script" path="res://core/components/comp_settings/selectable_setting.gd" id="9_sel"]
+[ext_resource type="Script" path="res://core/components/comp_settings/blockable_setting.gd" id="10_blk"]
+[ext_resource type="Script" path="res://core/components/comp_settings/path_setting.gd" id="11_path"]
+[ext_resource type="Script" path="res://core/components/comp_settings/switchshape_setting.gd" id="12_shape"]
+[ext_resource type="Script" path="res://core/components/comp_settings/socked_setting.gd" id="13_sock"]
+[ext_resource type="Script" path="res://core/components/comp_settings/powertrack_setting.gd" id="14_pwr"]
+[ext_resource type="Script" path="res://core/components/comp_settings/tracksupport_setting.gd" id="15_sup"]
+[ext_resource type="Script" path="res://core/components/comp_settings/switch_setting.gd" id="16_sw"]
+[ext_resource type="Texture2D" path="res://ui/icons/transport/rail_r2.svg" id="17_icon"]
+
+[sub_resource type="Resource" id="Resource_cfg"]
+script = ExtResource("3_cfg")
+diverge_deg = 15.0
+hand = -1
+radius = 23.9
+deg = 0.0
+
+[sub_resource type="Resource" id="Resource_id"]
+script = ExtResource("4_id")
+object_config = SubResource("Resource_cfg")
+
+[sub_resource type="Resource" id="Resource_vis"]
+script = ExtResource("5_vis")
+
+[sub_resource type="Resource" id="Resource_drag"]
+script = ExtResource("6_drag")
+
+[sub_resource type="Resource" id="Resource_piv"]
+script = ExtResource("7_piv")
+
+[sub_resource type="Resource" id="Resource_hov"]
+script = ExtResource("8_hov")
+
+[sub_resource type="Resource" id="Resource_sel"]
+script = ExtResource("9_sel")
+
+[sub_resource type="Resource" id="Resource_blk"]
+script = ExtResource("10_blk")
+
+[sub_resource type="Resource" id="Resource_path"]
+script = ExtResource("11_path")
+
+[sub_resource type="Resource" id="Resource_shape"]
+script = ExtResource("12_shape")
+
+[sub_resource type="Resource" id="Resource_sock"]
+script = ExtResource("13_sock")
+
+[sub_resource type="Resource" id="Resource_pwr"]
+script = ExtResource("14_pwr")
+
+[sub_resource type="Resource" id="Resource_sup"]
+script = ExtResource("15_sup")
+
+[sub_resource type="Resource" id="Resource_sw"]
+script = ExtResource("16_sw")
+control = 0
+throw_time = 0.0
+
+[resource]
+script = ExtResource("2_es")
+id = 1331
+name = "Switch L"
+description = "Стрелка левая. Ручная: клик по рычагу у носка. L 23.9, ответвление 15°."
+tag = &"switch"
+icon = ExtResource("17_icon")
+components = Array[ExtResource("1_cs")]([SubResource("Resource_id"), SubResource("Resource_vis"), SubResource("Resource_drag"), SubResource("Resource_piv"), SubResource("Resource_hov"), SubResource("Resource_sel"), SubResource("Resource_blk"), SubResource("Resource_path"), SubResource("Resource_shape"), SubResource("Resource_sock"), SubResource("Resource_pwr"), SubResource("Resource_sup"), SubResource("Resource_sw")])

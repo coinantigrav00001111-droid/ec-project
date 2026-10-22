@@ -36,7 +36,9 @@ func _parse_paths():
 	# Стучимся в логический компонент пути
 	var path_comp = get_comp(C_Path)
 	if path_comp and path_comp.path_node:
-		_parse_curve(path_comp.curve, path_comp.path_node)
+		# XX claude-switch: у стрелки сокеты со всех маршрутов (носок общий, сливается в _add_socket_if_unique)
+		for c in path_comp.all_curves():
+			_parse_curve(c, path_comp.path_node)
 
 
 
@@ -370,6 +372,8 @@ func on_curve_changed(_data: Dictionary) -> void:
 	var path_comp := get_comp(C_Path) as C_Path
 	if not path_comp or not path_comp.curve or not path_comp.path_node or sockets.size() < 2:
 		return
+	if path_comp.is_multi_route():
+		return   # XX claude-switch: форма стрелки статична, сокеты не двигаем (3 штуки, не 2)
 	var c := path_comp.curve
 	var length := c.get_baked_length()
 	var xf := path_comp.path_node.transform

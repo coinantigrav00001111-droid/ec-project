@@ -475,23 +475,24 @@ func underground_depth(xf: Transform3D) -> float:
 	if not curve or not path_node or not entity.is_inside_tree():
 		return 0.0
 	var space := entity.get_world_3d().direct_space_state
-	var length := curve.get_baked_length()
-	var n := maxi(2, ceili(length / 4.0) + 1)
 	var worst := 0.0
 	var tunnel := allows_underground()
-	for i in n:
-		var p: Vector3 = xf * (path_node.position + curve.sample_baked(length * i / (n - 1)))
-		if tunnel:
-			# XX claude-terra T6: тоннельный трак листы землей не считает, только стол (y = 0)
-			worst = maxf(worst, 0.0 - p.y)
-			continue
-		var q := PhysicsRayQueryParameters3D.create(Vector3(p.x, 1000.0, p.z), Vector3(p.x, -1000.0, p.z),
-				Global.active_layers(['ground']))
-		var hit := space.intersect_ray(q)
-		var gy := 0.0
-		if not hit.is_empty():
-			gy = hit.position.y
-		worst = maxf(worst, gy - p.y)
+	for c in all_curves():   # XX claude-switch: у стрелки и кросса проверяем все маршруты
+		var length := c.get_baked_length()
+		var n := maxi(2, ceili(length / 4.0) + 1)
+		for i in n:
+			var p: Vector3 = xf * (path_node.position + c.sample_baked(length * i / (n - 1)))
+			if tunnel:
+				# XX claude-terra T6: тоннельный трак листы землей не считает, только стол (y = 0)
+				worst = maxf(worst, 0.0 - p.y)
+				continue
+			var q := PhysicsRayQueryParameters3D.create(Vector3(p.x, 1000.0, p.z), Vector3(p.x, -1000.0, p.z),
+					Global.active_layers(['ground']))
+			var hit := space.intersect_ray(q)
+			var gy := 0.0
+			if not hit.is_empty():
+				gy = hit.position.y
+			worst = maxf(worst, gy - p.y)
 	return worst
 
 
@@ -499,7 +500,8 @@ func underground_depth(xf: Transform3D) -> float:
 ## Плоский горизонтальный трак: без уклона и не flex. Только такой трак подгоняет под себя листы
 ## пенопласта (магнит верха листа и обрезка под балласт). У пандусов и flex низ балласта наклонный
 func is_flat() -> bool:
-	return rise == 0.0 and pitch == 0.0 and not has_comp(C_FlexShape)
+	# XX claude-switch: стрелка (несколько маршрутов) под листы пенопласта пока не подгоняется
+	return rise == 0.0 and pitch == 0.0 and not has_comp(C_FlexShape) and routes.size() <= 1
 
 
 # XX claude-terra T5
@@ -570,6 +572,69 @@ func footprint_world() -> PackedVector2Array:
 	for i in range(s.size() - 1, -1, -1):
 		res.append(s[i]["r"])
 	return res
+
+
+# XX claude-switch ===== Маршруты (стрелки) =====
+## Стрелка = несколько кривых в системе координат одного Path3D с общим носком. curve / path_node всегда
+## указывают на АКТИВНЫЙ маршрут, поэтому вагон (C_Bogie, C_Chassis, C_TrainDraggable) видит только его
+## и ничего не знает о стрелках. Геометрии целиком (опоры, сокеты, коллизии) нужен all_curves().
+## Обычный трак: routes пуст, ничего не меняется. Кривые строит C_SwitchShape, переключает C_Switch.
+var routes: Array[Curve3D] = []
+var active_route := 0
+
+
+## Задать маршруты стрелки. Маршрут 0 уже построен как базовая кривая (длина по прямой), его заменяем той же формой
+func set_routes(list: Array[Curve3D], active: int = 0) -> void:
+	routes = list
+	active_route = clampi(active, 0, maxi(list.size() - 1, 0))
+	_activate_route(false)
+	entity.send_event("on_routes_changed", {})
+
+
+## Сделать маршрут активным. Не шлет on_curve_changed (это событие flex: двигает сокеты и пересобирает меш)
+func set_active_route(i: int) -> bool:
+	if i < 0 or i >= routes.size():
+		return false
+	if i == active_route:
+		return true
+	active_route = i
+	_activate_route(true)
+	return true
+
+
+func _activate_route(notify: bool) -> void:
+	if routes.is_empty():
+		return
+	curve = routes[active_route]
+	if path_node:
+		path_node.curve = curve
+	_bake_radii()   # радиус по длине нужен C_Chassis (сход в кривой): у ответвления он другой
+	if notify:
+		entity.send_event("on_route_activated", {"route": active_route})
+
+
+func is_multi_route() -> bool:
+	return routes.size() > 1
+
+
+## Вся геометрия трака: у обычного трака одна кривая, у стрелки все маршруты
+func all_curves() -> Array[Curve3D]:
+	if routes.size() > 1:
+		return routes
+	var one: Array[Curve3D] = [curve]
+	return one
+
+
+## Можно ли въехать на этот трак из точки gpos (мир). Обычному траку всегда да (как раньше).
+## Стрелке только у концов активного маршрута: со стороны неактивной ветки въезд закрыт (иначе тележку
+## спроецировало бы в середину активной кривой)
+func accepts_entry(gpos: Vector3, tol: float = 1.0) -> bool:
+	if routes.size() <= 1 or curve == null or path_node == null:
+		return true
+	var l := curve.get_baked_length()
+	var a := path_node.to_global(curve.sample_baked(0.0))
+	var b := path_node.to_global(curve.sample_baked(l))
+	return gpos.distance_to(a) <= tol or gpos.distance_to(b) <= tol
 
 
 # -----HELPERS------
