@@ -17,7 +17,23 @@ const STYLE := {
 	S.BLOCKED:  {"color": Color("ff3b30"), "width": 2.5},
 }
 
+## Режимы по уровню качества (Quality): все состояния или только hover
+enum Mode { ALL, HOVER_ONLY }
+
+## Общий выключатель. Observe выключает контуры целиком: каждый активный канал это полноэкранный SubViewport
+var enabled := true:
+	set(v):
+		enabled = v
+		_refresh_all()
+
+## Задает GFX из QualityPreset.outlines_all
+var mode := Mode.ALL:
+	set(v):
+		mode = v
+		_refresh_all()
+
 class Channel extends RefCounted:
+	var state := 0
 	var sub: SubViewport
 	var cam: Camera3D
 	var rect: ColorRect
@@ -35,6 +51,7 @@ func _ready() -> void:
 
 	for s in S.values():
 		var c := Channel.new()
+		c.state = s
 		c.sub = SubViewport.new()
 		c.sub.size = Vector2i(2, 2)   # реальный размер ставим при активации
 		c.sub.transparent_bg = true
@@ -79,8 +96,19 @@ func set_owner_state(owner_obj: Object, state: int) -> void:
 		_refresh(c)
 
 
+func _allowed(c: Channel) -> bool:
+	if not enabled:
+		return false
+	return mode == Mode.ALL or c.state == S.HOVER
+
+
+func _refresh_all() -> void:
+	for c in _ch:
+		_refresh(c)
+
+
 func _refresh(c: Channel) -> void:
-	var active := not c.owners.is_empty()
+	var active := not c.owners.is_empty() and _allowed(c)
 	c.rect.visible = active
 	c.sub.render_target_update_mode = \
 		SubViewport.UPDATE_ALWAYS if active else SubViewport.UPDATE_DISABLED
@@ -94,7 +122,7 @@ func _process(_d: float) -> void:
 		return
 	var size := Vector2i(get_viewport().get_visible_rect().size)
 	for c in _ch:
-		if c.owners.is_empty():
+		if c.owners.is_empty() or not _allowed(c):
 			continue
 		for id in c.owners.keys():
 			if not is_instance_id_valid(id):

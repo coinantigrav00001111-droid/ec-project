@@ -40,6 +40,8 @@ class_name GraphicsPreset extends Resource
 @export var ssao_intensity := 2.0
 @export var ssao_power := 1.5
 @export var ssao_light_affect := 0.0
+## SSIL включается, только если его разрешает Quality (High)
+@export var ssil := false
 ## Godot 4.8: multi-bounce AO. В beta 1 встроен в SSAO без переключателя, поле применяется только если
 ## в Environment появится такое свойство (см. GFX._discover_features)
 @export var ao_multibounce := false
@@ -52,8 +54,9 @@ class_name GraphicsPreset extends Resource
 
 @export_category("Reflections / Lamp")
 @export var probe_intensity := 1.0
-## Лампа над столом. 0 = выкл
-@export var lamp_energy := 0.0
+## Энергия лампы над столом, когда она включена (включает Time, ручной переключатель или lamp_forced_on)
+@export var lamp_energy := 10.0
+@export var lamp_forced_on := false
 
 @export_category("Miniature (S8, пока не применяется)")
 @export var tilt_shift := 0.0
@@ -69,29 +72,29 @@ static func builtin(_id: StringName) -> GraphicsPreset:
 		&"toy":
 			# LEGO-подобный: яркий, насыщенный, мягкие тени, пластик
 			return _make(_id, "Toy", {
-				"tonemap_exposure": 1.0, "tonemap_white": 6.0,
-				"brightness": 1.02, "contrast": 1.08, "saturation": 1.28,
+				"tonemap_exposure": 0.9, "tonemap_white": 6.0,
+				"brightness": 0.98, "contrast": 1.08, "saturation": 1.28,
 				"glow_enabled": true, "glow_intensity": 0.35, "glow_bloom": 0.0,
 				"background_color": Color(0.78, 0.84, 0.92),
-				"ambient_color": Color(0.66, 0.72, 0.84), "ambient_energy": 1.0,
+				"ambient_color": Color(0.66, 0.72, 0.84), "ambient_energy": 0.75,
 				"ssao_enabled": true, "ssao_radius": 0.9, "ssao_intensity": 2.6,
-				"ssao_power": 1.6, "ssao_light_affect": 0.15, "ao_multibounce": true,
-				"sun_energy_mul": 1.0, "sun_shadow_blur": 1.6, "contact_shadows": true,
-				"probe_intensity": 1.0, "lamp_energy": 0.0,
+				"ssao_power": 1.6, "ssao_light_affect": 0.15, "ssil": true, "ao_multibounce": true,
+				"sun_energy_mul": 0.9, "sun_shadow_blur": 1.6, "contact_shadows": true,
+				"probe_intensity": 1.0,
 				"tilt_shift": 0.6, "vignette": 0.15,
 			})
 		&"workshop":
-			# Вечер в мастерской: тёмное окружение, лампа над столом (до S4 лампа временная)
+			# Вечер в мастерской: тёмное окружение, лампа над столом включена всегда
 			return _make(_id, "Workshop", {
-				"tonemap_exposure": 0.95, "tonemap_white": 6.0,
-				"brightness": 0.92, "contrast": 1.15, "saturation": 1.1,
+				"tonemap_exposure": 1.15, "tonemap_white": 6.0,
+				"brightness": 1.0, "contrast": 1.15, "saturation": 1.1,
 				"glow_enabled": true, "glow_intensity": 0.7, "glow_bloom": 0.05,
 				"background_color": Color(0.10, 0.09, 0.12),
-				"ambient_color": Color(0.30, 0.26, 0.36), "ambient_energy": 0.45,
+				"ambient_color": Color(0.38, 0.33, 0.46), "ambient_energy": 0.85,
 				"ssao_enabled": true, "ssao_radius": 0.9, "ssao_intensity": 2.8,
-				"ssao_power": 1.6, "ssao_light_affect": 0.1, "ao_multibounce": true,
-				"sun_energy_mul": 0.25, "sun_shadow_blur": 1.8, "contact_shadows": true,
-				"probe_intensity": 0.6, "lamp_energy": 6.0,
+				"ssao_power": 1.6, "ssao_light_affect": 0.1, "ssil": true, "ao_multibounce": true,
+				"sun_energy_mul": 0.4, "sun_shadow_blur": 1.8, "contact_shadows": true,
+				"probe_intensity": 0.6, "lamp_energy": 12.0, "lamp_forced_on": true,
 				"tilt_shift": 0.5, "vignette": 0.35,
 			})
 		&"clean":

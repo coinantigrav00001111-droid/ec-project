@@ -14,6 +14,8 @@ signal room_visible_changed(on: bool)
 @export var config: RoomConfig
 ## Стены и потолок не отбрасывают тень: иначе низкое солнце затемнит стол. Окно и рама в S4
 @export var walls_cast_shadow := false
+## В режиме Observe стены отбрасывают тень: на столе виден рисунок окна. В остальных режимах свет ровный
+@export var window_shadows_in_observe := true
 ## Временный свет для проверки масштаба. Включать, только если в главной сцене нет своего солнца
 @export var temp_light := false
 
@@ -22,6 +24,7 @@ var ceiling: Node3D
 var table: Node3D
 
 var _mats := {}
+var _walls: Array[MeshInstance3D] = []
 
 const COL_FLOOR := Color(0.42, 0.40, 0.38)
 const COL_WALL := Color(0.80, 0.79, 0.76)
@@ -54,6 +57,8 @@ func _connect_observe() -> void:
 	var oc = get_tree().get_first_node_in_group(&"observe_controller")
 	if oc:
 		oc.observe_action.connect(_on_observe_action)
+		oc.observe_entered.connect(func(): set_walls_cast_shadow(window_shadows_in_observe))
+		oc.observe_exited.connect(func(): set_walls_cast_shadow(walls_cast_shadow))
 	else:
 		push_warning("RoomBuilder: ObserveController не найден, кнопки категории Room не работают")
 
@@ -64,6 +69,7 @@ func build() -> void:
 		remove_child(c)
 		c.queue_free()
 	_mats.clear()
+	_walls.clear()
 	ceiling = null
 
 	_build_table()
@@ -95,6 +101,13 @@ func set_room_visible(on: bool) -> void:
 	if visuals:
 		visuals.visible = on
 	room_visible_changed.emit(on)
+
+
+## Тень от стен (рисунок окна на столе). Потолок и небо в окне тень не отбрасывают никогда
+func set_walls_cast_shadow(on: bool) -> void:
+	var mode := GeometryInstance3D.SHADOW_CASTING_SETTING_ON if on else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	for m in _walls:
+		m.cast_shadow = mode
 
 
 func set_ceiling_visible(on: bool) -> void:
@@ -158,6 +171,8 @@ func _build_greybox() -> void:
 	_wall_z(1.0, c.door)      # юг: дверь
 	_wall_x(-1.0)
 	_wall_x(1.0)
+	_build_window_frame()
+	_build_sky_card()
 
 	# Потолок: отдельной нодой, по умолчанию скрыт, без коллизии
 	ceiling = Node3D.new()
@@ -204,18 +219,73 @@ func _wall_z(sgn: float, op: Dictionary) -> void:
 func _wall_x(sgn: float) -> void:
 	var c := config
 	var cx := sgn * (c.size.x * 0.5 + c.wall_thickness * 0.5)
-	_box(visuals, "WallE" if sgn > 0.0 else "WallW",
+	_walls.append(_box(visuals, "WallE" if sgn > 0.0 else "WallW",
 			Vector3(c.wall_thickness, c.size.y, c.size.z), Vector3(cx, c.floor_y + c.size.y * 0.5, 0.0),
-			COL_WALL, Global.active_layers(['room']), _vis_layer(), walls_cast_shadow)
+			COL_WALL, Global.active_layers(['room']), _vis_layer(), walls_cast_shadow))
 
 
 ## Кусок стены между x0..x1 и y0..y1 на z = cz
 func _slab(nm: String, x0: float, x1: float, y0: float, y1: float, cz: float) -> void:
 	if x1 - x0 < 0.01 or y1 - y0 < 0.01:
 		return
-	_box(visuals, nm, Vector3(x1 - x0, y1 - y0, config.wall_thickness),
+	_walls.append(_box(visuals, nm, Vector3(x1 - x0, y1 - y0, config.wall_thickness),
 			Vector3((x0 + x1) * 0.5, (y0 + y1) * 0.5, cz), COL_WALL,
-			Global.active_layers(['room']), _vis_layer(), walls_cast_shadow)
+			Global.active_layers(['room']), _vis_layer(), walls_cast_shadow))
+
+
+# ==========================================
+# Окно и небо
+# ==========================================
+
+## Рама с переплётом: отбрасывает тень на стол (в Observe)
+func _build_window_frame() -> void:
+	var c := config
+	if c.window.is_empty():
+		return
+	var cz := -(c.size.z * 0.5 + c.wall_thickness * 0.5)
+	var ox: float = c.window.x
+	var ww: float = c.window.w
+	var wh: float = c.window.h
+	var s0: float = c.floor_y + c.window.sill
+	var fb := 4.0
+	var vis := _vis_layer()
+	var col := Color(0.93, 0.93, 0.90)
+	_box(visuals, "FrameTop", Vector3(ww, fb, 3.0), Vector3(ox, s0 + wh - fb * 0.5, cz), col, 0, vis, true)
+	_box(visuals, "FrameBottom", Vector3(ww, fb, 3.0), Vector3(ox, s0 + fb * 0.5, cz), col, 0, vis, true)
+	_box(visuals, "FrameLeft", Vector3(fb, wh, 3.0), Vector3(ox - ww * 0.5 + fb * 0.5, s0 + wh * 0.5, cz), col, 0, vis, true)
+	_box(visuals, "FrameRight", Vector3(fb, wh, 3.0), Vector3(ox + ww * 0.5 - fb * 0.5, s0 + wh * 0.5, cz), col, 0, vis, true)
+	_box(visuals, "MullionV", Vector3(3.0, wh, 2.0), Vector3(ox, s0 + wh * 0.5, cz), col, 0, vis, true)
+	_box(visuals, "MullionH", Vector3(ww, 3.0, 2.0), Vector3(ox, s0 + wh * 0.55, cz), col, 0, vis, true)
+
+
+## «Небо» за окном: плоскость с вертикальным градиентом, без освещения. Цвета меняет GFX (группа gfx_sky)
+func _build_sky_card() -> void:
+	var c := config
+	if c.window.is_empty():
+		return
+	var g := Gradient.new()
+	g.set_color(0, Color(0.45, 0.68, 0.95))
+	g.set_color(1, Color(0.82, 0.92, 1.0))
+	var tex := GradientTexture2D.new()
+	tex.gradient = g
+	tex.fill_from = Vector2(0.0, 0.0)
+	tex.fill_to = Vector2(0.0, 1.0)
+	tex.width = 8
+	tex.height = 128
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.albedo_texture = tex
+	var q := QuadMesh.new()
+	q.size = Vector2(700.0, 350.0)
+	var mi := MeshInstance3D.new()
+	mi.name = "SkyCard"
+	mi.mesh = q
+	mi.material_override = m
+	mi.layers = _vis_layer()
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.position = Vector3(c.window.x, c.floor_y + c.size.y * 0.35, -(c.size.z * 0.5) - 150.0)
+	visuals.add_child(mi)
+	mi.add_to_group(&"gfx_sky")
 
 
 # ==========================================
@@ -237,7 +307,7 @@ func _mat(color: Color) -> StandardMaterial3D:
 
 ## Коробка: меш + (если body_layers != 0) StaticBody3D на этих слоях. vis_layers: visual layers меша
 func _box(parent: Node, nm: String, size: Vector3, center: Vector3, color: Color,
-		body_layers: int, vis_layers: int, shadow: bool) -> void:
+		body_layers: int, vis_layers: int, shadow: bool) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
 	var bm := BoxMesh.new()
 	bm.size = size
@@ -250,7 +320,7 @@ func _box(parent: Node, nm: String, size: Vector3, center: Vector3, color: Color
 		mi.name = nm
 		mi.position = center
 		parent.add_child(mi)
-		return
+		return mi
 	var body := StaticBody3D.new()
 	body.name = nm
 	body.position = center
@@ -264,3 +334,4 @@ func _box(parent: Node, nm: String, size: Vector3, center: Vector3, color: Color
 	mi.name = "Mesh"
 	body.add_child(mi)
 	parent.add_child(body)
+	return mi

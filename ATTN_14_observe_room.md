@@ -286,7 +286,9 @@ ObserveObjects:
 
 #### S4. Свет и время суток
 
-- [ ] `TimeOfDayPreset`: `morning`, `day`, `evening`, `night` в `res://data/graphics/time/`.
+- [ ] `TimeOfDayPreset`: `morning`, `day`, `evening`, `night`. Строятся кодом, `.tres` в `res://data/graphics/time/` переопределяют (F10 сохраняет встроенные). Итог = Look * Time: ambient Look умножается на `ambient_tint`, солнце берёт цвет, угол и энергию из Time. Азимут 0 = за окном северной стены, плюс к востоку, допустимый разброс около ±30° (иначе луч не попадает в окно).
+- [ ] Окно: рама с переплётом отбрасывает тень на стол. Стены отбрасывают тень только в Observe (`RoomBuilder.window_shadows_in_observe`), в Build и Operate свет остаётся ровным. Небо в окне: градиент (группа `gfx_sky`), цвета из `TimeOfDayPreset`.
+- [ ] Лампа: автоматом по Look (`lamp_forced_on`) или Time (`lamp_on`), ручной переключатель в Observe перекрывает до следующей смены Look или Time.
 - [ ] Окно: проём реальный, свет `DirectionalLight3D` попадает через него. Азимут солнца ограничить диапазоном, в котором луч входит в окно. Наружные стены и крыша `cast_shadow = off` там, где мешают, рама окна и шторы тень отбрасывают (рисунок рамы на столе даёт «уют» без лишнего).
 - [ ] «Небо» в окне: emissive-плоскость с градиентом из `TimeOfDayPreset`.
 - [ ] Лампа над столом: `SpotLight3D` с мягкой тенью, включается ночью и в Workshop, флаг `lamp_on`.
@@ -318,6 +320,9 @@ ObserveObjects:
 - [ ] `Outline.enabled` + режим `hover_only`. В Observe `Outline` выключается целиком (каждый активный канал это полноэкранный `SubViewport`).
 - [ ] `user://settings.cfg` через `ConfigFile`: quality, last look, last time. Не в `SavedGame`.
 - [ ] Автодетект стартового tier по `RenderingServer.get_video_adapter_name()` (грубо) с возможностью поменять в UI.
+- [ ] Реализация: `QualityPreset` (builtin low/medium/high, `.tres` в `res://data/graphics/quality/` переопределяют). Итог эффекта = Look AND Quality. Серверные настройки (MSAA, FXAA, атласы теней, каскады, soft shadow filter, SSAO quality) применяются при смене tier в `GFX._apply_quality_settings`.
+- [ ] `Outline.enabled` (Observe выключает контуры целиком) и `Outline.mode` (`ALL` / `HOVER_ONLY`). На Low остаётся только hover, а ghost, selected и blocked видны через overlay-материалы `C_Visual`.
+- [ ] `user://settings.cfg`: tier, последний Look и Time. Автодетект при первом запуске по `get_video_adapter_name()` (эвристика, ошибаться может, игрок меняет в Observe).
 - [ ] Замер fps на эталонной диораме для каждого tier, отдельно с contact shadows и без них.
 
 **Готово, когда:** на tier Low эталонная диорама держит 60 fps на среднем железе (цель: интегрированная графика / GTX 1050-класс).

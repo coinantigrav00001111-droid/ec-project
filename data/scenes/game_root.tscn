@@ -28,13 +28,8 @@ background_mode = 2
 sky = SubResource("Sky_bc160")
 ambient_light_energy = 16.0
 ssao_enabled = true
-ssao_radius = 7.69
-ssao_intensity = 6.47
-ssao_power = 1.0606601
-ssao_horizon = 0.84
-ssao_sharpness = 1.0
-ssao_light_affect = 0.55
-ssao_ao_channel_affect = 0.56
+ssao_intensity = 2.37
+ssao_power = 3.105794
 ssil_enabled = true
 sdfgi_enabled = true
 

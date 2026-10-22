@@ -17,6 +17,9 @@ class_name ObserveController extends Node
 
 ## ⚡Сигнал: нажата карточка. pressed осмыслен для toggle и radio карточек
 signal observe_action(category: StringName, id: StringName, pressed: bool)
+## ⚡Вошли в режим Observe / вышли из него
+signal observe_entered
+signal observe_exited
 
 var current_cat = &'idle'
 var current_tag = &'idle'   # у Observe тегов нет, оставлено для единого интерфейса контроллеров
@@ -109,6 +112,8 @@ func _on_enter() -> void:
 	if _power_layer_was_on:
 		PGM.toggle_power_layer(false)
 	# Выделение, ховер, призрак и InfoPanel снимает ToolController при смене инструмента
+	Outline.enabled = false   # без контуров: нет полноэкранных SubViewport, чище кадр
+	observe_entered.emit()
 
 
 func _on_exit() -> void:
@@ -120,6 +125,8 @@ func _on_exit() -> void:
 	_clear_cards()
 	%ObserveObjectsContainer.hide()
 	# TODO S9: photo_mode = false, вернуть UI, если был скрыт
+	Outline.enabled = true
+	observe_exited.emit()
 
 
 # ==============================================
@@ -188,6 +195,25 @@ func _on_card_pressed(_cat: StringName, _id: StringName, _pressed: bool) -> void
 	if Global.debug_mode:
 		print("[Observe] ", _cat, " / ", _id, " : ", _pressed)
 	observe_action.emit(_cat, _id, _pressed)
+
+
+## Программная смена выбранной карточки группы (GFX при смене Look/Time из кода). Сигнал карточки не шлется
+func set_group_state(group: StringName, id: StringName) -> void:
+	_group_state[group] = id
+	var g: ButtonGroup = _groups.get(group)
+	if g == null:
+		return
+	for b in g.get_buttons():
+		if b is ObserveCard:
+			b.set_pressed_no_signal(b.id == id)
+
+
+## То же для переключателя
+func set_toggle_state(id: StringName, on: bool) -> void:
+	_toggle_state[id] = on
+	for c in obj_container.get_children():
+		if c is ObserveCard and c.id == id and c.toggle_mode:
+			c.set_pressed_no_signal(on)
 
 
 ## Нажата ли карточка при показе: из сохранённого состояния, иначе по "default"
