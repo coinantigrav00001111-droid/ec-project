@@ -20,6 +20,8 @@ const COL_LEVER_DIV := Color(0.95, 0.65, 0.10)
 
 ## Задает SwitchVisualSettings. null = TrackStyle по умолчанию
 var style: TrackStyle
+## Рычаг стрелки. Выключен у траков без переключения (упор C_BufferStop использует этот же визуал)
+var with_lever := true
 
 var ballast: Area3D
 var head: StaticBody3D
@@ -119,7 +121,8 @@ func _build_instance() -> Node3D:
 	head.add_child(h0)
 	_head_shapes.append(h0)
 
-	_build_lever(root)
+	if with_lever:
+		_build_lever(root)
 	return root
 
 
@@ -253,7 +256,7 @@ func _build_lever(root: Node3D) -> void:
 ## Рычаг у носка, с обратной от ответвления стороны (за пределами балласта)
 func _place_lever(path: C_Path) -> void:
 	var curves := path.all_curves()
-	if curves.size() < 2:
+	if curves.size() < 2 or _lever_pivot == null:
 		return
 	var toe := curves[0].sample_baked(0.0)
 	var c1: Curve3D = curves[1]

@@ -1,6 +1,7 @@
 # ATTN 12. Switch (стрелка), Crossing, Buffer Stop
 
-Статус: **S1 (стрелка, ручная и дистанционная, электрика E0)** сделан. Кросс, упор, E1-E3 впереди.
+Статус: **S1 (стрелка, ручная и дистанционная, электрика E0)** и **S2 (упор)** написаны. Кросс, E1-E3 впереди.
+S2 написан без запуска Godot, проверка за вами (tests/buffer_stop_test.tscn).
 
 ## Принцип
 Стрелка = один Entity и один C_Path с несколькими кривыми (`routes`). В системе координат Path3D общий носок в начале.
@@ -45,5 +46,27 @@ Socket, PowerTrack, TrackSupport, **Switch**. Объекты: `data/tracks/objec
 * **E2 (токопроводящее сердечник, frog)**: полярность сердечника переключается вместе со стрелкой (контакты привода, реле, frog juicer); без нее КЗ при заезде на сердечник.
 * **E3 (кросс)**: режимы joined (один контур и полярность) и insulated.
 
+## Упор (Buffer Stop, S2)
+Прямой трак (одна кривая) с буферным брусом на конце. Пересобирает путь тем же визуалом, что стрелка
+(`SwitchVisualSettings.lever = false`), своих сцен нет.
+
+| Файл | Роль |
+|---|---|
+| `setting/buffer_stop_config.gd` | `BufferStopConfig` (наследует TrackConfig): radius = длина (11.9), stop_at_end, max_speed |
+| `c_buffer_stop.gd` | физика стены, брус и стойки, закрытый стык |
+| `bufferstop_setting.gd` | `BufferStopSettings` (zeta) |
+| `data/tracks/objects/buffer_stop.tres` | объект, тег `buffer` |
+
+Физика (формулы как у контакта буферов в `C_Coupler`, партнер неподвижен, приоритет -10, до `C_Chassis`):
+* стена стоит в конце кривой; торец вагона (`offset_z` у `C_Coupler`) считаем в плоскости XZ;
+* первый контакт: dv = (1 + e) * v_close. Если dv > `impact_dv_limit` вагона или v_close > `max_speed` упора,
+  вагон сходит (`on_derailed`, reason `buffer_stop_impact`), иначе отскок на буферах;
+* дальше сила пружины с демпфером и жестким упором ходом буфера вагона (`buffer_travel`), уходит в шасси как `on_coupler_force`;
+* вагону те же события, что при ударе сцепок (`on_coupler_impact`), упору наружу `on_buffer_impact`;
+* сокет у стены выключается (`on_socket_enabled`), пристыковаться можно только открытым концом.
+Порядок в .tres: ... Path, Socket, PowerTrack, TrackSupport, **BufferStop** (после Socket).
+
 ## Проверка
+`tests/buffer_stop_test.tscn` (F6): вагон в упор на скоростях 1.0, 1.5, 3.0. Ожидаемый результат в шапке скрипта.
+
 `tests/switch_drive_test.tscn` (F6): 6 сценариев проезда вагона. Ожидаемый вывод в шапке скрипта.
