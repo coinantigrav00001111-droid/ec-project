@@ -40,7 +40,7 @@ func on_component_added(type: Script):
 func _add_to_visual():
 	var visual = get_comp(C_TrackVisual)
 	var _clip = scene.instantiate() # Создаем сцену
-	_clip.position = Vector3(2.2, 0.3, -2.2)
+	_clip.transform = visual.clip_transform()   # XX claude-terra: у стилизованных траков зависит от стиля и наклона
 	visual.instance.add_child(_clip)
 	_change_clip_label()
 		

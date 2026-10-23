@@ -132,6 +132,13 @@ func on_slope_changed(data: Dictionary) -> void:
 		instance.rotation.x = data.pitch
 
 
+# XX claude-terra
+## Где в instance стоит клип питания (C_PowerClip). Сцены из Blender: как раньше, сбоку у начала.
+## C_StyleVisual переопределяет: берёт ширину стиля и наклон кривой
+func clip_transform() -> Transform3D:
+	return Transform3D(Basis.IDENTITY, Vector3(2.2, 0.3, -2.2))
+
+
 # ---- POWER LAYER ---
 
 ## 1️⃣  --- Секция логики слоя ---

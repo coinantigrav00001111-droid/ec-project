@@ -18,6 +18,10 @@ class_name C_StyleVisual extends C_TrackVisual
 ## Задаёт StyleVisualSetting. null = TrackStyle по умолчанию (балласт, 0.85)
 var style: TrackStyle
 
+const CLIP_S := 2.2      # вдоль кривой от начала, как раньше (z = -2.2)
+const CLIP_GAP := 0.6    # от края основания до оси клипа (ширина клипа 1.0 -> зазор 0.1)
+const CLIP_LIFT := 0.3   # половина высоты коробки клипа (0.6), чтобы стояла на основании
+
 var mesh_node: MeshInstance3D
 var sleepers: MultiMeshInstance3D
 var ballast: Area3D
@@ -58,6 +62,29 @@ func on_entity_ready() -> void:
 	mesh_node.mesh = TrackMeshBuilder.build_mesh(style, curve, L, false)
 	TrackMeshBuilder.place_sleepers(sleepers.multimesh, style, curve, L)
 	_build_collision(curve, L)
+
+
+## Пандус: подъём уже в кривой C_Path (rise), меш строится по ней вместе с наклоном репера.
+## Базовый C_TrackVisual по on_slope_changed ещё и наклонил бы instance (так делают сцены из Blender,
+## они прямые): получился бы двойной наклон. Поэтому здесь событие игнорируем
+func on_slope_changed(_data: Dictionary) -> void:
+	pass
+
+
+## Клип питания: сбоку от основания (ширина из стиля, а не константа сцены), на расстоянии
+## CLIP_S от начала вдоль кривой, повёрнут по реперу (на пандусе стоит вдоль уклона).
+## Ставим на основание (низ клипа = низ трака), а не на поверхность катания: клип стоит рядом с треком
+func clip_transform() -> Transform3D:
+	var path := get_comp(C_Path) as C_Path
+	if style == null or path == null or path.curve == null:
+		return super()
+	var L := path.curve.get_baked_length()
+	if L < 0.01:
+		return super()
+	var f := TrackMeshBuilder.frame(path.curve, minf(CLIP_S, L), L)
+	var b := Basis(f.r, f.u, f.r.cross(f.u))
+	var x := style.collision_width * 0.5 + CLIP_GAP
+	return Transform3D(b, f.p + f.r * x + f.u * CLIP_LIFT)
 
 
 func _set_overlay(mat: Material) -> void:
