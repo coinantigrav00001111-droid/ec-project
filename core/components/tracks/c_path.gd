@@ -546,10 +546,14 @@ func ballast_samples(step: float = 2.0) -> Array[Dictionary]:
 	var half: float = Global.settings.track_ballast_segment.size.x * 0.5
 	var length := curve.get_baked_length()
 	var n := maxi(2, ceili(length / step))
+	# Поза path_node в мире считаем от Entity и локальной позы path_node, а не path_node.to_global():
+	# path_node добавлен в on_entity_ready последним потомком, при удалении трака и закрытии игры он выходит
+	# из дерева РАНЬШЕ, чем сработает C_TrackSupport._exit_tree, и to_global() даёт ошибку !is_inside_tree()
+	var xf: Transform3D = entity.global_transform * path_node.transform
 	for i in n + 1:
 		var t := curve.sample_baked_with_rotation(length * i / n)
-		var p := path_node.to_global(t.origin)
-		var fwd := path_node.global_basis * -t.basis.z
+		var p := xf * t.origin
+		var fwd := xf.basis * -t.basis.z
 		fwd.y = 0.0
 		if fwd.length_squared() < 0.0001:
 			continue

@@ -370,8 +370,16 @@ func _physics_process(delta: float) -> void:
 		entity.send_event("on_derailed", {"reason": "bogie derailed", "current_velocity_3d": current_velocity_3d})
 		return
 		
+	# XX claude-fix: трак под любой тележкой удалили (не только под передней): сход.
+	# Иначе ниже в snapped_track присваивается освобождённый инстанс (ошибка и краш)
+	for b in bogie_comp.bogies_data:
+		if not is_instance_valid(b.current_track):
+			entity.send_event("on_derailed", {"reason": "track_removed", "current_velocity_3d": current_velocity_3d})
+			return
+
 	# 2. Проверяем состояние вагона в движении
 	_check_derailment() 
+	if not is_on_rails: return   # XX claude-fix: после схода дальше не считаем позиции
 	_assist_speed_correction(delta)
 
 	# 3. Заставляем тележки пересчитать позиции
