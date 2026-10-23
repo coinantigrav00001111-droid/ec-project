@@ -1,6 +1,4 @@
-[gd_scene format=3 uid="uid://cat5fos845tog"]
-
-[ext_resource type="Script" uid="uid://sohpuxiwyq72" path="res://ui/lvl2_wagon_button.gd" id="1_fm36r"]
+[gd_scene format=3 uid="uid://behjql2yf3b0p"]
 
 [sub_resource type="ButtonGroup" id="ButtonGroup_sgwu6"]
 resource_local_to_scene = false
@@ -12,7 +10,6 @@ custom_minimum_size = Vector2(120, 80)
 toggle_mode = true
 button_group = SubResource("ButtonGroup_sgwu6")
 icon_alignment = 1
-script = ExtResource("1_fm36r")
 
 [node name="NameLabel" type="Label" parent="." unique_id=1348475949]
 layout_mode = 0
