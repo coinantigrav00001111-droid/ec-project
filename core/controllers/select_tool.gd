@@ -186,7 +186,7 @@ func _try_press_lever() -> bool:
 	var hit = controller.get_mouse_ray(Global.active_layers(['handles']))
 	if hit.is_empty():
 		return false
-	var e := _find_entity(hit.collider)
+	var e = _find_entity(hit.collider)
 	if e == null or not e.has_comp(C_Switch):
 		return false
 	var data := {"collider": hit.collider, "consumed": false}
