@@ -15,7 +15,12 @@ class_name C_TerrainLayer extends C_Visual
 ##  - событие terrain_changed в TGM: лист поставлен, сдвинут, удален, поменял форму;
 ##  - T5, траки: магнит верха листа к низу балласта плоского трака (snap_to_tracks) и канава под
 ##    балласт, если трак стоит внутри высоты листа (автовырезы FoamCut.auto, recompute_auto_cuts).
-## Сейв: levels, cuts. Контур сохраняет C_Contour, поза лежит в transform Entity.
+## T7, стадии материала: FoamStage (RAW, PLASTER, PAINT, GRASS), материалы в TerrainStyle (верх и бок отдельно),
+##    set_stage меняет только материалы поверхностей, геометрия не пересобирается.
+## Сейв: levels, cuts, stage. Контур сохраняет C_Contour, поза лежит в transform Entity.
+
+## Стадии материала (D7): сырой пенопласт, шпаклевка, краска, трава
+enum FoamStage { RAW, PLASTER, PAINT, GRASS }
 
 ## Площадь, меньше которой кусок после клиппинга считаем мусором (ю²)
 const MIN_PIECE_AREA := 0.0001
@@ -26,6 +31,10 @@ var levels := 1
 ## Вырезы (локальные полигоны + диапазон слоев). Менять через add_cut / remove_last_cut / clear_cuts
 var cuts: Array[FoamCut] = []
 
+## Текущая стадия материала и стиль (null = встроенный). Менять через set_stage
+var stage: int = FoamStage.RAW
+var style: TerrainStyle
+
 var mesh_node: MeshInstance3D
 var body: StaticBody3D
 
@@ -35,7 +44,8 @@ var _blocks: Array[Dictionary] = []
 var _recomputing := false   # защита от повторного входа: пересчет канав сам шлет terrain_changed
 var _shapes: Array[CollisionShape3D] = []
 var _last_aabb := AABB()
-static var _mat_raw: StandardMaterial3D
+var _surf_side := -1   # индексы поверхностей меша (-1 нет)
+var _surf_top := -1
 
 
 ## Базовый C_Visual.on_added инстанцирует сцену; у листа сцены нет
@@ -480,9 +490,10 @@ func _build_mesh() -> ArrayMesh:
 	if _blocks.is_empty():
 		return null
 	var T: float = Global.settings.layer_height
-	var st := SurfaceTool.new()
+	var st := SurfaceTool.new()      # бока и низ
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	st.set_material(_material())
+	var st_top := SurfaceTool.new()  # горизонтальные верхние грани
+	st_top.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var any := false
 	for b in _blocks:
 		var y0: float = float(b["y0"]) * T
@@ -492,20 +503,28 @@ func _build_mesh() -> ArrayMesh:
 			if tris.is_empty():
 				continue
 			any = true
-			_add_prism(st, poly, tris, y0, y1)
+			_add_prism(st, st_top, poly, tris, y0, y1)
+	_surf_side = -1
+	_surf_top = -1
 	if not any:
 		return null
-	return st.commit()
+	var mesh := ArrayMesh.new()
+	st.commit(mesh)
+	_surf_side = 0
+	st_top.commit(mesh)
+	_surf_top = 1
+	_apply_stage(mesh)
+	return mesh
 
 
 ## Призма: верх (y1), низ (y0) и стенки. poly обходится против часовой (area > 0)
-func _add_prism(st: SurfaceTool, pts: PackedVector2Array, tris: PackedInt32Array, y0: float, y1: float) -> void:
+func _add_prism(st: SurfaceTool, st_top: SurfaceTool, pts: PackedVector2Array, tris: PackedInt32Array, y0: float, y1: float) -> void:
 	# верх и низ
 	for i in range(0, tris.size(), 3):
 		var a := pts[tris[i]]
 		var b := pts[tris[i + 1]]
 		var c := pts[tris[i + 2]]
-		_tri(st, Vector3(a.x, y1, a.y), Vector3(b.x, y1, b.y), Vector3(c.x, y1, c.y), Vector3.UP)
+		_tri(st_top, Vector3(a.x, y1, a.y), Vector3(b.x, y1, b.y), Vector3(c.x, y1, c.y), Vector3.UP)
 		_tri(st, Vector3(a.x, y0, a.y), Vector3(b.x, y0, b.y), Vector3(c.x, y0, c.y), Vector3.DOWN)
 
 	# стенки. Наружу от ребра d это (d.y, -d.x)
@@ -570,12 +589,30 @@ func _clear_shapes() -> void:
 	_shapes.clear()
 
 
-func _material() -> Material:
-	if _mat_raw == null:
-		_mat_raw = StandardMaterial3D.new()
-		_mat_raw.albedo_color = Color(0.93, 0.62, 0.72)   # розовый пенопласт
-		_mat_raw.roughness = 1.0
-	return _mat_raw
+## Материалы стадии на поверхности меша. Вызывается после сборки и при смене стадии
+func _apply_stage(mesh: ArrayMesh) -> void:
+	if mesh == null:
+		return
+	var st := style if style != null else TerrainStyle.new()
+	if _surf_side >= 0 and _surf_side < mesh.get_surface_count():
+		mesh.surface_set_material(_surf_side, st.get_side(stage))
+	if _surf_top >= 0 and _surf_top < mesh.get_surface_count():
+		mesh.surface_set_material(_surf_top, st.get_top(stage))
+
+
+## Сменить стадию материала (InfoPanel). Геометрия и физика не трогаются
+func set_stage(new_stage: int) -> void:
+	new_stage = clampi(new_stage, 0, FoamStage.size() - 1)
+	if new_stage == stage:
+		return
+	stage = new_stage
+	if mesh_node:
+		_apply_stage(mesh_node.mesh as ArrayMesh)
+	entity.send_event("on_terrain_stage_changed", {"stage": stage})
+
+
+func on_terrain_stage_set(d: Dictionary) -> void:
+	set_stage(int(d.get("stage", stage)))
 
 
 ## --- Геометрия для запросов TGM ---
@@ -700,11 +737,12 @@ func save_data() -> Dictionary:
 	var arr: Array = []
 	for c in cuts:
 		arr.append(c.to_dict())
-	return {"levels": levels, "cuts": arr}
+	return {"levels": levels, "cuts": arr, "stage": stage}
 
 
 func load_data(data: Dictionary) -> void:
 	levels = maxi(1, int(data.get("levels", levels)))
+	stage = clampi(int(data.get("stage", stage)), 0, FoamStage.size() - 1)
 	cuts.clear()
 	for d in data.get("cuts", []):
 		cuts.append(FoamCut.from_dict(d))
