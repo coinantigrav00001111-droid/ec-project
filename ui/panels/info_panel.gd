@@ -141,6 +141,9 @@ func _populate_main_tab():
 					%RadiusLabel.text = str(_path.radius) + ' u/sm'
 					%DegLabel.text = str(_path.deg) + '°'
 					%LengthLabel.text = str(_path.get_length()) + ' u/sm'
+			&'terrain':
+				%TrackContainer.hide()
+				%TrainContainer.hide()
 			&'train':
 				%TrackContainer.hide()
 				%TrainContainer.show()
@@ -714,6 +717,7 @@ const STAGE_NAMES := ["Сырой пенопласт", "Шпаклёвка", "К
 
 var _terrain_tab: VBoxContainer
 var _stage_option: OptionButton
+var _terrain_info: Label
 
 
 func _build_terrain_tab() -> void:
@@ -726,6 +730,8 @@ func _build_terrain_tab() -> void:
 	_terrain_tab.add_child(margin)
 	var box := VBoxContainer.new()
 	margin.add_child(box)
+	_terrain_info = Label.new()
+	box.add_child(_terrain_info)
 	var lbl := Label.new()
 	lbl.text = "Стадия отделки листа"
 	box.add_child(lbl)
@@ -755,6 +761,17 @@ func _update_terrain_tab() -> void:
 	_set_terrain_tab_visible(layer != null)
 	if layer:
 		_stage_option.select(layer.stage)
+		_refresh_terrain_info(layer)
+
+
+## Размер в плане, толщина и положение по уровням. Живые значения: вкладка обновляется при смене цели и стадии
+func _refresh_terrain_info(layer: C_TerrainLayer) -> void:
+	var T: float = Global.settings.layer_height
+	var identity := current_target.get_comp(C_Identity) as C_Identity
+	var size: Vector2 = identity.get_config('size', Vector2.ZERO) if identity else Vector2.ZERO
+	var base := roundi(layer.base_y() / T)
+	_terrain_info.text = "Размер: %d × %d u\nСлоёв: %d (высота %.1f u)\nНижний уровень: %d, верхний: %d\nВырезов: %d" % [
+		size.x, size.y, layer.levels, layer.levels * T, base, base + layer.levels, layer.cuts.size()]
 
 
 func _on_stage_selected(index: int) -> void:
