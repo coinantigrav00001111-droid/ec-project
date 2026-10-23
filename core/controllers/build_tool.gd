@@ -82,11 +82,17 @@ func handle_input(event: InputEvent):
 		ghost.send_event("on_rotate_input", {"axis": "y", "amount": ROT_STEP})
 	if Input.is_action_just_pressed("key_e"):
 		ghost.send_event("on_rotate_input", {"axis": "y", "amount": -ROT_STEP})
-	if Input.is_action_just_pressed("key_r"):
+	# XX claude-terra 13.1.4: с Shift R/F идут крупным шагом через ElevationInput, обычный шаг без Shift
+	var _shift := Input.is_key_pressed(KEY_SHIFT)
+	if Input.is_action_just_pressed("key_r") and not _shift:
 		ghost.send_event("on_rotate_input", {"axis": "x", "amount": ROT_STEP})
-	if Input.is_action_just_pressed("key_f"):
+	if Input.is_action_just_pressed("key_f") and not _shift:
 		ghost.send_event("on_rotate_input", {"axis": "x", "amount": -ROT_STEP})
-		
+	# XX claude-terra 13.1.4: Shift+R/F и PageUp/PageDown, крупный шаг уровня
+	var _levels := ElevationInput.levels_from_event(event)
+	if _levels != 0:
+		ghost.send_event("on_elevation_input", {"levels": _levels})
+
 	# XX claude-terra T6: тоннельный режим. Трак с флагом может уходить под листы пенопласта
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_U and ghost.has_comp(C_Path):
 		tunnel_mode = not tunnel_mode

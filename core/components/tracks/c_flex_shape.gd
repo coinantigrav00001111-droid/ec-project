@@ -126,6 +126,15 @@ func on_rotate_input(data: Dictionary) -> void:
 	_validate()
 
 
+## XX claude-terra 13.1.4. Крупный шаг уровня свободного конца (Shift+R/F, PageUp/PageDown)
+func on_elevation_input(data: Dictionary) -> void:
+	if not stretching:
+		return
+	end_levels += int(data.get("levels", 0))
+	_apply(true)
+	_validate()
+
+
 func on_stretch_ended(_d: Dictionary) -> void:
 	stretching = false
 	if _label:

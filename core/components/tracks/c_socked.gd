@@ -13,6 +13,14 @@ var sockets: Array[Dictionary] = []
 ## Массив ссылок на валидные соседние сущности (для графа сети)
 var connected_entities: Array[Entity] = []
 
+# XX claude-terra 13.1.4
+## Чужие сокеты, снап к которым отклонён (излом или подземное положение). Пока список не пуст,
+## призрак или трак в драге красный (C_Invalid) и не ставится. Только жесткие траки: у flex свой C_Invalid
+var _snap_rejected: Array[Area3D] = []
+## Причина последнего отказа: "kink" (излом по вертикали), "underground" (трак уходит под землю) или "".
+## Нужна для подсказки про разворот на 180°
+var snap_reject_reason := ""
+
 # Настройки формы сокета
 var  capsule_radius := 0.6
 var capsule_height := 1.49
@@ -190,7 +198,10 @@ func _on_socket_area_entered(s_socket: Area3D, d_socket: Area3D) -> void:
 	# XX claude-terra снап по "yaw + позиция": трак остается горизонтальным, уклон живет внутри кривой
 	var snap = _snap_transform(s_socket, d_socket)
 	if snap == null:
-		return   # слишком большой излом по вертикали (GlobalSetting.joint_kink_max_deg)
+		# XX claude-terra 13.1.4: излом больше joint_kink_max_deg или трак уходит под землю. Красный призрак
+		_set_snap_rejected(s_socket, d_socket, true)
+		return
+	_set_snap_rejected(s_socket, d_socket, false)
 
 	# Передаем управление в C_TrackDraggable
 	var _comp = entity.get_comp(C_TrackDraggable)
@@ -204,6 +215,7 @@ func _on_socket_area_entered(s_socket: Area3D, d_socket: Area3D) -> void:
 
 ## Выход ⚡Сигнал area 
 func _on_socket_area_exited(_area: Area3D) -> void:
+	_set_snap_rejected(_area, null, false)   # XX claude-terra 13.1.4: ушли от сокета, отказ снят
 	var neighbor_entity = _find_entity_from_collider(_area)
 	
 	# Убираем соседа из списка
@@ -342,11 +354,13 @@ func _orient_area(area: Area3D, _pos: Vector3, dir: Vector3) -> void:
 ## Поза Entity для стыка сокетов (только yaw + позиция) или null, если излом больше допуска.
 ## s_socket - стоящий сокет, d_socket - мой (локальный, базис Entity = только yaw)
 func _snap_transform(s_socket: Area3D, d_socket: Area3D) -> Variant:
+	snap_reject_reason = ""
 	var t_dir := -s_socket.global_basis.z    # "наружу" у стоящего сокета
 	var d_dir := -d_socket.basis.z           # "наружу" у моего, локально
 	# Стык гладкий, если наружные векторы почти противоположны и по вертикали
 	var kink := absf(rad_to_deg(asin(clampf(t_dir.y, -1.0, 1.0)) + asin(clampf(d_dir.y, -1.0, 1.0))))
 	if kink > Global.settings.joint_kink_max_deg:
+		snap_reject_reason = "kink"
 		return null
 	var want := Vector2(-t_dir.x, -t_dir.z)
 	var have := Vector2(d_dir.x, d_dir.z)
@@ -359,8 +373,47 @@ func _snap_transform(s_socket: Area3D, d_socket: Area3D) -> Variant:
 	# XX claude-terra снап, при котором трак уходит под землю, отклоняем (пандус вниз к траку на столе: развернуть на 180°)
 	var path := get_comp(C_Path) as C_Path
 	if path and path.underground_depth(xf) > Global.settings.underground_tolerance:
+		snap_reject_reason = "underground"
 		return null
 	return xf
+
+
+# XX claude-terra 13.1.4
+## Отметить или снять отказ снапа к чужому сокету. Пока есть хоть один отказ, на сущности висит C_Invalid.
+## d_socket нужен только при отметке: если сокеты уже разошлись (ждали физкадр), отказ не ставим
+func _set_snap_rejected(other: Area3D, d_socket: Area3D, on: bool) -> void:
+	if entity.has_comp(C_FlexShape):
+		return   # у flex свой C_Invalid (форма, пределы), не мешаем
+	if on:
+		if d_socket == null or not is_instance_valid(other) or not d_socket.overlaps_area(other):
+			return
+		if not _snap_rejected.has(other):
+			_snap_rejected.append(other)
+	else:
+		_snap_rejected.erase(other)
+	# сокеты соседа могли удалиться без сигнала выхода
+	_snap_rejected = _snap_rejected.filter(
+		func(a): return is_instance_valid(a) and not a.is_queued_for_deletion())
+	var bad := not _snap_rejected.is_empty()
+	if bad and not entity.has_comp(C_Invalid):
+		entity.add_component(C_Invalid.new())
+	elif not bad and entity.has_comp(C_Invalid):
+		entity.remove_component(C_Invalid)
+	if not bad:
+		snap_reject_reason = ""
+
+
+## Есть ли отказ снапа (DragTool: на дропе такой трак возвращается на место)
+func has_snap_rejection() -> bool:
+	return not _snap_rejected.is_empty()
+
+
+## Сброс отказов, например после драга
+func clear_snap_rejection() -> void:
+	_snap_rejected.clear()
+	snap_reject_reason = ""
+	if not entity.has_comp(C_FlexShape) and entity.has_comp(C_Invalid):
+		entity.remove_component(C_Invalid)
 
 
 ## Публичная проверка для вертикального магнита: сокет свободен (нет стабильного соседа)

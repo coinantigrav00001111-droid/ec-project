@@ -60,10 +60,17 @@ func handle_input(event: InputEvent):
 		target_entity.send_event("on_rotate_input", {"axis": "y", "amount": ROT_STEP})
 	if Input.is_action_just_pressed("key_e"):
 		target_entity.send_event("on_rotate_input", {"axis": "y", "amount": -ROT_STEP})
-	if Input.is_action_just_pressed("key_r"):
+	# XX claude-terra 13.1.4: с Shift R/F идут крупным шагом через ElevationInput, обычный шаг без Shift
+	var _shift := Input.is_key_pressed(KEY_SHIFT)
+	if Input.is_action_just_pressed("key_r") and not _shift:
 		target_entity.send_event("on_rotate_input", {"axis": "x", "amount": ROT_STEP})
-	if Input.is_action_just_pressed("key_f"):
+	if Input.is_action_just_pressed("key_f") and not _shift:
 		target_entity.send_event("on_rotate_input", {"axis": "x", "amount": -ROT_STEP})
+	# XX claude-terra 13.1.4: Shift+R/F и PageUp/PageDown, крупный шаг уровня (трак, лист). Поезд событие игнорирует,
+	# его PageUp/PageDown (on_lift_input) ниже работают как раньше
+	var _levels := ElevationInput.levels_from_event(event)
+	if _levels != 0:
+		target_entity.send_event("on_elevation_input", {"levels": _levels})
 	if Input.is_action_just_pressed("ui_home"):
 		target_entity.send_event("on_drag_reset", {}) # сбросить состояние
 	if Input.is_action_pressed("ui_page_up"):
