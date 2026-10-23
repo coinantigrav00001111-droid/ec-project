@@ -63,11 +63,11 @@ func _parse_curve(c: Curve3D, p: Path3D):
 	if d_last.is_zero_approx():
 		d_last = -(c.get_point_position(c.get_point_count() - 2) - p_last).normalized()
 		
-	_add_socket_if_unique(p_first, d_first)
+	_add_socket_if_unique(p_first, d_first, true)
 	_add_cone(p.transform * p_first, Color.CHARTREUSE)  #debug
 	
 	
-	_add_socket_if_unique(p_last, d_last)
+	_add_socket_if_unique(p_last, d_last, false)
 	_add_cone(p.transform * p_last, Color.DEEP_PINK)#debug
 
 
@@ -75,7 +75,8 @@ func _parse_curve(c: Curve3D, p: Path3D):
 
 
 # Добавляем сокет в массив, только если в этой точке его еще нет (слияние для стрелок)
-func _add_socket_if_unique(pos: Vector3, dir: Vector3):
+## XX claude-switch: is_start = начало маршрута. Нужен PGM для полярности: у кросса два начала (сокеты 0 и 2)
+func _add_socket_if_unique(pos: Vector3, dir: Vector3, is_start: bool = false):
 	for s in sockets:
 		if s.pos.distance_to(pos) < 0.01:
 			return # Сокет уже зарегистрирован
@@ -84,7 +85,8 @@ func _add_socket_if_unique(pos: Vector3, dir: Vector3):
 	sockets.append({
 		"pos": pos,
 		"out_dir": dir,
-		"socket": new_socket
+		"socket": new_socket,
+		"start": is_start
 	})
 
 

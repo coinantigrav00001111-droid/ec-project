@@ -581,11 +581,15 @@ func footprint_world() -> PackedVector2Array:
 ## Обычный трак: routes пуст, ничего не меняется. Кривые строит C_SwitchShape, переключает C_Switch.
 var routes: Array[Curve3D] = []
 var active_route := 0
+## Кросс: все маршруты активны одновременно, вагон едет по своему (номер хранит тележка, BogieData.route).
+## У стрелки false: маршрут один на всех, активный
+var parallel_routes := false
 
 
 ## Задать маршруты стрелки. Маршрут 0 уже построен как базовая кривая (длина по прямой), его заменяем той же формой
-func set_routes(list: Array[Curve3D], active: int = 0) -> void:
+func set_routes(list: Array[Curve3D], active: int = 0, parallel: bool = false) -> void:
 	routes = list
+	parallel_routes = parallel
 	active_route = clampi(active, 0, maxi(list.size() - 1, 0))
 	_activate_route(false)
 	entity.send_event("on_routes_changed", {})
@@ -629,11 +633,48 @@ func all_curves() -> Array[Curve3D]:
 ## Стрелке только у концов активного маршрута: со стороны неактивной ветки въезд закрыт (иначе тележку
 ## спроецировало бы в середину активной кривой)
 func accepts_entry(gpos: Vector3, tol: float = 1.0) -> bool:
+	return entry_route(gpos, tol) >= 0
+
+
+## Кривая для тележки с номером маршрута r. Кроссу (parallel_routes) отдает кривую этого маршрута,
+## всем остальным активную (curve): номер игнорируется, поэтому обычные траки и стрелки работают как раньше
+func curve_of(r: int) -> Curve3D:
+	if parallel_routes and r >= 0 and r < routes.size():
+		return routes[r]
+	return curve
+
+
+## Маршрут, на который попадает тележка, въезжая в точку gpos (мир). -1 = въезд закрыт.
+## Обычный трак: 0. Стрелка: 0, если gpos у конца активного маршрута. Кросс: маршрут, у конца которого gpos
+func entry_route(gpos: Vector3, tol: float = 1.0) -> int:
 	if routes.size() <= 1 or curve == null or path_node == null:
-		return true
-	var l := curve.get_baked_length()
-	var a := path_node.to_global(curve.sample_baked(0.0))
-	var b := path_node.to_global(curve.sample_baked(l))
+		return 0
+	if parallel_routes:
+		for i in routes.size():
+			if _near_ends(routes[i], gpos, tol):
+				return i
+		return -1
+	return 0 if _near_ends(curve, gpos, tol) else -1
+
+
+## Маршрут, ближайший к точке (в системе path_node). Нужен при посадке вагона на кросс. Остальным 0
+func route_at(local_pos: Vector3) -> int:
+	if not parallel_routes or routes.size() < 2:
+		return 0
+	var best := 0
+	var best_d := INF
+	for i in routes.size():
+		var d := routes[i].get_closest_point(local_pos).distance_to(local_pos)
+		if d < best_d:
+			best_d = d
+			best = i
+	return best
+
+
+func _near_ends(c: Curve3D, gpos: Vector3, tol: float) -> bool:
+	var l := c.get_baked_length()
+	var a := path_node.to_global(c.sample_baked(0.0))
+	var b := path_node.to_global(c.sample_baked(l))
 	return gpos.distance_to(a) <= tol or gpos.distance_to(b) <= tol
 
 

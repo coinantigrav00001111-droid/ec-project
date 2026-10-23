@@ -80,7 +80,8 @@ func get_motion_axis() -> Vector3:
 		return -entity.global_basis.z
 	var b = bc.bogies_data[0]
 	var pc = b.current_track.get_comp(C_Path)
-	var t = pc.curve.sample_baked_with_rotation(clampf(b.track_distance, 0.0, pc.curve.get_baked_length()))
+	var crv: Curve3D = pc.curve_of(b.route)   # XX claude-switch
+	var t = crv.sample_baked_with_rotation(clampf(b.track_distance, 0.0, crv.get_baked_length()))
 	var fwd: Vector3 = (pc.path_node.global_basis * -t.basis.z).normalized()
 	var pt = b.current_track.get_comp(C_PowerTrack)
 	return -fwd if (pt and pt.is_flipped) else fwd
@@ -144,7 +145,7 @@ func on_train_snapped(track_data: Dictionary) -> void:
 	var path_comp = snapped_track.get_comp(C_Path)
 	if path_comp and path_comp.curve:
 		# Получаем вектор касательной сплайна в точке посадки
-		var curve_transform = path_comp.curve.sample_baked_with_rotation(current_spline_offset)
+		var curve_transform = path_comp.curve_of(track_data.get("route", 0)).sample_baked_with_rotation(current_spline_offset)   # XX claude-switch
 		var track_forward = (path_comp.path_node.global_basis * -curve_transform.basis.z).normalized()
 		
 		# Берем текущий вектор морды вагона (который нам выставил драг-тул)
@@ -524,14 +525,16 @@ func restore_snap_after_load() -> void:
 
 	# Смещение считаем по ФАКТИЧЕСКОМУ положению тележки, а не из сейва (там значение с момента посадки).
 	# offset - положение ЦЕНТРА вагона на сплайне (так его ждёт set_track_to_bogies_data).
-	var s_b := pc.curve.get_closest_offset(pc.path_node.to_local(b.pivot.global_position))
-	var t := pc.curve.sample_baked_with_rotation(s_b)
+	var route := pc.route_at(pc.path_node.to_local(b.pivot.global_position))   # XX claude-switch: кросс, маршрут под тележкой
+	var crv := pc.curve_of(route)
+	var s_b := crv.get_closest_offset(pc.path_node.to_local(b.pivot.global_position))
+	var t := crv.sample_baked_with_rotation(s_b)
 	var tangent := (pc.path_node.global_basis * -t.basis.z).normalized()
 	var flipped := (-entity.global_basis.z).dot(tangent) < 0.0
 	var placement_dir := 1.0 if flipped else -1.0
 	var offset := s_b - b.pivot.position.z * placement_dir
 
-	on_train_snapped({"track": track_entity, "offset": offset})
+	on_train_snapped({"track": track_entity, "offset": offset, "route": route})
 
 
 

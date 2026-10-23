@@ -8,6 +8,7 @@ class BogieData:
 	var ray_home := Vector3.ZERO   # XX claude-terra штатная локальная позиция датчика (луч временно смещаем и возвращаем)
 	var current_track: Entity
 	var track_distance: float = 0.0
+	var route: int = 0   # XX claude-switch: номер маршрута на кроссе (C_Path.curve_of). Остальным траком не важен
 	var calculated_global_pos: Vector3
 	var calculated_global_basis: Basis
 	#var is_front: bool = false # уже не надо
@@ -78,10 +79,12 @@ func set_track_to_bogies_data(track_data: Dictionary, w_flipped: bool) -> Dictio
 	if not is_instance_valid(track) or not track.has_comp(C_Path): return {}
 		
 	var path_comp = track.get_comp(C_Path)
-	var curve_len = path_comp.curve.get_baked_length()
+	var route: int = track_data.get("route", 0)   # XX claude-switch
+	var curve_len = path_comp.curve_of(route).get_baked_length()
 	
 	for bogie in bogies_data:
 		bogie.current_track = track
+		bogie.route = route
 		
 		# Если вагон посажен мордой против сплайна (w_flipped = true), 
 		# передняя тележка (у которой Z < 0) должна оказаться ближе к началу сплайна (0.0).
@@ -154,7 +157,8 @@ func _assist_check_transition(bogie: BogieData) -> void:
 	if not is_instance_valid(bogie.current_track): return
 	
 	var path_comp = bogie.current_track.get_comp(C_Path)
-	var curve_len = path_comp.curve.get_baked_length()
+	var crv: Curve3D = path_comp.curve_of(bogie.route)   # XX claude-switch
+	var curve_len = crv.get_baked_length()
 
 	# 1. Тележка в пределах текущего сплайна — переход не нужен
 	if bogie.track_distance >= 0.0 and bogie.track_distance <= curve_len:
@@ -167,7 +171,7 @@ func _assist_check_transition(bogie: BogieData) -> void:
 	# 3. Получаем крайнюю точку и глобальный вектор вылета (касательную)
 	var edge_offset = curve_len if is_exiting_end else 0.0
 	
-	var edge_transform = path_comp.curve.sample_baked_with_rotation(edge_offset)
+	var edge_transform = crv.sample_baked_with_rotation(edge_offset)
 	var edge_global_pos = path_comp.path_node.to_global(edge_transform.origin)
 	
 	# В Godot вперед - это -Z
@@ -204,7 +208,7 @@ func _assist_check_transition(bogie: BogieData) -> void:
 			# Если нащупали новый трак
 			# XX claude-switch: стрелка пускает только со стороны концов активного маршрута
 			if is_instance_valid(hit_entity) and hit_entity != bogie.current_track and hit_entity.has_comp(C_Path) \
-					and hit_entity.get_comp(C_Path).accepts_entry(extrapolated_pos):
+					and hit_entity.get_comp(C_Path).entry_route(extrapolated_pos) >= 0:
 				var next_path = hit_entity.get_comp(C_Path)
 				
 				# Переводим глобальную точку полета в локальную систему нового трака
@@ -212,7 +216,8 @@ func _assist_check_transition(bogie: BogieData) -> void:
 				
 				# Проецируем на новую кривую. Это автоматически решает все стыки (1-0, 0-1)
 				bogie.current_track = hit_entity
-				bogie.track_distance = next_path.curve.get_closest_offset(local_hit_pos)
+				bogie.route = next_path.entry_route(extrapolated_pos)   # XX claude-switch
+				bogie.track_distance = next_path.curve_of(bogie.route).get_closest_offset(local_hit_pos)
 				return
 	
 	# 5. Если улетели за пределы толерантности зазора (0.4м) и ничего не нащупали — дерейл
@@ -222,16 +227,17 @@ func _assist_check_transition(bogie: BogieData) -> void:
 
 
 #### Получение глобальной координаты на сплайне с поддержкой экстраполяции над зазором
-func _assist_sample_pos_with_extrapolation(path_comp: C_Path, distance: float, curve_len: float) -> Vector3:
+func _assist_sample_pos_with_extrapolation(path_comp: C_Path, distance: float, curve_len: float, route: int = 0) -> Vector3:
+	var crv: Curve3D = path_comp.curve_of(route)   # XX claude-switch
 	if distance >= 0.0 and distance <= curve_len:
-		var transform_baked = path_comp.curve.sample_baked_with_rotation(distance)
+		var transform_baked = crv.sample_baked_with_rotation(distance)
 		return path_comp.path_node.to_global(transform_baked.origin)
 	else:
 		var is_exiting_end = distance > curve_len
 		var overflow = distance - curve_len if is_exiting_end else distance
 		var edge_offset = curve_len if is_exiting_end else 0.0
 		
-		var edge_transform = path_comp.curve.sample_baked_with_rotation(edge_offset)
+		var edge_transform = crv.sample_baked_with_rotation(edge_offset)
 		var edge_global_pos = path_comp.path_node.to_global(edge_transform.origin)
 		
 		var global_forward = (path_comp.path_node.global_basis * -edge_transform.basis.z).normalized()
@@ -247,7 +253,7 @@ func _assist_update_calc_global_pos(bogie: BogieData) -> void:
 	if not is_instance_valid(bogie.current_track): return
 	
 	var path_comp = bogie.current_track.get_comp(C_Path)
-	var curve_len = path_comp.curve.get_baked_length()
+	var curve_len = path_comp.curve_of(bogie.route).get_baked_length()   # XX claude-switch
 	#var track_h = bogie.current_track.get_comp(C_Identity).get_config('height', 0.0)
 	var track_h = path_comp.head_height()
 	var wp_z = bogie.config.wheel_pair_position.z  if bogie.config else 0.0
@@ -259,8 +265,8 @@ func _assist_update_calc_global_pos(bogie: BogieData) -> void:
 	
 	if wp_z > 0.001:
 		# Двухосная тележка: считаем крайние точки колесных пар (front/rear)
-		var front_pos = _assist_sample_pos_with_extrapolation(path_comp, bogie.track_distance + wp_z, curve_len)
-		var rear_pos = _assist_sample_pos_with_extrapolation(path_comp, bogie.track_distance - wp_z, curve_len)
+		var front_pos = _assist_sample_pos_with_extrapolation(path_comp, bogie.track_distance + wp_z, curve_len, bogie.route)
+		var rear_pos = _assist_sample_pos_with_extrapolation(path_comp, bogie.track_distance - wp_z, curve_len, bogie.route)
 		
 		# Центр тележки — точка посередине между осями
 		bogie.calculated_global_pos = (front_pos + rear_pos) / 2.0
@@ -278,11 +284,11 @@ func _assist_update_calc_global_pos(bogie: BogieData) -> void:
 			bogie.pivot.global_basis = Basis.looking_at(forward_dir, Vector3.UP)
 	else:
 		# Одноосная тележка: расчет по центральной точке
-		bogie.calculated_global_pos = _assist_sample_pos_with_extrapolation(path_comp, bogie.track_distance, curve_len)
+		bogie.calculated_global_pos = _assist_sample_pos_with_extrapolation(path_comp, bogie.track_distance, curve_len, bogie.route)
 		bogie.calculated_global_pos.y += track_h
 		
 		if is_instance_valid(bogie.pivot):
-			var transform_baked = path_comp.curve.sample_baked_with_rotation(clampf(bogie.track_distance, 0.0, curve_len))
+			var transform_baked = path_comp.curve_of(bogie.route).sample_baked_with_rotation(clampf(bogie.track_distance, 0.0, curve_len))
 			var global_forward = (path_comp.path_node.global_basis * -transform_baked.basis.z).normalized()
 			
 			# --- ИСПРАВЛЕНИЕ: Инвертируем вектор для 1-осной тележки, если сплайн встречный (1-1) ---

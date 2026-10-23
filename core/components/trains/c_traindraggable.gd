@@ -16,6 +16,8 @@ var drag_offset := Vector3.ZERO # Смещение ентити
 # Ссылки на текущий трак, если мы над ним
 var current_track: Entity = null
 var current_curve_point: float = 0.0 # Смещение на кривой
+var current_route: int = 0           # XX claude-switch: маршрут на кроссе (ближайший к курсору)
+var _snap_route: int = -1
 var is_snapped_to_track := false # Флаг привязки к траку
 var is_flipped_on_track := false # Флаг: смотрит ли вагон мордой к началу трака
 
@@ -157,6 +159,7 @@ func on_drag_ended(_data: Dictionary) -> void:
 		entity.send_event("on_train_snapped", {
 			"track": current_track,
 			"offset": current_curve_point,
+			"route": current_route,
 			"is_wagon_flipped": is_flipped_on_track # Передаем разворот
 		})
 	else:
@@ -204,11 +207,13 @@ func _snap_to_track(track_entity: Entity, world_mouse_pos: Vector3) -> void:
 		return
 
 	var path_node = path_comp.path_node
-	var curve = path_comp.curve
+	var local_mouse_pos = path_node.to_local(world_mouse_pos)
+	# XX claude-switch: у кросса берем кривую, ближайшую к курсору (обычному траку всегда активная)
+	current_route = path_comp.route_at(local_mouse_pos)
+	var curve = path_comp.curve_of(current_route)
 
 
 	# 1. Находим ближайшую точку на кривой в локальных координатах
-	var local_mouse_pos = path_node.to_local(world_mouse_pos)
 	current_curve_point = curve.get_closest_offset(local_mouse_pos)
 
 	# 2. Получаем Transform3D точки на кривой, чтобы узнать касательную (tangent)
@@ -219,7 +224,7 @@ func _snap_to_track(track_entity: Entity, world_mouse_pos: Vector3) -> void:
 	var track_forward = (path_node.global_transform.basis * -curve_point_transform.basis.z).normalized()
 	
 	# 4. Проверяем сонаправленность ТОЛЬКО при первой посадке на трак
-	if not is_snapped_to_track or current_track != track_entity: 
+	if not is_snapped_to_track or current_track != track_entity or _snap_route != current_route:
 		var wagon_forward = -entity.global_transform.basis.z     
 		is_flipped_on_track = wagon_forward.dot(track_forward) < 0
 		
@@ -240,6 +245,7 @@ func _snap_to_track(track_entity: Entity, world_mouse_pos: Vector3) -> void:
 	
 	# Сохраняем стейт
 	current_track = track_entity
+	_snap_route = current_route
 	is_snapped_to_track = true
 
 

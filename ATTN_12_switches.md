@@ -1,7 +1,8 @@
 # ATTN 12. Switch (стрелка), Crossing, Buffer Stop
 
-Статус: **S1 (стрелка, ручная и дистанционная, электрика E0)** и **S2 (упор)** написаны. Кросс, E1-E3 впереди.
-S2 написан без запуска Godot, проверка за вами (tests/buffer_stop_test.tscn).
+Статус: **S1 (стрелка, ручная и дистанционная, электрика E0)**, **S2 (упор)**, **S3 (кросс)** написаны. E1-E3 впереди.
+S1 прогнан в headless Godot 4.6 (логика и проезд вагона). S2 и S3 написаны без запуска Godot, проверка за вами
+(tests/buffer_stop_test.tscn, tests/crossing_drive_test.tscn). Серия перенесена на main c8ff188 (тоннели T6 и др.).
 
 ## Принцип
 Стрелка = один Entity и один C_Path с несколькими кривыми (`routes`). В системе координат Path3D общий носок в начале.
@@ -24,6 +25,7 @@ C_TrainDraggable) видит только его и о стрелках ниче
 | `c_socked.gd` | сокеты со всех маршрутов: [0] носок, [1] конец прямой, [2] конец ответвления |
 | `c_bogie.gd` | `accepts_entry` при въезде на трак; группа `bogie_owner` для замка |
 | `c_tracksupport.gd` | опоры под всеми маршрутами |
+| `power_grid_manager.gd` | `_calc_flip`: начало маршрута из флага сокета `start` (S3) |
 | `select_tool.gd` | `_try_press_lever`: клик по рычагу без выделения |
 
 Порядок в .tres: Identity, SwitchVisual, Draggable, Pivot, Hoverable, Selectable, Blockable, Path, **SwitchShape**,
@@ -66,7 +68,36 @@ Socket, PowerTrack, TrackSupport, **Switch**. Объекты: `data/tracks/objec
 * сокет у стены выключается (`on_socket_enabled`), пристыковаться можно только открытым концом.
 Порядок в .tres: ... Path, Socket, PowerTrack, TrackSupport, **BufferStop** (после Socket).
 
+## Кросс (Crossing, S3)
+Один Entity, два прямых пути (`routes`), пересекающихся в центре под `cross_deg` (15). В отличие от стрелки
+**оба пути активны сразу**: `C_Path.parallel_routes = true`, а какой путь у вагона, хранит тележка (`BogieData.route`).
+
+* `C_Path.curve_of(r)`: кривая пути r. Обычному траку и стрелке отдает активную `curve` и номер игнорирует, поэтому
+  остальной код работает как раньше.
+* `C_Path.entry_route(gpos)`: на какой путь въезжает тележка (по концу пути, -1 = закрыто). Пользуется `C_Bogie` при переходе.
+* `C_Path.route_at(local_pos)`: путь, ближайший к точке. Нужен при посадке вагона на кросс мышью
+  (`C_TrainDraggable`) и при загрузке сейва (`C_Chassis.restore_snap_after_load`). В сейв номер не пишем, он считается по положению.
+* Правки в `C_Bogie`, `C_Chassis`, `C_TrainDraggable`: везде, где читалась `path_comp.curve`, теперь `curve_of(route)`;
+  `route` приходит в `track_data` (`on_train_snapped {track, offset, route}`).
+* Сокеты кросса: [0] начало 0, [1] конец 0, [2] начало 1, [3] конец 1. У сокетов новый флаг `start` (начало маршрута),
+  PGM берет его в `_calc_flip` вместо `id == 0` (для старых траков значение то же).
+* Файлы: `setting/crossing_config.gd` (`cross_deg`), `c_crossing_shape.gd`, `crossingshape_setting.gd`,
+  `data/tracks/objects/crossing.tres` (тег `crossing`). Визуал тот же `C_SwitchVisual` без рычага.
+* Электрика (упрощение E3 joined): один `C_PowerTrack` на оба пути, один контур и одна полярность. Конфликт полярности
+  между путями даст обычное КЗ PGM. В реальности рамки кросса изолируют, раздельные контуры путей (insulated)
+  потребуют `C_PowerTrack` на каждый путь: следующий этап.
+* Ограничения: только прямые пути; концы путей на расстоянии около 3.1 ю (при 15°), балласт соседних траков у концов
+  может слегка пересечься.
+
+## Известные ограничения (S1-S3)
+* Террейн: стрелка и кросс не `is_flat`, листы пенопласта под ними не подгоняются. `C_TrackSupport._notify_terrain` берет
+  `ballast_samples()` по активной кривой.
+* Тоннельный флаг (U) на стрелке и кроссе: свод и метка только по активной кривой (`C_Tunnel` и террейн знают одну кривую).
+
 ## Проверка
-`tests/buffer_stop_test.tscn` (F6): вагон в упор на скоростях 1.0, 1.5, 3.0. Ожидаемый результат в шапке скрипта.
+* `tests/switch_drive_test.tscn` (F6): 6 сценариев проезда через стрелку.
+* `tests/buffer_stop_test.tscn` (F6): вагон в упор на скоростях 1.0, 1.5, 3.0.
+* `tests/crossing_drive_test.tscn` (F6): вагон по путям A и B кросса, вперед и назад.
+Ожидаемый результат в шапках скриптов.
 
 `tests/switch_drive_test.tscn` (F6): 6 сценариев проезда вагона. Ожидаемый вывод в шапке скрипта.

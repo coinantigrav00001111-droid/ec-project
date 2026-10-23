@@ -359,6 +359,11 @@ func _calc_flip(current_entity: Entity, neighbor_entity: Entity, current_flip: b
 	# 2. Логика полярности
 	var is_start1 = (id1 == 0)
 	var is_start2 = (id2 == 0)
+	# XX claude-switch: начало маршрута берем из флага сокета (у кросса два начала). Без флага как раньше
+	if id1 < sock_comp1.sockets.size():
+		is_start1 = bool(sock_comp1.sockets[id1].get("start", id1 == 0))
+	if id2 < sock_comp2.sockets.size():
+		is_start2 = bool(sock_comp2.sockets[id2].get("start", id2 == 0))
 	
 	# print("Стык %s[%s] <-> %s[%s] | Было: %s" % [current_entity.name, id1, neighbor_entity.name, id2, current_flip])
 	
