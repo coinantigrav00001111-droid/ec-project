@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="TrackStyle" format=3]
+
+[ext_resource type="Script" uid="uid://cfpx56q1cgoy5" path="res://core/components/tracks/track_style.gd" id="1_ts"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_sleeper"]
+albedo_color = Color(0.30, 0.20, 0.13, 1)
+roughness = 0.9
+
+[resource]
+script = ExtResource("1_ts")
+id = &"wood_ballast"
+sleeper_material = SubResource("Mat_sleeper")
