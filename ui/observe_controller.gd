@@ -66,6 +66,18 @@ const CARDS := {
 	&"room": [
 		{"id": &"room_visible", "title": "Комната", "toggle": true, "default": true},
 		{"id": &"ceiling", "title": "Потолок", "toggle": true},
+		{"id": &"wall_cream", "title": "Стены: беж", "group": &"wall", "default": true},
+		{"id": &"wall_sky", "title": "Стены: небо", "group": &"wall"},
+		{"id": &"wall_mint", "title": "Стены: мята", "group": &"wall"},
+		{"id": &"bed_blue", "title": "Постель: синяя", "group": &"bedding", "default": true},
+		{"id": &"bed_red", "title": "Постель: красная", "group": &"bedding"},
+		{"id": &"bed_green", "title": "Постель: зелёная", "group": &"bedding"},
+		{"id": &"curt_yellow", "title": "Шторы: жёлтые", "group": &"curtains", "default": true},
+		{"id": &"curt_red", "title": "Шторы: красные", "group": &"curtains"},
+		{"id": &"curt_blue", "title": "Шторы: синие", "group": &"curtains"},
+		{"id": &"poster_trains", "title": "Постеры: поезда", "group": &"posters", "default": true},
+		{"id": &"poster_map", "title": "Постеры: карта", "group": &"posters"},
+		{"id": &"poster_space", "title": "Постеры: космос", "group": &"posters"},
 	],
 	&"photo": [
 		{"id": &"hide_ui", "title": "Скрыть UI", "toggle": true, "tip": "Клавиша H. Esc: вернуть UI"},

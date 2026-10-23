@@ -103,6 +103,15 @@ void fragment() {
 
 func _ready() -> void:
 	set_process(false)
+	if Global.fast_debug:
+		# Режим быстрой загрузки: без пресетов Look и Time, без миниатюры, только Low и без SDFGI
+		_load_presets()
+		_load_settings()
+		await get_tree().process_frame
+		if _resolve():
+			_apply_fast()
+		_debug_perf()
+		return
 	_build_miniature()
 	_load_presets()
 	_load_settings()
@@ -113,9 +122,14 @@ func _ready() -> void:
 		_apply_quality_settings()
 		_apply_all(0.0)
 	_connect_observe()
+	_debug_perf()
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# F8 (debug): V-Sync вкл/выкл. По умолчанию V-Sync включён, поэтому fps упирается в частоту монитора
+	if Global.debug_mode and event is InputEventKey and event.pressed and not event.echo \
+			and event.keycode == KEY_F8:
+		_toggle_vsync()
 	# F10 (debug): сохранить встроенные Look и Time в .tres для правки
 	if Global.debug_mode and event is InputEventKey and event.pressed and not event.echo \
 			and event.keycode == KEY_F10:
@@ -379,6 +393,39 @@ func _sync_cards() -> void:
 	_oc.set_group_state(&"time", state.time)
 	_oc.set_group_state(&"quality", state.quality)
 	_oc.set_toggle_state(&"lamp", _lamp_is_on)
+
+
+# ==========================================
+# FAST DEBUG и ПРОИЗВОДИТЕЛЬНОСТЬ
+# ==========================================
+
+## Минимум для отладки: Low-настройки (тени, AA, SSAO quality), SDFGI и SSIL выключены, остальное как в сцене
+func _apply_fast() -> void:
+	state.quality = &"low"
+	_apply_quality_settings()
+	_env.sdfgi_enabled = false
+	_env.ssil_enabled = false
+
+
+func _toggle_vsync() -> void:
+	var on := DisplayServer.window_get_vsync_mode() == DisplayServer.VSYNC_DISABLED
+	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if on else DisplayServer.VSYNC_DISABLED)
+	Engine.max_fps = 0
+	print("[GFX] V-Sync ", "вкл" if on else "выкл")
+
+
+## В debug раз в секунду пишет fps и состояние V-Sync в заголовок окна
+func _debug_perf() -> void:
+	if not Global.debug_mode:
+		return
+	var base := str(ProjectSettings.get_setting("application/config/name", "EC"))
+	var t := Timer.new()
+	t.wait_time = 1.0
+	t.autostart = true
+	t.timeout.connect(func():
+		var vs := "vsync" if DisplayServer.window_get_vsync_mode() != DisplayServer.VSYNC_DISABLED else "no vsync"
+		get_window().title = "%s | %d fps | %s | %s" % [base, Engine.get_frames_per_second(), vs, state.quality])
+	add_child(t)
 
 
 # ==========================================

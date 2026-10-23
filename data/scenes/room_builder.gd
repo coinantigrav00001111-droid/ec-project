@@ -24,10 +24,13 @@ var ceiling: Node3D
 var table: Node3D
 
 var _mats := {}
-var _walls: Array[MeshInstance3D] = []
+var _walls: Array[MeshInstance3D] = []   # стены, рама, шторы и подоконник: тень только в Observe
+var _decor: RoomDecor
+var _wall_col := Color(0.80, 0.79, 0.76)
+var _room_visible := true
+var _ceiling_visible := false
+var _walls_shadow_now := false
 
-const COL_FLOOR := Color(0.42, 0.40, 0.38)
-const COL_WALL := Color(0.80, 0.79, 0.76)
 const COL_CEILING := Color(0.90, 0.90, 0.88)
 const COL_TABLE := Color(0.62, 0.50, 0.38)
 const COL_TABLE_LEG := Color(0.45, 0.36, 0.28)
@@ -46,9 +49,28 @@ const PROPS := [
 func _ready() -> void:
 	if config == null:
 		config = RoomConfig.new()
+	if Global.fast_debug:
+		# Режим быстрой загрузки: комнату не строим, подмакетником служит скрытый WoodFloor из сцены
+		print("[FAST] комната не строится, пол WoodFloor")
+		_use_wood_floor()
+		return
 	add_to_group(&"room_root")
+	_walls_shadow_now = walls_cast_shadow
 	build()
 	_connect_observe()
+	_connect_gfx()
+
+
+## Debug: включает старую большую землю (WoodFloor) вместо подмакетника и комнаты
+func _use_wood_floor() -> void:
+	var f := get_tree().root.find_child("WoodFloor", true, false) as Node3D
+	if f == null:
+		push_warning("RoomBuilder: WoodFloor не найден, в fast_debug нет земли")
+		return
+	f.visible = true
+	var shape := f.find_child("CollisionShape3D", true, false) as CollisionShape3D
+	if shape:
+		shape.set_deferred("disabled", false)
 
 
 ## Карточки категории Room (S1). Ищем по группе: ObserveController живёт в сцене UI, а %-имена видны только внутри своей сцены
@@ -57,32 +79,48 @@ func _connect_observe() -> void:
 	var oc = get_tree().get_first_node_in_group(&"observe_controller")
 	if oc:
 		oc.observe_action.connect(_on_observe_action)
-		oc.observe_entered.connect(func(): set_walls_cast_shadow(window_shadows_in_observe))
-		oc.observe_exited.connect(func(): set_walls_cast_shadow(walls_cast_shadow))
+		oc.observe_entered.connect(func(): _set_observe_shadows(true))
+		oc.observe_exited.connect(func(): _set_observe_shadows(false))
 	else:
 		push_warning("RoomBuilder: ObserveController не найден, кнопки категории Room не работают")
 
 
-## Пересобрать комнату (после смены config)
+## Лампочка светится по GFX.lamp_changed, мелочи прячутся по QualityPreset.room_detail_lod
+func _connect_gfx() -> void:
+	await get_tree().process_frame
+	GFX.lamp_changed.connect(_on_lamp_changed)
+	GFX.quality_changed.connect(func(_id): _apply_detail())
+	if _decor:
+		_decor.set_lamp_glow(GFX.is_lamp_on())
+	_apply_detail()
+
+
+func _on_lamp_changed(on: bool) -> void:
+	if _decor:
+		_decor.set_lamp_glow(on)
+
+
+func _apply_detail() -> void:
+	if _decor == null:
+		return
+	var q: QualityPreset = GFX.get_quality()
+	_decor.set_detail(q.room_detail_lod if q else 1)
+
+
+## Тень стен, рамы и штор: рисунок окна на столе только в Observe
+func _set_observe_shadows(on: bool) -> void:
+	_walls_shadow_now = window_shadows_in_observe if on else walls_cast_shadow
+	set_walls_cast_shadow(_walls_shadow_now)
+
+
+## Пересобрать всё (после смены config). Стол тоже: при игре лучше rebuild_room()
 func build() -> void:
 	for c in get_children():
 		remove_child(c)
 		c.queue_free()
 	_mats.clear()
-	_walls.clear()
-	ceiling = null
-
 	_build_table()
-
-	if config.scene:
-		visuals = config.scene.instantiate() as Node3D
-		visuals.name = "Room"
-		add_child(visuals)
-	else:
-		visuals = Node3D.new()
-		visuals.name = "Room"
-		add_child(visuals)
-		_build_greybox()
+	_build_room()
 
 	if temp_light:
 		var l := DirectionalLight3D.new()
@@ -93,11 +131,48 @@ func build() -> void:
 		add_child(l)
 
 
+## Пересобрать только комнату (смена варианта), стол с вагонами не трогаем
+func rebuild_room() -> void:
+	if visuals:
+		remove_child(visuals)
+		visuals.queue_free()
+	_mats.clear()
+	_build_room()
+
+
+func _build_room() -> void:
+	_walls.clear()
+	ceiling = null
+	_decor = null
+	visuals = Node3D.new()
+	visuals.name = "Room"
+	add_child(visuals)
+	if config.scene:
+		visuals.add_child(config.scene.instantiate())
+	else:
+		_build_greybox()
+	# Состояние переживает пересборку
+	visuals.visible = _room_visible
+	if ceiling:
+		ceiling.visible = _ceiling_visible
+	set_walls_cast_shadow(_walls_shadow_now)
+	_apply_detail()
+
+
+## Смена варианта (слоты wall, bedding, curtains, posters, см. RoomDecor.VARIANTS)
+func set_variant(slot: String, value: String) -> void:
+	if config.variants.get(slot, "") == value:
+		return
+	config.variants[slot] = value
+	rebuild_room()
+
+
 func get_bounds() -> AABB:
 	return config.bounds
 
 
 func set_room_visible(on: bool) -> void:
+	_room_visible = on
 	if visuals:
 		visuals.visible = on
 	room_visible_changed.emit(on)
@@ -111,6 +186,7 @@ func set_walls_cast_shadow(on: bool) -> void:
 
 
 func set_ceiling_visible(on: bool) -> void:
+	_ceiling_visible = on
 	if ceiling:
 		ceiling.visible = on
 
@@ -122,8 +198,18 @@ func _on_observe_action(_cat: StringName, _id: StringName, _pressed: bool) -> vo
 	match _id:
 		&'room_visible':
 			set_room_visible(_pressed)
+			return
 		&'ceiling':
 			set_ceiling_visible(_pressed)
+			return
+	# Варианты: wall_cream, bed_blue, curt_yellow, poster_trains
+	if not _pressed:
+		return
+	var s := String(_id)
+	for pair in [["wall_", "wall"], ["bed_", "bedding"], ["curt_", "curtains"], ["poster_", "posters"]]:
+		if s.begins_with(pair[0]):
+			set_variant(pair[1], s.trim_prefix(pair[0]))
+			return
 
 
 # ==========================================
@@ -164,8 +250,11 @@ func _build_greybox() -> void:
 	var room_layer := Global.active_layers(['room'])
 	var vis := _vis_layer()
 
+	_decor = RoomDecor.new(c, vis, _lamp_height())
+	_wall_col = _decor.wall_color()
+
 	_box(visuals, "Floor", Vector3(c.size.x + 2.0 * t, t, c.size.z + 2.0 * t), Vector3(0.0, fy - t * 0.5, 0.0),
-			COL_FLOOR, room_layer, vis, true)
+			_decor.floor_color(), room_layer, vis, true)
 
 	_wall_z(-1.0, c.window)   # север: окно
 	_wall_z(1.0, c.door)      # юг: дверь
@@ -182,12 +271,16 @@ func _build_greybox() -> void:
 			Vector3(0.0, fy + c.size.y + t * 0.5, 0.0), COL_CEILING, 0, vis, false)
 	ceiling.visible = false
 
+	# Мебель: коллизия простой коробкой (слой room), внешний вид строит RoomDecor
 	for p in PROPS:
-		var sz: Vector3 = p.size
-		var xz: Vector2 = p.xz
-		var collide: bool = p.get("collide", true)
-		_box(visuals, p.name, sz, Vector3(xz.x, fy + sz.y * 0.5, xz.y), p.color,
-				room_layer if collide else 0, vis, true)
+		if p.get("collide", true):
+			var sz: Vector3 = p.size
+			var xz: Vector2 = p.xz
+			_collider(visuals, p.name, sz, Vector3(xz.x, fy + sz.y * 0.5, xz.y), room_layer)
+
+	_decor.build(visuals)
+	for part in _decor.window_parts:
+		_walls.append(part)
 
 
 ## Стена вдоль X на z = sgn * (hz + t/2) с необязательным проёмом {x, w, sill, h}
@@ -221,7 +314,7 @@ func _wall_x(sgn: float) -> void:
 	var cx := sgn * (c.size.x * 0.5 + c.wall_thickness * 0.5)
 	_walls.append(_box(visuals, "WallE" if sgn > 0.0 else "WallW",
 			Vector3(c.wall_thickness, c.size.y, c.size.z), Vector3(cx, c.floor_y + c.size.y * 0.5, 0.0),
-			COL_WALL, Global.active_layers(['room']), _vis_layer(), walls_cast_shadow))
+			_wall_col, Global.active_layers(['room']), _vis_layer(), walls_cast_shadow))
 
 
 ## Кусок стены между x0..x1 и y0..y1 на z = cz
@@ -229,7 +322,7 @@ func _slab(nm: String, x0: float, x1: float, y0: float, y1: float, cz: float) ->
 	if x1 - x0 < 0.01 or y1 - y0 < 0.01:
 		return
 	_walls.append(_box(visuals, nm, Vector3(x1 - x0, y1 - y0, config.wall_thickness),
-			Vector3((x0 + x1) * 0.5, (y0 + y1) * 0.5, cz), COL_WALL,
+			Vector3((x0 + x1) * 0.5, (y0 + y1) * 0.5, cz), _wall_col,
 			Global.active_layers(['room']), _vis_layer(), walls_cast_shadow))
 
 
@@ -250,12 +343,12 @@ func _build_window_frame() -> void:
 	var fb := 4.0
 	var vis := _vis_layer()
 	var col := Color(0.93, 0.93, 0.90)
-	_box(visuals, "FrameTop", Vector3(ww, fb, 3.0), Vector3(ox, s0 + wh - fb * 0.5, cz), col, 0, vis, true)
-	_box(visuals, "FrameBottom", Vector3(ww, fb, 3.0), Vector3(ox, s0 + fb * 0.5, cz), col, 0, vis, true)
-	_box(visuals, "FrameLeft", Vector3(fb, wh, 3.0), Vector3(ox - ww * 0.5 + fb * 0.5, s0 + wh * 0.5, cz), col, 0, vis, true)
-	_box(visuals, "FrameRight", Vector3(fb, wh, 3.0), Vector3(ox + ww * 0.5 - fb * 0.5, s0 + wh * 0.5, cz), col, 0, vis, true)
-	_box(visuals, "MullionV", Vector3(3.0, wh, 2.0), Vector3(ox, s0 + wh * 0.5, cz), col, 0, vis, true)
-	_box(visuals, "MullionH", Vector3(ww, 3.0, 2.0), Vector3(ox, s0 + wh * 0.55, cz), col, 0, vis, true)
+	_walls.append(_box(visuals, "FrameTop", Vector3(ww, fb, 3.0), Vector3(ox, s0 + wh - fb * 0.5, cz), col, 0, vis, true))
+	_walls.append(_box(visuals, "FrameBottom", Vector3(ww, fb, 3.0), Vector3(ox, s0 + fb * 0.5, cz), col, 0, vis, true))
+	_walls.append(_box(visuals, "FrameLeft", Vector3(fb, wh, 3.0), Vector3(ox - ww * 0.5 + fb * 0.5, s0 + wh * 0.5, cz), col, 0, vis, true))
+	_walls.append(_box(visuals, "FrameRight", Vector3(fb, wh, 3.0), Vector3(ox + ww * 0.5 - fb * 0.5, s0 + wh * 0.5, cz), col, 0, vis, true))
+	_walls.append(_box(visuals, "MullionV", Vector3(3.0, wh, 2.0), Vector3(ox, s0 + wh * 0.5, cz), col, 0, vis, true))
+	_walls.append(_box(visuals, "MullionH", Vector3(ww, 3.0, 2.0), Vector3(ox, s0 + wh * 0.55, cz), col, 0, vis, true))
 
 
 ## «Небо» за окном: плоскость с вертикальным градиентом, без освещения. Цвета меняет GFX (группа gfx_sky)
@@ -291,6 +384,26 @@ func _build_sky_card() -> void:
 # ==========================================
 # Хелперы
 # ==========================================
+
+## Только коллизия (без меша): внешний вид мебели строит RoomDecor
+func _collider(parent: Node, nm: String, size: Vector3, center: Vector3, layers: int) -> void:
+	var body := StaticBody3D.new()
+	body.name = nm + "Collider"
+	body.position = center
+	body.collision_layer = layers
+	body.collision_mask = 0
+	var cs := CollisionShape3D.new()
+	var bs := BoxShape3D.new()
+	bs.size = size
+	cs.shape = bs
+	body.add_child(cs)
+	parent.add_child(body)
+
+
+func _lamp_height() -> float:
+	var l := get_tree().get_first_node_in_group(&"gfx_lamp") as Node3D
+	return l.position.y if l else 120.0
+
 
 func _vis_layer() -> int:
 	return 1 << (Global.ROOM_VISUAL_LAYER - 1)

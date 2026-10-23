@@ -16,6 +16,8 @@ class_name EnvironmentRoot extends Node3D
 
 
 func _ready() -> void:
+	if Global.fast_debug:
+		return   # свет и окружение остаются как в сцене
 	_ensure_env()
 	_ensure_sun()
 	_ensure_lamp()

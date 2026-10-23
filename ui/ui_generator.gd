@@ -85,8 +85,13 @@ func _ready() -> void:
 	# создаем кнопки объектов билд
 	create_btn_categories(build_controller)
 	create_btn_categories(operate_controller)
-	if observe_controller:
+	if observe_controller and not Global.fast_debug:
 		create_btn_categories(observe_controller)
+	if Global.fast_debug:
+		# Режим быстрой загрузки: Observe недоступен
+		var ob := get_tree().root.find_child("ObserveButton", true, false)
+		if ob:
+			ob.hide()
 
 	# Задержка, чтобы создались кнопки, иначе нулевые размеры врапперов
 	await get_tree().process_frame

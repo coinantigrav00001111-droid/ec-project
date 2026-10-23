@@ -17,6 +17,11 @@ var settings: Resource = preload("res://setting/global_setting.tres")
 #DD Дебаги вкл
 var debug_mode := true
 
+## Режим быстрой загрузки для отладки: без комнаты и карточек Observe, графика по умолчанию (Low, без SDFGI),
+## землёй служит скрытый WoodFloor. Включается аргументом запуска `--fast` (Run with args: -- --fast)
+## или настройкой проекта ec/fast_debug = true
+var fast_debug := OS.get_cmdline_user_args().has("--fast") or bool(ProjectSettings.get_setting("ec/fast_debug", false))
+
 ## Отладочные маркеры в кадре: куб над Entity, конусы и шарики сокетов. Отдельно от debug_mode,
 ## тот включён по умолчанию и держит другие отладочные вещи
 var debug_markers := false

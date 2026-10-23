@@ -22,7 +22,6 @@ const SCREENSHOT_DIR := "user://screenshots/"
 ## Где сидит POV-камера в координатах вагона. Направление взгляда: -Z вагона (переключатель POV ↔ разворачивает)
 @export var pov_offset := Vector3(0.0, 3.0, 0.0)
 @export var pov_fov := 70.0
-@export var bookmark_time := 0.6
 
 ## ⚡Режим камеры сменился
 signal mode_changed(mode: int)
@@ -42,7 +41,6 @@ var _orbit_radius := 150.0
 var _orbit_height := 80.0
 var _oc: Node
 var _bookmarks: Array = []
-var _bm_tween: Tween
 
 
 func _ready() -> void:
@@ -220,18 +218,15 @@ func go_bookmark(i: int) -> void:
 	var bm = _bookmarks[i]
 	set_mode(Mode.NONE)
 	_sync_cards()
-	if bm == null or _gimbal == null:
+	if _gimbal == null or not _valid_bookmark(bm):
 		return
-	var from: Dictionary = _gimbal.save_global_state()
-	if _bm_tween:
-		_bm_tween.kill()
-	_bm_tween = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	_bm_tween.tween_method(func(t: float):
-		_gimbal.load_global_state({
-			"transform": from.transform.interpolate_with(bm.transform, t),
-			"elevation": from.elevation.interpolate_with(bm.elevation, t),
-			"camera": from.camera.interpolate_with(bm.camera, t),
-		}), 0.0, 1.0, bookmark_time)
+	# Gimbal сам плавно едет к целевому виду (snap = false), отдельный твин не нужен
+	_gimbal.set_view(bm.pivot, bm.yaw, bm.pitch, bm.dist)
+
+
+## Формат Gimbal.get_view(): pivot, yaw, pitch, dist. Старый формат (transform, elevation, camera) не поддерживаем
+func _valid_bookmark(bm) -> bool:
+	return bm is Dictionary and bm.has("pivot") and bm.has("yaw") and bm.has("pitch") and bm.has("dist")
 
 
 func _load_bookmarks() -> void:
@@ -240,7 +235,8 @@ func _load_bookmarks() -> void:
 	var stored = cfg.get_value("camera", "bookmarks", [])
 	_bookmarks.clear()
 	for i in BOOKMARK_COUNT:
-		_bookmarks.append(stored[i] if stored is Array and i < stored.size() else null)
+		var bm = stored[i] if stored is Array and i < stored.size() else null
+		_bookmarks.append(bm if _valid_bookmark(bm) else null)
 
 
 func _save_bookmarks() -> void:
