@@ -1,0 +1,559 @@
+From f18324b42522efe6868c3d1aa848fcc18ffb8dc0 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 23 Oct 2026 20:17:42 +0000
+Subject: [PATCH] hints system, drag_physics option + spawn plane fallback,
+ outline ESSENTIAL mode (ghost/blocked on Low)
+
+---
+ ATTN_14_observe_room.md                |   2 +-
+ ATTN_TDD.md                            |  20 +++
+ core/components/trains/c_kinematics.gd |  10 ++
+ core/controllers/build_tool.gd         |   2 +
+ core/controllers/drag_tool.gd          |   3 +
+ core/controllers/hint_manager.gd       | 215 +++++++++++++++++++++++++
+ core/controllers/observe_camera_rig.gd |   4 +
+ core/controllers/outline_manager.gd    |   7 +-
+ core/controllers/select_tool.gd        |   2 +
+ core/controllers/tool_controller.gd    |  15 ++
+ core/globals.gd                        |   4 +
+ core/graphics/graphics_manager.gd      |   2 +-
+ core/graphics/quality_preset.gd        |   2 +-
+ project.godot                          |   1 +
+ ui/panels/top_panel.gd                 |  13 ++
+ 15 files changed, 296 insertions(+), 6 deletions(-)
+ create mode 100644 core/controllers/hint_manager.gd
+
+diff --git a/ATTN_14_observe_room.md b/ATTN_14_observe_room.md
+index 21a7eb6..17329cc 100644
+--- a/ATTN_14_observe_room.md
++++ b/ATTN_14_observe_room.md
+@@ -321,7 +321,7 @@ ObserveObjects:
+ - [ ] `user://settings.cfg` через `ConfigFile`: quality, last look, last time. Не в `SavedGame`.
+ - [ ] Автодетект стартового tier по `RenderingServer.get_video_adapter_name()` (грубо) с возможностью поменять в UI.
+ - [ ] Реализация: `QualityPreset` (builtin low/medium/high, `.tres` в `res://data/graphics/quality/` переопределяют). Итог эффекта = Look AND Quality. Серверные настройки (MSAA, FXAA, атласы теней, каскады, soft shadow filter, SSAO quality) применяются при смене tier в `GFX._apply_quality_settings`.
+-- [ ] `Outline.enabled` (Observe выключает контуры целиком) и `Outline.mode` (`ALL` / `HOVER_ONLY`). На Low остаётся только hover, а ghost, selected и blocked видны через overlay-материалы `C_Visual`.
++- [ ] `Outline.enabled` (Observe выключает контуры целиком) и `Outline.mode` (`ALL` / `ESSENTIAL`). На Low остаются hover, selected, ghost и blocked (без них не видно, можно ли ставить объект), отключаются только reserve и multi. Первая версия (`HOVER_ONLY`) убирала ghost и blocked, это было ошибкой, найдено в fast-режиме.
+ - [ ] `user://settings.cfg`: tier, последний Look и Time. Автодетект при первом запуске по `get_video_adapter_name()` (эвристика, ошибаться может, игрок меняет в Observe).
+ - [ ] Замер fps на эталонной диораме для каждого tier, отдельно с contact shadows и без них.
+ 
+diff --git a/ATTN_TDD.md b/ATTN_TDD.md
+index 53c94b9..80dba87 100644
+--- a/ATTN_TDD.md
++++ b/ATTN_TDD.md
+@@ -338,6 +338,8 @@ Observe это созерцательная награда за Build/Operate: 
+ | 3 | **Gimbal: рефакторинг и оптимизация** (`gimbal.gd` уже в проекте) | см. ниже | см. ниже |
+ 
+ 
++**Статус п. 2 (спавн вне стола).** Исправлено в два шага. Во-первых, `DragTool.enter` и `BuildTool._enter_spawn_and_drag` при пустом луче используют точку на плоскости стола (`ToolController.get_mouse_plane_hit`), поэтому `on_drag_started` отправляется всегда. Во-вторых, опция `Global.drag_physics` (по умолчанию `false`): во время драга `RigidBody3D` замораживается и едет за `Entity` как ребёнок, без догонялок скоростями. `true` возвращает прежнее поведение (rb догоняет, вагон можно бросить).
++
+ ### 15.1. Gimbal
+ 
+ - **Скорость зума и панорамы от расстояния.** Сейчас ступенька: до `mult_distance` / `speed_mult_distance` (15) множитель 1, выше ×5. Заменить на непрерывную зависимость: зум экспоненциальный (шаг пропорционален расстоянию до цели), панорама в мировых единицах на пиксель по FOV и расстоянию камеры, чтобы смещение под курсором было одинаковым на любом приближении.
+@@ -345,6 +347,24 @@ Observe это созерцательная награда за Build/Operate: 
+ - **Оптимизация.** `move_edge` опрашивает мышь каждый кадр (по умолчанию выкл, но тяжёлый), `has_focus` и обработка вращения идут каждый кадр без ввода (ранний выход, если нет ввода и скорость затухла), `_get_ground_position` на каждом тике зума, `get_node(target)` каждый кадр.
+ - **Совместимость с `CameraBounds`.** Gimbal сейчас напрямую меняет `position`, без целевой позиции с lerp, поэтому внешний clamp камеры работает. После рефакторинга перенести ограничение внутрь Gimbal.
+ 
++# 16. Подсказки игроку (Hints)
++
++Автолоад `Hints` (`core/controllers/hint_manager.gd`) показывает внизу экрана одну-две строки с клавишами для текущего режима и инструмента. Включение хранится в `user://settings.cfg` (`[ui] hints_enabled`), переключатель в меню верхней панели («Подсказки»).
++
++**Контекст.** Тексты никто не передаёт, источники сообщают только состояние:
++
++| Кто | Что сообщает |
++|---|---|
++| `ToolController` | режим (`set_mode`) и инструмент (`set_tool`) |
++| `SelectTool` | есть ли выбранный объект (`set_context(&"selected", on)`) |
++| `ObserveCameraRig` | режим камеры (`set_extra`: follow, pov, orbit) и фоторежим (`set_context(&"photo", on)`) |
++
++**Тексты** лежат в одной константе `Hints.HINTS`: ключ `режим/контекст` перекрывает общий ключ контекста (например, `operate/select_sel`). Контексты: `select_none`, `select_sel`, `build`, `drag`, `library`, `observe`, `observe_follow`, `observe_pov`, `observe_orbit`, `observe_photo`. Вторая строка про камеру Gimbal (СКМ, ПКМ, колесо, WASD) добавляется там, где камерой управляет игрок.
++
++**Правила.** При снимке экрана подсказки скрываются (`Hints.suspend`). Новый режим или инструмент получает текст добавлением ключа в `HINTS` и вызовом `set_context` или `set_extra` из своего кода, без правки `hint_manager.gd`.
++
++**Позже.** Подсказки по ситуации (например, «вагон сошёл с рельсов: пнуть PgUp»), локализация, скрытие подсказки, когда игрок её уже выполнил.
++
+ ## Roadmap (техническая часть)
+ 
+ 1. [x] Power System — реализация контуров, клипов, полярности
+diff --git a/core/components/trains/c_kinematics.gd b/core/components/trains/c_kinematics.gd
+index 5002d42..00b24bc 100644
+--- a/core/components/trains/c_kinematics.gd
++++ b/core/components/trains/c_kinematics.gd
+@@ -75,6 +75,16 @@ func on_component_added(_type: Script):
+ ## из C_TrainDraggable в начале\конце  драга прилетает  {'on': false, 'freeze': false}
+ ## Энергию после броска гасит трение (_assist_ground_friction), без хаков с alignment.
+ func on_is_dragging(_data: Dictionary) -> void:
++	if rb and _data.on and not Global.drag_physics:
++		# Физика на время драга выключена (Global.drag_physics): rb замораживается и едет за ентити
++		# как ребёнок (top_level = false), без догонялок. На дропе включается обычная физика
++		is_dragging = true
++		rb.freeze = true
++		rb.top_level = false
++		rb.linear_velocity = Vector3.ZERO
++		rb.angular_velocity = Vector3.ZERO
++		wheel_surface_speed = 0.0
++		return
+ 	if rb:
+ 		rb.freeze = _data.freeze  # Физика вкл\выкл 
+ 		is_dragging = _data.on    # Флаг драга
+diff --git a/core/controllers/build_tool.gd b/core/controllers/build_tool.gd
+index a3e74bd..36e4ceb 100644
+--- a/core/controllers/build_tool.gd
++++ b/core/controllers/build_tool.gd
+@@ -51,6 +51,8 @@ func _enter_ghost_place() -> void:
+ func _enter_spawn_and_drag() -> void:
+ 	controller.entities_root.add_child(ghost)      # сначала в дерево
+ 	var hit = controller.get_mouse_ray(_pick_mask())   # XX claude-terra
++	if hit.is_empty():
++		hit = controller.get_mouse_plane_hit()   # кнопка спавна не над столом
+ 	if hit:
+ 		ghost.send_event("on_drag_moved", hit)     # теперь get_tree() есть
+ 	controller.select_tool.set_selection(ghost)
+diff --git a/core/controllers/drag_tool.gd b/core/controllers/drag_tool.gd
+index b386b1d..60e63b6 100644
+--- a/core/controllers/drag_tool.gd
++++ b/core/controllers/drag_tool.gd
+@@ -26,6 +26,9 @@ func enter():
+ 	var hit = controller.get_mouse_ray(Global.active_layers(['ground']))
+ 	# Драг проверит, если евент из билд моде, то смещения мыши не будет
+ 	#hit['build'] = false
++	if hit.is_empty():
++		# Курсор вне стола (спавн кнопкой с панели): стартуем драг по плоскости стола, иначе вагон не оживёт
++		hit = controller.get_mouse_plane_hit()
+ 	if hit:
+ 		target_entity.send_event("on_drag_started", hit)
+ 		
+diff --git a/core/controllers/hint_manager.gd b/core/controllers/hint_manager.gd
+new file mode 100644
+index 0000000..a411b2d
+--- /dev/null
++++ b/core/controllers/hint_manager.gd
+@@ -0,0 +1,215 @@
++extends Node
++# class_name не задаём: это синглтон Hints (autoload)
++
++###########################
++##💡 Hints - подсказки игроку внизу экрана (TDD §16)
++############################
++## Показывает одну-две строки с клавишами для текущего режима и инструмента.
++## Источники состояния (никто сюда не пишет текст, только сообщает контекст):
++##   set_mode(mode)        ToolController при смене режима (build, operate, observe, library)
++##   set_tool(tool_name)   ToolController при смене инструмента (SelectTool, BuildTool, DragTool, ObserveTool)
++##   set_context(key, on)  SelectTool: "selected" (есть выбранный объект), ObserveCameraRig: "photo" (UI скрыт)
++##   set_extra(name)       ObserveCameraRig: режим камеры follow, pov, orbit или ""
++## Тексты лежат в HINTS ниже: правятся только там. Ключ "режим/контекст" перекрывает общий "контекст".
++## Включение сохраняется в user://settings.cfg, кнопка в меню верхней панели.
++
++signal enabled_changed(on: bool)
++
++const SETTINGS_PATH := "user://settings.cfg"
++const KEY_COLOR := "#ffd54a"
++const DIM_COLOR := "#9aa4b2"
++const BOTTOM_MARGIN := 14.0
++const SEPARATOR := "   ·   "
++
++## Пары [клавиша, действие]
++const HINTS := {
++	"select_none": [["ЛКМ", "выбрать объект"], ["Категория → объект", "построить новый"]],
++	"operate/select_none": [["ЛКМ", "выбрать вагон или локомотив"], ["Тащить ЛКМ", "переместить выбранный"]],
++	"select_sel": [["Тащить ЛКМ", "переместить"], ["Del", "удалить"], ["PgUp/PgDn", "пинок вагона"], ["U", "тоннель (трак)"]],
++	"operate/select_sel": [["Ручка на панели", "ЛКМ вращать, ПКМ обнулить"], ["PgUp/PgDn", "пинок вагона"], ["Тащить ЛКМ", "переместить"], ["Del", "удалить"]],
++	"build": [["ЛКМ", "построить"], ["ПКМ", "отмена"], ["Q/E", "поворот"], ["R/F", "наклон"], ["U", "тоннель"], ["L", "лимиты flex"]],
++	"drag": [["Отпустить ЛКМ", "поставить"], ["ПКМ", "отмена"], ["Q/E", "поворот"], ["R/F", "наклон"], ["PgUp/PgDn", "высота"], ["Home", "сброс"]],
++	"library": [["Режим в разработке", ""]],
++	"observe": [["ЛКМ по вагону", "камера Follow"], ["1-5", "перейти к закладке (пустая: сохранить)"], ["Ctrl+1-5 или Shift+карточка", "перезаписать закладку"], ["H", "скрыть UI"], ["P", "снимок"]],
++	"observe_follow": [["Esc", "выйти из Follow"], ["ЛКМ по другому вагону", "сменить"], ["СКМ + мышь", "вращать камеру вагона"]],
++	"observe_pov": [["Esc", "выйти из POV"], ["POV ↔", "развернуть камеру"], ["ЛКМ по другому вагону", "перенести камеру"]],
++	"observe_orbit": [["Esc", "выйти из Orbit"], ["Orbit", "ещё раз, чтобы остановить"]],
++	"observe_photo": [["P", "снимок"], ["H или Esc", "вернуть интерфейс"]],
++}
++
++## Управление камерой Gimbal, вторая строка, где камерой управляет игрок
++const CAMERA_LINE := [["СКМ", "поворот"], ["ПКМ", "сдвиг"], ["Колесо", "зум"], ["WASD", "перемещение"]]
++
++var enabled := true
++var mode: StringName = &"build"
++var tool: StringName = &"SelectTool"
++var extra: StringName = &""
++
++var _ctx := {}
++var _suspended := false
++var _last_text := ""
++var _layer: CanvasLayer
++var _panel: PanelContainer
++var _label: RichTextLabel
++var _tween: Tween
++
++
++func _ready() -> void:
++	var cfg := ConfigFile.new()
++	cfg.load(SETTINGS_PATH)
++	enabled = bool(cfg.get_value("ui", "hints_enabled", true))
++	_build_ui()
++	_refresh()
++
++
++# ==========================================
++# ПУБЛИЧНЫЙ API
++# ==========================================
++
++func set_enabled(on: bool) -> void:
++	if on == enabled:
++		return
++	enabled = on
++	var cfg := ConfigFile.new()
++	cfg.load(SETTINGS_PATH)   # не затираем чужие секции
++	cfg.set_value("ui", "hints_enabled", enabled)
++	cfg.save(SETTINGS_PATH)
++	enabled_changed.emit(enabled)
++	_refresh()
++
++
++func set_mode(m: StringName) -> void:
++	mode = m
++	_refresh()
++
++
++func set_tool(tool_name: StringName) -> void:
++	tool = tool_name
++	_refresh()
++
++
++func set_context(key: StringName, on: bool) -> void:
++	if _ctx.get(key, false) == on:
++		return
++	_ctx[key] = on
++	_refresh()
++
++
++func set_extra(name: StringName) -> void:
++	if extra == name:
++		return
++	extra = name
++	_refresh()
++
++
++## Временно скрыть (снимок экрана)
++func suspend(on: bool) -> void:
++	_suspended = on
++	_refresh()
++
++
++# ==========================================
++# ВЫБОР ТЕКСТА
++# ==========================================
++
++## Ключ данных для текущего состояния
++func _context_key() -> String:
++	if mode == &"library":
++		return "library"
++	if mode == &"observe":
++		if _ctx.get(&"photo", false):
++			return "observe_photo"
++		if extra != &"":
++			return "observe_" + String(extra)
++		return "observe"
++	match tool:
++		&"DragTool":
++			return "drag"
++		&"BuildTool":
++			return "build"
++	return "select_sel" if _ctx.get(&"selected", false) else "select_none"
++
++
++func _lookup(key: String) -> Array:
++	return HINTS.get(String(mode) + "/" + key, HINTS.get(key, []))
++
++
++func _compose() -> String:
++	var key := _context_key()
++	var items := _lookup(key)
++	if items.is_empty():
++		return ""
++	var text := _format(items)
++	# Вторая строка про камеру: когда ею управляет игрок (не Follow, POV, Orbit и не фоторежим)
++	var own_camera := key in ["select_none", "select_sel", "build", "drag", "observe"]
++	if own_camera:
++		text += "\n[color=%s]%s[/color]" % [DIM_COLOR, _format(CAMERA_LINE, false)]
++	return "[center]" + text + "[/center]"
++
++
++func _format(items: Array, highlight := true) -> String:
++	var parts: Array[String] = []
++	for it in items:
++		var k: String = it[0]
++		var t: String = it[1]
++		if highlight:
++			parts.append(("[b][color=%s]%s[/color][/b] %s" % [KEY_COLOR, k, t]).strip_edges())
++		else:
++			parts.append("%s %s" % [k, t])
++	return SEPARATOR.join(parts)
++
++
++# ==========================================
++# UI
++# ==========================================
++
++func _build_ui() -> void:
++	_layer = CanvasLayer.new()
++	_layer.name = "HintLayer"
++	_layer.layer = 10
++	add_child(_layer)
++
++	_panel = PanelContainer.new()
++	_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
++	var sb := StyleBoxFlat.new()
++	sb.bg_color = Color(0.05, 0.07, 0.10, 0.78)
++	sb.set_corner_radius_all(8)
++	sb.content_margin_left = 16.0
++	sb.content_margin_right = 16.0
++	sb.content_margin_top = 8.0
++	sb.content_margin_bottom = 8.0
++	_panel.add_theme_stylebox_override("panel", sb)
++	_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
++	_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
++	_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
++	_panel.offset_bottom = -BOTTOM_MARGIN
++	_layer.add_child(_panel)
++
++	_label = RichTextLabel.new()
++	_label.bbcode_enabled = true
++	_label.fit_content = true
++	_label.scroll_active = false
++	_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
++	_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
++	_label.custom_minimum_size = Vector2(960.0, 0.0)
++	_label.add_theme_font_size_override("normal_font_size", 15)
++	_label.add_theme_font_size_override("bold_font_size", 15)
++	_panel.add_child(_label)
++
++
++func _refresh() -> void:
++	if _panel == null:
++		return
++	var text := _compose() if (enabled and not _suspended) else ""
++	_panel.visible = text != ""
++	if text == "" or text == _last_text:
++		_last_text = text
++		return
++	_last_text = text
++	_label.text = text
++	_panel.reset_size()   # высота подстраивается под число строк
++	if _tween:
++		_tween.kill()
++	_panel.modulate.a = 0.0
++	_tween = create_tween()
++	_tween.tween_property(_panel, "modulate:a", 1.0, 0.15)
+diff --git a/core/controllers/observe_camera_rig.gd b/core/controllers/observe_camera_rig.gd
+index d26902f..4770992 100644
+--- a/core/controllers/observe_camera_rig.gd
++++ b/core/controllers/observe_camera_rig.gd
+@@ -127,6 +127,7 @@ func set_mode(m: Mode) -> void:
+ 	mode = m
+ 	_enter_mode(m)
+ 	mode_changed.emit(mode)
++	Hints.set_extra([&"", &"follow", &"pov", &"orbit"][mode])
+ 
+ 
+ func _enter_mode(m: Mode) -> void:
+@@ -256,6 +257,7 @@ func _save_bookmarks() -> void:
+ 
+ func set_ui_hidden(on: bool) -> void:
+ 	_ui_hidden = on
++	Hints.set_context(&"photo", on)
+ 	var ui := get_node_or_null("/root/GameRoot/UI")
+ 	if ui and "visible" in ui:
+ 		ui.visible = not on
+@@ -265,6 +267,7 @@ func set_ui_hidden(on: bool) -> void:
+ ## Снимок без UI на качестве High. Файл: user://screenshots/
+ func take_photo() -> void:
+ 	var ui_was_hidden := _ui_hidden
++	Hints.suspend(true)   # подсказки не должны попасть в кадр
+ 	set_ui_hidden(true)
+ 	var prev_quality: StringName = GFX.state.quality
+ 	GFX.apply_quality(&"high", 0.0, false)   # временно, в настройки не пишется
+@@ -281,6 +284,7 @@ func take_photo() -> void:
+ 	else:
+ 		push_error("Observe: не удалось сохранить снимок (код %d)" % err)
+ 	GFX.apply_quality(prev_quality, 0.0, false)
++	Hints.suspend(false)
+ 	if not ui_was_hidden:
+ 		set_ui_hidden(false)
+ 
+diff --git a/core/controllers/outline_manager.gd b/core/controllers/outline_manager.gd
+index 7090e5b..ff25fd1 100644
+--- a/core/controllers/outline_manager.gd
++++ b/core/controllers/outline_manager.gd
+@@ -17,8 +17,9 @@ const STYLE := {
+ 	S.BLOCKED:  {"color": Color("ff3b30"), "width": 2.5},
+ }
+ 
+-## Режимы по уровню качества (Quality): все состояния или только hover
+-enum Mode { ALL, HOVER_ONLY }
++## Режимы по уровню качества (Quality): все состояния или только важные для игры (hover, selected, ghost, blocked).
++## ESSENTIAL не трогает ghost и blocked: без них не видно, можно ли ставить объект
++enum Mode { ALL, ESSENTIAL }
+ 
+ ## Общий выключатель. Observe выключает контуры целиком: каждый активный канал это полноэкранный SubViewport
+ var enabled := true:
+@@ -99,7 +100,7 @@ func set_owner_state(owner_obj: Object, state: int) -> void:
+ func _allowed(c: Channel) -> bool:
+ 	if not enabled:
+ 		return false
+-	return mode == Mode.ALL or c.state == S.HOVER
++	return mode == Mode.ALL or c.state in [S.HOVER, S.SELECTED, S.GHOST, S.BLOCKED]
+ 
+ 
+ func _refresh_all() -> void:
+diff --git a/core/controllers/select_tool.gd b/core/controllers/select_tool.gd
+index 2592783..d29b627 100644
+--- a/core/controllers/select_tool.gd
++++ b/core/controllers/select_tool.gd
+@@ -122,6 +122,7 @@ func set_selection(entity_to_select: Entity):
+ 		selected_entity.remove_component(C_Selected)
+ 		#selected_entity = null # из старого, убрать? 
+ 	selected_entity = entity_to_select
++	Hints.set_context(&"selected", selected_entity != null)
+ 	
+ 	if selected_entity:
+ 		selected_entity.add_component(C_Selected.new())
+@@ -200,6 +201,7 @@ func _clear_selection():
+ 		# ⚡Сигнал в visual о смене слоя
+ 		selected_entity.send_event("on_select_layer", {'enabled':false})
+ 	selected_entity = null
++	Hints.set_context(&"selected", false)
+ 	
+ 	#INFO ОЧИЩАЕМ ПАНЕЛЬ! +
+ 	controller.info_panel.set_target(null)
+diff --git a/core/controllers/tool_controller.gd b/core/controllers/tool_controller.gd
+index 8ff3f53..6d3a47d 100644
+--- a/core/controllers/tool_controller.gd
++++ b/core/controllers/tool_controller.gd
+@@ -84,6 +84,7 @@ func switch_tool(new_tool: Node):
+ 		active_tool.exit(_to_drag)
+ 
+ 	active_tool = new_tool
++	Hints.set_tool(active_tool.name)
+ 	active_tool.enter()
+ 
+ 
+@@ -135,6 +136,19 @@ func get_mouse_ray(mask: int = -1) -> Dictionary:
+ 
+ 
+ 
++## Точка луча мыши на плоскости y (по умолчанию уровень стола). Запасной вариант, когда луч не попал в стол:
++## например, кнопка спавна на панели находится не над столом
++func get_mouse_plane_hit(y := 0.0) -> Dictionary:
++	var mouse_pos := get_viewport().get_mouse_position()
++	var camera := get_viewport().get_camera_3d()
++	var from := camera.project_ray_origin(mouse_pos)
++	var dir := camera.project_ray_normal(mouse_pos)
++	var p = Plane(Vector3.UP, y).intersects_ray(from, dir)
++	if p == null:
++		return {}
++	return {"position": p, "normal": Vector3.UP, "collider": null}
++
++
+ ## Луч из камеры в мир (для драга по плоскости, считает сам компонент)
+ func get_mouse_ray_vec() -> Dictionary:
+ 	var mouse_pos := get_viewport().get_mouse_position()
+@@ -147,6 +161,7 @@ func get_mouse_ray_vec() -> Dictionary:
+ 
+ func on_current_mode_changed(_new_mode):
+ 	Global.current_mode = _new_mode
++	Hints.set_mode(_new_mode)
+ 	# Observe: инструмент без выбора и драга. Выход из прежнего инструмента сам снимает выделение и призрака
+ 	if observe_tool:
+ 		if _new_mode == &'observe':
+diff --git a/core/globals.gd b/core/globals.gd
+index dac9c81..ce57c40 100644
+--- a/core/globals.gd
++++ b/core/globals.gd
+@@ -17,6 +17,10 @@ var settings: Resource = preload("res://setting/global_setting.tres")
+ #DD Дебаги вкл
+ var debug_mode := true
+ 
++## Физика вагона во время драга. false (по умолчанию): rb замораживается и едет за ентити как ребёнок,
++## без «догоняния» и броска. true: прежнее поведение, rb догоняет ентити скоростями (можно бросить вагон)
++var drag_physics := false
++
+ ## Отладочные маркеры в кадре: куб над Entity, конусы и шарики сокетов. Отдельно от debug_mode,
+ ## тот включён по умолчанию и держит другие отладочные вещи
+ var debug_markers := false
+diff --git a/core/graphics/graphics_manager.gd b/core/graphics/graphics_manager.gd
+index 6bcf7d3..2959da9 100644
+--- a/core/graphics/graphics_manager.gd
++++ b/core/graphics/graphics_manager.gd
+@@ -473,7 +473,7 @@ func _apply_quality_settings() -> void:
+ 			_:
+ 				_sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
+ 		_sun.directional_shadow_max_distance = q.dir_shadow_max_distance
+-	Outline.mode = Outline.Mode.ALL if q.outlines_all else Outline.Mode.HOVER_ONLY
++	Outline.mode = Outline.Mode.ALL if q.outlines_all else Outline.Mode.ESSENTIAL
+ 
+ 
+ ## Грубый стартовый tier по имени видеокарты. Игрок меняет его в Observe, выбор запоминается
+diff --git a/core/graphics/quality_preset.gd b/core/graphics/quality_preset.gd
+index 02cd787..24c8529 100644
+--- a/core/graphics/quality_preset.gd
++++ b/core/graphics/quality_preset.gd
+@@ -48,7 +48,7 @@ class_name QualityPreset extends Resource
+ @export var dof := false
+ 
+ @export_category("Outlines")
+-## false = контуры только у hover (состояния ghost, selected и blocked остаются в виде overlay-материалов)
++## false = только важные контуры (hover, selected, ghost, blocked), без reserve и multi
+ @export var outlines_all := false
+ 
+ @export_category("Room (S7)")
+diff --git a/project.godot b/project.godot
+index fd3b0fd..3f7b6a4 100644
+--- a/project.godot
++++ b/project.godot
+@@ -27,6 +27,7 @@ Global="*uid://cuyqabojk5lbh"
+ GFX="*uid://ibw0xeowgtvh"
+ PGM="*uid://cs6t1pamqjrbq"
+ Outline="*uid://bsgvq8tlldjvo"
++Hints="*res://core/controllers/hint_manager.gd"
+ TGM="*res://core/controllers/terrain_manager.gd"
+ 
+ [display]
+diff --git a/ui/panels/top_panel.gd b/ui/panels/top_panel.gd
+index c7ec9e4..8d9c014 100644
+--- a/ui/panels/top_panel.gd
++++ b/ui/panels/top_panel.gd
+@@ -17,12 +17,21 @@ class_name TopPanel extends PanelContainer
+ 
+ 
+ 
++## id пункта «Подсказки» в меню
++const HINTS_MENU_ID := 100
++
++
+ func _ready() -> void:
+ 	# попап меню, которое вываливается по кнопке, посылает этот сигнал
+ 	menu_button.get_popup().id_pressed.connect(_on_menu_button_pressed)
+ 	# Слой питания могут переключить не из чекбокса (Observe при входе/выходе): держим вид в синхроне
+ 	PGM.power_layer_toggled.connect(_on_power_layer_toggled)
+ 	power_schema_check.set_pressed_no_signal(PGM.is_power_layer_active)
++	# Подсказки внизу экрана: галочка в меню
++	var popup := menu_button.get_popup()
++	popup.add_separator()
++	popup.add_check_item("Подсказки", HINTS_MENU_ID)
++	popup.set_item_checked(popup.get_item_index(HINTS_MENU_ID), Hints.enabled)
+ 
+ 
+ 
+@@ -30,6 +39,10 @@ func _ready() -> void:
+ func _on_menu_button_pressed(_index : int) -> void:
+ 	#menu_button_pressed.emit(_index)
+ 	match _index:
++		HINTS_MENU_ID: # подсказки вкл/выкл
++			var popup := menu_button.get_popup()
++			Hints.set_enabled(not Hints.enabled)
++			popup.set_item_checked(popup.get_item_index(HINTS_MENU_ID), Hints.enabled)
+ 		0: # save
+ 			#SaveManager.save_game()
+ 			pass
+-- 
+2.43.0
+

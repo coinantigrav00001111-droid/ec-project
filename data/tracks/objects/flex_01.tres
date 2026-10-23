@@ -14,7 +14,7 @@
 [ext_resource type="Script" uid="uid://bv065wdiw674c" path="res://core/components/comp_settings/socked_setting.gd" id="12_4qu3e"]
 [ext_resource type="Script" uid="uid://cjk51o364xfn" path="res://core/components/comp_settings/powertrack_setting.gd" id="13_i3j1b"]
 [ext_resource type="Script" uid="uid://cs257ge2f37bu" path="res://core/components/comp_settings/tracksupport_setting.gd" id="14_tijak"]
-[ext_resource type="Texture2D" uid="uid://c8tndy1lksot8" path="res://ui/icons/transport/rail-road.svg" id="15_se2ph"]
+[ext_resource type="Texture2D" uid="uid://6vvfxmo2e8wl" path="res://ui/icons/transport/rail_r1.svg" id="15_b1byy"]
 [ext_resource type="Script" uid="uid://do5hjkm3r2pdg" path="res://core/entity_setting.gd" id="16_lwvy1"]
 
 [sub_resource type="Resource" id="Resource_cfg"]
@@ -65,7 +65,7 @@ id = 1310
 name = "Flex"
 description = "Гибкий трак. Клик - начало, второй клик - конец. L 10-90, R от 32."
 tag = &"flex"
-icon = ExtResource("15_se2ph")
+icon = ExtResource("15_b1byy")
 build_behavior = 2
 components = Array[ExtResource("1_b1byy")]([SubResource("Resource_id"), SubResource("Resource_flex"), SubResource("Resource_drag"), SubResource("Resource_piv"), SubResource("Resource_hov"), SubResource("Resource_sel"), SubResource("Resource_blk"), SubResource("Resource_sock"), SubResource("Resource_pwr"), SubResource("Resource_sup")])
 metadata/_custom_type_script = "uid://do5hjkm3r2pdg"

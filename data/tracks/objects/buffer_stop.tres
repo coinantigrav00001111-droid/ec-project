@@ -1,28 +1,26 @@
-[gd_resource type="Resource" script_class="EntitySetting" format=3]
+[gd_resource type="Resource" script_class="EntitySetting" format=3 uid="uid://cuwv12dc31jnv"]
 
-[ext_resource type="Script" path="res://core/component_setting.gd" id="1_cs"]
-[ext_resource type="Script" path="res://core/entity_setting.gd" id="2_es"]
-[ext_resource type="Script" path="res://setting/buffer_stop_config.gd" id="3_cfg"]
-[ext_resource type="Script" path="res://core/components/comp_settings/identity_setting.gd" id="4_id"]
-[ext_resource type="Script" path="res://core/components/comp_settings/switchvisual_setting.gd" id="5_vis"]
-[ext_resource type="Script" path="res://core/components/comp_settings/trackdraggable_setting.gd" id="6_drag"]
-[ext_resource type="Script" path="res://core/components/comp_settings/pivot_setting.gd" id="7_piv"]
-[ext_resource type="Script" path="res://core/components/comp_settings/hoverable_setting.gd" id="8_hov"]
-[ext_resource type="Script" path="res://core/components/comp_settings/selectable_setting.gd" id="9_sel"]
-[ext_resource type="Script" path="res://core/components/comp_settings/blockable_setting.gd" id="10_blk"]
-[ext_resource type="Script" path="res://core/components/comp_settings/path_setting.gd" id="11_path"]
-[ext_resource type="Script" path="res://core/components/comp_settings/socked_setting.gd" id="12_sock"]
-[ext_resource type="Script" path="res://core/components/comp_settings/powertrack_setting.gd" id="13_pwr"]
-[ext_resource type="Script" path="res://core/components/comp_settings/tracksupport_setting.gd" id="14_sup"]
-[ext_resource type="Script" path="res://core/components/comp_settings/bufferstop_setting.gd" id="15_bs"]
-[ext_resource type="Texture2D" path="res://ui/icons/transport/rail_r2.svg" id="16_icon"]
+[ext_resource type="Script" uid="uid://m4g5jbfwmaa0" path="res://core/component_setting.gd" id="1_cs"]
+[ext_resource type="Script" uid="uid://do5hjkm3r2pdg" path="res://core/entity_setting.gd" id="2_es"]
+[ext_resource type="Script" uid="uid://4q7obm3rjyaj" path="res://setting/buffer_stop_config.gd" id="3_cfg"]
+[ext_resource type="Script" uid="uid://mpakwrr6lum8" path="res://core/components/comp_settings/identity_setting.gd" id="4_id"]
+[ext_resource type="Resource" uid="uid://bqss7rh1mwv41" path="res://core/visual/visual_state.tres" id="5_ca1yb"]
+[ext_resource type="Script" uid="uid://b2r1p5dalh514" path="res://core/components/comp_settings/switchvisual_setting.gd" id="5_vis"]
+[ext_resource type="Script" uid="uid://b1jwuxb32so7e" path="res://core/components/comp_settings/trackdraggable_setting.gd" id="6_drag"]
+[ext_resource type="Script" uid="uid://djbifkyei01t7" path="res://core/components/comp_settings/pivot_setting.gd" id="7_piv"]
+[ext_resource type="Script" uid="uid://cuumo0qj7r7gb" path="res://core/components/comp_settings/hoverable_setting.gd" id="8_hov"]
+[ext_resource type="Script" uid="uid://deljgsmo4bpow" path="res://core/components/comp_settings/selectable_setting.gd" id="9_sel"]
+[ext_resource type="Script" uid="uid://chprgtlxn3aub" path="res://core/components/comp_settings/blockable_setting.gd" id="10_blk"]
+[ext_resource type="Script" uid="uid://b7f7dka1i3slu" path="res://core/components/comp_settings/path_setting.gd" id="11_path"]
+[ext_resource type="Script" uid="uid://bv065wdiw674c" path="res://core/components/comp_settings/socked_setting.gd" id="12_sock"]
+[ext_resource type="Script" uid="uid://cjk51o364xfn" path="res://core/components/comp_settings/powertrack_setting.gd" id="13_pwr"]
+[ext_resource type="Script" uid="uid://cs257ge2f37bu" path="res://core/components/comp_settings/tracksupport_setting.gd" id="14_sup"]
+[ext_resource type="Script" uid="uid://d1g4t2vrede3s" path="res://core/components/comp_settings/bufferstop_setting.gd" id="15_bs"]
+[ext_resource type="Texture2D" uid="uid://xihfm6k4nv0d" path="res://ui/icons/transport/rail_cross_2.svg" id="16_3qy88"]
 
 [sub_resource type="Resource" id="Resource_cfg"]
 script = ExtResource("3_cfg")
-stop_at_end = true
-max_speed = 0.0
 radius = 11.9
-deg = 0.0
 
 [sub_resource type="Resource" id="Resource_id"]
 script = ExtResource("4_id")
@@ -61,7 +59,6 @@ script = ExtResource("14_sup")
 
 [sub_resource type="Resource" id="Resource_bs"]
 script = ExtResource("15_bs")
-zeta = 0.25
 
 [resource]
 script = ExtResource("2_es")
@@ -69,5 +66,5 @@ id = 1340
 name = "Buffer Stop"
 description = "Упор. Тупиковый трак с буферным брусом на конце. L 11.9. Медленно: отскок на буферах, быстро: сход."
 tag = &"buffer"
-icon = ExtResource("16_icon")
+icon = ExtResource("16_3qy88")
 components = Array[ExtResource("1_cs")]([SubResource("Resource_id"), SubResource("Resource_vis"), SubResource("Resource_drag"), SubResource("Resource_piv"), SubResource("Resource_hov"), SubResource("Resource_sel"), SubResource("Resource_blk"), SubResource("Resource_path"), SubResource("Resource_sock"), SubResource("Resource_pwr"), SubResource("Resource_sup"), SubResource("Resource_bs")])
