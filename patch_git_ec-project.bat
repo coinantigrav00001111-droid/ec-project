@@ -5,5 +5,6 @@
 git am -3 %1
 
 :: git am -3 observe-s7-fast.patch
-  
-TIMEOUT /T 4
+
+pause
+::TIMEOUT /T 4
