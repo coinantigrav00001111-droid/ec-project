@@ -22,16 +22,17 @@ const SUITES := [
 		["дерево", "s239_wood.tres"],
 		["бетон+балласт", "s239_concrete_ballast.tres"],
 		["бетон", "s239_concrete.tres"]]],
-	["дуги R1", Vector2(22.0, 24.0), [
-		["бюджет R1 (Blender)", "r1.tres"],
-		["дерево+балласт", "sr1_wood_ballast.tres"],
-		["бетон", "sr1_concrete.tres"]]],
+	["дуги R2", Vector2(24.0, 24.0), [
+		["бюджет R2 (Blender)", "r2.tres"],
+		["дерево+балласт", "sr2_wood_ballast.tres"],
+		["бетон", "sr2_concrete.tres"]]],
 	["пандусы 0.5", Vector2(4.0, 24.0), [
 		["бюджет G239-05 (Blender)", "g239_r05.tres"],
 		["дерево+балласт", "s239r05_wood_ballast.tres"]]],
 ]
 
 var _cam: Camera3D
+var _sun: DirectionalLight3D
 var _rows: Array[String] = []
 
 
@@ -41,14 +42,14 @@ func _ready() -> void:
 	_cam = Camera3D.new()
 	_cam.far = 4000.0
 	add_child(_cam)
-	var sun := DirectionalLight3D.new()
-	sun.shadow_enabled = SHADOWS
-	sun.rotation_degrees = Vector3(-60, 30, 0)
-	add_child(sun)
+	_sun = DirectionalLight3D.new()
+	_sun.shadow_enabled = SHADOWS
+	_sun.rotation_degrees = Vector3(-60, 30, 0)
+	add_child(_sun)
 	await get_tree().process_frame
 
-	_rows.append("| набор | вариант | траков | создание, мс | узлов | MeshInstance | коллизий | обзор: кадр мс / фпс / отрисовок / объектов / треуг., тыс | план: кадр мс / фпс / отрисовок | process мс | physics мс (ср / макс) | видеопамять, МБ |")
-	_rows.append("|---|---|---|---|---|---|---|---|---|---|---|---|")
+	_rows.append("| набор | вариант | траков | создание, мс | узлов | MeshInstance | коллизий | обзор: кадр мс / фпс / отрисовок / объектов / треуг., тыс | план (тени): кадр мс / фпс / отрисовок | план (без теней): кадр мс / фпс / отрисовок | process мс | physics мс (ср / макс, только кадры с тиком) | видеопамять, МБ |")
+	_rows.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|")
 	for suite in SUITES:
 		for item in suite[2]:
 			for n in COUNTS:
@@ -69,6 +70,13 @@ func _run(suite: String, cell: Vector2, label: String, file: String, n: int) -> 
 	var setting := load(file) as EntitySetting
 	if setting == null:
 		push_error("нет объекта: " + file)
+		return
+	var has_identity := false
+	for c in setting.components:
+		if c is IdentitySetting:
+			has_identity = true
+	if not has_identity:
+		push_warning("пропуск %s: в объекте нет IdentitySetting (Entity._ready падает на get_name_e)" % file)
 		return
 	var factory := EntityFactory.new()
 	var cols := maxi(1, ceili(sqrt(n * cell.y / cell.x)))
@@ -98,14 +106,20 @@ func _run(suite: String, cell: Vector2, label: String, file: String, n: int) -> 
 		aspect = vp.x / vp.y
 	var half_t := tan(deg_to_rad(_cam.fov) * 0.5)
 	var need := maxf(d * 0.5, w * 0.5 / aspect) / half_t * 1.1
+	_sun.shadow_enabled = SHADOWS
 	var over := await _measure(Vector3(center.x, need, center.z))
-	# 2) крупный план: камера низко, видна малая часть
-	var close := await _measure(Vector3(center.x, 70.0, center.z))
+	# 2) крупный план: камера низко, видна малая часть (с тенями)
+	var close := await _measure(Vector3(center.x, 25.0, center.z))
+	# 3) тот же план без теней: отделяем стоимость геометрии от стоимости теневых проходов
+	_sun.shadow_enabled = false
+	var close_ns := await _measure(Vector3(center.x, 25.0, center.z))
+	_sun.shadow_enabled = SHADOWS
 
-	_rows.append("| %s | %s | %d | %.0f | %d | %d | %d | %.2f / %.0f / %d / %d / %.0f | %.2f / %.0f / %d | %.2f | %.2f / %.2f | %.0f |" % [
+	_rows.append("| %s | %s | %d | %.0f | %d | %d | %d | %.2f / %.0f / %d / %d / %.0f | %.2f / %.0f / %d | %.2f / %.0f / %d | %.2f | %.2f / %.2f | %.0f |" % [
 		suite, label, n, spawn_ms, counts[0], counts[1], counts[2],
 		over.ms, over.fps, over.draws, over.objs, over.prims / 1000.0,
 		close.ms, close.fps, close.draws,
+		close_ns.ms, close_ns.fps, close_ns.draws,
 		over.proc, over.phys, over.phys_max, over.vram])
 	print(_rows.back())
 
@@ -127,15 +141,21 @@ func _measure(cam_pos: Vector3) -> Dictionary:
 	var phys := 0.0
 	var phys_max := 0.0
 	var last := Time.get_ticks_usec()
+	var last_pf := Engine.get_physics_frames()
+	var phys_n := 0
 	for i in SAMPLE_FRAMES:
 		await get_tree().process_frame
 		var now := Time.get_ticks_usec()
 		dt_sum += (now - last) / 1000.0
 		last = now
 		proc += Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0
-		var p := Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0
-		phys += p
-		phys_max = maxf(phys_max, p)
+		var pf := Engine.get_physics_frames()
+		if pf != last_pf:   # монитор обновляется только после физического тика, иначе читали бы старое значение
+			last_pf = pf
+			var p := Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0
+			phys += p
+			phys_n += 1
+			phys_max = maxf(phys_max, p)
 	var ms := dt_sum / SAMPLE_FRAMES
 	return {
 		"ms": ms,
@@ -144,7 +164,7 @@ func _measure(cam_pos: Vector3) -> Dictionary:
 		"objs": int(Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME)),
 		"prims": Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME),
 		"proc": proc / SAMPLE_FRAMES,
-		"phys": phys / SAMPLE_FRAMES,
+		"phys": phys / maxi(phys_n, 1),
 		"phys_max": phys_max,
 		"vram": Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0,
 	}
