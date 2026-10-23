@@ -122,6 +122,7 @@ func set_selection(entity_to_select: Entity):
 		selected_entity.remove_component(C_Selected)
 		#selected_entity = null # из старого, убрать? 
 	selected_entity = entity_to_select
+	Hints.set_context(&"selected", selected_entity != null)
 	
 	if selected_entity:
 		selected_entity.add_component(C_Selected.new())
@@ -214,6 +215,7 @@ func _clear_selection():
 		# ⚡Сигнал в visual о смене слоя
 		selected_entity.send_event("on_select_layer", {'enabled':false})
 	selected_entity = null
+	Hints.set_context(&"selected", false)
 	
 	#INFO ОЧИЩАЕМ ПАНЕЛЬ! +
 	controller.info_panel.set_target(null)

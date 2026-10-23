@@ -48,7 +48,7 @@ class_name QualityPreset extends Resource
 @export var dof := false
 
 @export_category("Outlines")
-## false = контуры только у hover (состояния ghost, selected и blocked остаются в виде overlay-материалов)
+## false = только важные контуры (hover, selected, ghost, blocked), без reserve и multi
 @export var outlines_all := false
 
 @export_category("Room (S7)")

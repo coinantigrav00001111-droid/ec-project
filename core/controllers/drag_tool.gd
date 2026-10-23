@@ -26,6 +26,9 @@ func enter():
 	var hit = controller.get_mouse_ray(Global.active_layers(['ground']))
 	# Драг проверит, если евент из билд моде, то смещения мыши не будет
 	#hit['build'] = false
+	if hit.is_empty():
+		# Курсор вне стола (спавн кнопкой с панели): стартуем драг по плоскости стола, иначе вагон не оживёт
+		hit = controller.get_mouse_plane_hit()
 	if hit:
 		target_entity.send_event("on_drag_started", hit)
 		

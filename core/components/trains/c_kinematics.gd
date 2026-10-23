@@ -75,6 +75,16 @@ func on_component_added(_type: Script):
 ## из C_TrainDraggable в начале\конце  драга прилетает  {'on': false, 'freeze': false}
 ## Энергию после броска гасит трение (_assist_ground_friction), без хаков с alignment.
 func on_is_dragging(_data: Dictionary) -> void:
+	if rb and _data.on and not Global.drag_physics:
+		# Физика на время драга выключена (Global.drag_physics): rb замораживается и едет за ентити
+		# как ребёнок (top_level = false), без догонялок. На дропе включается обычная физика
+		is_dragging = true
+		rb.freeze = true
+		rb.top_level = false
+		rb.linear_velocity = Vector3.ZERO
+		rb.angular_velocity = Vector3.ZERO
+		wheel_surface_speed = 0.0
+		return
 	if rb:
 		rb.freeze = _data.freeze  # Физика вкл\выкл 
 		is_dragging = _data.on    # Флаг драга

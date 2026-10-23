@@ -84,6 +84,7 @@ func switch_tool(new_tool: Node):
 		active_tool.exit(_to_drag)
 
 	active_tool = new_tool
+	Hints.set_tool(active_tool.name)
 	active_tool.enter()
 
 
@@ -135,6 +136,19 @@ func get_mouse_ray(mask: int = -1) -> Dictionary:
 
 
 
+## Точка луча мыши на плоскости y (по умолчанию уровень стола). Запасной вариант, когда луч не попал в стол:
+## например, кнопка спавна на панели находится не над столом
+func get_mouse_plane_hit(y := 0.0) -> Dictionary:
+	var mouse_pos := get_viewport().get_mouse_position()
+	var camera := get_viewport().get_camera_3d()
+	var from := camera.project_ray_origin(mouse_pos)
+	var dir := camera.project_ray_normal(mouse_pos)
+	var p = Plane(Vector3.UP, y).intersects_ray(from, dir)
+	if p == null:
+		return {}
+	return {"position": p, "normal": Vector3.UP, "collider": null}
+
+
 ## Луч из камеры в мир (для драга по плоскости, считает сам компонент)
 func get_mouse_ray_vec() -> Dictionary:
 	var mouse_pos := get_viewport().get_mouse_position()
@@ -147,6 +161,7 @@ func get_mouse_ray_vec() -> Dictionary:
 
 func on_current_mode_changed(_new_mode):
 	Global.current_mode = _new_mode
+	Hints.set_mode(_new_mode)
 	# Observe: инструмент без выбора и драга. Выход из прежнего инструмента сам снимает выделение и призрака
 	if observe_tool:
 		if _new_mode == &'observe':

@@ -520,7 +520,7 @@ func _apply_quality_settings() -> void:
 			_:
 				_sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
 		_sun.directional_shadow_max_distance = q.dir_shadow_max_distance
-	Outline.mode = Outline.Mode.ALL if q.outlines_all else Outline.Mode.HOVER_ONLY
+	Outline.mode = Outline.Mode.ALL if q.outlines_all else Outline.Mode.ESSENTIAL
 
 
 ## Грубый стартовый tier по имени видеокарты. Игрок меняет его в Observe, выбор запоминается

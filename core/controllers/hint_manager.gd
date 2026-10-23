@@ -1,0 +1,215 @@
+extends Node
+# class_name не задаём: это синглтон Hints (autoload)
+
+###########################
+##💡 Hints - подсказки игроку внизу экрана (TDD §16)
+############################
+## Показывает одну-две строки с клавишами для текущего режима и инструмента.
+## Источники состояния (никто сюда не пишет текст, только сообщает контекст):
+##   set_mode(mode)        ToolController при смене режима (build, operate, observe, library)
+##   set_tool(tool_name)   ToolController при смене инструмента (SelectTool, BuildTool, DragTool, ObserveTool)
+##   set_context(key, on)  SelectTool: "selected" (есть выбранный объект), ObserveCameraRig: "photo" (UI скрыт)
+##   set_extra(name)       ObserveCameraRig: режим камеры follow, pov, orbit или ""
+## Тексты лежат в HINTS ниже: правятся только там. Ключ "режим/контекст" перекрывает общий "контекст".
+## Включение сохраняется в user://settings.cfg, кнопка в меню верхней панели.
+
+signal enabled_changed(on: bool)
+
+const SETTINGS_PATH := "user://settings.cfg"
+const KEY_COLOR := "#ffd54a"
+const DIM_COLOR := "#9aa4b2"
+const BOTTOM_MARGIN := 14.0
+const SEPARATOR := "   ·   "
+
+## Пары [клавиша, действие]
+const HINTS := {
+	"select_none": [["ЛКМ", "выбрать объект"], ["Категория → объект", "построить новый"]],
+	"operate/select_none": [["ЛКМ", "выбрать вагон или локомотив"], ["Тащить ЛКМ", "переместить выбранный"]],
+	"select_sel": [["Тащить ЛКМ", "переместить"], ["Del", "удалить"], ["PgUp/PgDn", "пинок вагона"], ["U", "тоннель (трак)"]],
+	"operate/select_sel": [["Ручка на панели", "ЛКМ вращать, ПКМ обнулить"], ["PgUp/PgDn", "пинок вагона"], ["Тащить ЛКМ", "переместить"], ["Del", "удалить"]],
+	"build": [["ЛКМ", "построить"], ["ПКМ", "отмена"], ["Q/E", "поворот"], ["R/F", "наклон"], ["U", "тоннель"], ["L", "лимиты flex"]],
+	"drag": [["Отпустить ЛКМ", "поставить"], ["ПКМ", "отмена"], ["Q/E", "поворот"], ["R/F", "наклон"], ["PgUp/PgDn", "высота"], ["Home", "сброс"]],
+	"library": [["Режим в разработке", ""]],
+	"observe": [["ЛКМ по вагону", "камера Follow"], ["1-5", "перейти к закладке (пустая: сохранить)"], ["Ctrl+1-5 или Shift+карточка", "перезаписать закладку"], ["H", "скрыть UI"], ["P", "снимок"]],
+	"observe_follow": [["Esc", "выйти из Follow"], ["ЛКМ по другому вагону", "сменить"], ["СКМ + мышь", "вращать камеру вагона"]],
+	"observe_pov": [["Esc", "выйти из POV"], ["POV ↔", "развернуть камеру"], ["ЛКМ по другому вагону", "перенести камеру"]],
+	"observe_orbit": [["Esc", "выйти из Orbit"], ["Orbit", "ещё раз, чтобы остановить"]],
+	"observe_photo": [["P", "снимок"], ["H или Esc", "вернуть интерфейс"]],
+}
+
+## Управление камерой Gimbal, вторая строка, где камерой управляет игрок
+const CAMERA_LINE := [["СКМ", "поворот"], ["ПКМ", "сдвиг"], ["Колесо", "зум"], ["WASD", "перемещение"]]
+
+var enabled := true
+var mode: StringName = &"build"
+var tool: StringName = &"SelectTool"
+var extra: StringName = &""
+
+var _ctx := {}
+var _suspended := false
+var _last_text := ""
+var _layer: CanvasLayer
+var _panel: PanelContainer
+var _label: RichTextLabel
+var _tween: Tween
+
+
+func _ready() -> void:
+	var cfg := ConfigFile.new()
+	cfg.load(SETTINGS_PATH)
+	enabled = bool(cfg.get_value("ui", "hints_enabled", true))
+	_build_ui()
+	_refresh()
+
+
+# ==========================================
+# ПУБЛИЧНЫЙ API
+# ==========================================
+
+func set_enabled(on: bool) -> void:
+	if on == enabled:
+		return
+	enabled = on
+	var cfg := ConfigFile.new()
+	cfg.load(SETTINGS_PATH)   # не затираем чужие секции
+	cfg.set_value("ui", "hints_enabled", enabled)
+	cfg.save(SETTINGS_PATH)
+	enabled_changed.emit(enabled)
+	_refresh()
+
+
+func set_mode(m: StringName) -> void:
+	mode = m
+	_refresh()
+
+
+func set_tool(tool_name: StringName) -> void:
+	tool = tool_name
+	_refresh()
+
+
+func set_context(key: StringName, on: bool) -> void:
+	if _ctx.get(key, false) == on:
+		return
+	_ctx[key] = on
+	_refresh()
+
+
+func set_extra(name: StringName) -> void:
+	if extra == name:
+		return
+	extra = name
+	_refresh()
+
+
+## Временно скрыть (снимок экрана)
+func suspend(on: bool) -> void:
+	_suspended = on
+	_refresh()
+
+
+# ==========================================
+# ВЫБОР ТЕКСТА
+# ==========================================
+
+## Ключ данных для текущего состояния
+func _context_key() -> String:
+	if mode == &"library":
+		return "library"
+	if mode == &"observe":
+		if _ctx.get(&"photo", false):
+			return "observe_photo"
+		if extra != &"":
+			return "observe_" + String(extra)
+		return "observe"
+	match tool:
+		&"DragTool":
+			return "drag"
+		&"BuildTool":
+			return "build"
+	return "select_sel" if _ctx.get(&"selected", false) else "select_none"
+
+
+func _lookup(key: String) -> Array:
+	return HINTS.get(String(mode) + "/" + key, HINTS.get(key, []))
+
+
+func _compose() -> String:
+	var key := _context_key()
+	var items := _lookup(key)
+	if items.is_empty():
+		return ""
+	var text := _format(items)
+	# Вторая строка про камеру: когда ею управляет игрок (не Follow, POV, Orbit и не фоторежим)
+	var own_camera := key in ["select_none", "select_sel", "build", "drag", "observe"]
+	if own_camera:
+		text += "\n[color=%s]%s[/color]" % [DIM_COLOR, _format(CAMERA_LINE, false)]
+	return "[center]" + text + "[/center]"
+
+
+func _format(items: Array, highlight := true) -> String:
+	var parts: Array[String] = []
+	for it in items:
+		var k: String = it[0]
+		var t: String = it[1]
+		if highlight:
+			parts.append(("[b][color=%s]%s[/color][/b] %s" % [KEY_COLOR, k, t]).strip_edges())
+		else:
+			parts.append("%s %s" % [k, t])
+	return SEPARATOR.join(parts)
+
+
+# ==========================================
+# UI
+# ==========================================
+
+func _build_ui() -> void:
+	_layer = CanvasLayer.new()
+	_layer.name = "HintLayer"
+	_layer.layer = 10
+	add_child(_layer)
+
+	_panel = PanelContainer.new()
+	_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.05, 0.07, 0.10, 0.78)
+	sb.set_corner_radius_all(8)
+	sb.content_margin_left = 16.0
+	sb.content_margin_right = 16.0
+	sb.content_margin_top = 8.0
+	sb.content_margin_bottom = 8.0
+	_panel.add_theme_stylebox_override("panel", sb)
+	_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_panel.offset_bottom = -BOTTOM_MARGIN
+	_layer.add_child(_panel)
+
+	_label = RichTextLabel.new()
+	_label.bbcode_enabled = true
+	_label.fit_content = true
+	_label.scroll_active = false
+	_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_label.custom_minimum_size = Vector2(960.0, 0.0)
+	_label.add_theme_font_size_override("normal_font_size", 15)
+	_label.add_theme_font_size_override("bold_font_size", 15)
+	_panel.add_child(_label)
+
+
+func _refresh() -> void:
+	if _panel == null:
+		return
+	var text := _compose() if (enabled and not _suspended) else ""
+	_panel.visible = text != ""
+	if text == "" or text == _last_text:
+		_last_text = text
+		return
+	_last_text = text
+	_label.text = text
+	_panel.reset_size()   # высота подстраивается под число строк
+	if _tween:
+		_tween.kill()
+	_panel.modulate.a = 0.0
+	_tween = create_tween()
+	_tween.tween_property(_panel, "modulate:a", 1.0, 0.15)

@@ -125,6 +125,7 @@ func set_mode(m: Mode) -> void:
 	mode = m
 	_enter_mode(m)
 	mode_changed.emit(mode)
+	Hints.set_extra([&"", &"follow", &"pov", &"orbit"][mode])
 
 
 func _enter_mode(m: Mode) -> void:
@@ -252,6 +253,7 @@ func _save_bookmarks() -> void:
 
 func set_ui_hidden(on: bool) -> void:
 	_ui_hidden = on
+	Hints.set_context(&"photo", on)
 	var ui := get_node_or_null("/root/GameRoot/UI")
 	if ui and "visible" in ui:
 		ui.visible = not on
@@ -261,6 +263,7 @@ func set_ui_hidden(on: bool) -> void:
 ## Снимок без UI на качестве High. Файл: user://screenshots/
 func take_photo() -> void:
 	var ui_was_hidden := _ui_hidden
+	Hints.suspend(true)   # подсказки не должны попасть в кадр
 	set_ui_hidden(true)
 	var prev_quality: StringName = GFX.state.quality
 	GFX.apply_quality(&"high", 0.0, false)   # временно, в настройки не пишется
@@ -277,6 +280,7 @@ func take_photo() -> void:
 	else:
 		push_error("Observe: не удалось сохранить снимок (код %d)" % err)
 	GFX.apply_quality(prev_quality, 0.0, false)
+	Hints.suspend(false)
 	if not ui_was_hidden:
 		set_ui_hidden(false)
 

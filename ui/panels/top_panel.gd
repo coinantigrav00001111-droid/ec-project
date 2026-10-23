@@ -17,12 +17,21 @@ class_name TopPanel extends PanelContainer
 
 
 
+## id пункта «Подсказки» в меню
+const HINTS_MENU_ID := 100
+
+
 func _ready() -> void:
 	# попап меню, которое вываливается по кнопке, посылает этот сигнал
 	menu_button.get_popup().id_pressed.connect(_on_menu_button_pressed)
 	# Слой питания могут переключить не из чекбокса (Observe при входе/выходе): держим вид в синхроне
 	PGM.power_layer_toggled.connect(_on_power_layer_toggled)
 	power_schema_check.set_pressed_no_signal(PGM.is_power_layer_active)
+	# Подсказки внизу экрана: галочка в меню
+	var popup := menu_button.get_popup()
+	popup.add_separator()
+	popup.add_check_item("Подсказки", HINTS_MENU_ID)
+	popup.set_item_checked(popup.get_item_index(HINTS_MENU_ID), Hints.enabled)
 
 
 
@@ -30,6 +39,10 @@ func _ready() -> void:
 func _on_menu_button_pressed(_index : int) -> void:
 	#menu_button_pressed.emit(_index)
 	match _index:
+		HINTS_MENU_ID: # подсказки вкл/выкл
+			var popup := menu_button.get_popup()
+			Hints.set_enabled(not Hints.enabled)
+			popup.set_item_checked(popup.get_item_index(HINTS_MENU_ID), Hints.enabled)
 		0: # save
 			#SaveManager.save_game()
 			pass

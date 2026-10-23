@@ -321,7 +321,7 @@ ObserveObjects:
 - [ ] `user://settings.cfg` через `ConfigFile`: quality, last look, last time. Не в `SavedGame`.
 - [ ] Автодетект стартового tier по `RenderingServer.get_video_adapter_name()` (грубо) с возможностью поменять в UI.
 - [ ] Реализация: `QualityPreset` (builtin low/medium/high, `.tres` в `res://data/graphics/quality/` переопределяют). Итог эффекта = Look AND Quality. Серверные настройки (MSAA, FXAA, атласы теней, каскады, soft shadow filter, SSAO quality) применяются при смене tier в `GFX._apply_quality_settings`.
-- [ ] `Outline.enabled` (Observe выключает контуры целиком) и `Outline.mode` (`ALL` / `HOVER_ONLY`). На Low остаётся только hover, а ghost, selected и blocked видны через overlay-материалы `C_Visual`.
+- [ ] `Outline.enabled` (Observe выключает контуры целиком) и `Outline.mode` (`ALL` / `ESSENTIAL`). На Low остаются hover, selected, ghost и blocked (без них не видно, можно ли ставить объект), отключаются только reserve и multi. Первая версия (`HOVER_ONLY`) убирала ghost и blocked, это было ошибкой, найдено в fast-режиме.
 - [ ] `user://settings.cfg`: tier, последний Look и Time. Автодетект при первом запуске по `get_video_adapter_name()` (эвристика, ошибаться может, игрок меняет в Observe).
 - [ ] Замер fps на эталонной диораме для каждого tier, отдельно с contact shadows и без них.
 

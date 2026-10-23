@@ -51,6 +51,8 @@ func _enter_ghost_place() -> void:
 func _enter_spawn_and_drag() -> void:
 	controller.entities_root.add_child(ghost)      # сначала в дерево
 	var hit = controller.get_mouse_ray(_pick_mask())   # XX claude-terra
+	if hit.is_empty():
+		hit = controller.get_mouse_plane_hit()   # кнопка спавна не над столом
 	if hit:
 		ghost.send_event("on_drag_moved", hit)     # теперь get_tree() есть
 	controller.select_tool.set_selection(ghost)

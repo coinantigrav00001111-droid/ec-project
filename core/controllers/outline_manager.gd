@@ -17,8 +17,9 @@ const STYLE := {
 	S.BLOCKED:  {"color": Color("ff3b30"), "width": 2.5},
 }
 
-## Режимы по уровню качества (Quality): все состояния или только hover
-enum Mode { ALL, HOVER_ONLY }
+## Режимы по уровню качества (Quality): все состояния или только важные для игры (hover, selected, ghost, blocked).
+## ESSENTIAL не трогает ghost и blocked: без них не видно, можно ли ставить объект
+enum Mode { ALL, ESSENTIAL }
 
 ## Общий выключатель. Observe выключает контуры целиком: каждый активный канал это полноэкранный SubViewport
 var enabled := true:
@@ -99,7 +100,7 @@ func set_owner_state(owner_obj: Object, state: int) -> void:
 func _allowed(c: Channel) -> bool:
 	if not enabled:
 		return false
-	return mode == Mode.ALL or c.state == S.HOVER
+	return mode == Mode.ALL or c.state in [S.HOVER, S.SELECTED, S.GHOST, S.BLOCKED]
 
 
 func _refresh_all() -> void:
