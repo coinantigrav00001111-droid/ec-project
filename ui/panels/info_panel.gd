@@ -17,6 +17,8 @@ func _ready():
 	
 	# Таб механизмы создается кодом
 	_build_mech_tab()
+	# Таб материала листа пенопласта (T7), тоже кодом
+	_build_terrain_tab()
 
 
 # Для TransformTab (если нужны живые координаты)
@@ -116,6 +118,8 @@ func _populate_data():
 	_update_debug_tab()
 	# Вкладка механизмы 
 	_rebuild_mech_tab()
+	# Вкладка материал листа
+	_update_terrain_tab()
 
 
 func _populate_main_tab():
@@ -701,3 +705,58 @@ func _on_wagon_camera_button_pressed() -> void:
 	else:
 		#printt('_on_wagon_camera_button_pressed')
 		current_target.send_event('on_wagon_camera_selected',{'selected': false})
+
+
+## --- Вкладка "Материал" листа пенопласта (T7, XX claude-terra) ---
+## Видна только у настоящего листа (C_TerrainLayer без C_Ghost). Стадия: C_TerrainLayer.FoamStage.
+
+const STAGE_NAMES := ["Сырой пенопласт", "Шпаклёвка", "Краска", "Трава"]
+
+var _terrain_tab: VBoxContainer
+var _stage_option: OptionButton
+
+
+func _build_terrain_tab() -> void:
+	_terrain_tab = VBoxContainer.new()
+	_terrain_tab.name = "Материал"
+	tab_container.add_child(_terrain_tab)
+	var margin := MarginContainer.new()
+	for side in ["left", "right", "top", "bottom"]:
+		margin.add_theme_constant_override("margin_" + side, 10)
+	_terrain_tab.add_child(margin)
+	var box := VBoxContainer.new()
+	margin.add_child(box)
+	var lbl := Label.new()
+	lbl.text = "Стадия отделки листа"
+	box.add_child(lbl)
+	_stage_option = OptionButton.new()
+	for n in STAGE_NAMES:
+		_stage_option.add_item(n)
+	_stage_option.item_selected.connect(_on_stage_selected)
+	box.add_child(_stage_option)
+	_set_terrain_tab_visible(false)
+
+
+func _set_terrain_tab_visible(on: bool) -> void:
+	var idx = tab_container.get_tab_idx_from_control(_terrain_tab)
+	tab_container.set_tab_hidden(idx, not on)
+	if not on and tab_container.current_tab == idx:
+		tab_container.current_tab = 0
+
+
+func _get_terrain_layer() -> C_TerrainLayer:
+	if current_target == null or current_target.has_comp(C_Ghost):
+		return null
+	return current_target.get_comp(C_TerrainLayer) as C_TerrainLayer
+
+
+func _update_terrain_tab() -> void:
+	var layer := _get_terrain_layer()
+	_set_terrain_tab_visible(layer != null)
+	if layer:
+		_stage_option.select(layer.stage)
+
+
+func _on_stage_selected(index: int) -> void:
+	if _get_terrain_layer():
+		current_target.send_event("on_terrain_stage_set", {"stage": index})

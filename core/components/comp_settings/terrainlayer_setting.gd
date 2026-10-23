@@ -7,6 +7,9 @@ class_name TerrainLayerSetting extends ComponentSettings
 
 @export var settings: VisualStateSettings = preload("res://core/visual/visual_state.tres")
 
+## Материалы стадий. null = встроенные
+@export var style: TerrainStyle
+
 
 func create_component(entity: Entity) -> Component:
 	var size := Vector2(20.0, 20.0)
@@ -27,6 +30,7 @@ func create_component(entity: Entity) -> Component:
 	layer.name = 'C_TerrainLayer'
 	layer.visual_settings = settings
 	layer.levels = maxi(1, levels)
+	layer.style = style
 	entity.add_component(layer)
 
 	return layer
