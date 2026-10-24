@@ -48,8 +48,8 @@ func _ready() -> void:
 	add_child(_sun)
 	await get_tree().process_frame
 
-	_rows.append("| набор | вариант | траков | создание, мс | узлов | MeshInstance | коллизий | обзор: кадр мс / фпс / отрисовок / объектов / треуг., тыс | план (тени): кадр мс / фпс / отрисовок | план (без теней): кадр мс / фпс / отрисовок | process мс | physics мс (ср / макс, только кадры с тиком) | видеопамять, МБ |")
-	_rows.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+	_rows.append("| набор | вариант | траков | создание, мс | узлов | коллизий | обзор, тени: мс / фпс / отрис. | обзор, без теней | план, тени | план, без теней | план: тени есть, трак НЕ отбрасывает | объектов в обзоре | треуг. в обзоре, тыс | process мс | physics мс (ср / макс) | видеопамять, МБ |")
+	_rows.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
 	for suite in SUITES:
 		for item in suite[2]:
 			for n in COUNTS:
@@ -106,21 +106,22 @@ func _run(suite: String, cell: Vector2, label: String, file: String, n: int) -> 
 		aspect = vp.x / vp.y
 	var half_t := tan(deg_to_rad(_cam.fov) * 0.5)
 	var need := maxf(d * 0.5, w * 0.5 / aspect) / half_t * 1.1
+	var over_pos := Vector3(center.x, need, center.z)
+	var close_pos := Vector3(center.x, 25.0, center.z)
 	_sun.shadow_enabled = SHADOWS
-	var over := await _measure(Vector3(center.x, need, center.z))
-	# 2) крупный план: камера низко, видна малая часть (с тенями)
-	var close := await _measure(Vector3(center.x, 25.0, center.z))
-	# 3) тот же план без теней: отделяем стоимость геометрии от стоимости теневых проходов
-	_sun.shadow_enabled = false
-	var close_ns := await _measure(Vector3(center.x, 25.0, center.z))
-	_sun.shadow_enabled = SHADOWS
+	var over := await _measure(over_pos)                 # 1) обзор: вся сетка в кадре
+	var close := await _measure(close_pos)               # 2) крупный план: малая часть, с тенями
+	_sun.shadow_enabled = false                          # 3) то же без теней: чистая стоимость геометрии
+	var over_ns := await _measure(over_pos)
+	var close_ns := await _measure(close_pos)
+	_sun.shadow_enabled = SHADOWS                        # 4) тени от солнца есть, но трак их не отбрасывает
+	_set_track_shadows(spawned, false)
+	var close_nc := await _measure(close_pos)
 
-	_rows.append("| %s | %s | %d | %.0f | %d | %d | %d | %.2f / %.0f / %d / %d / %.0f | %.2f / %.0f / %d | %.2f / %.0f / %d | %.2f | %.2f / %.2f | %.0f |" % [
-		suite, label, n, spawn_ms, counts[0], counts[1], counts[2],
-		over.ms, over.fps, over.draws, over.objs, over.prims / 1000.0,
-		close.ms, close.fps, close.draws,
-		close_ns.ms, close_ns.fps, close_ns.draws,
-		over.proc, over.phys, over.phys_max, over.vram])
+	_rows.append("| %s | %s | %d | %.0f | %d | %d | %s | %s | %s | %s | %s | %d | %.0f | %.2f | %.2f / %.2f | %.0f |" % [
+		suite, label, n, spawn_ms, counts[0], counts[2],
+		_fmt(over), _fmt(over_ns), _fmt(close), _fmt(close_ns), _fmt(close_nc),
+		over.objs, over.prims / 1000.0, over.proc, over.phys, over.phys_max, over.vram])
 	print(_rows.back())
 
 	for e in spawned:
@@ -128,6 +129,22 @@ func _run(suite: String, cell: Vector2, label: String, file: String, n: int) -> 
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 	await get_tree().process_frame
+
+
+func _fmt(m: Dictionary) -> String:
+	return "%.2f / %.0f / %d" % [m.ms, m.fps, m.draws]
+
+
+## Включает или выключает отбрасывание теней у всей геометрии траков (меши и MultiMesh шпал)
+func _set_track_shadows(entities: Array[Entity], on: bool) -> void:
+	var mode := GeometryInstance3D.SHADOW_CASTING_SETTING_ON if on else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	for e in entities:
+		var stack: Array[Node] = [e]
+		while not stack.is_empty():
+			var nd: Node = stack.pop_back()
+			if nd is GeometryInstance3D:
+				(nd as GeometryInstance3D).cast_shadow = mode
+			stack.append_array(nd.get_children())
 
 
 ## Ставит камеру сверху, прогревает, затем усредняет кадры
