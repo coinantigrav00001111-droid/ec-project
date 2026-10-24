@@ -350,7 +350,7 @@ func _physics_probe() -> void:
 		var f1: float = res[1].ms
 		for hz in PROBE_HZ:
 			var m: Dictionary = res[hz]
-			var tick_cost := 1000.0 * (m.ms - f1) / (hz * m.ms) if hz > 1 else 0.0
+			var tick_cost = 1000.0 * (m.ms - f1) / (hz * m.ms) if hz > 1 else 0.0
 			_rows.append("| %s | %d | %.2f | %.0f | %s | %.0f | %s |" % [
 				item[0], hz, m.ms, m.fps, _fmt_rt(m), m.phz, ("%.2f" % tick_cost) if hz > 1 else "-"])
 			print(_rows.back())
