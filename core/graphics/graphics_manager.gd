@@ -567,9 +567,11 @@ func _load_settings() -> void:
 	var t := StringName(cfg.get_value("graphics", "time", ""))
 	if times.has(t):
 		state.time = t
-	var ts = cfg.get_value("graphics", "track_shadows", null)
-	if ts is bool:
-		_track_shadows_override = 1 if ts else 0
+	# Ключа может не быть (первый запуск): get_value с null вместо умолчания дает ошибку, поэтому has_section_key
+	if cfg.has_section_key("graphics", "track_shadows"):
+		var ts = cfg.get_value("graphics", "track_shadows", false)
+		if ts is bool:
+			_track_shadows_override = 1 if ts else 0
 
 
 func _save_settings() -> void:
