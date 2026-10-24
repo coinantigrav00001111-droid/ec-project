@@ -39,6 +39,7 @@ var _rows: Array[String] = []
 func _ready() -> void:
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	Engine.max_fps = 0
+	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
 	_cam = Camera3D.new()
 	_cam.far = 4000.0
 	add_child(_cam)
@@ -48,8 +49,8 @@ func _ready() -> void:
 	add_child(_sun)
 	await get_tree().process_frame
 
-	_rows.append("| набор | вариант | траков | создание, мс | узлов | коллизий | обзор, тени: мс / фпс / отрис. | обзор, без теней | план, тени | план, без теней | план: тени есть, трак НЕ отбрасывает | объектов в обзоре | треуг. в обзоре, тыс | process мс | physics мс (ср / макс) / тиков в сек (цель: см. project.godot) | видеопамять, МБ |")
-	_rows.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+	_rows.append("| набор | вариант | траков | создание, мс | узлов | коллизий | обзор, тени: мс / фпс / отрис. | обзор, без теней | план, тени | план, без теней | план: тени есть, трак НЕ отбрасывает | обзор: рендер CPU / GPU, мс | план: рендер CPU / GPU, мс | объектов в обзоре | треуг. в обзоре, тыс | process мс | physics мс (ср / макс) / тиков в сек (цель: см. project.godot) | видеопамять, МБ |")
+	_rows.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
 	for suite in SUITES:
 		for item in suite[2]:
 			for n in COUNTS:
@@ -114,9 +115,10 @@ func _run(suite: String, cell: Vector2, label: String, file: String, n: int) -> 
 	_set_track_shadows(spawned, false)
 	var close_nc := await _measure(close_pos)
 
-	_rows.append("| %s | %s | %d | %.0f | %d | %d | %s | %s | %s | %s | %s | %d | %.0f | %.2f | %.2f / %.2f / %.0f | %.0f |" % [
+	_rows.append("| %s | %s | %d | %.0f | %d | %d | %s | %s | %s | %s | %s | %s | %s | %d | %.0f | %.2f | %.2f / %.2f / %.0f | %.0f |" % [
 		suite, label, n, spawn_ms, counts[0], counts[2],
 		_fmt(over), _fmt(over_ns), _fmt(close), _fmt(close_ns), _fmt(close_nc),
+		_fmt_rt(over), _fmt_rt(close_nc),
 		over.objs, over.prims / 1000.0, over.proc, over.phys, over.phys_max, over.phz, over.vram])
 	print(_rows.back())
 
@@ -125,6 +127,11 @@ func _run(suite: String, cell: Vector2, label: String, file: String, n: int) -> 
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 	await get_tree().process_frame
+
+
+## Время кадра на рендер: процессор / видеокарта, мс (если драйвер не отдаёт GPU-время, будет 0)
+func _fmt_rt(m: Dictionary) -> String:
+	return "%.2f / %.2f" % [m.rcpu, m.rgpu]
 
 
 func _fmt(m: Dictionary) -> String:
@@ -168,12 +175,17 @@ func _measure(cam_pos: Vector3) -> Dictionary:
 	var pf0 := last_pf
 	var t_start := Time.get_ticks_usec()
 	var phys_n := 0
+	var vp_rid := get_viewport().get_viewport_rid()
+	var r_cpu := 0.0
+	var r_gpu := 0.0
 	for i in SAMPLE_FRAMES:
 		await get_tree().process_frame
 		var now := Time.get_ticks_usec()
 		dt_sum += (now - last) / 1000.0
 		last = now
 		proc += Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0
+		r_cpu += RenderingServer.viewport_get_measured_render_time_cpu(vp_rid)
+		r_gpu += RenderingServer.viewport_get_measured_render_time_gpu(vp_rid)
 		var pf := Engine.get_physics_frames()
 		if pf != last_pf:   # монитор обновляется только после физического тика, иначе читали бы старое значение
 			last_pf = pf
@@ -184,6 +196,8 @@ func _measure(cam_pos: Vector3) -> Dictionary:
 	var ms := dt_sum / SAMPLE_FRAMES
 	var elapsed := maxf((Time.get_ticks_usec() - t_start) / 1000000.0, 0.001)
 	return {
+		"rcpu": r_cpu / SAMPLE_FRAMES,
+		"rgpu": r_gpu / SAMPLE_FRAMES,
 		"phz": (Engine.get_physics_frames() - pf0) / elapsed,
 		"ms": ms,
 		"fps": 1000.0 / maxf(ms, 0.001),
