@@ -57,6 +57,7 @@ func _ready() -> void:
 				await _run(suite[0], suite[1], item[0], OBJ + item[1], n)
 
 	await _sweep()
+	await _physics_probe()
 
 	var report := "\n".join(_rows)
 	print("\n", report)
@@ -297,3 +298,63 @@ func _sweep() -> void:
 	for e in spawned:
 		e.queue_free()
 	await get_tree().physics_frame
+
+
+# ==========================================
+# Прогон частоты физики: сколько кадра съедают физические тики
+# Кадр = (рендер + скрипты) + тики_за_кадр * стоимость_тика, а тиков за кадр = частота * время_кадра.
+# Меряем обзор при разной частоте физики и по разнице выводим стоимость одного тика.
+# Пустая сцена (0 траков) отделяет постоянную стоимость от стоимости траков.
+# ==========================================
+
+const PROBE := [
+	["пустая сцена, 0 траков", "", 0],
+	["бюджет G239 x500", "g239.tres", 500],
+	["дерево+балласт x500", "s239_wood_ballast.tres", 500],
+]
+const PROBE_HZ := [1, 30, 60, 120]
+
+
+func _physics_probe() -> void:
+	var hz0 := Engine.physics_ticks_per_second
+	_sun.shadow_enabled = false   # тени тут ни при чём, убираем их из измерения
+	_rows.append("")
+	_rows.append("Прогон частоты физики (обзор, тени выключены). Оценка тика = 1000 * (кадр - кадр при 1 Гц) / (Гц * кадр).")
+	_rows.append("| сцена | физика, Гц | кадр, мс | фпс | рендер CPU / GPU, мс | тиков в сек (факт) | оценка тика, мс |")
+	_rows.append("|---|---|---|---|---|---|---|")
+	for item in PROBE:
+		var n: int = item[2]
+		var spawned: Array[Entity] = []
+		var cam_pos := Vector3(0.0, 100.0, 0.0)
+		if n > 0:
+			var setting := load(OBJ + item[1]) as EntitySetting
+			if setting == null:
+				continue
+			var cell := Vector2(4.0, 24.0)
+			var factory := EntityFactory.new()
+			var cols := maxi(1, ceili(sqrt(n * cell.y / cell.x)))
+			for i in n:
+				var e: Entity = factory.create_from_setting(setting)
+				add_child(e)
+				e.global_position = Vector3((i % cols) * cell.x, 0.0, -floori(float(i) / cols) * cell.y)
+				spawned.append(e)
+			var w := cols * cell.x
+			var d := ceili(float(n) / cols) * cell.y
+			cam_pos = Vector3(w * 0.5, _over_height(w, d), -d * 0.5)
+			await get_tree().physics_frame
+			await get_tree().physics_frame
+		var res := {}
+		for hz in PROBE_HZ:
+			Engine.physics_ticks_per_second = hz
+			res[hz] = await _measure(cam_pos)
+		var f1: float = res[1].ms
+		for hz in PROBE_HZ:
+			var m: Dictionary = res[hz]
+			var tick_cost := 1000.0 * (m.ms - f1) / (hz * m.ms) if hz > 1 else 0.0
+			_rows.append("| %s | %d | %.2f | %.0f | %s | %.0f | %s |" % [
+				item[0], hz, m.ms, m.fps, _fmt_rt(m), m.phz, ("%.2f" % tick_cost) if hz > 1 else "-"])
+			print(_rows.back())
+		Engine.physics_ticks_per_second = hz0
+		for e in spawned:
+			e.queue_free()
+		await get_tree().physics_frame
