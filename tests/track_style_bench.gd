@@ -354,6 +354,18 @@ func _physics_probe() -> void:
 			_rows.append("| %s | %d | %.2f | %.0f | %s | %.0f | %s |" % [
 				item[0], hz, m.ms, m.fps, _fmt_rt(m), m.phz, ("%.2f" % tick_cost) if hz > 1 else "-"])
 			print(_rows.back())
+		# Отключаем C_TrackSupport._physics_process у всех траков и меряем тик ещё раз:
+		# если тик упал почти до нуля, вся стоимость физики сидит в нём
+		if n > 0:
+			for e in spawned:
+				var ts := e.get_comp(C_TrackSupport) as C_TrackSupport
+				if ts:
+					ts.set_physics_process(false)
+			Engine.physics_ticks_per_second = hz0
+			var m2: Dictionary = await _measure(cam_pos)
+			_rows.append("| %s [C_TrackSupport выкл] | %d | %.2f | %.0f | %s | %.0f | %.2f |" % [
+				item[0], hz0, m2.ms, m2.fps, _fmt_rt(m2), m2.phz, 1000.0 * (m2.ms - f1) / (hz0 * m2.ms)])
+			print(_rows.back())
 		Engine.physics_ticks_per_second = hz0
 		for e in spawned:
 			e.queue_free()
