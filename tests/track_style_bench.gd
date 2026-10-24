@@ -48,12 +48,14 @@ func _ready() -> void:
 	add_child(_sun)
 	await get_tree().process_frame
 
-	_rows.append("| набор | вариант | траков | создание, мс | узлов | коллизий | обзор, тени: мс / фпс / отрис. | обзор, без теней | план, тени | план, без теней | план: тени есть, трак НЕ отбрасывает | объектов в обзоре | треуг. в обзоре, тыс | process мс | physics мс (ср / макс) | видеопамять, МБ |")
+	_rows.append("| набор | вариант | траков | создание, мс | узлов | коллизий | обзор, тени: мс / фпс / отрис. | обзор, без теней | план, тени | план, без теней | план: тени есть, трак НЕ отбрасывает | объектов в обзоре | треуг. в обзоре, тыс | process мс | physics мс (ср / макс) / тиков в сек (цель: см. project.godot) | видеопамять, МБ |")
 	_rows.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
 	for suite in SUITES:
 		for item in suite[2]:
 			for n in COUNTS:
 				await _run(suite[0], suite[1], item[0], OBJ + item[1], n)
+
+	await _sweep()
 
 	var report := "\n".join(_rows)
 	print("\n", report)
@@ -99,13 +101,7 @@ func _run(suite: String, cell: Vector2, label: String, file: String, n: int) -> 
 	var center := Vector3(w * 0.5, 0.0, -d * 0.5)
 	var counts := _count_nodes()
 
-	# 1) обзор: камера над центром, в кадре вся сетка
-	var aspect := 16.0 / 9.0
-	var vp := get_viewport().get_visible_rect().size
-	if vp.y > 0.0:
-		aspect = vp.x / vp.y
-	var half_t := tan(deg_to_rad(_cam.fov) * 0.5)
-	var need := maxf(d * 0.5, w * 0.5 / aspect) / half_t * 1.1
+	var need := _over_height(w, d)
 	var over_pos := Vector3(center.x, need, center.z)
 	var close_pos := Vector3(center.x, 25.0, center.z)
 	_sun.shadow_enabled = SHADOWS
@@ -118,10 +114,10 @@ func _run(suite: String, cell: Vector2, label: String, file: String, n: int) -> 
 	_set_track_shadows(spawned, false)
 	var close_nc := await _measure(close_pos)
 
-	_rows.append("| %s | %s | %d | %.0f | %d | %d | %s | %s | %s | %s | %s | %d | %.0f | %.2f | %.2f / %.2f | %.0f |" % [
+	_rows.append("| %s | %s | %d | %.0f | %d | %d | %s | %s | %s | %s | %s | %d | %.0f | %.2f | %.2f / %.2f / %.0f | %.0f |" % [
 		suite, label, n, spawn_ms, counts[0], counts[2],
 		_fmt(over), _fmt(over_ns), _fmt(close), _fmt(close_ns), _fmt(close_nc),
-		over.objs, over.prims / 1000.0, over.proc, over.phys, over.phys_max, over.vram])
+		over.objs, over.prims / 1000.0, over.proc, over.phys, over.phys_max, over.phz, over.vram])
 	print(_rows.back())
 
 	for e in spawned:
@@ -147,6 +143,16 @@ func _set_track_shadows(entities: Array[Entity], on: bool) -> void:
 			stack.append_array(nd.get_children())
 
 
+## Высота камеры, при которой сетка w x d целиком в кадре
+func _over_height(w: float, d: float) -> float:
+	var aspect := 16.0 / 9.0
+	var vp := get_viewport().get_visible_rect().size
+	if vp.y > 0.0:
+		aspect = vp.x / vp.y
+	var half_t := tan(deg_to_rad(_cam.fov) * 0.5)
+	return maxf(d * 0.5, w * 0.5 / aspect) / half_t * 1.1
+
+
 ## Ставит камеру сверху, прогревает, затем усредняет кадры
 func _measure(cam_pos: Vector3) -> Dictionary:
 	_cam.global_position = cam_pos
@@ -159,6 +165,8 @@ func _measure(cam_pos: Vector3) -> Dictionary:
 	var phys_max := 0.0
 	var last := Time.get_ticks_usec()
 	var last_pf := Engine.get_physics_frames()
+	var pf0 := last_pf
+	var t_start := Time.get_ticks_usec()
 	var phys_n := 0
 	for i in SAMPLE_FRAMES:
 		await get_tree().process_frame
@@ -174,7 +182,9 @@ func _measure(cam_pos: Vector3) -> Dictionary:
 			phys_n += 1
 			phys_max = maxf(phys_max, p)
 	var ms := dt_sum / SAMPLE_FRAMES
+	var elapsed := maxf((Time.get_ticks_usec() - t_start) / 1000000.0, 0.001)
 	return {
+		"phz": (Engine.get_physics_frames() - pf0) / elapsed,
 		"ms": ms,
 		"fps": 1000.0 / maxf(ms, 0.001),
 		"draws": int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)),
@@ -202,3 +212,74 @@ func _count_nodes() -> Array:
 			shapes += 1
 		stack.append_array(nd.get_children())
 	return [total - 3, meshes, shapes]
+
+
+# ==========================================
+# Прогон качества и дальности теней (процедурный трак, 500 штук, обзор и крупный план)
+# ==========================================
+
+const SWEEP_FILE := "s239_wood_ballast.tres"
+const SWEEP_COUNT := 500
+## label, тени вообще, трак отбрасывает, каскадов (1/2/4), дальность м, фильтр 0..5 (0 жёсткие, 2 Soft Low, 5 ultra), атлас
+const SWEEP := [
+	["без теней", false, true, 4, 100.0, 2, 4096],
+	["тени есть, трак не отбрасывает", true, false, 4, 100.0, 2, 4096],
+	["база: 4 каскада, 100 м, фильтр 2, атлас 4096", true, true, 4, 100.0, 2, 4096],
+	["2 каскада", true, true, 2, 100.0, 2, 4096],
+	["1 каскад (orthogonal)", true, true, 1, 100.0, 2, 4096],
+	["дальность 60 м", true, true, 4, 60.0, 2, 4096],
+	["дальность 30 м", true, true, 4, 30.0, 2, 4096],
+	["фильтр 0 (жёсткие)", true, true, 4, 100.0, 0, 4096],
+	["фильтр 4 (мягкие high)", true, true, 4, 100.0, 4, 4096],
+	["атлас 2048", true, true, 4, 100.0, 2, 2048],
+	["атлас 8192", true, true, 4, 100.0, 2, 8192],
+	["2 каскада + 40 м (дешёвый вариант)", true, true, 2, 40.0, 2, 2048],
+]
+
+
+func _sweep() -> void:
+	var setting := load(OBJ + SWEEP_FILE) as EntitySetting
+	if setting == null:
+		return
+	var cell := Vector2(4.0, 24.0)
+	var factory := EntityFactory.new()
+	var cols := maxi(1, ceili(sqrt(SWEEP_COUNT * cell.y / cell.x)))
+	var spawned: Array[Entity] = []
+	for i in SWEEP_COUNT:
+		var e: Entity = factory.create_from_setting(setting)
+		add_child(e)
+		e.global_position = Vector3((i % cols) * cell.x, 0.0, -floori(float(i) / cols) * cell.y)
+		spawned.append(e)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	var w := cols * cell.x
+	var d := ceili(float(SWEEP_COUNT) / cols) * cell.y
+	var center := Vector3(w * 0.5, 0.0, -d * 0.5)
+	var over_pos := Vector3(center.x, _over_height(w, d), center.z)
+	var close_pos := Vector3(center.x, 25.0, center.z)
+
+	_rows.append("")
+	_rows.append("Прогон теней: s239 дерево+балласт x %d. Строка: вариант | обзор: мс / фпс / отрис. | план: мс / фпс / отрис." % SWEEP_COUNT)
+	_rows.append("| вариант | обзор | план |")
+	_rows.append("|---|---|---|")
+	for cfg in SWEEP:
+		_sun.shadow_enabled = cfg[1]
+		_set_track_shadows(spawned, cfg[2])
+		match cfg[3]:
+			1:
+				_sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
+			2:
+				_sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
+			_:
+				_sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
+		_sun.directional_shadow_max_distance = cfg[4]
+		RenderingServer.directional_soft_shadow_filter_set_quality(cfg[5] as RenderingServer.ShadowQuality)
+		RenderingServer.directional_shadow_atlas_set_size(cfg[6], true)
+		var over := await _measure(over_pos)
+		var close := await _measure(close_pos)
+		_rows.append("| %s | %s | %s |" % [cfg[0], _fmt(over), _fmt(close)])
+		print(_rows.back())
+
+	for e in spawned:
+		e.queue_free()
+	await get_tree().physics_frame
