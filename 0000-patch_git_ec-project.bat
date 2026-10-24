@@ -8,11 +8,11 @@
 :: git am -3 %1
 
 ::git am --continue
-:: git am --abort
+git am --abort
 
 
 :: ===diff===
-git am < %1
+:: git am < %1
 :: проверка диф
 git apply --check %1
 
