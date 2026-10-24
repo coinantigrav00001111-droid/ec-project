@@ -22,6 +22,10 @@ class_name QualityPreset extends Resource
 @export_range(0, 5) var soft_shadow_quality := 1
 ## Атлас теней точечных и spot источников (лампа), Viewport.positional_shadow_atlas_size
 @export var positional_shadow_atlas := 2048
+## Тени от траков (балласт, шпалы, рельсы, опоры). По умолчанию выключены на всех tier: на макете из сотен траков
+## они давали +6 мс на кадр (каждый трак попадал в теневой проход), а тень рельса в атласе размером в пару пикселей.
+## Включать осознанно в .tres конкретного tier (например, для high)
+@export var track_shadows := false
 
 @export_category("Anti-aliasing")
 @export_enum("Off:0", "MSAA 2x:1", "MSAA 4x:2", "MSAA 8x:3") var msaa := 0

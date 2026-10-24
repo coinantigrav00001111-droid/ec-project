@@ -101,6 +101,10 @@ func _run(suite: String, cell: Vector2, label: String, file: String, n: int) -> 
 	var w := cols * cell.x
 	var d := rows_count * cell.y
 	var center := Vector3(w * 0.5, 0.0, -d * 0.5)
+	# В игре тени траков по умолчанию выключены (QualityPreset.track_shadows). Для сравнения со старыми замерами
+	# включаем их обратно: колонки «тени» и «без теней» показывают худший случай, колонка «трак НЕ отбрасывает»
+	# соответствует умолчанию игры
+	_set_track_shadows(spawned, true)
 	var counts := _count_nodes()
 
 	var need := _over_height(w, d)
@@ -149,6 +153,52 @@ func _set_track_shadows(entities: Array[Entity], on: bool) -> void:
 			if nd is GeometryInstance3D:
 				(nd as GeometryInstance3D).cast_shadow = mode
 			stack.append_array(nd.get_children())
+
+
+## Строка пробы: кадр при hz0 и оценка тика относительно кадра при 1 Гц
+func _probe_row(label: String, cam_pos: Vector3, f1: float, hz: int) -> void:
+	var m: Dictionary = await _measure(cam_pos)
+	_rows.append("| %s | %d | %.2f | %.0f | %s | %.0f | %.2f |" % [
+		label, hz, m.ms, m.fps, _fmt_rt(m), m.phz, 1000.0 * (m.ms - f1) / (hz * m.ms)])
+	print(_rows.back())
+
+
+## Все узлы заданного класса под entity
+func _find_all(root: Node, cls: String) -> Array[Node]:
+	var out: Array[Node] = []
+	var stack: Array[Node] = [root]
+	while not stack.is_empty():
+		var nd: Node = stack.pop_back()
+		if nd.is_class(cls):
+			out.append(nd)
+		stack.append_array(nd.get_children())
+	return out
+
+
+## Что физического в среднем на один трак и сколько узлов крутят _physics_process / _process
+func _phys_counts(entities: Array[Entity]) -> Dictionary:
+	var areas := 0
+	var bodies := 0
+	var shapes := 0
+	var phys_proc := 0
+	var proc := 0
+	for e in entities:
+		var stack: Array[Node] = [e]
+		while not stack.is_empty():
+			var nd: Node = stack.pop_back()
+			if nd is Area3D:
+				areas += 1
+			elif nd is StaticBody3D:
+				bodies += 1
+			elif nd is CollisionShape3D:
+				shapes += 1
+			if nd.is_physics_processing():
+				phys_proc += 1
+			if nd.is_processing():
+				proc += 1
+			stack.append_array(nd.get_children())
+	var n := float(maxi(entities.size(), 1))
+	return {"areas": areas / n, "bodies": bodies / n, "shapes": shapes / n, "phys_proc": phys_proc / n, "proc": proc / n}
 
 
 ## Высота камеры, при которой сетка w x d целиком в кадре
@@ -354,18 +404,32 @@ func _physics_probe() -> void:
 			_rows.append("| %s | %d | %.2f | %.0f | %s | %.0f | %s |" % [
 				item[0], hz, m.ms, m.fps, _fmt_rt(m), m.phz, ("%.2f" % tick_cost) if hz > 1 else "-"])
 			print(_rows.back())
-		# Отключаем C_TrackSupport._physics_process у всех траков и меряем тик ещё раз:
-		# если тик упал почти до нуля, вся стоимость физики сидит в нём
 		if n > 0:
+			var pc := _phys_counts(spawned)
+			_rows.append("  на один трак: Area3D %.1f, StaticBody3D %.1f, CollisionShape3D %.1f; узлов с _physics_process на 100 траков: %.0f, с _process: %.0f" % [
+				pc.areas, pc.bodies, pc.shapes, pc.phys_proc * 100.0, pc.proc * 100.0])
+			print(_rows.back())
+			# Серия проб: что ещё стоит тика. Каждая строка добавляет отключение к предыдущим.
+			Engine.physics_ticks_per_second = hz0
+			# а) C_TrackSupport совсем выключен
 			for e in spawned:
 				var ts := e.get_comp(C_TrackSupport) as C_TrackSupport
 				if ts:
 					ts.set_physics_process(false)
-			Engine.physics_ticks_per_second = hz0
-			var m2: Dictionary = await _measure(cam_pos)
-			_rows.append("| %s [C_TrackSupport выкл] | %d | %.2f | %.0f | %s | %.0f | %.2f |" % [
-				item[0], hz0, m2.ms, m2.fps, _fmt_rt(m2), m2.phz, 1000.0 * (m2.ms - f1) / (hz0 * m2.ms)])
-			print(_rows.back())
+			await _probe_row(item[0] + " [C_TrackSupport выкл]", cam_pos, f1, hz0)
+			# б) у всех Area3D выключен мониторинг (балласт это Area3D)
+			for e in spawned:
+				for a in _find_all(e, "Area3D"):
+					(a as Area3D).set_deferred("monitoring", false)
+					(a as Area3D).set_deferred("monitorable", false)
+			await get_tree().physics_frame
+			await _probe_row(item[0] + " [+ Area3D monitoring выкл]", cam_pos, f1, hz0)
+			# в) у всех CollisionShape3D выключен disabled
+			for e in spawned:
+				for c in _find_all(e, "CollisionShape3D"):
+					(c as CollisionShape3D).set_deferred("disabled", true)
+			await get_tree().physics_frame
+			await _probe_row(item[0] + " [+ все CollisionShape3D выкл]", cam_pos, f1, hz0)
 		Engine.physics_ticks_per_second = hz0
 		for e in spawned:
 			e.queue_free()

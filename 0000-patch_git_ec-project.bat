@@ -8,9 +8,9 @@
 
 :: git add core/globals.gd
 ::git am --continue
-git am --abort
-git am -3 %1
-
+:: git am --abort
+:: git am -3 %1
+git apply --check %1
 
 
 pause

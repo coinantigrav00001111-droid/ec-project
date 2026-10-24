@@ -60,6 +60,10 @@ func on_added():
 
 
 func on_entity_ready() -> void:
+	# XX claude-perf: тени траков по настройке качества (по умолчанию выключены), потом при смене качества
+	call_deferred("_sync_track_shadows")
+	if is_instance_valid(GFX) and not GFX.quality_changed.is_connected(_on_quality_changed_shadows):
+		GFX.quality_changed.connect(_on_quality_changed_shadows)
 	var identity = get_comp(C_Identity) as C_Identity
 	if not identity or not identity.setting:
 		return
@@ -704,6 +708,15 @@ func _find_ballast_recursive(node: Node) -> Area3D:
 
 
 ## Меняет активный слой объекта при перетаскивании
+func _sync_track_shadows() -> void:
+	if entity != null and entity.is_inside_tree():
+		TrackShadows.apply(entity)
+
+
+func _on_quality_changed_shadows(_id: StringName) -> void:
+	_sync_track_shadows()
+
+
 func on_select_layer(_data):
 	# нужные слои (collision_layer / collision_mask)
 	#area.set_collision_layer_value(3, true) # вкл этот слой 

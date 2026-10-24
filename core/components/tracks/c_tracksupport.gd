@@ -8,24 +8,29 @@ class_name C_TrackSupport extends ICapability
 ## больше GlobalSetting.support_min_clearance. Под чужим траком опоры не ставятся (пролет).
 ## Владеет MultiMeshInstance3D. НЕ сохраняется: считается из пути и земли.
 ## Земля = стол или верх листа пенопласта (13.1.3). Лист ставят и убирают под готовым траком:
-## пересчет по TGM.terrain_changed сразу, а не через REFRESH_PERIOD.
+## пересчет по TGM.terrain_changed, а не по таймеру.
+## XX claude-perf: компонент НЕ опрашивает мир в простое. Физический процесс включается только когда есть
+## что делать (первый расчет после создания, пересчет по событию, трак или призрак двигают) и сам выключается,
+## когда расчет сделан. Фонового пересчета "на всякий случай" нет: все причины изменения приходят событиями
+## (создание, сдвиг, форма, маршруты стрелки, лист пенопласта, удаление трака через TGM.terrain_changed).
 
 const DRAG_PERIOD := 0.05    # с, не чаще при движении призрака/трака
-const REFRESH_PERIOD := 0.5  # с, фоновая проверка (удалили трак под эстакадой и т.п.)
+const SPREAD := 0.15         # с, случайный разброс пересчетов, чтобы 500 траков не пересчитывались в один тик
 
 static var _wood: StandardMaterial3D
 
 var _mmi: MultiMeshInstance3D
 var _dirty := true
 var _cooldown := 0.3         # после загрузки сейва ждем, пока встанут все коллизии
-var _refresh := 0.0
+var _acc := 0.0              # XX claude-perf: накопленное время с прошлой проверки
 var _last_entity_xf := Transform3D()
 var _last_xf: Array[Transform3D] = []
 
 
 func on_entity_ready() -> void:
 	_dirty = true
-	_cooldown = 0.3
+	_cooldown = 0.3 + randf() * SPREAD   # разброс: загрузка сейва создает сотни траков в один кадр
+	set_physics_process(true)
 	TGM.terrain_changed.connect(_on_terrain_changed)   # XX claude-terra T3
 	# T5: трак встал, листы под ним пересчитают канаву. Отложено: призрак получает C_Ghost после готовности
 	call_deferred("_notify_terrain")
@@ -34,20 +39,18 @@ func on_entity_ready() -> void:
 ## Лист пенопласта поставлен, сдвинут или убран: земля под опорами могла измениться.
 ## Не фильтруем по области: событие редкое (дроп, постановка, удаление), пересчет дешевый
 func _on_terrain_changed(_aabb: AABB) -> void:
-	_dirty = true
-	_cooldown = 0.0
+	_wake(randf() * SPREAD)   # событие рассылается всем опорам, разброс убирает вспышку в один тик
 
 
 func on_drag_ended(_d: Dictionary) -> void:
-	_dirty = true
-	_cooldown = 0.0
+	_wake(0.0)
 	_notify_terrain()   # T5: трак сдвинули, листам пересчитать канаву
 
 
 ## flex поменял форму
 func on_curve_changed(_d: Dictionary) -> void:
-	_dirty = true
-	_cooldown = 0.0
+	_wake(0.0)
+	call_deferred("_sync_shadows")   # flex пересобрал меши: у новых узлов тени по настройке качества
 	_notify_terrain()   # T6: форма flex поменялась, листам пересчитать канаву или тоннель
 
 
@@ -59,8 +62,8 @@ func on_tunnel_changed(_d: Dictionary) -> void:
 
 ## XX claude-switch: стрелка получила маршруты
 func on_routes_changed(_d: Dictionary) -> void:
-	_dirty = true
-	_cooldown = 0.0
+	_wake(0.0)
+	call_deferred("_sync_shadows")
 
 
 func _exit_tree() -> void:
@@ -101,29 +104,53 @@ func _notify_terrain() -> void:
 
 func on_component_added(_t: Script) -> void:
 	_apply_material()
+	if _is_moving():
+		set_physics_process(true)   # трак взяли в драг или это призрак: следим за смещением
 
 
 func on_component_removed(_t: Script) -> void:
 	_apply_material()
 
 
+## Разбудить расчет. delay: через сколько секунд можно пересчитывать
+func _wake(delay: float) -> void:
+	_dirty = true
+	_cooldown = delay
+	set_physics_process(true)
+
+
+## Двигают ли сейчас этот трак: призрак постановки или драг. Только тогда опрашиваем позицию
+func _is_moving() -> bool:
+	return entity != null and (entity.has_comp(C_Ghost) or entity.has_comp(C_Drag))
+
+
+func _sync_shadows() -> void:
+	if entity != null and entity.is_inside_tree():
+		TrackShadows.apply(entity)
+
+
 func _physics_process(delta: float) -> void:
+	# Не чаще DRAG_PERIOD: пересчет и так ограничен кулдауном, проверять каждый из 120 тиков в секунду незачем
+	_acc += delta
+	if _acc < DRAG_PERIOD:
+		return
+	delta = _acc
+	_acc = 0.0
 	if not entity or not entity.is_inside_tree() or entity.is_queued_for_deletion():
 		return
 	_cooldown -= delta
-	_refresh += delta
-	var xf := entity.global_transform
-	if not xf.is_equal_approx(_last_entity_xf):
-		_last_entity_xf = xf
-		_dirty = true
-	elif _refresh >= REFRESH_PERIOD:
-		_dirty = true
-	if not _dirty or _cooldown > 0.0:
-		return
-	_dirty = false
-	_refresh = 0.0
-	_cooldown = DRAG_PERIOD
-	_rebuild()
+	var moving := _is_moving()
+	if moving:
+		var xf := entity.global_transform
+		if not xf.is_equal_approx(_last_entity_xf):
+			_last_entity_xf = xf
+			_dirty = true
+	if _dirty and _cooldown <= 0.0:
+		_dirty = false
+		_cooldown = DRAG_PERIOD
+		_rebuild()
+	if not _dirty and not moving:
+		set_physics_process(false)   # расчет сделан, до следующего события процесс спит
 
 
 func _rebuild() -> void:
@@ -204,6 +231,7 @@ func _ensure_nodes() -> void:
 	_mmi.multimesh = mm
 	_mmi.name = 'Supports'
 	entity.add_child(_mmi)
+	TrackShadows.apply(_mmi)
 	_apply_material()
 
 
