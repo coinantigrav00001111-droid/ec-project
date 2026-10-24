@@ -6,7 +6,7 @@
 [node name="TopPanel" type="PanelContainer" unique_id=640310913]
 offset_left = 6.0
 offset_top = 40.0
-offset_right = 214.0
+offset_right = 380.0
 offset_bottom = 75.0
 size_flags_vertical = 0
 script = ExtResource("1_cqpwk")
@@ -51,4 +51,11 @@ layout_mode = 2
 size_flags_horizontal = 0
 text = "Power schema"
 
+[node name="TrackShadowsCheck" type="CheckBox" parent="HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+text = "Тени траков"
+
 [connection signal="toggled" from="HBoxContainer/PowerSchemaCheck" to="." method="_on_power_schema_check_toggled"]
+[connection signal="toggled" from="HBoxContainer/TrackShadowsCheck" to="." method="_on_track_shadows_check_toggled"]

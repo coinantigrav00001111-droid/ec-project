@@ -14,7 +14,7 @@
 :: ===diff===
 git am < %1
 :: проверка диф
-:: git apply --check %1
+git apply --check %1
 
 
 pause

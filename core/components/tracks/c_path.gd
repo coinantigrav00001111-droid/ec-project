@@ -60,10 +60,10 @@ func on_added():
 
 
 func on_entity_ready() -> void:
-	# XX claude-perf: тени траков по настройке качества (по умолчанию выключены), потом при смене качества
+	# XX claude-perf: тени траков по настройке (по умолчанию выключены), потом при ее смене
 	call_deferred("_sync_track_shadows")
-	if is_instance_valid(GFX) and not GFX.quality_changed.is_connected(_on_quality_changed_shadows):
-		GFX.quality_changed.connect(_on_quality_changed_shadows)
+	if is_instance_valid(GFX) and not GFX.track_shadows_changed.is_connected(_on_track_shadows_changed):
+		GFX.track_shadows_changed.connect(_on_track_shadows_changed)
 	var identity = get_comp(C_Identity) as C_Identity
 	if not identity or not identity.setting:
 		return
@@ -713,7 +713,7 @@ func _sync_track_shadows() -> void:
 		TrackShadows.apply(entity)
 
 
-func _on_quality_changed_shadows(_id: StringName) -> void:
+func _on_track_shadows_changed(_on: bool) -> void:
 	_sync_track_shadows()
 
 

@@ -98,7 +98,7 @@ func _build_collision(curve: Curve3D, L: float) -> void:
 	ballast.get_child(0).queue_free()   # заглушка из build_skeleton
 	head.get_child(0).queue_free()
 
-	var cuts := TrackMeshBuilder.collision_cuts(curve, L, false)
+	var cuts := TrackMeshBuilder.collision_cuts(curve, L, false, true)   # прямая: одна коллизия
 	for i in cuts.size() - 1:
 		var bx := TrackMeshBuilder.segment_boxes(style, curve, L, cuts[i], cuts[i + 1])
 		var cb := TrackMeshBuilder.new_shape(bx.ballast_size)

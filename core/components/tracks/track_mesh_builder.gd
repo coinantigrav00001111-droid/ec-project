@@ -253,8 +253,13 @@ static func place_sleepers(mm: MultiMesh, style: TrackStyle, curve: Curve3D, L: 
 
 ## Границы сегментов коллизии: по накопленному углу касательной и по макс. длине.
 ## Торцы короче трака на COL_END_INSET, чтобы стык соседей не давал overlap балласта.
-static func collision_cuts(curve: Curve3D, L: float, preview: bool) -> PackedFloat32Array:
+## single_if_straight: у прямой (начало и конец смотрят одинаково) один сегмент на всю длину. Нарезка по
+## flex_collision_step нужна гибкому траку, а у фиксированной прямой она только удваивает число форм
+## (каждая форма стоит физике тика: Area3D с мониторингом на сотнях траков)
+static func collision_cuts(curve: Curve3D, L: float, preview: bool, single_if_straight := false) -> PackedFloat32Array:
 	var span := maxf(L - 2.0 * COL_END_INSET, 0.2)
+	if single_if_straight and frame(curve, COL_END_INSET, L).f.angle_to(frame(curve, COL_END_INSET + span, L).f) < 0.01:
+		return PackedFloat32Array([COL_END_INSET, COL_END_INSET + span])
 	var gs = Global.settings
 	var k := 2.0 if preview else 1.0
 	var deg_max := deg_to_rad(gs.track_ballast_segment.deg_per_segment) * k

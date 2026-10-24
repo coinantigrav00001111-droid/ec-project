@@ -19,6 +19,8 @@ signal look_changed(id: StringName)
 signal time_of_day_changed(id: StringName)
 ## ⚡Контуры, tilt-shift и комната (LOD) подстраиваются под tier
 signal quality_changed(id: StringName)
+## Тени траков включили или выключили (или сменился tier, от которого зависит умолчание)
+signal track_shadows_changed(on: bool)
 signal lamp_changed(on: bool)
 
 const LOOKS_DIR := "res://data/graphics/looks/"
@@ -31,6 +33,8 @@ const DEFAULT_TIME := &"day"
 const DEFAULT_TRANSITION := 0.5
 
 var state := {"look": DEFAULT_LOOK, "time": DEFAULT_TIME, "quality": &"medium"}
+## Тени траков: -1 как в пресете качества, 0 выкл, 1 вкл (выбор игрока, пишется в settings.cfg)
+var _track_shadows_override := -1
 ## id -> GraphicsPreset
 var looks := {}
 ## id -> TimeOfDayPreset
@@ -176,6 +180,22 @@ func apply_quality(id: StringName, duration := 0.3, persist := true) -> void:
 	if persist:
 		_save_settings()
 	quality_changed.emit(id)
+	track_shadows_changed.emit(is_track_shadows())
+
+
+## Тени от траков: выбор игрока, иначе значение пресета качества (по умолчанию выключены)
+func is_track_shadows() -> bool:
+	if _track_shadows_override >= 0:
+		return _track_shadows_override == 1
+	var q := get_quality()
+	return q != null and q.track_shadows
+
+
+func set_track_shadows(on: bool, persist := true) -> void:
+	_track_shadows_override = 1 if on else 0
+	if persist:
+		_save_settings()
+	track_shadows_changed.emit(on)
 
 
 func get_quality() -> QualityPreset:
@@ -547,6 +567,9 @@ func _load_settings() -> void:
 	var t := StringName(cfg.get_value("graphics", "time", ""))
 	if times.has(t):
 		state.time = t
+	var ts = cfg.get_value("graphics", "track_shadows", null)
+	if ts is bool:
+		_track_shadows_override = 1 if ts else 0
 
 
 func _save_settings() -> void:
@@ -555,6 +578,8 @@ func _save_settings() -> void:
 	cfg.set_value("graphics", "quality", String(state.quality))
 	cfg.set_value("graphics", "look", String(state.look))
 	cfg.set_value("graphics", "time", String(state.time))
+	if _track_shadows_override >= 0:
+		cfg.set_value("graphics", "track_shadows", _track_shadows_override == 1)
 	cfg.save(SETTINGS_PATH)
 
 

@@ -1,17 +1,16 @@
 class_name TrackShadows
 
 # XX claude-perf (новый файл)
-## Тени траков. Один выключатель на все траки: QualityPreset.track_shadows (по умолчанию false).
+## Тени траков. Один выключатель на все траки: GFX.is_track_shadows() (выбор игрока, иначе QualityPreset.track_shadows, по умолчанию false).
 ## Выключает или включает cast_shadow у всей геометрии под Entity трака: меши сцен Blender, процедурный меш,
 ## MultiMesh шпал и опор, клипы. Вызывается при создании трака (C_Path), после пересборки формы (C_TrackSupport)
-## и при смене качества (GFX.quality_changed).
+## и при смене настройки (GFX.track_shadows_changed).
 
 
 static func enabled() -> bool:
 	if not is_instance_valid(GFX):
 		return false
-	var q := GFX.get_quality()
-	return q != null and q.track_shadows
+	return GFX.is_track_shadows()
 
 
 ## on: явно включить или выключить, по умолчанию как в настройках качества

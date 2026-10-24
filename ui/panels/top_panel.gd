@@ -12,6 +12,8 @@ class_name TopPanel extends PanelContainer
 @onready var save_manager: SaveManager = $"../../SaveManager"
 ## Чекбокс слоя питания
 @onready var power_schema_check: CheckBox = %PowerSchemaCheck
+## Чекбокс теней от траков (пока тут, потом уедет в экран настроек)
+@onready var track_shadows_check: CheckBox = %TrackShadowsCheck
 # ⚡Сигнал для ToolController
 #signal menu_button_pressed 
 
@@ -27,6 +29,8 @@ func _ready() -> void:
 	# Слой питания могут переключить не из чекбокса (Observe при входе/выходе): держим вид в синхроне
 	PGM.power_layer_toggled.connect(_on_power_layer_toggled)
 	power_schema_check.set_pressed_no_signal(PGM.is_power_layer_active)
+	track_shadows_check.set_pressed_no_signal(GFX.is_track_shadows())
+	GFX.track_shadows_changed.connect(_on_track_shadows_changed)
 	# Подсказки внизу экрана: галочка в меню
 	var popup := menu_button.get_popup()
 	popup.add_separator()
@@ -81,3 +85,13 @@ func _on_power_schema_check_toggled(toggled_on: bool) -> void:
 ## ⚡Сигнал из PGM: слой питания переключён. Двигаем чекбокс без повторного сигнала
 func _on_power_layer_toggled(is_active: bool) -> void:
 	power_schema_check.set_pressed_no_signal(is_active)
+
+
+## Тени от траков вкл/выкл. Выбор сохраняется в settings.cfg
+func _on_track_shadows_check_toggled(toggled_on: bool) -> void:
+	GFX.set_track_shadows(toggled_on)
+
+
+## ⚡Сигнал из GFX: настройка или tier поменялись извне. Двигаем чекбокс без повторного сигнала
+func _on_track_shadows_changed(on: bool) -> void:
+	track_shadows_check.set_pressed_no_signal(on)
