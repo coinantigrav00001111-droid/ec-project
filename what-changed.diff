@@ -1,0 +1,209 @@
+diff --git a/core/components/tracks/c_path.gd b/core/components/tracks/c_path.gd
+index 6bdbae7..0cb5fd9 100644
+--- a/core/components/tracks/c_path.gd
++++ b/core/components/tracks/c_path.gd
+@@ -60,10 +60,10 @@ func on_added():
+ 
+ 
+ func on_entity_ready() -> void:
+-	# XX claude-perf: тени траков по настройке качества (по умолчанию выключены), потом при смене качества
++	# XX claude-perf: тени траков по настройке (по умолчанию выключены), потом при ее смене
+ 	call_deferred("_sync_track_shadows")
+-	if is_instance_valid(GFX) and not GFX.quality_changed.is_connected(_on_quality_changed_shadows):
+-		GFX.quality_changed.connect(_on_quality_changed_shadows)
++	if is_instance_valid(GFX) and not GFX.track_shadows_changed.is_connected(_on_track_shadows_changed):
++		GFX.track_shadows_changed.connect(_on_track_shadows_changed)
+ 	var identity = get_comp(C_Identity) as C_Identity
+ 	if not identity or not identity.setting:
+ 		return
+@@ -713,7 +713,7 @@ func _sync_track_shadows() -> void:
+ 		TrackShadows.apply(entity)
+ 
+ 
+-func _on_quality_changed_shadows(_id: StringName) -> void:
++func _on_track_shadows_changed(_on: bool) -> void:
+ 	_sync_track_shadows()
+ 
+ 
+diff --git a/core/components/tracks/c_stylevisual.gd b/core/components/tracks/c_stylevisual.gd
+index 61a4880..6ebd0fa 100644
+--- a/core/components/tracks/c_stylevisual.gd
++++ b/core/components/tracks/c_stylevisual.gd
+@@ -98,7 +98,7 @@ func _build_collision(curve: Curve3D, L: float) -> void:
+ 	ballast.get_child(0).queue_free()   # заглушка из build_skeleton
+ 	head.get_child(0).queue_free()
+ 
+-	var cuts := TrackMeshBuilder.collision_cuts(curve, L, false)
++	var cuts := TrackMeshBuilder.collision_cuts(curve, L, false, true)   # прямая: одна коллизия
+ 	for i in cuts.size() - 1:
+ 		var bx := TrackMeshBuilder.segment_boxes(style, curve, L, cuts[i], cuts[i + 1])
+ 		var cb := TrackMeshBuilder.new_shape(bx.ballast_size)
+diff --git a/core/components/tracks/track_mesh_builder.gd b/core/components/tracks/track_mesh_builder.gd
+index befdda1..a3e4c29 100644
+--- a/core/components/tracks/track_mesh_builder.gd
++++ b/core/components/tracks/track_mesh_builder.gd
+@@ -253,8 +253,13 @@ static func place_sleepers(mm: MultiMesh, style: TrackStyle, curve: Curve3D, L:
+ 
+ ## Границы сегментов коллизии: по накопленному углу касательной и по макс. длине.
+ ## Торцы короче трака на COL_END_INSET, чтобы стык соседей не давал overlap балласта.
+-static func collision_cuts(curve: Curve3D, L: float, preview: bool) -> PackedFloat32Array:
++## single_if_straight: у прямой (начало и конец смотрят одинаково) один сегмент на всю длину. Нарезка по
++## flex_collision_step нужна гибкому траку, а у фиксированной прямой она только удваивает число форм
++## (каждая форма стоит физике тика: Area3D с мониторингом на сотнях траков)
++static func collision_cuts(curve: Curve3D, L: float, preview: bool, single_if_straight := false) -> PackedFloat32Array:
+ 	var span := maxf(L - 2.0 * COL_END_INSET, 0.2)
++	if single_if_straight and frame(curve, COL_END_INSET, L).f.angle_to(frame(curve, COL_END_INSET + span, L).f) < 0.01:
++		return PackedFloat32Array([COL_END_INSET, COL_END_INSET + span])
+ 	var gs = Global.settings
+ 	var k := 2.0 if preview else 1.0
+ 	var deg_max := deg_to_rad(gs.track_ballast_segment.deg_per_segment) * k
+diff --git a/core/components/tracks/track_shadows.gd b/core/components/tracks/track_shadows.gd
+index 860eb6a..d5dbbdf 100644
+--- a/core/components/tracks/track_shadows.gd
++++ b/core/components/tracks/track_shadows.gd
+@@ -1,17 +1,16 @@
+ class_name TrackShadows
+ 
+ # XX claude-perf (новый файл)
+-## Тени траков. Один выключатель на все траки: QualityPreset.track_shadows (по умолчанию false).
++## Тени траков. Один выключатель на все траки: GFX.is_track_shadows() (выбор игрока, иначе QualityPreset.track_shadows, по умолчанию false).
+ ## Выключает или включает cast_shadow у всей геометрии под Entity трака: меши сцен Blender, процедурный меш,
+ ## MultiMesh шпал и опор, клипы. Вызывается при создании трака (C_Path), после пересборки формы (C_TrackSupport)
+-## и при смене качества (GFX.quality_changed).
++## и при смене настройки (GFX.track_shadows_changed).
+ 
+ 
+ static func enabled() -> bool:
+ 	if not is_instance_valid(GFX):
+ 		return false
+-	var q := GFX.get_quality()
+-	return q != null and q.track_shadows
++	return GFX.is_track_shadows()
+ 
+ 
+ ## on: явно включить или выключить, по умолчанию как в настройках качества
+diff --git a/core/graphics/graphics_manager.gd b/core/graphics/graphics_manager.gd
+index ae9afad..d69a725 100644
+--- a/core/graphics/graphics_manager.gd
++++ b/core/graphics/graphics_manager.gd
+@@ -19,6 +19,8 @@ signal look_changed(id: StringName)
+ signal time_of_day_changed(id: StringName)
+ ## ⚡Контуры, tilt-shift и комната (LOD) подстраиваются под tier
+ signal quality_changed(id: StringName)
++## Тени траков включили или выключили (или сменился tier, от которого зависит умолчание)
++signal track_shadows_changed(on: bool)
+ signal lamp_changed(on: bool)
+ 
+ const LOOKS_DIR := "res://data/graphics/looks/"
+@@ -31,6 +33,8 @@ const DEFAULT_TIME := &"day"
+ const DEFAULT_TRANSITION := 0.5
+ 
+ var state := {"look": DEFAULT_LOOK, "time": DEFAULT_TIME, "quality": &"medium"}
++## Тени траков: -1 как в пресете качества, 0 выкл, 1 вкл (выбор игрока, пишется в settings.cfg)
++var _track_shadows_override := -1
+ ## id -> GraphicsPreset
+ var looks := {}
+ ## id -> TimeOfDayPreset
+@@ -176,6 +180,22 @@ func apply_quality(id: StringName, duration := 0.3, persist := true) -> void:
+ 	if persist:
+ 		_save_settings()
+ 	quality_changed.emit(id)
++	track_shadows_changed.emit(is_track_shadows())
++
++
++## Тени от траков: выбор игрока, иначе значение пресета качества (по умолчанию выключены)
++func is_track_shadows() -> bool:
++	if _track_shadows_override >= 0:
++		return _track_shadows_override == 1
++	var q := get_quality()
++	return q != null and q.track_shadows
++
++
++func set_track_shadows(on: bool, persist := true) -> void:
++	_track_shadows_override = 1 if on else 0
++	if persist:
++		_save_settings()
++	track_shadows_changed.emit(on)
+ 
+ 
+ func get_quality() -> QualityPreset:
+@@ -547,6 +567,9 @@ func _load_settings() -> void:
+ 	var t := StringName(cfg.get_value("graphics", "time", ""))
+ 	if times.has(t):
+ 		state.time = t
++	var ts = cfg.get_value("graphics", "track_shadows", null)
++	if ts is bool:
++		_track_shadows_override = 1 if ts else 0
+ 
+ 
+ func _save_settings() -> void:
+@@ -555,6 +578,8 @@ func _save_settings() -> void:
+ 	cfg.set_value("graphics", "quality", String(state.quality))
+ 	cfg.set_value("graphics", "look", String(state.look))
+ 	cfg.set_value("graphics", "time", String(state.time))
++	if _track_shadows_override >= 0:
++		cfg.set_value("graphics", "track_shadows", _track_shadows_override == 1)
+ 	cfg.save(SETTINGS_PATH)
+ 
+ 
+diff --git a/ui/panels/top_panel.gd b/ui/panels/top_panel.gd
+index 8d9c014..7201325 100644
+--- a/ui/panels/top_panel.gd
++++ b/ui/panels/top_panel.gd
+@@ -12,6 +12,8 @@ class_name TopPanel extends PanelContainer
+ @onready var save_manager: SaveManager = $"../../SaveManager"
+ ## Чекбокс слоя питания
+ @onready var power_schema_check: CheckBox = %PowerSchemaCheck
++## Чекбокс теней от траков (пока тут, потом уедет в экран настроек)
++@onready var track_shadows_check: CheckBox = %TrackShadowsCheck
+ # ⚡Сигнал для ToolController
+ #signal menu_button_pressed 
+ 
+@@ -27,6 +29,8 @@ func _ready() -> void:
+ 	# Слой питания могут переключить не из чекбокса (Observe при входе/выходе): держим вид в синхроне
+ 	PGM.power_layer_toggled.connect(_on_power_layer_toggled)
+ 	power_schema_check.set_pressed_no_signal(PGM.is_power_layer_active)
++	track_shadows_check.set_pressed_no_signal(GFX.is_track_shadows())
++	GFX.track_shadows_changed.connect(_on_track_shadows_changed)
+ 	# Подсказки внизу экрана: галочка в меню
+ 	var popup := menu_button.get_popup()
+ 	popup.add_separator()
+@@ -81,3 +85,13 @@ func _on_power_schema_check_toggled(toggled_on: bool) -> void:
+ ## ⚡Сигнал из PGM: слой питания переключён. Двигаем чекбокс без повторного сигнала
+ func _on_power_layer_toggled(is_active: bool) -> void:
+ 	power_schema_check.set_pressed_no_signal(is_active)
++
++
++## Тени от траков вкл/выкл. Выбор сохраняется в settings.cfg
++func _on_track_shadows_check_toggled(toggled_on: bool) -> void:
++	GFX.set_track_shadows(toggled_on)
++
++
++## ⚡Сигнал из GFX: настройка или tier поменялись извне. Двигаем чекбокс без повторного сигнала
++func _on_track_shadows_changed(on: bool) -> void:
++	track_shadows_check.set_pressed_no_signal(on)
+diff --git a/ui/panels/top_panel.tscn b/ui/panels/top_panel.tscn
+index e667147..f16aaa0 100644
+--- a/ui/panels/top_panel.tscn
++++ b/ui/panels/top_panel.tscn
+@@ -6,7 +6,7 @@
+ [node name="TopPanel" type="PanelContainer" unique_id=640310913]
+ offset_left = 6.0
+ offset_top = 40.0
+-offset_right = 214.0
++offset_right = 380.0
+ offset_bottom = 75.0
+ size_flags_vertical = 0
+ script = ExtResource("1_cqpwk")
+@@ -51,4 +51,11 @@ layout_mode = 2
+ size_flags_horizontal = 0
+ text = "Power schema"
+ 
++[node name="TrackShadowsCheck" type="CheckBox" parent="HBoxContainer"]
++unique_name_in_owner = true
++layout_mode = 2
++size_flags_horizontal = 0
++text = "Тени траков"
++
+ [connection signal="toggled" from="HBoxContainer/PowerSchemaCheck" to="." method="_on_power_schema_check_toggled"]
++[connection signal="toggled" from="HBoxContainer/TrackShadowsCheck" to="." method="_on_track_shadows_check_toggled"]

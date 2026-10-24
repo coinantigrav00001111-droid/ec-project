@@ -4,13 +4,17 @@
 ::cd D:\Godot\ec-project
 
 
-::git diff core/globals.gd
+:: ==patch===
+:: git am -3 %1
 
-:: git add core/globals.gd
 ::git am --continue
 :: git am --abort
-:: git am -3 %1
-git apply --check %1
+
+
+:: ===diff===
+git am < %1
+:: проверка диф
+:: git apply --check %1
 
 
 pause
