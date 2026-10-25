@@ -118,6 +118,7 @@ func on_switch_request(data: Dictionary) -> void:
 ## Клик в рычаг (SelectTool шлет, когда луч попал в слой handles и сущность имеет C_Switch).
 ## Забираем нажатие всегда, даже если стрелка не приняла команду (иначе клик выберет/потащит трак)
 func on_lever_pressed(data: Dictionary) -> void:
+
 	var col := data.get("collider") as Node
 	if col == null or not col.has_meta(&"switch_lever") or not entity.is_ancestor_of(col):
 		return
