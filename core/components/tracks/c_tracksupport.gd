@@ -6,7 +6,10 @@ class_name C_TrackSupport extends ICapability
 ####################
 ## Семплирует кривую C_Path, бросает лучи вниз и ставит опоры (ригель + столб), где зазор до земли
 ## больше GlobalSetting.support_min_clearance. Под чужим траком опоры не ставятся (пролет).
-## Владеет MultiMeshInstance3D. НЕ сохраняется: считается из пути и земли.
+## Владеет MultiMeshInstance3D и StaticBody3D (слой supports, 13.1.5): сошедший вагон встает на опоры, а не
+## проваливается сквозь эстакаду. Коллизий у призрака и трака в драге нет. НЕ сохраняется: считается из пути и земли.
+## Дедупликация на стыке (13.1.5): общую опору у конца строит один из двух траков (с меньшим instance id),
+## второй свою опору в этой точке пропускает.
 ## Земля = стол или верх листа пенопласта (13.1.3). Лист ставят и убирают под готовым траком:
 ## пересчет по TGM.terrain_changed, а не по таймеру.
 ## XX claude-perf: компонент НЕ опрашивает мир в простое. Физический процесс включается только когда есть
@@ -25,6 +28,13 @@ var _cooldown := 0.3         # после загрузки сейва ждем, 
 var _acc := 0.0              # XX claude-perf: накопленное время с прошлой проверки
 var _last_entity_xf := Transform3D()
 var _last_xf: Array[Transform3D] = []
+
+# XX claude-terra 13.1.5: коллизии опор
+var _body: StaticBody3D
+var _shapes: Array[CollisionShape3D] = []   # пул, форм столько же, сколько боксов
+var _box_t: Array[Transform3D] = []         # позы боксов без масштаба (в системе Entity)
+var _box_s: Array[Vector3] = []             # размеры боксов
+var _coll_dirty := false                    # коллизии надо пересобрать, хотя боксы те же (драг закончился)
 
 
 func on_entity_ready() -> void:
@@ -102,14 +112,21 @@ func _notify_terrain() -> void:
 	TGM.notify_changed(AABB(Vector3(lo.x, y_lo, lo.y), Vector3(hi.x - lo.x, top - y_lo, hi.y - lo.y)))
 
 
+## XX claude-terra 13.1.5: у соседа по стыку появился или исчез трак (C_Socket), решение "кто строит общую опору" могло смениться
+func on_neighbors_changed(_d: Dictionary) -> void:
+	_wake(0.0)
+
+
 func on_component_added(_t: Script) -> void:
 	_apply_material()
+	_apply_collision_state()
 	if _is_moving():
 		set_physics_process(true)   # трак взяли в драг или это призрак: следим за смещением
 
 
 func on_component_removed(_t: Script) -> void:
 	_apply_material()
+	_apply_collision_state()
 
 
 ## Разбудить расчет. delay: через сколько секунд можно пересчитывать
@@ -161,6 +178,15 @@ func _rebuild() -> void:
 	var space := entity.get_world_3d().direct_space_state
 	var inv := entity.global_transform.affine_inverse()
 	var xf: Array[Transform3D] = []
+	var bt: Array[Transform3D] = []
+	var bs: Array[Vector3] = []
+	# XX claude-terra 13.1.5: общую опору на стыке строит один из двух траков, второй свою в этой точке пропускает.
+	# Стрелка и кросс считают опоры на каждый маршрут, стык у них не дедуплицируем
+	var skip_start := false
+	var skip_end := false
+	if not path.is_multi_route():
+		skip_start = _yields_joint(false)
+		skip_end = _yields_joint(true)
 
 	for crv in path.all_curves():   # XX claude-switch: у стрелки опоры под всеми маршрутами
 		var length := crv.get_baked_length()
@@ -172,21 +198,24 @@ func _rebuild() -> void:
 			fwd.y = 0.0
 			if fwd.length_squared() < 0.0001:
 				continue
+			if (i == 0 and skip_start) or (i == n and skip_end):
+				continue
 			var yaw := Basis.looking_at(fwd.normalized(), Vector3.UP)
 			var ground := _ground_y(space, p, path)
 			if is_nan(ground) or p.y - ground < gs.support_min_clearance:
 				continue
 			var col_h := p.y - ground - 0.3
 			# ригель под балластом
-			xf.append(inv * Transform3D(yaw * Basis.from_scale(Vector3(3.0, 0.3, 0.8)), p - Vector3(0, 0.15, 0)))
+			_add_box(xf, bt, bs, inv, yaw, Vector3(3.0, 0.3, 0.8), p - Vector3(0, 0.15, 0))
 			# столб
 			if col_h > 0.05:
-				xf.append(inv * Transform3D(yaw * Basis.from_scale(Vector3(1.0, col_h, 0.8)),
-						Vector3(p.x, ground + col_h * 0.5, p.z)))
+				_add_box(xf, bt, bs, inv, yaw, Vector3(1.0, col_h, 0.8), Vector3(p.x, ground + col_h * 0.5, p.z))
 
-	if xf == _last_xf:
+	if xf == _last_xf and not _coll_dirty:
 		return
 	_last_xf = xf
+	_box_t = bt
+	_box_s = bs
 	if xf.is_empty() and not _mmi:
 		return
 	_ensure_nodes()
@@ -194,6 +223,63 @@ func _rebuild() -> void:
 	mm.instance_count = xf.size()
 	for i in xf.size():
 		mm.set_instance_transform(i, xf[i])
+	_sync_collision()
+
+
+## XX claude-terra 13.1.5. Один бокс опоры: масштабная поза для MultiMesh и поза с размером для коллизии
+## (у CollisionShape3D масштаб не задают, размер лежит в BoxShape3D)
+func _add_box(xf: Array[Transform3D], bt: Array[Transform3D], bs: Array[Vector3],
+		inv: Transform3D, yaw: Basis, size: Vector3, center: Vector3) -> void:
+	xf.append(inv * Transform3D(yaw * Basis.from_scale(size), center))
+	bt.append(inv * Transform3D(yaw, center))
+	bs.append(size)
+
+
+## XX claude-terra 13.1.5. Этот стык строит опору не я, а сосед: он пристыкован к краю моей кривой, тоже имеет
+## эстакаду и у него меньший instance id. Тогда в точке стыка у меня боксов нет, у соседа есть (там та же точка и
+## тот же грунт). Не зависит от драга: связь пропадает с выходом сокета, а удаление соседа будит все опоры
+func _yields_joint(is_end: bool) -> bool:
+	var sock := get_comp(C_Socket) as C_Socket
+	if sock == null:
+		return false
+	var nb := sock.get_neighbor_at(is_end)
+	if nb == null or nb.is_queued_for_deletion() or nb.has_comp(C_Ghost) or not nb.has_comp(C_TrackSupport):
+		return false
+	return nb.get_instance_id() < entity.get_instance_id()
+
+
+## XX claude-terra 13.1.5. Коллизии опор: один StaticBody3D на слое supports, формы из пула.
+## Пока трак призрак или в драге, слой выключен (а формы не трогаем: пересоберутся по окончании драга)
+func _sync_collision() -> void:
+	if _is_moving():
+		_coll_dirty = true
+		_apply_collision_state()
+		return
+	_coll_dirty = false
+	if _box_t.is_empty() and _body == null:
+		return
+	if _body == null:
+		_body = StaticBody3D.new()
+		_body.name = "SupportsBody"
+		_body.collision_mask = 0
+		entity.add_child(_body)
+	while _shapes.size() > _box_t.size():
+		_shapes.pop_back().queue_free()
+	while _shapes.size() < _box_t.size():
+		var cs := CollisionShape3D.new()
+		cs.shape = BoxShape3D.new()
+		_body.add_child(cs)
+		_shapes.append(cs)
+	for i in _box_t.size():
+		_shapes[i].transform = _box_t[i]
+		(_shapes[i].shape as BoxShape3D).size = _box_s[i]
+	_apply_collision_state()
+
+
+func _apply_collision_state() -> void:
+	if _body == null:
+		return
+	_body.collision_layer = 0 if _is_moving() else Global.active_layers(['supports'])
 
 
 ## NAN: под нами чужой трак, значит пролет без опоры. Нет попадания: стол (y = 0).

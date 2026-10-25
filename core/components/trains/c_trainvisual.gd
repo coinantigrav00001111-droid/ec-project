@@ -27,7 +27,7 @@ var wheel_nodes: Array[Dictionary] = [] # все колеса {'wheel_node', 'ra
 func _on_instance_ready() -> void:
 	rb = instance as RigidBody3D
 	# Вагон видит комнату (пол, стены) независимо от того, что стоит в маске сцены
-	rb.collision_mask |= Global.active_layers(['room'])
+	rb.collision_mask |= Global.active_layers(['room', 'supports'])   # XX claude-terra 13.1.5: сход на эстакаде, и вагон из сейва
 	_collect_collision_nodes()
 	_build_bogies()          # твой нынешний цикл по bogie_configs
 	
@@ -108,7 +108,7 @@ func on_select_layer(_data) -> void:
 		rb.collision_mask = Global.active_layers(['ground','tracks','trains','room'])
 	else:
 		rb.collision_layer = Global.active_layers(['trains'])
-		rb.collision_mask = Global.active_layers(['ground','tracks','trains','ghost','room'])
+		rb.collision_mask = Global.active_layers(['ground','tracks','trains','ghost','room','supports'])   # XX claude-terra 13.1.5: опоры эстакады
 		
 
 
