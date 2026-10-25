@@ -145,6 +145,7 @@ size_flags_vertical = 19
 
 [node name="PanelContainer" type="PanelContainer" parent="MainControl/BuildObjectsContainer/AnimatedWrapper/HBoxContainer/ScrollContainer" unique_id=872628203]
 editor_description = "для фона"
+custom_minimum_size = Vector2(0, 235)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
