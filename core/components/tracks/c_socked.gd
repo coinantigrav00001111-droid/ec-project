@@ -20,6 +20,8 @@ var _snap_rejected: Array[Area3D] = []
 ## Причина последнего отказа: "kink" (излом по вертикали), "underground" (трак уходит под землю) или "".
 ## Нужна для подсказки про разворот на 180°
 var snap_reject_reason := ""
+## Метка с причиной отказа (Label3D над траком, создается по требованию)
+var _hint: Label3D
 
 # Настройки формы сокета
 var  capsule_radius := 0.6
@@ -401,6 +403,33 @@ func _set_snap_rejected(other: Area3D, d_socket: Area3D, on: bool) -> void:
 		entity.remove_component(C_Invalid)
 	if not bad:
 		snap_reject_reason = ""
+	_update_reject_hint()
+
+
+## Метка над призраком или траком в драге: почему снап отклонён и что делать. Для подземного положения это разворот
+## на 180° (пандус вниз к траку на столе: стыковать нижним концом). Q/E крутят на ROT_STEP = 45°, значит 4 нажатия
+func _update_reject_hint() -> void:
+	if _snap_rejected.is_empty() or snap_reject_reason == "":
+		if _hint:
+			_hint.queue_free()
+			_hint = null
+		return
+	if _hint == null:
+		_hint = Label3D.new()
+		_hint.name = "SnapRejectHint"
+		_hint.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		_hint.fixed_size = true
+		_hint.no_depth_test = true
+		_hint.pixel_size = 0.0015
+		_hint.font_size = 32
+		_hint.outline_size = 8
+		_hint.modulate = Color(1.0, 0.35, 0.35)
+		_hint.position = Vector3(0.0, 6.0, 0.0)
+		entity.add_child(_hint)
+	if snap_reject_reason == "underground":
+		_hint.text = "Под землёй: разверни на 180° (Q/E ×4)"
+	else:
+		_hint.text = "Излом по вертикали больше %.0f°" % Global.settings.joint_kink_max_deg
 
 
 ## Есть ли отказ снапа (DragTool: на дропе такой трак возвращается на место)
@@ -412,6 +441,7 @@ func has_snap_rejection() -> bool:
 func clear_snap_rejection() -> void:
 	_snap_rejected.clear()
 	snap_reject_reason = ""
+	_update_reject_hint()
 	if not entity.has_comp(C_FlexShape) and entity.has_comp(C_Invalid):
 		entity.remove_component(C_Invalid)
 

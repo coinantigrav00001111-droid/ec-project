@@ -53,6 +53,10 @@ func _ready() -> void:
 	# ⚡Сигнал из топпанели нажат пункт меню контроллера
 	#top_panel.menu_button_pressed.connect(_on_menu_button_pressed)
 	
+	# XX claude-terra 13.1.4: дубль последнего объекта. Кнопка в панели Build и сигнал BuildTool обратно в кнопку
+	build_controller.duplicate_requested.connect(duplicate_last_object)
+	build_tool.last_changed.connect(build_controller.on_last_changed)
+
 	# Инициализируем инструменты, передав им ссылку на себя
 	for tool in %Tools.get_children():
 		tool.controller = self
@@ -63,6 +67,14 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# XX claude-terra 13.1.4: V - дубль последнего объекта (в Build, из SelectTool и BuildTool)
+	var k := event as InputEventKey
+	if k and k.pressed and not k.echo and k.keycode == KEY_V \
+			and not (k.ctrl_pressed or k.alt_pressed or k.shift_pressed or k.meta_pressed):
+		duplicate_last_object()
+		if build_tool.can_duplicate() and Global.current_mode == &'build':
+			get_viewport().set_input_as_handled()
+			return
 	if active_tool: 
 		active_tool.handle_input(event) # Смотрит ввод активного инструмента
 
@@ -87,6 +99,17 @@ func switch_tool(new_tool: Node):
 	Hints.set_tool(active_tool.name)
 	active_tool.enter()
 
+
+
+
+# XX claude-terra 13.1.4
+## Дубль последнего поставленного объекта. Только в режиме Build и только из SelectTool или BuildTool
+## (в драге, Observe и т.п. клавиша ничего не делает)
+func duplicate_last_object() -> void:
+	if Global.current_mode != &'build' or not build_tool.can_duplicate():
+		return
+	if active_tool == select_tool or active_tool == build_tool:
+		build_tool.duplicate_last()
 
 
 

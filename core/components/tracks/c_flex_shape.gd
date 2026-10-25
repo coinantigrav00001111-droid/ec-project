@@ -159,6 +159,43 @@ func set_target(t: Vector2) -> void:
 	_apply()
 
 
+# XX claude-terra 13.1.4
+## Призрак получил готовую форму (дубль последнего объекта): растягивания нет, ставится одним кликом.
+## Форма задана в плоскости начала и от позы не зависит. От позы зависят уклон соседа в начале и "под землей":
+## пока призрак ездит за курсором, их обновляет _tick_preshaped
+var preshaped := false
+
+
+func on_preshaped_set(_d: Dictionary) -> void:
+	preshaped = true
+	stretching = false
+	relaxed = not Global.flex_limits
+	if _label:
+		_label.visible = true
+	_ground_ms = 0
+	_apply(true)
+	set_process(true)
+
+
+func _tick_preshaped() -> void:
+	if not entity.has_comp(C_Ghost):
+		preshaped = false
+		set_process(false)
+		return
+	var now := Time.get_ticks_msec()
+	if now - _ground_ms < GROUND_PERIOD_MS:
+		return
+	_ground_ms = now
+	var s := _neighbor_slope()
+	if not is_equal_approx(s, start_slope):
+		start_slope = s
+		_apply(true)
+		entity.send_event("on_flex_final", {})   # после _apply меш и коллизии грубые, нужен финал
+	var path := get_comp(C_Path) as C_Path
+	_ground_bad = path != null and path.underground_depth(entity.global_transform) > Global.settings.underground_tolerance
+	_refresh_state()
+
+
 # ==========================================
 # Расчет формы
 # ==========================================
@@ -314,6 +351,9 @@ func _update_label() -> void:
 
 
 func _process(_delta: float) -> void:
+	if preshaped:   # XX claude-terra 13.1.4
+		_tick_preshaped()
+		return
 	if not _ground_pending or not (stretching or editing):
 		set_process(false)
 		return

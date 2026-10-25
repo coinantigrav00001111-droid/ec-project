@@ -19,10 +19,35 @@ var obj_btn_scene := preload("res://ui/buttons/object_button.tscn")
 #signal update_info
 # ⚡Сигнал объект выбран
 signal object_selected(setting)
+# XX claude-terra 13.1.4: ⚡нажата кнопка "Дубль" (последний поставленный объект)
+signal duplicate_requested
 
 
 var current_cat = &'idle'
 var current_tag = &'idle'
+
+# XX claude-terra 13.1.4: кнопка дубля создается кодом (под заголовком панели), в ui.tscn ничего не меняется
+var _dup_btn: Button
+
+
+func _ready() -> void:
+	_dup_btn = Button.new()
+	_dup_btn.text = "Дубль  (V)"
+	_dup_btn.focus_mode = Control.FOCUS_NONE   # чтобы Пробел и Enter не нажимали кнопку, а клавиши работали в игре
+	_dup_btn.disabled = true
+	_dup_btn.tooltip_text = "Еще один такой же, как последний построенный (клавиша V)"
+	_dup_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_dup_btn.pressed.connect(func(): duplicate_requested.emit())
+	var box: Node = %BuCatTitle.get_parent()
+	box.add_child(_dup_btn)
+	box.move_child(_dup_btn, %BuCatTitle.get_index() + 1)
+
+
+## ⚡Сигнал BuildTool.last_changed: появился или сменился последний поставленный объект
+func on_last_changed(setting: EntitySetting) -> void:
+	_dup_btn.disabled = setting == null
+	if setting != null:
+		_dup_btn.tooltip_text = "Еще один: %s (клавиша V)" % setting.name
 
 ## Список категорий
 var category_list = {
