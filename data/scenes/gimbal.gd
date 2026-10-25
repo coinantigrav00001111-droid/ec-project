@@ -21,6 +21,10 @@ const VEL_SMOOTH := 25.0           # сглаживание измерения �
 ########################
 # EXPORT PARAMS
 ########################
+## Свободная камера: наклон до +15 градусов (взгляд снизу) и зум до 1000
+const FREE_PITCH_MAX_DEG := 15.0
+const FREE_ZOOM_MAX := 1000.0
+
 @export_group("Move")
 ## Скорость WASD: единиц/сек на каждую единицу дистанции камеры (чем дальше, тем быстрее)
 @export_range(0.1, 3.0, 0.05) var wasd_speed := 0.8
@@ -54,8 +58,8 @@ const VEL_SMOOTH := 25.0           # сглаживание измерения �
 @export var rotate_invert := false
 ## Самый крутой наклон (вид сверху = -90)
 @export_range(-90.0, -10.0, 1.0) var pitch_min_deg := -85.0
-## Самый пологий наклон (0 = горизонт)
-@export_range(-45.0, 0.0, 1.0) var pitch_max_deg := -5.0
+## Самый пологий наклон (0 = горизонт, плюс = взгляд снизу вверх). Свободная камера разрешает чуть выше нуля
+@export_range(-45.0, 30.0, 1.0) var pitch_max_deg := -5.0
 
 @export_group("Bounds")
 ## Границы камеры (AABB комнаты). Обычно подаёт CameraBounds.
@@ -85,6 +89,7 @@ var pan_vel := Vector3.ZERO     # единиц/сек
 var rot_vel := Vector2.ZERO     # рад/сек (x = yaw, y = pitch)
 
 var follow_target: Node3D
+var _default_limits := {}
 
 var _grabbing := false
 var _rotating := false
@@ -106,6 +111,7 @@ func _ready() -> void:
 	t_yaw = rotation.y
 	t_pitch = elevation.rotation.x
 	t_dist = camera.position.z
+	_default_limits = {"limits": limits_enabled, "pitch_max": pitch_max_deg, "zoom_max": zoom_max}
 	_clamp_target()
 
 
@@ -384,6 +390,23 @@ func set_bounds(aabb: AABB, enabled := true) -> void:
 
 func set_bounds_enabled(enabled: bool) -> void:
 	bounds_enabled = enabled
+	_clamp_target()
+	_wake()
+
+
+## Свободная камера (fast_debug, большая поляна): без пределов сдвига, дальний зум, взгляд чуть снизу.
+## off возвращает значения, с которыми Gimbal стартовал
+func set_free_camera(on: bool) -> void:
+	if _default_limits.is_empty():
+		_default_limits = {"limits": limits_enabled, "pitch_max": pitch_max_deg, "zoom_max": zoom_max}
+	if on:
+		limits_enabled = false
+		pitch_max_deg = FREE_PITCH_MAX_DEG
+		zoom_max = FREE_ZOOM_MAX
+	else:
+		limits_enabled = _default_limits.limits
+		pitch_max_deg = _default_limits.pitch_max
+		zoom_max = _default_limits.zoom_max
 	_clamp_target()
 	_wake()
 

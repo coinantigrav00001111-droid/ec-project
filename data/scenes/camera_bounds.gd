@@ -17,7 +17,9 @@ func _ready() -> void:
 	await get_tree().process_frame
 	var room := get_tree().get_first_node_in_group(&"room_root") as RoomBuilder
 	if room == null:
+		# Нет комнаты (fast_debug): границ нет, камера свободная, можно уехать далеко и заглянуть снизу
 		gimbal.set_bounds_enabled(false)
+		gimbal.set_free_camera(true)
 		return
 	gimbal.set_bounds(room.get_bounds(), true)
 	room.room_visible_changed.connect(func(on: bool): gimbal.set_bounds_enabled(on))
