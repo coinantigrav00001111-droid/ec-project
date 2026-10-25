@@ -132,42 +132,49 @@ mouse_filter = 2
 [node name="HBoxContainer" type="HBoxContainer" parent="MainControl/BuildObjectsContainer/AnimatedWrapper" unique_id=1276423400]
 editor_description = "Контейнер со всеми кнопками траков и фильтров. Филтры переключают контейнеры с кнопками траков"
 layout_mode = 0
-offset_right = 282.0
-offset_bottom = 227.0
+offset_right = 326.0
+offset_bottom = 428.0
 mouse_filter = 2
 
-[node name="PanelContainer" type="PanelContainer" parent="MainControl/BuildObjectsContainer/AnimatedWrapper/HBoxContainer" unique_id=872628203]
+[node name="ScrollContainer" type="ScrollContainer" parent="MainControl/BuildObjectsContainer/AnimatedWrapper/HBoxContainer" unique_id=1193114638]
+custom_minimum_size = Vector2(500, 0)
+custom_maximum_size = Vector2(-1, 235)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 19
+
+[node name="PanelContainer" type="PanelContainer" parent="MainControl/BuildObjectsContainer/AnimatedWrapper/HBoxContainer/ScrollContainer" unique_id=872628203]
 editor_description = "для фона"
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MainControl/BuildObjectsContainer/AnimatedWrapper/HBoxContainer/PanelContainer" unique_id=1013616715]
+[node name="VBoxContainer" type="VBoxContainer" parent="MainControl/BuildObjectsContainer/AnimatedWrapper/HBoxContainer/ScrollContainer/PanelContainer" unique_id=1013616715]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="BuCatTitle" type="Label" parent="MainControl/BuildObjectsContainer/AnimatedWrapper/HBoxContainer/PanelContainer/VBoxContainer" unique_id=1465564848]
+[node name="BuCatTitle" type="Label" parent="MainControl/BuildObjectsContainer/AnimatedWrapper/HBoxContainer/ScrollContainer/PanelContainer/VBoxContainer" unique_id=1465564848]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
 theme_type_variation = &"HeaderSmall"
 text = "Track"
 
-[node name="BuBtnGridContainer" type="GridContainer" parent="MainControl/BuildObjectsContainer/AnimatedWrapper/HBoxContainer/PanelContainer/VBoxContainer" unique_id=1221843301]
+[node name="BuBtnGridContainer" type="GridContainer" parent="MainControl/BuildObjectsContainer/AnimatedWrapper/HBoxContainer/ScrollContainer/PanelContainer/VBoxContainer" unique_id=1221843301]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 columns = 4
 
-[node name="BuTagPanel" type="VBoxContainer" parent="MainControl/BuildObjectsContainer/AnimatedWrapper/HBoxContainer" unique_id=2044844396]
+[node name="BuTagPanel" type="GridContainer" parent="MainControl/BuildObjectsContainer/AnimatedWrapper/HBoxContainer" unique_id=2092356052]
 unique_name_in_owner = true
 editor_description = "Тут лежат кнопки фильтры,
 сигналы в build_panels.gd "
 layout_mode = 2
-size_flags_vertical = 8
+size_flags_vertical = 0
 mouse_filter = 2
-theme_override_constants/separation = 6
+columns = 2
 
 [node name="OperateObjectsContainer" type="MarginContainer" parent="MainControl" unique_id=1202635813]
 unique_name_in_owner = true
