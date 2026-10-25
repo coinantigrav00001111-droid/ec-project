@@ -100,6 +100,7 @@ func _apply_vertical_magnet(pos: Vector3) -> Vector3:
 	var yaw := Basis(Vector3.UP, rotation_euler.y)
 	var best_d: float = gs.magnet_radius
 	var best_dy := 0.0
+	var path := entity.get_comp(C_Path) as C_Path
 	for node in get_tree().get_nodes_in_group(&"track_socket"):
 		var other := node as Entity
 		if other == null or other == entity or other.is_queued_for_deletion() or other.has_comp(C_Ghost):
@@ -116,13 +117,12 @@ func _apply_vertical_magnet(pos: Vector3) -> Vector3:
 				var d := Vector2(tp.x - mp.x, tp.z - mp.z).length()
 				var dy := tp.y - mp.y
 				if d < best_d and absf(dy) <= gs.magnet_max_dy:
+					# XX claude-terra 13.1.4: магнит не тянет трак под землю (пандус вниз к траку на столе).
+					# Проверяем каждого кандидата, а не только лучшего: уходящий под землю не мешает дальнему
+					if dy != 0.0 and path and path.underground_depth(Transform3D(yaw, Vector3(pos.x, pos.y + dy, pos.z))) > gs.underground_tolerance:
+						continue
 					best_d = d
 					best_dy = dy
-	# XX claude-terra магнит не должен тянуть трак под землю (пандус вниз к траку на столе)
-	if best_dy != 0.0:
-		var path := entity.get_comp(C_Path) as C_Path
-		if path and path.underground_depth(Transform3D(yaw, Vector3(pos.x, pos.y + best_dy, pos.z))) > gs.underground_tolerance:
-			best_dy = 0.0
 	pos.y += best_dy
 	return pos
 
@@ -150,11 +150,17 @@ func start_snap(target_global_transform: Transform3D) -> void:
 
 func on_drag_ended(_data: Dictionary) -> void:
 	# Если рельс заблокирован коллизией балласта при отпускании — возвращаем назад
-	if entity.has_comp(C_Blocked):
+	# XX claude-terra 13.1.4: отклонённый снап (излом или подземное положение) тоже возвращает на место
+	var sock := entity.get_comp(C_Socket) as C_Socket
+	if entity.has_comp(C_Blocked) or (sock and sock.has_snap_rejection()):
 		entity.global_transform = initial_transform
 
 	# Запрашиваем пересчет сети после возврата на исходную
 		PGM.request_recalculate()
+
+	# XX claude-terra 13.1.4: красный флаг отказа снапа снимаем после драга (на старом месте трак валиден)
+	if sock:
+		sock.clear_snap_rejection()
 
 	# При дропе объекта отключаем логику срыва, чтобы рельс остался лежать в точке снапа
 	is_snapped_locked = false
@@ -166,6 +172,13 @@ func on_rotate_input(data: Dictionary):
 		rotation_euler.y += deg_to_rad(data.amount)
 	if data.axis == "x":   # XX claude-terra: R/F теперь уровень (слой), а не pitch
 		elevation = maxi(0, elevation + int(signf(data.amount)))
+
+
+
+# XX claude-terra 13.1.4
+## Крупный шаг уровня (Shift+R/F, PageUp/PageDown): ElevationInput, levels = ±5
+func on_elevation_input(data: Dictionary) -> void:
+	elevation = maxi(0, elevation + int(data.get("levels", 0)))
 
 
 

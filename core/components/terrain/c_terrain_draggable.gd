@@ -70,6 +70,11 @@ func on_rotate_input(data: Dictionary) -> void:
 		elevation = maxi(0, elevation + int(signf(data.amount)))
 
 
+## XX claude-terra 13.1.4. Крупный шаг уровня (Shift+R/F, PageUp/PageDown)
+func on_elevation_input(data: Dictionary) -> void:
+	elevation = maxi(0, elevation + int(data.get("levels", 0)))
+
+
 ## --- Клонирование состояния (BuildTool: призрак -> настоящий лист) ---
 
 func on_clone_state_to(data: Dictionary) -> void:

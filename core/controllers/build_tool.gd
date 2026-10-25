@@ -22,9 +22,20 @@ var stretch_phase := 0
 # XX claude-terra T6: тоннельный режим (клавиша U). Новые призраки траков получают C_Tunnel, режим запоминается
 var tunnel_mode := false
 
+# XX claude-terra 13.1.4: дубль последнего поставленного объекта (клавиша V, кнопка в панели Build)
+## Последний поставленный объект сменился (кнопка дубля включается и показывает имя)
+signal last_changed(setting: EntitySetting)
+## Что дублировать: настройка последнего объекта и он сам (источник состояния, если еще жив)
+var last_setting: EntitySetting
+var last_entity: Entity
+## Призрак получил готовую форму (flex): фазу растягивания пропускаем, ставится одним кликом
+var preshaped := false
+var _dup_pending := false
+
 
 func enter():
 	stretch_phase = 0
+	preshaped = false   # XX claude-terra 13.1.4
 	if ghost: ghost.queue_free()
 	ghost = controller.entity_factory.create_from_setting(ghost_setting)
 
@@ -35,6 +46,11 @@ func enter():
 			_enter_spawn_and_drag()
 		EntitySetting.BuildBehavior.PLACE_THEN_STRETCH:   # XX claude-terra
 			_enter_ghost_place()
+
+	# XX claude-terra 13.1.4: призрак-дубль получает состояние последнего объекта
+	if _dup_pending:
+		_dup_pending = false
+		_apply_duplicate_state()
 
 
 func _enter_ghost_place() -> void:
@@ -56,6 +72,7 @@ func _enter_spawn_and_drag() -> void:
 	if hit:
 		ghost.send_event("on_drag_moved", hit)     # теперь get_tree() есть
 	controller.select_tool.set_selection(ghost)
+	_remember(ghost_setting, null)   # XX claude-terra 13.1.4: состояния нет, дубль = еще одна копия
 	ghost = null
 	controller.to_drag = true
 	controller.switch_tool(controller.select_tool)
@@ -82,11 +99,17 @@ func handle_input(event: InputEvent):
 		ghost.send_event("on_rotate_input", {"axis": "y", "amount": ROT_STEP})
 	if Input.is_action_just_pressed("key_e"):
 		ghost.send_event("on_rotate_input", {"axis": "y", "amount": -ROT_STEP})
-	if Input.is_action_just_pressed("key_r"):
+	# XX claude-terra 13.1.4: с Shift R/F идут крупным шагом через ElevationInput, обычный шаг без Shift
+	var _shift := Input.is_key_pressed(KEY_SHIFT)
+	if Input.is_action_just_pressed("key_r") and not _shift:
 		ghost.send_event("on_rotate_input", {"axis": "x", "amount": ROT_STEP})
-	if Input.is_action_just_pressed("key_f"):
+	if Input.is_action_just_pressed("key_f") and not _shift:
 		ghost.send_event("on_rotate_input", {"axis": "x", "amount": -ROT_STEP})
-		
+	# XX claude-terra 13.1.4: Shift+R/F и PageUp/PageDown, крупный шаг уровня
+	var _levels := ElevationInput.levels_from_event(event)
+	if _levels != 0:
+		ghost.send_event("on_elevation_input", {"levels": _levels})
+
 	# XX claude-terra T6: тоннельный режим. Трак с флагом может уходить под листы пенопласта
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_U and ghost.has_comp(C_Path):
 		tunnel_mode = not tunnel_mode
@@ -105,7 +128,8 @@ func handle_input(event: InputEvent):
 			return # Не строим, если гост красный (пересекается с чем-то / невалидная форма)
 
 		# XX claude-terra: flex ставится в две фазы, тул только шлет события
-		var _stretch := ghost_setting.build_behavior == EntitySetting.BuildBehavior.PLACE_THEN_STRETCH
+		# 13.1.4: призрак-дубль flex уже имеет форму, растягивать нечего
+		var _stretch := ghost_setting.build_behavior == EntitySetting.BuildBehavior.PLACE_THEN_STRETCH and not preshaped
 		if _stretch and stretch_phase == 0:
 			stretch_phase = 1
 			ghost.send_event("on_stretch_started", {})
@@ -117,6 +141,10 @@ func handle_input(event: InputEvent):
 		var spawned_entity = _place_real_object()
 		if _stretch and spawned_entity:
 			enter()   # новый призрак: можно продолжать от свободного конца
+			return
+		if preshaped and spawned_entity:   # XX claude-terra 13.1.4: следующая копия с той же формой
+			_dup_pending = true
+			enter()
 			return
 		
 		if not spawned_entity:
@@ -142,7 +170,47 @@ func _place_real_object() -> Entity:
 	# 💥 Тул приказывает госту клонировать стейт. draggable выполнит:
 	ghost.send_event("on_clone_state_to", {"target": real_entity})
 	#real_entity.send_event("on_drag_ended", {})
+	_remember(ghost_setting, real_entity)   # XX claude-terra 13.1.4
 	return real_entity
+
+
+# XX claude-terra 13.1.4 ===== Дубль последнего объекта =====
+
+func _remember(setting: EntitySetting, entity: Entity) -> void:
+	last_setting = setting
+	last_entity = entity
+	last_changed.emit(setting)
+
+
+func can_duplicate() -> bool:
+	return last_setting != null
+
+
+## Новый призрак того же объекта с тем же состоянием (поворот, уровень, форма flex). Работает из SelectTool
+## и из BuildTool. Источник состояния - сам последний объект (его on_clone_state_to работает так же, как у призрака).
+## Если его уже удалили, получится обычный свежий призрак той же настройки
+func duplicate_last() -> void:
+	if last_setting == null:
+		return
+	ghost_setting = last_setting
+	_dup_pending = true
+	if controller.active_tool == self:
+		enter()
+	else:
+		controller.switch_tool(self)
+
+
+func _apply_duplicate_state() -> void:
+	if ghost == null or not is_instance_valid(last_entity) or last_entity.is_queued_for_deletion() \
+			or not last_entity.is_inside_tree():
+		return
+	if ghost.has_comp(C_Path):   # тоннельный флаг копии совпадает с исходным, режим U подстраиваем
+		tunnel_mode = last_entity.has_comp(C_Tunnel)
+		ghost.send_event("on_tunnel_set", {"on": tunnel_mode})
+	last_entity.send_event("on_clone_state_to", {"target": ghost})
+	if ghost.has_comp(C_FlexShape):
+		preshaped = true
+		ghost.send_event("on_preshaped_set", {})
 
 
 
