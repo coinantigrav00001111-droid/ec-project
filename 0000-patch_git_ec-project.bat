@@ -5,10 +5,10 @@
 
 
 :: ==patch===
-:: git am -3 %1
+git am -3 %1
 
 ::git am --continue
-git am --abort
+:: git am --abort
 
 
 :: ===diff===
