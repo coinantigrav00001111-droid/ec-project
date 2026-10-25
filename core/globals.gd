@@ -62,7 +62,7 @@ func active_layers(data:Array) -> int:
 			'tracks' : i = i | 1 << 2
 			'sokets' : i = i | 1 << 3
 			'trains' : i = i | 1 << 4
-			'supports' : i = i | 1 << 5  # XX claude-terra опоры эстакады (резерв)
+			'supports' : i = i | 1 << 5  # XX claude-terra опоры эстакады (StaticBody3D C_TrackSupport, сталкиваются вагоны, 13.1.5)
 			'handles' : i = i | 1 << 6   # ручки flex (бит 5 занят опорами)
 			'room'   : i = i | 1 << 7    # пол, стены, мебель комнаты (Observe)
 			'ghost'  : i = i | 1 << 10

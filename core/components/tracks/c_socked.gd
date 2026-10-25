@@ -166,6 +166,7 @@ func _on_socket_area_entered(s_socket: Area3D, d_socket: Area3D) -> void:
 	if neighbor_entity and neighbor_entity != entity:
 		if not neighbor_entity.has_comp(C_Ghost) and not connected_entities.has(neighbor_entity):
 			connected_entities.append(neighbor_entity)
+			entity.send_event("on_neighbors_changed", {})   # XX claude-terra 13.1.5: опоры на стыке (кто строит общую)
 			# новый реальный стык (flex встаёт из призрака, выхода из сокета не будет): пересчитать сеть
 			if not entity.has_comp(C_Ghost):
 				PGM.request_recalculate()
@@ -223,6 +224,7 @@ func _on_socket_area_exited(_area: Area3D) -> void:
 	# Убираем соседа из списка
 	if neighbor_entity and connected_entities.has(neighbor_entity):
 		connected_entities.erase(neighbor_entity)
+		entity.send_event("on_neighbors_changed", {})   # XX claude-terra 13.1.5
 
 	PGM.request_recalculate() # пересчет сети
 	
