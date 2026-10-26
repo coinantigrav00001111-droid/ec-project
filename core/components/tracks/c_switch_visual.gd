@@ -256,22 +256,34 @@ func clip_transform() -> Transform3D:
 	return Transform3D(b, f.p + f.r * (side * (style.collision_width * 0.5 + CLIP_GAP)) + f.u * CLIP_LIFT)
 
 
-## Слой электрики: у кросса с раздельными цепями каждый путь красим по своему лучу, остальным как раньше (один материал)
+## Слой электрики:
+##  - кросс с раздельными цепями: каждый путь красим по своему лучу;
+##  - стрелка E1 (power_routing): активная ветка под током, неактивная без подсветки (обесточена);
+##  - остальным как раньше (один материал на все).
+## У стрелки в зоне носка обе ветки лежат друг на друге, там рельсы мерцают между цветами. Это визуал, физики не касается
 func _set_power_view():
 	var pc := get_comp(C_PowerTrack) as C_PowerTrack
-	if pc == null or pc.legs <= 1 or _meshes.size() < 2:
+	var sw := get_comp(C_Switch) as C_Switch
+	var routed := sw != null and sw.power_routing
+	if pc == null or (pc.legs <= 1 and not routed) or _meshes.size() < 2:
 		super()
 		return
 	if is_inside_tree():
 		await get_tree().physics_frame
+	var path := get_comp(C_Path) as C_Path
+	var active := path.active_route if path else 0
 	for i in _meshes.size():
+		var m := _meshes[i]
+		if not (m.mesh and m.mesh.get_surface_count() > rail_surface_index):
+			continue
+		if routed and i != active:
+			m.set_surface_override_material(rail_surface_index, null)   # мертвая ветка
+			continue
 		var leg := mini(i, pc.legs - 1)
 		var cid := pc.contour_of(leg)
 		var volt: float = PGM.power_pwm[cid].voltage if cid != 0 else 0.0
 		var mat := _get_or_create_power_material(cid, volt, pc.flip_of(leg))
-		var m := _meshes[i]
-		if m.mesh and m.mesh.get_surface_count() > rail_surface_index:
-			m.set_surface_override_material(rail_surface_index, mat)
+		m.set_surface_override_material(rail_surface_index, mat)
 
 
 # ==========================================

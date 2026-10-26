@@ -299,6 +299,11 @@ func _build_contour_from_clip(_clip: C_PowerClip) -> void:
 				if current_sock.leg_of_socket(joint.id1) != cur_leg:
 					continue   # этот стык принадлежит другому лучу сущности (другому пути кросса)
 				var n_sock = neighbor_ent.get_comp(C_Socket)
+				# E1 (power routing): мертвый сокет стрелки не проводит ток ни наружу, ни внутрь
+				if not current_sock.is_socket_live(joint.id1):
+					continue
+				if n_sock and not n_sock.is_socket_live(joint.id2):
+					continue
 				n_leg = n_sock.leg_of_socket(joint.id2) if n_sock else 0
 
 			# Вычисляем разворот ДО проверок

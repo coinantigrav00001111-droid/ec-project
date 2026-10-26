@@ -14,7 +14,12 @@ class_name C_Switch extends ICapability
 ##   on_switch_request {route = -1 (следующий) или индекс, source} -> data.ok / data.reason
 ##   on_lever_pressed {collider, consumed} - от SelectTool по клику в рычаг
 ##   исходящие: on_switch_changed {route, source}, on_switch_moving {route}, on_switch_rejected {reason}
-## Электрика режима E0: стрелка один проводящий трак (C_PowerTrack), PGM ничего не знает о маршруте.
+## Электрика:
+##  - E0 (power_routing = false): стрелка один проводящий трак (C_PowerTrack), обе ветки всегда под током.
+##  - E1 (power_routing = true): ток идет от носка только на выбранную ветку. Сокет неактивной ветки мертвый
+##    (C_Socket.set_socket_live), PGM через него не ходит: трак за невыбранной веткой обесточен, пока его не
+##    питает свой клип. При переключении сеть пересчитывается. Если выбранная ветка соединяет два разных контура,
+##    сработает обычное "столкновение контуров" PGM (в реальности это КЗ между цепями).
 
 enum Drive { MANUAL, REMOTE }
 enum State { SETTLED, MOVING }
@@ -25,6 +30,8 @@ var route := 0
 var control: Drive = Drive.MANUAL
 ## Время перекладки, с. 0 = мгновенно
 var throw_time := 0.0
+## E1: ток только на выбранную ветку (см. шапку). Выставляет SwitchSettings, меняется в игре set_power_routing()
+var power_routing := false
 var state: State = State.SETTLED
 
 var _target := 0
@@ -158,7 +165,38 @@ func _apply(target: int, source: StringName) -> void:
 	if path and path.is_multi_route():
 		path.set_active_route(target)
 	route = target
+	_update_liveness()
 	entity.send_event("on_switch_changed", {"route": route, "source": source})
+	# E1: смена ветки меняет питание соседей. При старте пересчет не нужен (его вызовут стыки), призрак сеть не трогает
+	if power_routing and source != &"init":
+		_recalc_power()
+
+
+## Включить или выключить E1 в игре
+func set_power_routing(on: bool) -> void:
+	if on == power_routing:
+		return
+	power_routing = on
+	_update_liveness()
+	_recalc_power()
+
+
+## Сокеты стрелки по порядку: [0] носок, [1] конец прямой, [2] конец ответвления.
+## E1: живы носок и сокет активной ветки. E0: все живые
+func _update_liveness() -> void:
+	var sock := get_comp(C_Socket) as C_Socket
+	if sock == null:
+		return
+	for i in sock.sockets.size():
+		var live := true
+		if power_routing and i >= 1:
+			live = (i == 1 + route)
+		sock.set_socket_live(i, live)
+
+
+func _recalc_power() -> void:
+	if entity and not entity.has_comp(C_Ghost):
+		PGM.request_recalculate()
 
 
 func _reject(reason: StringName) -> bool:
@@ -177,12 +215,14 @@ func save_data() -> Dictionary:
 		"route": route,
 		"control": int(control),
 		"throw_time": throw_time,
+		"power_routing": power_routing,
 	}
 
 
 func load_data(data: Dictionary) -> void:
 	control = int(data.get("control", control)) as Drive
 	throw_time = float(data.get("throw_time", throw_time))
+	power_routing = bool(data.get("power_routing", power_routing))
 	# Положение применяем сразу: сущность уже собрана (SaveManager грузит после add_child),
 	# а вагоны садятся на трак позже (restore_snap_after_load) и считают смещение по активной кривой
 	_apply(int(data.get("route", route)), &"load")

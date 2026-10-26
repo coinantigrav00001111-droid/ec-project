@@ -298,6 +298,17 @@ func leg_of_socket(i: int) -> int:
 	return int(sockets[i].get("leg", 0)) if i >= 0 and i < sockets.size() else 0
 
 
+## XX claude-switch (E1, power routing): мертвый сокет не проводит ток в обе стороны.
+## По умолчанию все живые. Выставляет C_Switch по положению стрелки, читает PGM при обходе сети
+func set_socket_live(i: int, live: bool) -> void:
+	if i >= 0 and i < sockets.size():
+		sockets[i]["live"] = live
+
+
+func is_socket_live(i: int) -> bool:
+	return bool(sockets[i].get("live", true)) if i >= 0 and i < sockets.size() else true
+
+
 
 ## Проверка: занят ли сокет стабильно установленным (не таскиваемым) рельсом
 func _is_socket_occupied(socket_area: Area3D) -> bool:

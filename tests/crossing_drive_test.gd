@@ -10,7 +10,8 @@ extends Node
 ##   2) B: B0_0 > B0_1 ... > X/1 > B1_0 > B1_1       (путь B насквозь, route 1)
 ##   3) A назад: A1_x > X/0 > A0_x
 ##   4) B назад: B1_x > X/1 > B0_x
-## Вагон ни разу не сходит. Электрика (общий контур) в тесте не проверяется.
+## Вагон не сходит на кроссе. В конце линии (дальний трак _1) он может сойти: линия кончается, это не считается.
+## Электрика в этом тесте не проверяется (см. crossing_power_test).
 
 const L := 23.9
 
@@ -82,7 +83,8 @@ func run(title: String, leg: int, reverse: bool) -> void:
 		ch.current_speed = speed
 		await get_tree().physics_frame
 		if bg.is_derailed or not ch.is_on_rails:
-			derailed = true
+			# Сход на дальнем конце линии (последний подвод/выход _1) это конец пути, не ошибка кросса
+			derailed = seq.is_empty() or not str(seq.back()).ends_with("_1")
 			break
 		var b: C_Bogie.BogieData = bg.bogies_data.front()
 		var nm: String = names.get(b.current_track, "?")
