@@ -8,7 +8,7 @@ var controller: ToolController
 var target_entity: Entity
 
 const ROT_STEP := 45.0 # Градусы
-const LIFT_STEP := 10.0 # Метры
+const ROT_FINE := 5.0 # Градусы, Shift+Q/E (XX claude-terra 13.1.7)
 
 # Флаг позиции пкм
 var rmb_pressed_pos := Vector2.ZERO
@@ -56,27 +56,25 @@ func process_tick(_delta):
 
 ### Передача инпутов в ентити, tool_controller вызывает
 func handle_input(event: InputEvent):
-	if Input.is_action_just_pressed("key_q"):
-		target_entity.send_event("on_rotate_input", {"axis": "y", "amount": ROT_STEP})
-	if Input.is_action_just_pressed("key_e"):
-		target_entity.send_event("on_rotate_input", {"axis": "y", "amount": -ROT_STEP})
-	# XX claude-terra 13.1.4: с Shift R/F идут крупным шагом через ElevationInput, обычный шаг без Shift
+	# XX claude-terra 13.1.7: Shift+Q/E поворот на ROT_FINE (5°), без Shift ROT_STEP (45°)
 	var _shift := Input.is_key_pressed(KEY_SHIFT)
+	var _rot := ROT_FINE if _shift else ROT_STEP
+	if Input.is_action_just_pressed("key_q"):
+		target_entity.send_event("on_rotate_input", {"axis": "y", "amount": _rot})
+	if Input.is_action_just_pressed("key_e"):
+		target_entity.send_event("on_rotate_input", {"axis": "y", "amount": -_rot})
+	# XX claude-terra 13.1.4: с Shift R/F идут крупным шагом через ElevationInput, обычный шаг без Shift
 	if Input.is_action_just_pressed("key_r") and not _shift:
 		target_entity.send_event("on_rotate_input", {"axis": "x", "amount": ROT_STEP})
 	if Input.is_action_just_pressed("key_f") and not _shift:
 		target_entity.send_event("on_rotate_input", {"axis": "x", "amount": -ROT_STEP})
-	# XX claude-terra 13.1.4: Shift+R/F и PageUp/PageDown, крупный шаг уровня (трак, лист). Поезд событие игнорирует,
-	# его PageUp/PageDown (on_lift_input) ниже работают как раньше
+	# XX claude-terra 13.1.4: Shift+R/F и PageUp/PageDown, крупный шаг уровня (трак, лист, вагон, 13.1.7)
 	var _levels := ElevationInput.levels_from_event(event)
 	if _levels != 0:
 		target_entity.send_event("on_elevation_input", {"levels": _levels})
 	if Input.is_action_just_pressed("ui_home"):
 		target_entity.send_event("on_drag_reset", {}) # сбросить состояние
-	if Input.is_action_pressed("ui_page_up"):
-		target_entity.send_event("on_lift_input", {"step": LIFT_STEP}) 
-	if Input.is_action_pressed("ui_page_down"):
-		target_entity.send_event("on_lift_input", {"step": -LIFT_STEP}) 
+	# 13.1.7: PageUp/PageDown теперь крупный шаг уровня (ElevationInput выше) для всех, и для вагона тоже
 		
 	if Input.is_action_just_released("lmb"):
 		controller.switch_tool(controller.select_tool)# Драг окончен дропом

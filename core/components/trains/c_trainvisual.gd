@@ -105,7 +105,8 @@ func on_select_layer(_data) -> void:
 	if not rb: return
 	if _data.enabled:
 		rb.collision_layer = Global.active_layers(['ghost'])
-		rb.collision_mask = Global.active_layers(['ground','tracks','trains','room'])
+		# XX claude-terra 13.1.7: выбранный вагон лежит на слое ghost, и пинок вагона (он выбран) шел мимо опор
+		rb.collision_mask = Global.active_layers(['ground','tracks','trains','room','supports'])
 	else:
 		rb.collision_layer = Global.active_layers(['trains'])
 		rb.collision_mask = Global.active_layers(['ground','tracks','trains','ghost','room','supports'])   # XX claude-terra 13.1.5: опоры эстакады
