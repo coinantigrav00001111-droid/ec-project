@@ -24,7 +24,7 @@
 [ext_resource type="Script" uid="uid://do5hjkm3r2pdg" path="res://core/entity_setting.gd" id="17_y6u2v"]
 [ext_resource type="Script" uid="uid://d4advxi3tkwvc" path="res://core/components/comp_settings/camera_target_setting.gd" id="19_ufx6w"]
 [ext_resource type="Script" uid="uid://mqrnwkjfweqr" path="res://core/components/comp_settings/coupler_setting.gd" id="20_n280y"]
-[ext_resource type="Script" path="res://setting/light_config.gd" id="30_lcfg"]
+[ext_resource type="Script" uid="uid://daeylhso0elsx" path="res://setting/light_config.gd" id="30_lcfg"]
 [ext_resource type="Script" uid="uid://brbladjp7pfki" path="res://core/components/comp_settings/mechanisms_setting.gd" id="31_msetg"]
 
 [sub_resource type="Resource" id="Resource_m448q"]
@@ -38,41 +38,39 @@ script = ExtResource("2_xi8dl")
 b_offset_z = 2.43
 metadata/_custom_type_script = "uid://7vuxuiiysiji"
 
-[sub_resource type="Resource" id="Resource_0p1ic"]
-script = ExtResource("8_i4jyf")
-metadata/_custom_type_script = "uid://bwaluvayi2o8k"
-
 [sub_resource type="Resource" id="Resource_lt_front"]
 script = ExtResource("30_lcfg")
-id = &"headlight_front"
 title = "Фара передняя"
-color = Color(1, 0.95, 0.8, 1)
+kind = 1
+position = Vector3(0, 3, -4.8)
+rotation_deg = Vector3(-6, 0, 0)
 energy = 4.0
 light_range = 40.0
 spot_angle = 30.0
-position = Vector3(0, 3, -4.8)
-rotation_deg = Vector3(-6, 0, 0)
 
 [sub_resource type="Resource" id="Resource_lt_rear"]
 script = ExtResource("30_lcfg")
 id = &"headlight_rear"
 title = "Фара задняя"
-color = Color(1, 0.15, 0.1, 1)
-energy = 2.0
-light_range = 25.0
-spot_angle = 35.0
+kind = 1
 position = Vector3(0, 3, 4.4)
 rotation_deg = Vector3(-6, 180, 0)
+color = Color(1, 0.15, 0.1, 1)
+light_range = 25.0
 
 [sub_resource type="Resource" id="Resource_lt_cab"]
 script = ExtResource("30_lcfg")
 id = &"cab_light"
 title = "Кабина"
 kind = 1
+position = Vector3(0, 4, 1.5)
 color = Color(1, 0.85, 0.6, 1)
 energy = 1.5
 light_range = 8.0
-position = Vector3(0, 4, 1.5)
+
+[sub_resource type="Resource" id="Resource_0p1ic"]
+script = ExtResource("8_i4jyf")
+metadata/_custom_type_script = "uid://bwaluvayi2o8k"
 
 [sub_resource type="Resource" id="Resource_ybgll"]
 script = ExtResource("5_ufx6w")

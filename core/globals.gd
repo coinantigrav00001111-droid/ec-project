@@ -21,7 +21,7 @@ var debug_mode := true
 ## Режим быстрой загрузки для отладки: без комнаты и карточек Observe, графика по умолчанию (Low, без SDFGI),
 ## землёй служит скрытый WoodFloor. Включается аргументом запуска `--fast` (Run with args: -- --fast)
 ## или настройкой проекта ec/fast_debug = true
-var fast_debug := OS.get_cmdline_user_args().has("--fast") or bool(ProjectSettings.get_setting("ec/fast_debug", true))
+var fast_debug := OS.get_cmdline_user_args().has("--fast") or bool(ProjectSettings.get_setting("ec/fast_debug", false))
 ##=======
 ## Физика вагона во время драга. false (по умолчанию): rb замораживается и едет за ентити как ребёнок,
 ## без «догоняния» и броска. true: прежнее поведение, rb догоняет ентити скоростями (можно бросить вагон)

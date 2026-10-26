@@ -33,6 +33,7 @@ object_config = SubResource("Resource_cfg")
 [sub_resource type="Resource" id="Resource_x7nxp"]
 script = ExtResource("6_aebcm")
 rail_profile = null
+sleeper_size = Vector3(2.5, 0.2, 0.3)
 ballast_enabled = false
 ballast_profile = null
 collision_width = 2.5
