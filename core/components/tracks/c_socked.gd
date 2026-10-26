@@ -49,8 +49,8 @@ func _parse_paths():
 		# XX claude-switch: у стрелки сокеты со всех маршрутов (носок общий, сливается в _add_socket_if_unique)
 		# Луч питания (leg): у кросса с раздельными цепями каждый путь свой луч, у остальных всегда 0
 		var pt := get_comp(C_PowerTrack) as C_PowerTrack
-		var split := pt != null and pt.legs > 1 and path_comp.parallel_routes
-		var curves := path_comp.all_curves()
+		var split = pt != null and pt.legs > 1 and path_comp.parallel_routes
+		var curves = path_comp.all_curves()
 		for i in curves.size():
 			_parse_curve(curves[i], path_comp.path_node, i if split else 0)
 
