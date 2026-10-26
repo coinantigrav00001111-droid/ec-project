@@ -24,6 +24,18 @@ func on_entity_ready() -> void:
 		return
 	length = float(identity.get_config('radius', 23.9))
 	cross_deg = clampf(absf(float(identity.get_config('cross_deg', 15.0))), 5.0, 90.0)
+
+	# Подгонка под коллизию: соседние концы двух путей разнесены на L * sin(a / 2)
+	var vis := get_comp(C_SwitchVisual) as C_SwitchVisual
+	var width := vis.style.collision_width if vis and vis.style else 3.2
+	var need := width + float(identity.get_config('end_clearance', 0.1))
+	if length > 0.1:
+		var sep := length * sin(deg_to_rad(cross_deg) * 0.5)
+		if sep < need - 0.01:
+			if bool(identity.get_config('auto_fit', true)):
+				cross_deg = clampf(rad_to_deg(2.0 * asin(minf(need / length, 1.0))), 5.0, 90.0)
+			else:
+				push_warning("C_CrossingShape: концы путей разнесены на %.2f, а коллизии соседей требуют %.2f. Увеличьте угол (или auto_fit)" % [sep, need])
 	path.set_routes(build_routes(path, length, cross_deg), 0, true)
 
 

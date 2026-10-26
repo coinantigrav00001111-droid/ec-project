@@ -17,6 +17,10 @@ const LEVER_TILT := 0.6          # рад, наклон рычага
 const LEVER_HEIGHT := 1.4
 const COL_LEVER_OK := Color(0.25, 0.75, 0.30)
 const COL_LEVER_DIV := Color(0.95, 0.65, 0.10)
+const FLASH_HOLD := 1.5          # с, подсветка активного пути держится
+const FLASH_FADE := 1.0          # с, потом гаснет
+const FLASH_LIFT := 0.04         # ю, лента над поверхностью катания
+const FLASH_STEP := 1.0          # ю, шаг ленты вдоль кривой
 
 ## Задает SwitchVisualSettings. null = TrackStyle по умолчанию
 var style: TrackStyle
@@ -35,12 +39,20 @@ var _lever_pivot: Node3D
 var _lever_mat: StandardMaterial3D
 var _lever_dir := 1.0    # сторона, куда рычаг ложится в положении "ответвление" (x знак)
 var _lever_on := true
+var _flash: MeshInstance3D
+var _flash_tween: Tween
 
 
 ## Базовый C_Visual.on_added инстанцирует сцену; у стрелки сцены нет
 func on_added() -> void:
 	if style == null:
 		style = TrackStyle.new()
+	# XX claude-switch: ширина коллизии из TrackConfig.collision_width (0 = как в стиле). Стиль общий ресурс: правим копию
+	var idc := entity.get_comp(C_Identity) as C_Identity
+	var cw := float(idc.get_config('collision_width', 0.0)) if idc else 0.0
+	if cw > 0.0 and not is_equal_approx(cw, style.collision_width):
+		style = style.duplicate() as TrackStyle
+		style.collision_width = cw
 	rail_surface_index = 1 if style.ballast_enabled else 0
 	instance = _build_instance()
 	entity.add_child(instance)
@@ -79,6 +91,15 @@ func on_routes_changed(_d: Dictionary) -> void:
 
 func on_route_activated(data: Dictionary) -> void:
 	_update_lever(int(data.get("route", 0)))
+
+
+## Стрелку переложили (рычаг, пульт, привод): подсветить активный путь на пару секунд.
+## При старте и загрузке не подсвечиваем
+func on_switch_changed(data: Dictionary) -> void:
+	var src: StringName = data.get("source", &"")
+	if src == &"init" or src == &"load":
+		return
+	_flash_route(int(data.get("route", 0)))
 
 
 # ==========================================
@@ -201,6 +222,76 @@ func _set_box(cs: CollisionShape3D, size: Vector3, xf: Transform3D) -> void:
 	if not bx.size.is_equal_approx(size):
 		bx.size = size
 	cs.transform = xf
+
+
+# ==========================================
+# Подсветка активного пути
+# ==========================================
+
+func _flash_route(route: int) -> void:
+	var path := get_comp(C_Path) as C_Path
+	if path == null or instance == null or route < 0 or route >= path.routes.size():
+		return
+	var mesh := _build_ribbon(path.routes[route])
+	if mesh == null:
+		return
+	_clear_flash()
+
+	var col := COL_LEVER_DIV if route == 1 else COL_LEVER_OK
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mat.albedo_color = Color(col.r, col.g, col.b, 0.65)
+	mat.render_priority = 1
+
+	_flash = MeshInstance3D.new()
+	_flash.name = "RouteFlash"
+	_flash.mesh = mesh
+	_flash.material_override = mat
+	_flash.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	instance.add_child(_flash)
+
+	_flash_tween = create_tween()
+	_flash_tween.tween_interval(FLASH_HOLD)
+	_flash_tween.tween_property(mat, "albedo_color:a", 0.0, FLASH_FADE)
+	_flash_tween.tween_callback(_clear_flash)
+
+
+func _clear_flash() -> void:
+	if _flash_tween and _flash_tween.is_valid():
+		_flash_tween.kill()
+	_flash_tween = null
+	if _flash and is_instance_valid(_flash):
+		_flash.queue_free()
+	_flash = null
+
+
+## Лента над рельсами вдоль кривой (в системе инстанса: тот же репер, что у меша трака)
+func _build_ribbon(crv: Curve3D) -> ArrayMesh:
+	var L := crv.get_baked_length()
+	if L < 0.5:
+		return null
+	var path := get_comp(C_Path) as C_Path
+	var top := (path.head_height() if path else style.head_height()) + FLASH_LIFT
+	var hw := style.rail_x + 0.35
+	var n := maxi(1, ceili(L / FLASH_STEP))
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var prev_l := Vector3.ZERO
+	var prev_r := Vector3.ZERO
+	var up := Vector3.UP
+	for i in n + 1:
+		var fr := TrackMeshBuilder.frame(crv, L * i / n, L)
+		var l := fr.p + fr.u * top - fr.r * hw
+		var r := fr.p + fr.u * top + fr.r * hw
+		if i > 0:
+			for v in [prev_l, prev_r, l, prev_r, r, l]:
+				st.set_normal(up)
+				st.add_vertex(v)
+		prev_l = l
+		prev_r = r
+	return st.commit()
 
 
 # ==========================================

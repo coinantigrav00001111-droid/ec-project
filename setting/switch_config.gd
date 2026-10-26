@@ -17,3 +17,9 @@ class_name SwitchConfig extends TrackConfig
 @export var hand := 1
 ## Стартовое положение: 0 = прямо, 1 = ответвление
 @export var start_route := 0
+## Подгонка под коллизию: если концы веток ближе, чем collision_width + end_clearance, угол ответвления
+## увеличивается (только при diverge_radius = 0). Иначе стандартный трак не встанет к обоим концам.
+## При заданном diverge_radius только предупреждение в консоль
+@export var auto_fit := true
+## Зазор между коллизиями соседей на концах веток, ю
+@export var end_clearance := 0.1

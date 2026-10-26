@@ -89,7 +89,7 @@ func request(target: int, source: StringName) -> bool:
 	return true
 
 
-## Замок: на стрелке стоит тележка какого-либо вагона
+## Замок: на стрелке стоит тележка какого-либо вагона, стоящего на рельсах (сошедший не в счет)
 func is_occupied() -> bool:
 	if entity == null or not entity.is_inside_tree():
 		return false
@@ -98,7 +98,12 @@ func is_occupied() -> bool:
 		if wagon == null or wagon.is_queued_for_deletion():
 			continue
 		var bc := wagon.get_comp(C_Bogie) as C_Bogie
-		if bc == null:
+		if bc == null or bc.is_derailed:
+			continue
+		# Сошедший вагон (и тот, что в руке игрока) не на рельсах: стрелку он не держит,
+		# хотя current_track у его тележек еще указывает на нее
+		var ch := wagon.get_comp(C_Chassis) as C_Chassis
+		if ch != null and not ch.is_on_rails:
 			continue
 		for b in bc.bogies_data:
 			if b.current_track == entity:

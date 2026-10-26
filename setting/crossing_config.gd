@@ -8,3 +8,8 @@ class_name CrossingConfig extends TrackConfig
 
 ## Угол пересечения путей, градусы. Путь 0 идет вдоль -Z, путь 1 повернут на этот угол вокруг центра
 @export var cross_deg := 15.0
+## Подгонка под коллизию: если концы путей ближе, чем collision_width + end_clearance, угол увеличивается.
+## Иначе стандартный трак не встанет к соседним концам
+@export var auto_fit := true
+## Зазор между коллизиями соседей на концах путей, ю
+@export var end_clearance := 0.1

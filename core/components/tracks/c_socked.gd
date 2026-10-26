@@ -291,6 +291,10 @@ func get_sockets() -> Array[Dictionary]:
 
 ## Проверка: занят ли сокет стабильно установленным (не таскиваемым) рельсом
 func _is_socket_occupied(socket_area: Area3D) -> bool:
+	# XX claude-switch: сокет выключен (закрытый стык упора, flex в растяжке): get_overlapping_areas() на нем
+	# ошибка, а подключаться к нему нельзя. Считаем занятым
+	if not socket_area.monitoring:
+		return true
 	var my_entity = _find_entity_from_collider(socket_area)
 	
 	for area in socket_area.get_overlapping_areas():
