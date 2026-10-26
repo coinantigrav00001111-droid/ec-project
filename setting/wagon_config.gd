@@ -68,3 +68,4 @@ class_name WagonConfig extends ObjectConfig
 @export var impact_dv_limit: float = 50.0# Δv от удара, после которого вагон сходит, м/с
 @export_category("Mechanisms")
 @export var mechanisms: Array[MechanismConfig] = []
+@export var lights: Array[LightConfig] = []

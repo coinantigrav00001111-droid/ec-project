@@ -68,6 +68,10 @@ func _process(_delta):
 	
 	if visible and current_target and tab_container.current_tab == 1: # 1 - Питание
 		_update_power_tab()
+
+	# Вкладка механизмов и света: статус и положения слайдеров
+	if visible and current_target and _mech_tab and tab_container.current_tab == tab_container.get_tab_idx_from_control(_mech_tab):
+		_update_mech_tab()
 	
 
 
@@ -529,6 +533,8 @@ var _mech_tab: VBoxContainer
 var _mech_list: VBoxContainer
 var _mech_rows: Dictionary = {}      # StringName -> {slider, check, enabled, status}
 var _mech_drag: StringName = &""     # id механизма, чей слайдер тянут сейчас
+var _light_rows: Dictionary = {}     # StringName -> {slider, check, enabled, status}
+var _light_drag: StringName = &""    # id источника света, чей слайдер тянут сейчас
 
 
 func _build_mech_tab() -> void:
@@ -563,27 +569,54 @@ func _rebuild_mech_tab() -> void:
 		_mech_list.remove_child(c)
 		c.queue_free()
 	_mech_rows.clear()
+	_light_rows.clear()
 	_mech_drag = &""
+	_light_drag = &""
 
 	var comp := _get_mech_comp()
 	if comp == null:
 		_set_mech_tab_visible(false)
 		return
+	var mechs := comp.get_list()
+	var lamps := comp.get_light_list()
+	if mechs.is_empty() and lamps.is_empty():
+		_set_mech_tab_visible(false)
+		return
 	_set_mech_tab_visible(true)
 
-	for item in comp.get_list():
+	for item in mechs:
 		_add_mech_row(item)
 
-	var all_row := HBoxContainer.new()
-	var b_open := Button.new()
-	b_open.text = "Открыть всё"
-	b_open.pressed.connect(_on_mech_all.bind(1.0))
-	var b_close := Button.new()
-	b_close.text = "Закрыть всё"
-	b_close.pressed.connect(_on_mech_all.bind(0.0))
-	all_row.add_child(b_open)
-	all_row.add_child(b_close)
-	_mech_list.add_child(all_row)
+	if not mechs.is_empty():
+		var all_row := HBoxContainer.new()
+		var b_open := Button.new()
+		b_open.text = "Открыть всё"
+		b_open.pressed.connect(_on_mech_all.bind(1.0))
+		var b_close := Button.new()
+		b_close.text = "Закрыть всё"
+		b_close.pressed.connect(_on_mech_all.bind(0.0))
+		all_row.add_child(b_open)
+		all_row.add_child(b_close)
+		_mech_list.add_child(all_row)
+
+	if not lamps.is_empty():
+		if not mechs.is_empty():
+			_mech_list.add_child(HSeparator.new())
+		var head := Label.new()
+		head.text = "Свет"
+		_mech_list.add_child(head)
+		for item in lamps:
+			_add_light_row(item)
+		var l_row := HBoxContainer.new()
+		var b_on := Button.new()
+		b_on.text = "Включить весь"
+		b_on.pressed.connect(_on_light_all.bind(1.0))
+		var b_off := Button.new()
+		b_off.text = "Выключить весь"
+		b_off.pressed.connect(_on_light_all.bind(0.0))
+		l_row.add_child(b_on)
+		l_row.add_child(b_off)
+		_mech_list.add_child(l_row)
 	_update_mech_tab()
 
 
@@ -629,11 +662,54 @@ func _add_mech_row(item: Dictionary) -> void:
 	_mech_rows[id] = {"slider": slider, "check": check, "enabled": en, "status": status}
 
 
+func _add_light_row(item: Dictionary) -> void:
+	var id: StringName = item.id
+	var row := HBoxContainer.new()
+
+	var title := Label.new()
+	title.text = item.title
+	title.custom_minimum_size.x = 110
+	row.add_child(title)
+
+	var slider := HSlider.new()
+	slider.min_value = 0.0
+	slider.max_value = 1.0
+	slider.step = 0.01
+	slider.custom_minimum_size.x = 140
+	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	slider.drag_started.connect(func(): _light_drag = id)
+	slider.drag_ended.connect(func(_changed): _light_drag = &"")
+	slider.value_changed.connect(func(v): if _light_drag == id: _send_light(id, v))
+	row.add_child(slider)
+
+	var check := CheckButton.new()
+	check.text = "Горит"
+	check.toggled.connect(func(on): _send_light(id, 1.0 if on else 0.0))
+	row.add_child(check)
+
+	var en := CheckBox.new()
+	en.text = "вкл"
+	en.tooltip_text = "Выключенный источник не реагирует на команды"
+	en.toggled.connect(func(on):
+		var comp := _get_mech_comp()
+		if comp: comp.set_light_enabled(id, on))
+	row.add_child(en)
+
+	var status := Label.new()
+	status.custom_minimum_size.x = 70
+	row.add_child(status)
+
+	_mech_list.add_child(row)
+	_light_rows[id] = {"slider": slider, "check": check, "enabled": en, "status": status}
+
+
 ## Каждый кадр, пока вкладка открыта. Только синхронизация вида, команд не шлёт (set_*_no_signal)
 func _update_mech_tab() -> void:
 	var comp := _get_mech_comp()
 	if comp == null:
 		return
+	_update_light_rows(comp)
 	for item in comp.get_list():
 		var r: Dictionary = _mech_rows.get(item.id, {})
 		if r.is_empty():
@@ -652,6 +728,40 @@ func _update_mech_tab() -> void:
 		else:
 			r.status.text = "..." if item.moving else "%d%%" % roundi(item.t * 100.0)
 			r.status.modulate = Color.WHITE
+
+
+func _update_light_rows(comp: C_Mechanisms) -> void:
+	for item in comp.get_light_list():
+		var r: Dictionary = _light_rows.get(item.id, {})
+		if r.is_empty():
+			continue
+		var usable: bool = item.enabled and item.found
+		if _light_drag != item.id:
+			r.slider.set_value_no_signal(item.t)
+		r.slider.editable = usable
+		r.check.set_pressed_no_signal(item.target > 0.5)
+		r.check.disabled = not usable
+		r.enabled.set_pressed_no_signal(item.enabled)
+		r.enabled.disabled = not item.found
+		if not item.found:
+			r.status.text = "нет света"
+			r.status.modulate = Color(1.0, 0.302, 0.043)
+		else:
+			r.status.text = "..." if item.changing else "%d%%" % roundi(item.t * 100.0)
+			r.status.modulate = Color.WHITE
+
+
+func _send_light(id: StringName, state: float) -> void:
+	if current_target:
+		current_target.send_event("on_light_set", {"id": id, "state": state})
+
+
+func _on_light_all(state: float) -> void:
+	var comp := _get_mech_comp()
+	if comp == null:
+		return
+	for item in comp.get_light_list():
+		_send_light(item.id, state)
 
 
 func _send_mech(id: StringName, state: float) -> void:

@@ -148,7 +148,7 @@ class_name RoomConfig extends Resource
 | Кто | Что | Кому |
 |---|---|---|
 | `ModeController.current_mode_changed` | вход/выход из Observe | `ObserveController.on_mode_changed` |
-| `GraphicsManager.time_of_day_changed` | время суток | здания, фары (`C_Mechanisms` LIGHT), окно |
+| `GraphicsManager.time_of_day_changed` | время суток | здания, фары (`C_Mechanisms`, `LightConfig`, см. ATTN_16), окно |
 | `ObserveController` → `Outline.enabled` | вкл/выкл контуров | `Outline` |
 | `ObserveController` → `PGM.toggle_power_layer(false)` | выключить power layer при входе | `PGM` |
 | `ObserveTool` → `entity.send_event("on_wagon_camera_selected", {...})` | POV | `C_CameraTarget` |
@@ -389,7 +389,7 @@ ObserveObjects:
 #### S10. Интерактив и атмосфера
 
 - [ ] Шторы, дверь и жалюзи как механизмы: `MechanismConfig` (SLIDE / ROTATE) и `C_Mechanisms` уже есть, комнатные предметы подключаются тем же способом (`role` в Blender). Кнопки в категории Room.
-- [ ] Ночная лампа и свет в окнах зданий: подписка на `time_of_day_changed`. Фары локо: актуатор `LIGHT` в `MechanismConfig`.
+- [ ] Ночная лампа и свет в окнах зданий: подписка на `time_of_day_changed`. Фары локо: `LightConfig` в `C_Mechanisms`, см. [ATTN_16_mechanisms.md](ATTN_16_mechanisms.md).
 - [ ] Частицы: пылинки в луче окна (`GPUParticles3D`, выключено на Low).
 - [ ] Оценить `Trail3D` (дым, свет фар) и анимируемые decals (капли на стекле) после S8.
 - [ ] Звук комнаты: тиканье часов, далёкие звуки дома, переходы день/ночь (GDD §13 «окружение»).
