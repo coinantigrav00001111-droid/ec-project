@@ -19,6 +19,7 @@
 
 [sub_resource type="Resource" id="Resource_cfg"]
 script = ExtResource("2_7w4hg")
+collision_width = 1.0
 
 [sub_resource type="Resource" id="Resource_id"]
 script = ExtResource("3_m67po")
@@ -29,6 +30,7 @@ script = ExtResource("6_u6p3o")
 rail_profile = null
 ballast_enabled = false
 ballast_profile = null
+collision_width = 2.5
 metadata/_custom_type_script = "uid://cfpx56q1cgoy5"
 
 [sub_resource type="Resource" id="Resource_flex"]
