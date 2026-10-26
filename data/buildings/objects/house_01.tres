@@ -14,10 +14,65 @@
 [ext_resource type="Script" uid="uid://deljgsmo4bpow" path="res://core/components/comp_settings/selectable_setting.gd" id="14_d1lf5"]
 [ext_resource type="Script" uid="uid://chprgtlxn3aub" path="res://core/components/comp_settings/blockable_setting.gd" id="15_uaa47"]
 [ext_resource type="Script" uid="uid://do5hjkm3r2pdg" path="res://core/entity_setting.gd" id="21_q4ryd"]
+[ext_resource type="Script" uid="uid://daeylhso0elsx" path="res://setting/light_config.gd" id="30_lcfg"]
+[ext_resource type="Script" uid="uid://brbladjp7pfki" path="res://core/components/comp_settings/mechanisms_setting.gd" id="31_msetg"]
+
+[sub_resource type="Resource" id="Resource_hw1"]
+script = ExtResource("30_lcfg")
+id = &"window_1"
+title = "Окно спереди"
+kind = 1
+rule = 1
+position = Vector3(0, 2.2, -6.8)
+color = Color(1, 0.78, 0.45, 1)
+energy = 1.2
+light_range = 6.0
+fade_time = 0.8
+delay_jitter = 8.0
+
+[sub_resource type="Resource" id="Resource_hw2"]
+script = ExtResource("30_lcfg")
+id = &"window_2"
+title = "Окно сзади"
+kind = 1
+rule = 1
+position = Vector3(0, 2.2, 5.4)
+color = Color(1, 0.78, 0.45, 1)
+energy = 1.2
+light_range = 6.0
+fade_time = 0.8
+delay_jitter = 8.0
+
+[sub_resource type="Resource" id="Resource_hw3"]
+script = ExtResource("30_lcfg")
+id = &"window_3"
+title = "Окно слева"
+kind = 1
+rule = 1
+position = Vector3(-7.6, 2.2, 0)
+color = Color(1, 0.78, 0.45, 1)
+energy = 1.2
+light_range = 6.0
+fade_time = 0.8
+delay_jitter = 8.0
+
+[sub_resource type="Resource" id="Resource_hw4"]
+script = ExtResource("30_lcfg")
+id = &"window_4"
+title = "Окно справа"
+kind = 1
+rule = 1
+position = Vector3(7.6, 2.2, 0)
+color = Color(1, 0.78, 0.45, 1)
+energy = 1.2
+light_range = 6.0
+fade_time = 0.8
+delay_jitter = 8.0
 
 [sub_resource type="Resource" id="Resource_n4pna"]
 script = ExtResource("7_hwfs4")
 scene = ExtResource("4_5ia0v")
+lights = Array[ExtResource("30_lcfg")]([SubResource("Resource_hw1"), SubResource("Resource_hw2"), SubResource("Resource_hw3"), SubResource("Resource_hw4")])
 metadata/_custom_type_script = "uid://bicjny5dv1h3s"
 
 [sub_resource type="Resource" id="Resource_lvfb0"]
@@ -45,6 +100,10 @@ metadata/_custom_type_script = "uid://deljgsmo4bpow"
 script = ExtResource("15_uaa47")
 metadata/_custom_type_script = "uid://chprgtlxn3aub"
 
+[sub_resource type="Resource" id="Resource_hmech"]
+script = ExtResource("31_msetg")
+metadata/_custom_type_script = "uid://brbladjp7pfki"
+
 [resource]
 script = ExtResource("21_q4ryd")
 id = 5020
@@ -54,5 +113,5 @@ category = &"building"
 tag = &"house"
 icon = ExtResource("10_iu37o")
 build_behavior = 1
-components = Array[ExtResource("1_ugla1")]([SubResource("Resource_lvfb0"), SubResource("Resource_l1ojo"), SubResource("Resource_lf4xo"), SubResource("Resource_aqgj4"), SubResource("Resource_j3fkf"), SubResource("Resource_tip3w")])
+components = Array[ExtResource("1_ugla1")]([SubResource("Resource_lvfb0"), SubResource("Resource_l1ojo"), SubResource("Resource_lf4xo"), SubResource("Resource_aqgj4"), SubResource("Resource_j3fkf"), SubResource("Resource_tip3w"), SubResource("Resource_hmech")])
 metadata/_custom_type_script = "uid://do5hjkm3r2pdg"

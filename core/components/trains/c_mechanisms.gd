@@ -67,6 +67,7 @@ class Lamp extends RefCounted:
 	var gain := 1.0             # множитель яркости 0..LightConfig.GAIN_MAX (слайдер в InfoPanel)
 	var ghost := false          # сущность - призрак, источник скрыт
 	var culled := false         # скрыт бюджетом (LightBudget)
+	var delay := 0.0            # оставшаяся случайная задержка перед переходом (LightConfig.delay_jitter)
 
 	func is_changing() -> bool:
 		return not is_equal_approx(t, target)
@@ -78,6 +79,9 @@ class Lamp extends RefCounted:
 	## Возвращает true, если дошли до цели в этом шаге
 	func step(dt: float) -> bool:
 		var was := is_changing()
+		if delay > 0.0:
+			delay -= dt
+			return false
 		t = move_toward(t, target, dt / maxf(cfg.fade_time, 0.01))
 		apply()
 		return was and not is_changing()
@@ -252,6 +256,7 @@ func set_light(id: StringName, state: float) -> void:
 		return
 	l.target = clampf(state, 0.0, 1.0)
 	l.manual = true
+	l.delay = 0.0
 	set_process(true)
 	entity.send_event("on_light_changed", {"id": l.cfg.id, "state": l.target, "changing": l.is_changing()})
 
@@ -331,6 +336,7 @@ func _drive_lamp(l: Lamp, instant: bool) -> void:
 		l.t = v
 		l.apply()
 	elif l.is_changing():
+		l.delay = randf() * l.cfg.delay_jitter if l.cfg.delay_jitter > 0.0 else 0.0
 		set_process(true)
 		entity.send_event("on_light_changed", {"id": l.cfg.id, "state": l.target, "changing": true})
 
