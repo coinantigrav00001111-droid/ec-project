@@ -44,8 +44,9 @@ func _physics_process(_delta: float) -> void:
 			continue
 			
 		var power_track = bogie.current_track.get_comp(C_PowerTrack) as C_PowerTrack
-		if power_track and power_track.contour_id != 0:
-			current_contour = power_track.contour_id
+		# XX claude-switch: на кроссе с раздельными цепями контур зависит от пути тележки (route)
+		if power_track and power_track.contour_of(bogie.route) != 0:
+			current_contour = power_track.contour_of(bogie.route)
 			var raw_voltage = PGM.get_power(current_contour)
 			
 			# Учитываем полярность/разворот трака относительно контура питания

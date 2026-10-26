@@ -13,3 +13,6 @@ class_name CrossingConfig extends TrackConfig
 @export var auto_fit := true
 ## Зазор между коллизиями соседей на концах путей, ю
 @export var end_clearance := 0.1
+## Раздельные цепи: два пути кросса электрически независимы (свой контур и полярность у каждого), как у кросса
+## с изолированными рамками. false: один проводник на оба пути, один контур и одна полярность (ошибка полярности = КЗ)
+@export var separate_circuits := true

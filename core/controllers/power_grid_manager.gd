@@ -245,8 +245,7 @@ func _reset_all_tracks() -> void:
 	for track_entity in all_tracks:
 		var comp = track_entity.get_comp(C_PowerTrack)
 		if comp:
-			comp.contour_id = 0
-			comp.is_flipped = false
+			comp.reset()   # XX claude-switch: все лучи (у кросса с раздельными цепями их два)
 			
 			# 🚧 Гасим визуал перед новым пересчетом
 			track_entity.send_event("on_power_view_changed", {"active": is_power_layer_active})
@@ -272,12 +271,15 @@ func _build_contour_from_clip(_clip: C_PowerClip) -> void:
 		_clip.entity.call_deferred("remove_component", C_PowerClip)
 		return
 
-	var queue: Array[Entity] = [_clip.entity]
-	start_track.contour_id = _clip.contour_id
-	start_track.is_flipped = false # Эталон полярности от клипа
+	# XX claude-switch: узел обхода = (сущность, луч питания). У обычных траков и стрелок луч всегда 0, обход как раньше.
+	# У кросса с раздельными цепями два луча: контур идет только по своему пути, на соседний путь не переходит
+	var queue: Array[Dictionary] = [{"e": _clip.entity, "leg": 0}]
+	start_track.set_leg(0, _clip.contour_id, false)   # Эталон полярности от клипа
 
 	while queue.size() > 0:
-		var current_ent = queue.pop_front()
+		var node: Dictionary = queue.pop_front()
+		var current_ent: Entity = node.e
+		var cur_leg: int = node.leg
 		var current_track = current_ent.get_comp(C_PowerTrack)
 		var current_sock = current_ent.get_comp(C_Socket)
 
@@ -290,36 +292,45 @@ func _build_contour_from_clip(_clip: C_PowerClip) -> void:
 			var neighbor_track = neighbor_ent.get_comp(C_PowerTrack)
 			if not neighbor_track: continue
 
-			# Вычисляем разворот ДО проверок
-			var calc_flip = _calc_flip(current_ent, neighbor_ent, current_track.is_flipped)
+			# Стык: какие сокеты соприкасаются. От них зависят лучи и полярность
+			var joint := _find_joint(current_ent, neighbor_ent)
+			var n_leg := 0
+			if not joint.is_empty():
+				if current_sock.leg_of_socket(joint.id1) != cur_leg:
+					continue   # этот стык принадлежит другому лучу сущности (другому пути кросса)
+				var n_sock = neighbor_ent.get_comp(C_Socket)
+				n_leg = n_sock.leg_of_socket(joint.id2) if n_sock else 0
 
-			if neighbor_track.contour_id == 0:
+			# Вычисляем разворот ДО проверок
+			var calc_flip = _flip_at(current_ent, neighbor_ent, joint, current_track.flip_of(cur_leg))
+			var n_cid: int = neighbor_track.contour_of(n_leg)
+
+			if n_cid == 0:
 				# 🟢 1. Чистый трак: забираем в контур
-				neighbor_track.contour_id = _clip.contour_id
-				neighbor_track.is_flipped = calc_flip
+				neighbor_track.set_leg(n_leg, _clip.contour_id, calc_flip)
 				
-				# 🟢 2. Проверка на лишние клипы по ходу сети
+				# 🟢 2. Проверка на лишние клипы по ходу сети (клип стоит на луче 0)
 				var neighbor_clip = neighbor_ent.get_comp(C_PowerClip)
-				if neighbor_clip and neighbor_clip != _clip:
+				if neighbor_clip and neighbor_clip != _clip and n_leg == 0:
 					# Уничтожаем дубликат клипа безопасно
 					neighbor_ent.call_deferred("remove_component", C_PowerClip)
 				
 				# 🟢 3. Добавляем в очередь
-				queue.append(neighbor_ent)
+				queue.append({"e": neighbor_ent, "leg": n_leg})
 
-			elif neighbor_track.contour_id == _clip.contour_id:
+			elif n_cid == _clip.contour_id:
 				# 🟡 Трак УЖЕ в нашем контуре (Замыкание кольца). 
 				# Сверяем полярность для защиты от физического КЗ (реверсивная петля).
-				if neighbor_track.is_flipped != calc_flip:
+				if neighbor_track.flip_of(n_leg) != calc_flip:
 					print("⚡ АВАРИЯ (КЗ Полярности)! Цепь ", current_ent.name, " столкнулась с ", neighbor_ent.name)
 					# Здесь можно вызвать PGM.emergency_stop(true)
 
 			else:
 				# 🔴 Трак принадлежит ДРУГОМУ контуру. Две разные цепи соединились!
-				print("⚡ Столкновение контуров: ", _clip.contour_id, " и ", neighbor_track.contour_id)
+				print("⚡ Столкновение контуров: ", _clip.contour_id, " и ", n_cid)
 				# Удаляем клип-агрессор, чтобы цепь слилась в одну при следующем пересчете
 				var neighbor_clip = neighbor_ent.get_comp(C_PowerClip)
-				if neighbor_clip:
+				if neighbor_clip and n_leg == 0:
 					neighbor_ent.call_deferred("remove_component", C_PowerClip)
 					
 	PGM.power_tab_updated.emit()
@@ -328,6 +339,12 @@ func _build_contour_from_clip(_clip: C_PowerClip) -> void:
 
 ## --- Хелпер для расчета полярности ---  Вычисляет разворот флип по питанию
 func _calc_flip(current_entity: Entity, neighbor_entity: Entity, current_flip: bool) -> bool:
+	return _flip_at(current_entity, neighbor_entity, _find_joint(current_entity, neighbor_entity), current_flip)
+
+
+## XX claude-switch. Стык двух сущностей: индексы ближайших друг к другу сокетов {id1, id2}.
+## Пусто, если у кого-то нет сокетов или пути
+func _find_joint(current_entity: Entity, neighbor_entity: Entity) -> Dictionary:
 	var sock_comp1 = current_entity.get_comp(C_Socket)
 	var sock_comp2 = neighbor_entity.get_comp(C_Socket)
 	
@@ -336,13 +353,13 @@ func _calc_flip(current_entity: Entity, neighbor_entity: Entity, current_flip: b
 	var path_comp2 = neighbor_entity.get_comp(C_Path)
 	
 	if not sock_comp1 or not sock_comp2 or not path_comp1 or not path_comp2:
-		return current_flip 
+		return {}
 		
 	var min_dist = INF
 	var id1 = 0
 	var id2 = 0
 	
-	# 1. Ищем точку стыковки через точные глобальные координаты Path3D
+	# Ищем точку стыковки через точные глобальные координаты Path3D
 	for i in range(sock_comp1.sockets.size()):
 		# ВАЖНО: Используем path_node.to_global вместо current_entity.to_global
 		var p1 = path_comp1.path_node.to_global(sock_comp1.sockets[i].pos)
@@ -355,8 +372,18 @@ func _calc_flip(current_entity: Entity, neighbor_entity: Entity, current_flip: b
 				min_dist = dist
 				id1 = i
 				id2 = j
-				
-	# 2. Логика полярности
+	return {"id1": id1, "id2": id2}
+
+
+## Логика полярности по стыку (см. _find_joint). Без стыка полярность сохраняется
+func _flip_at(current_entity: Entity, neighbor_entity: Entity, joint: Dictionary, current_flip: bool) -> bool:
+	if joint.is_empty():
+		return current_flip
+	var sock_comp1 = current_entity.get_comp(C_Socket)
+	var sock_comp2 = neighbor_entity.get_comp(C_Socket)
+	var id1: int = joint.id1
+	var id2: int = joint.id2
+
 	var is_start1 = (id1 == 0)
 	var is_start2 = (id2 == 0)
 	# XX claude-switch: начало маршрута берем из флага сокета (у кросса два начала). Без флага как раньше
@@ -364,8 +391,6 @@ func _calc_flip(current_entity: Entity, neighbor_entity: Entity, current_flip: b
 		is_start1 = bool(sock_comp1.sockets[id1].get("start", id1 == 0))
 	if id2 < sock_comp2.sockets.size():
 		is_start2 = bool(sock_comp2.sockets[id2].get("start", id2 == 0))
-	
-	# print("Стык %s[%s] <-> %s[%s] | Было: %s" % [current_entity.name, id1, neighbor_entity.name, id2, current_flip])
 	
 	if is_start1 and is_start2:
 		# Начало к Началу

@@ -214,9 +214,10 @@ func _update_power_tab():
 				%PowerClipButton.button_pressed = false
 				%ClipContourIDButton.disabled = true  # запрещаем менять контур
 				# Трак
-				%TrackContourLabel.text = str(_power_comp.contour_id)
-				%TrackVoltageLabel.text = str(PGM.get_power(_power_comp.contour_id))
-				%FlippedLabel.text = str(_power_comp.is_flipped)
+				# XX claude-switch: у кросса с раздельными цепями "1 | 2" (по лучу на путь)
+				%TrackContourLabel.text = _power_comp.contour_text()
+				%TrackVoltageLabel.text = _power_comp.voltage_text()
+				%FlippedLabel.text = _power_comp.flip_text()
 
 		
 			else: # Если трака нет, то в дефолт все

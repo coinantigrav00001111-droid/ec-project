@@ -11,6 +11,8 @@ class_name C_CrossingShape extends ICapability
 ## Центр пересечения = середина маршрута 0, после центрирования C_Path он в начале координат Entity.
 ## Должен стоять в массиве компонентов ПОСЛЕ C_Path и ДО C_Socket.
 ## Пока только прямые пути (радиус на кроссе всегда INF).
+## Электрика: CrossingConfig.separate_circuits (по умолчанию true) дает два независимых луча C_PowerTrack.
+## Клип питания на кроссе питает путь 0, путь 1 получает ток от соседей (PGM ходит по лучам, см. power_grid_manager).
 
 var length := 0.0
 var cross_deg := 15.0
@@ -37,6 +39,11 @@ func on_entity_ready() -> void:
 			else:
 				push_warning("C_CrossingShape: концы путей разнесены на %.2f, а коллизии соседей требуют %.2f. Увеличьте угол (или auto_fit)" % [sep, need])
 	path.set_routes(build_routes(path, length, cross_deg), 0, true)
+
+	# Электрика: два независимых луча (путь 0 и путь 1). Сокеты получат свой луч при сборке (C_Socket идет после формы)
+	var pt := get_comp(C_PowerTrack) as C_PowerTrack
+	if pt and bool(identity.get_config('separate_circuits', true)):
+		pt.set_legs(2)
 
 
 ## Чистая функция: два пути. Путь 1 = путь 0, повернутый вокруг его середины на deg

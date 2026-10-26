@@ -84,7 +84,7 @@ func get_motion_axis() -> Vector3:
 	var t = crv.sample_baked_with_rotation(clampf(b.track_distance, 0.0, crv.get_baked_length()))
 	var fwd: Vector3 = (pc.path_node.global_basis * -t.basis.z).normalized()
 	var pt = b.current_track.get_comp(C_PowerTrack)
-	return -fwd if (pt and pt.is_flipped) else fwd
+	return -fwd if (pt and pt.flip_of(b.route)) else fwd   # XX claude-switch: луч кросса
 
 
 

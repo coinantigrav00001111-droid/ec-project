@@ -145,7 +145,7 @@ func _assist_move_bogie(bogie: BogieData, delta: float, speed: float) -> void:
 	# Учитываем инверсию  трака 
 	var  dir_sign = 1.0
 	if power_track:
-		dir_sign =-1.0 if power_track.is_flipped else 1.0
+		dir_sign =-1.0 if power_track.flip_of(bogie.route) else 1.0   # XX claude-switch: луч кросса
 		
 	bogie.track_distance += speed * delta * dir_sign 
 
@@ -260,7 +260,7 @@ func _assist_update_calc_global_pos(bogie: BogieData) -> void:
 	
 	# --- ИСПРАВЛЕНИЕ: Получаем данные о развороте трака ---
 	var power_track = bogie.current_track.get_comp(C_PowerTrack)
-	var is_track_flipped = power_track.is_flipped if power_track else false
+	var is_track_flipped = power_track.flip_of(bogie.route) if power_track else false   # XX claude-switch
 	# --------------------------------------------------------
 	
 	if wp_z > 0.001:

@@ -18,7 +18,8 @@ const LEVER_HEIGHT := 1.4
 const COL_LEVER_OK := Color(0.25, 0.75, 0.30)
 const COL_LEVER_DIV := Color(0.95, 0.65, 0.10)
 const FLASH_HOLD := 1.5          # с, подсветка активного пути держится
-const FLASH_FADE := 1.0          # с, потом гаснет
+const FLASH_FADE := 1.0          # с, нарастание и затухание (одинаковая скорость)
+const FLASH_ALPHA := 0.65        # итоговая непрозрачность ленты
 const FLASH_LIFT := 0.04         # ю, лента над поверхностью катания
 const FLASH_STEP := 1.0          # ю, шаг ленты вдоль кривой
 
@@ -225,6 +226,55 @@ func _set_box(cs: CollisionShape3D, size: Vector3, xf: Transform3D) -> void:
 
 
 # ==========================================
+# Электрика
+# ==========================================
+
+const CLIP_S := 6.0       # вдоль кривой от начала (рычаг стоит на 3.0)
+const CLIP_GAP := 0.6     # от края основания до оси клипа
+const CLIP_LIFT := 0.3    # половина высоты коробки клипа
+
+
+## Клип стоит у начала пути 0, со стороны, противоположной ответвлению/второму пути (рычаг стрелки на той же стороне,
+## но ближе к носку, не пересекаются)
+func clip_transform() -> Transform3D:
+	var path := get_comp(C_Path) as C_Path
+	if style == null or path == null or path.routes.is_empty():
+		return super()
+	var c0: Curve3D = path.routes[0]
+	var L := c0.get_baked_length()
+	if L < 0.01:
+		return super()
+	var side := 1.0
+	if path.routes.size() > 1:
+		var c1: Curve3D = path.routes[1]
+		var d := c1.sample_baked(0.0).x - c0.sample_baked(0.0).x          # кросс: второй путь начинается сбоку
+		if absf(d) < 0.01:
+			d = c1.sample_baked(c1.get_baked_length()).x - c0.sample_baked(L).x   # стрелка: расходятся на конце
+		side = -1.0 if d > 0.0 else 1.0
+	var f := TrackMeshBuilder.frame(c0, minf(CLIP_S, L), L)
+	var b := Basis(f.r, f.u, f.r.cross(f.u))
+	return Transform3D(b, f.p + f.r * (side * (style.collision_width * 0.5 + CLIP_GAP)) + f.u * CLIP_LIFT)
+
+
+## Слой электрики: у кросса с раздельными цепями каждый путь красим по своему лучу, остальным как раньше (один материал)
+func _set_power_view():
+	var pc := get_comp(C_PowerTrack) as C_PowerTrack
+	if pc == null or pc.legs <= 1 or _meshes.size() < 2:
+		super()
+		return
+	if is_inside_tree():
+		await get_tree().physics_frame
+	for i in _meshes.size():
+		var leg := mini(i, pc.legs - 1)
+		var cid := pc.contour_of(leg)
+		var volt: float = PGM.power_pwm[cid].voltage if cid != 0 else 0.0
+		var mat := _get_or_create_power_material(cid, volt, pc.flip_of(leg))
+		var m := _meshes[i]
+		if m.mesh and m.mesh.get_surface_count() > rail_surface_index:
+			m.set_surface_override_material(rail_surface_index, mat)
+
+
+# ==========================================
 # Подсветка активного пути
 # ==========================================
 
@@ -242,7 +292,7 @@ func _flash_route(route: int) -> void:
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	mat.albedo_color = Color(col.r, col.g, col.b, 0.65)
+	mat.albedo_color = Color(col.r, col.g, col.b, 0.0)   # плавно включаем: FLASH_FADE вверх, FLASH_HOLD, FLASH_FADE вниз
 	mat.render_priority = 1
 
 	_flash = MeshInstance3D.new()
@@ -253,6 +303,7 @@ func _flash_route(route: int) -> void:
 	instance.add_child(_flash)
 
 	_flash_tween = create_tween()
+	_flash_tween.tween_property(mat, "albedo_color:a", FLASH_ALPHA, FLASH_FADE)
 	_flash_tween.tween_interval(FLASH_HOLD)
 	_flash_tween.tween_property(mat, "albedo_color:a", 0.0, FLASH_FADE)
 	_flash_tween.tween_callback(_clear_flash)

@@ -47,13 +47,17 @@ func _parse_paths():
 	var path_comp = get_comp(C_Path)
 	if path_comp and path_comp.path_node:
 		# XX claude-switch: у стрелки сокеты со всех маршрутов (носок общий, сливается в _add_socket_if_unique)
-		for c in path_comp.all_curves():
-			_parse_curve(c, path_comp.path_node)
+		# Луч питания (leg): у кросса с раздельными цепями каждый путь свой луч, у остальных всегда 0
+		var pt := get_comp(C_PowerTrack) as C_PowerTrack
+		var split := pt != null and pt.legs > 1 and path_comp.parallel_routes
+		var curves := path_comp.all_curves()
+		for i in curves.size():
+			_parse_curve(curves[i], path_comp.path_node, i if split else 0)
 
 
 
 # Парсим кривую из path3d для вычисления сокетов
-func _parse_curve(c: Curve3D, p: Path3D):
+func _parse_curve(c: Curve3D, p: Path3D, leg: int = 0):
 	if c.get_point_count() < 2: return
 
 	# Берем точные координаты первой и последней точек
@@ -73,11 +77,11 @@ func _parse_curve(c: Curve3D, p: Path3D):
 	if d_last.is_zero_approx():
 		d_last = -(c.get_point_position(c.get_point_count() - 2) - p_last).normalized()
 		
-	_add_socket_if_unique(p_first, d_first, true)
+	_add_socket_if_unique(p_first, d_first, true, leg)
 	_add_cone(p.transform * p_first, Color.CHARTREUSE)  #debug
 	
 	
-	_add_socket_if_unique(p_last, d_last, false)
+	_add_socket_if_unique(p_last, d_last, false, leg)
 	_add_cone(p.transform * p_last, Color.DEEP_PINK)#debug
 
 
@@ -86,7 +90,7 @@ func _parse_curve(c: Curve3D, p: Path3D):
 
 # Добавляем сокет в массив, только если в этой точке его еще нет (слияние для стрелок)
 ## XX claude-switch: is_start = начало маршрута. Нужен PGM для полярности: у кросса два начала (сокеты 0 и 2)
-func _add_socket_if_unique(pos: Vector3, dir: Vector3, is_start: bool = false):
+func _add_socket_if_unique(pos: Vector3, dir: Vector3, is_start: bool = false, leg: int = 0):
 	for s in sockets:
 		if s.pos.distance_to(pos) < 0.01:
 			return # Сокет уже зарегистрирован
@@ -96,7 +100,8 @@ func _add_socket_if_unique(pos: Vector3, dir: Vector3, is_start: bool = false):
 		"pos": pos,
 		"out_dir": dir,
 		"socket": new_socket,
-		"start": is_start
+		"start": is_start,
+		"leg": leg   # XX claude-switch: луч питания, которому принадлежит сокет (C_PowerTrack.legs)
 	})
 
 
@@ -286,6 +291,11 @@ func get_connected_entities() -> Array[Entity]:
 
 func get_sockets() -> Array[Dictionary]:
 	return sockets
+
+
+## XX claude-switch: луч питания сокета i (0 у всех, кроме кросса с раздельными цепями)
+func leg_of_socket(i: int) -> int:
+	return int(sockets[i].get("leg", 0)) if i >= 0 and i < sockets.size() else 0
 
 
 
