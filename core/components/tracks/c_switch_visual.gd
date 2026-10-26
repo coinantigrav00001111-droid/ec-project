@@ -274,7 +274,7 @@ func _build_ribbon(crv: Curve3D) -> ArrayMesh:
 		return null
 	var path := get_comp(C_Path) as C_Path
 	var top := (path.head_height() if path else style.head_height()) + FLASH_LIFT
-	var hw := style.rail_x + 0.35
+	var hw := style.rail_x - 0.7
 	var n := maxi(1, ceili(L / FLASH_STEP))
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
