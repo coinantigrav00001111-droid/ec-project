@@ -55,6 +55,13 @@ class_name QualityPreset extends Resource
 ## false = только важные контуры (hover, selected, ghost, blocked), без reserve и multi
 @export var outlines_all := false
 
+@export_category("Entity lights (ATTN_16)")
+## Сколько источников света сущностей (фары, окна, сигналы) горят одновременно. Ближайшие к камере,
+## остальные скрыты, их состояние сохраняется. 0 = все выключены
+@export var entity_light_max := 8
+## Заготовка (шаг L6): вместо Light3D только свечение материалов
+@export var entity_light_emissive_only := false
+
 @export_category("Room (S7)")
 ## 0 дальний LOD, 1 средний, 2 полный
 @export var room_detail_lod := 0
@@ -73,6 +80,7 @@ static func builtin(_id: StringName) -> QualityPreset:
 				"msaa": 0, "fxaa": true,
 				"ssao": false, "ssil": false, "contact_shadows": false,
 				"tilt_shift": false, "dof": false, "outlines_all": false, "room_detail_lod": 0,
+				"entity_light_max": 3,
 			})
 		&"medium":
 			return _make(_id, "Medium", {
@@ -82,6 +90,7 @@ static func builtin(_id: StringName) -> QualityPreset:
 				"ssao": true, "ssao_half_size": true, "ssao_quality": 1, "ssil": false,
 				"contact_shadows": true,
 				"tilt_shift": true, "dof": false, "outlines_all": true, "room_detail_lod": 1,
+				"entity_light_max": 8,
 			})
 		&"high":
 			return _make(_id, "High", {
@@ -91,6 +100,7 @@ static func builtin(_id: StringName) -> QualityPreset:
 				"ssao": true, "ssao_half_size": false, "ssao_quality": 2, "ssil": true,
 				"contact_shadows": true,
 				"tilt_shift": true, "dof": true, "outlines_all": true, "room_detail_lod": 2,
+				"entity_light_max": 16,
 			})
 	return null
 

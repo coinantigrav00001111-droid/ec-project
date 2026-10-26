@@ -15,8 +15,11 @@ class_name C_Mechanisms extends ICapability
 ##
 ## СВЕТ (ATTN_16_mechanisms.md). Тот же компонент держит и источники света: WagonConfig.lights (Array[LightConfig]).
 ## Источники создаются КОДОМ в точках из конфига (позиция, поворот, родитель-роль), маркеры в сцене не нужны.
-## События IN:  on_light_set {id, state 0..1}, on_light_toggle {id}
+## События IN:  on_light_set {id, state 0..1}, on_light_toggle {id}, on_light_gain {id, gain 0..2}, on_light_auto {id}
 ## События OUT: on_light_changed {id, state, changing}
+## Правила (LightConfig.rule): NIGHT (GFX.time_of_day_changed), DIRECTION (знак скорости и ось движения C_Chassis),
+## ALWAYS. Команда игрока ставит manual и перекрывает правило до события-сброса или команды on_light_auto.
+## Бюджет: источники регистрируются в GFX.light_budget, он скрывает лишние (Lamp.culled), ближайшие к камере остаются.
 ## Тени у источников сущностей выключены всегда (тени только у лампы стола, GFX).
 ## Отладка (Global.debug_mode, сущность выбрана): I - вкл/выкл весь свет, Shift+I - метки источников и размеры кузова в Output
 ## Порядок в components: Identity -> TrainVisual -> ... -> Mechanisms
@@ -60,23 +63,30 @@ class Lamp extends RefCounted:
 	var t := 0.0                # текущая яркость 0..1
 	var target := 0.0
 	var enabled := true
-	var manual := false         # игрок взял управление (на будущее: AUTO-правила)
+	var manual := false         # игрок перекрыл правило (NIGHT, DIRECTION) до события-сброса
+	var gain := 1.0             # множитель яркости 0..LightConfig.GAIN_MAX (слайдер в InfoPanel)
+	var ghost := false          # сущность - призрак, источник скрыт
+	var culled := false         # скрыт бюджетом (LightBudget)
 
 	func is_changing() -> bool:
 		return not is_equal_approx(t, target)
 
+	## Хочет гореть (до учёта бюджета)
+	func wants_on() -> bool:
+		return light != null and t > 0.001 and not ghost
+
 	## Возвращает true, если дошли до цели в этом шаге
-	func step(dt: float, ghost: bool) -> bool:
+	func step(dt: float) -> bool:
 		var was := is_changing()
 		t = move_toward(t, target, dt / maxf(cfg.fade_time, 0.01))
-		apply(ghost)
+		apply()
 		return was and not is_changing()
 
-	func apply(ghost: bool) -> void:
+	func apply() -> void:
 		if light == null or not is_instance_valid(light):
 			return
-		light.light_energy = cfg.energy * t
-		light.visible = t > 0.001 and not ghost
+		light.light_energy = cfg.energy * gain * t
+		light.visible = wants_on() and not culled
 
 
 var _mechs: Dictionary = {}          # StringName -> Mech
@@ -87,10 +97,15 @@ var _lamp_order: Array[StringName] = []
 var _saved_lights: Dictionary = {}   # id(String) -> {t, manual, enabled}
 var _gizmos_on := false
 var _ghost := false
+## Направление движения для DIRECTION: 1 носом (-Z) вперёд, -1 хвостом
+var _dir := 1
+
+const DIR_SPEED_EPS := 0.05
 
 
 func _init() -> void:
 	set_process(false)
+	set_physics_process(false)
 
 
 func on_entity_ready() -> void:
@@ -127,6 +142,18 @@ func on_entity_ready() -> void:
 		_lamp_order.append(lc.id)
 	_apply_saved_lights()
 	_apply_all_lamps()
+	_setup_rules()
+	if not _lamps.is_empty() and GFX.light_budget:
+		GFX.light_budget.register(self)
+
+
+func _exit_tree() -> void:
+	if not is_instance_valid(GFX):
+		return
+	if GFX.light_budget:
+		GFX.light_budget.unregister(self)
+	if GFX.time_of_day_changed.is_connected(_on_time_of_day_changed):
+		GFX.time_of_day_changed.disconnect(_on_time_of_day_changed)
 
 
 func on_component_added(type: Script) -> void:
@@ -197,7 +224,7 @@ func _process(delta: float) -> void:
 		var l: Lamp = _lamps[id]
 		if not l.is_changing():
 			continue
-		if l.step(delta, _ghost):
+		if l.step(delta):
 			entity.send_event("on_light_changed", {"id": id, "state": l.t, "changing": false})
 		any = any or l.is_changing()
 	if not any:
@@ -235,6 +262,114 @@ func set_light_enabled(id: StringName, on: bool) -> void:
 		l.enabled = on
 
 
+func on_light_gain(data: Dictionary) -> void:
+	set_light_gain(data.get("id", &""), data.get("gain", 1.0))
+
+
+func on_light_auto(data: Dictionary) -> void:
+	set_light_auto(data.get("id", &""))
+
+
+## Множитель яркости 0..LightConfig.GAIN_MAX (к energy из конфига)
+func set_light_gain(id: StringName, gain: float) -> void:
+	var l: Lamp = _lamps.get(StringName(id))
+	if l == null or not l.enabled or _ghost:
+		return
+	l.gain = clampf(gain, 0.0, LightConfig.GAIN_MAX)
+	l.apply()
+
+
+## Вернуть источник правилу (снять manual)
+func set_light_auto(id: StringName) -> void:
+	var l: Lamp = _lamps.get(StringName(id))
+	if l == null or _ghost:
+		return
+	l.manual = false
+	_drive_lamp(l, false)
+
+
+# ==========================================
+# СВЕТ: правила (LightConfig.rule)
+# ==========================================
+
+func _setup_rules() -> void:
+	var has_dir := false
+	var has_night := false
+	for id in _lamp_order:
+		match (_lamps[id] as Lamp).cfg.rule:
+			LightConfig.Rule.DIRECTION:
+				has_dir = true
+			LightConfig.Rule.NIGHT:
+				has_night = true
+	if has_night and not GFX.time_of_day_changed.is_connected(_on_time_of_day_changed):
+		GFX.time_of_day_changed.connect(_on_time_of_day_changed)
+	set_physics_process(has_dir)
+	_drive_all(true)
+
+
+## Значение, которое выставляет правило: 0 или 1, либо -1 если правило не управляет источником
+func _rule_value(l: Lamp) -> float:
+	match l.cfg.rule:
+		LightConfig.Rule.NIGHT:
+			return 1.0 if l.cfg.night_times.has(String(GFX.state.time)) else 0.0
+		LightConfig.Rule.DIRECTION:
+			return 1.0 if (l.cfg.dir_end == LightConfig.End.FRONT) == (_dir > 0) else 0.0
+		LightConfig.Rule.ALWAYS:
+			return 1.0
+	return -1.0
+
+
+## manual, отключённый или не найденный источник правило не трогает
+func _drive_lamp(l: Lamp, instant: bool) -> void:
+	if l.manual or not l.enabled or l.anchor == null:
+		return
+	var v := _rule_value(l)
+	if v < 0.0:
+		return
+	l.target = v
+	if instant:
+		l.t = v
+		l.apply()
+	elif l.is_changing():
+		set_process(true)
+		entity.send_event("on_light_changed", {"id": l.cfg.id, "state": l.target, "changing": true})
+
+
+func _drive_all(instant: bool) -> void:
+	for id in _lamp_order:
+		_drive_lamp(_lamps[id], instant)
+
+
+func _on_time_of_day_changed(_id: StringName) -> void:
+	for id in _lamp_order:
+		var l: Lamp = _lamps[id]
+		if l.cfg.rule == LightConfig.Rule.NIGHT:
+			l.manual = false
+			_drive_lamp(l, false)
+
+
+## Направление: знак скорости относительно оси движения (get_motion_axis учитывает разворот контура).
+## Стоим или сошли с рельсов: остаётся последнее направление
+func _physics_process(_delta: float) -> void:
+	if _ghost:
+		return
+	var ch := get_comp(C_Chassis) as C_Chassis
+	if ch == null or not ch.is_on_rails or absf(ch.current_speed) < DIR_SPEED_EPS:
+		return
+	var s := signf((-entity.global_basis.z).dot(ch.get_motion_axis())) * signf(ch.current_speed)
+	if s == 0.0:
+		return
+	var d := 1 if s > 0.0 else -1
+	if d == _dir:
+		return
+	_dir = d
+	for id in _lamp_order:
+		var l: Lamp = _lamps[id]
+		if l.cfg.rule == LightConfig.Rule.DIRECTION:
+			l.manual = false
+			_drive_lamp(l, false)
+
+
 ## Список для вкладки "Механизмы" в InfoPanel (раздел "Свет")
 func get_light_list() -> Array[Dictionary]:
 	var res: Array[Dictionary] = []
@@ -243,6 +378,7 @@ func get_light_list() -> Array[Dictionary]:
 		res.append({
 			"id": id, "title": l.cfg.title, "t": l.t, "target": l.target,
 			"found": l.anchor != null and l.light != null, "enabled": l.enabled, "changing": l.is_changing(),
+			"gain": l.gain, "rule": l.cfg.rule, "manual": l.manual, "culled": l.culled and l.wants_on(),
 		})
 	return res
 
@@ -251,6 +387,8 @@ func _build_lamp(cfg: LightConfig, vis: C_Visual) -> Lamp:
 	var l := Lamp.new()
 	l.cfg = cfg
 	l.enabled = cfg.enabled
+	l.gain = clampf(cfg.brightness, 0.0, LightConfig.GAIN_MAX)
+	l.ghost = _ghost
 	var parent: Node3D = vis.instance
 	if cfg.anchor_role != &"":
 		parent = vis.parts.find_one(cfg.anchor_role, cfg.anchor_aliases, &"Node3D", null, str(entity.name)) as Node3D
@@ -295,7 +433,13 @@ func _build_lamp(cfg: LightConfig, vis: C_Visual) -> Lamp:
 
 func _apply_all_lamps() -> void:
 	for id in _lamp_order:
-		_lamps[id].apply(_ghost)
+		var l: Lamp = _lamps[id]
+		l.ghost = _ghost
+		l.apply()
+
+
+func get_lamps() -> Array:
+	return _lamps.values()
 
 
 ## Метка точки (шарик) и направления (стрелка вдоль -Z источника). Видна по Shift+I
@@ -362,8 +506,9 @@ func get_debug_info() -> Array[String]:
 				"" if m.node else "[NO PART] ", "" if m.enabled else "[off]"])
 	for id in _lamp_order:
 		var l: Lamp = _lamps[id]
-		res.append("light %s: t=%.2f -> %.2f %s%s" % [id, l.t, l.target,
-				"" if l.light else "[NO LIGHT] ", "" if l.enabled else "[off]"])
+		res.append("light %s: t=%.2f -> %.2f gain %.2f rule %s%s %s%s%s" % [id, l.t, l.target, l.gain,
+				LightConfig.Rule.keys()[l.cfg.rule], " (manual)" if l.manual else "",
+				"" if l.light else "[NO LIGHT] ", "[culled] " if l.culled else "", "" if l.enabled else "[off]"])
 	return res
 
 
@@ -404,12 +549,13 @@ func save_data() -> Dictionary:
 	var ld := {}
 	for id in _lamp_order:
 		var l: Lamp = _lamps[id]
-		ld[String(id)] = {"t": l.t, "manual": l.manual, "enabled": l.enabled}
+		ld[String(id)] = {"t": l.t, "manual": l.manual, "enabled": l.enabled, "gain": l.gain}
 	return {
 		'comp_path': get_script().resource_path,
 		'comp_name': get_script().resource_path.get_file().get_basename(),
 		'mech': d,
 		'lights': ld,
+		'dir': _dir,
 	}
 
 
@@ -418,7 +564,9 @@ func load_data(data: Dictionary) -> void:
 	_saved = data.get('mech', {})
 	_apply_saved()
 	_saved_lights = data.get('lights', {})
+	_dir = int(data.get('dir', 1))
 	_apply_saved_lights()
+	_drive_all(true)
 
 
 func _apply_saved() -> void:
@@ -444,4 +592,5 @@ func _apply_saved_lights() -> void:
 		l.target = l.t
 		l.manual = bool(d.get("manual", false))
 		l.enabled = bool(d.get("enabled", l.enabled))
-		l.apply(_ghost)
+		l.gain = clampf(float(d.get("gain", l.gain)), 0.0, LightConfig.GAIN_MAX)
+		l.apply()

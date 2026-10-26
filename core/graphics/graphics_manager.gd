@@ -42,6 +42,9 @@ var times := {}
 ## id -> QualityPreset
 var qualities := {}
 
+## Бюджет источников света сущностей (ATTN_16 §16.6). Создаётся в _ready, регистрируются C_Mechanisms
+var light_budget: LightBudget
+
 var _world_env: WorldEnvironment
 var _env: Environment
 var _sun: DirectionalLight3D
@@ -107,6 +110,9 @@ void fragment() {
 
 func _ready() -> void:
 	set_process(false)
+	light_budget = LightBudget.new()
+	light_budget.name = "LightBudget"
+	add_child(light_budget)
 	if Global.fast_debug:
 		# Режим быстрой загрузки: без пресетов Look и Time, без миниатюры, только Low и без SDFGI
 		_load_presets()
@@ -444,7 +450,8 @@ func _debug_perf() -> void:
 	t.autostart = true
 	t.timeout.connect(func():
 		var vs := "vsync" if DisplayServer.window_get_vsync_mode() != DisplayServer.VSYNC_DISABLED else "no vsync"
-		get_window().title = "%s | %d fps | %s | %s" % [base, Engine.get_frames_per_second(), vs, state.quality])
+		get_window().title = "%s | %d fps | %s | %s | lights %d/%d" % [base, Engine.get_frames_per_second(), vs, state.quality,
+				light_budget.active, light_budget.wanted])
 	add_child(t)
 
 

@@ -5,8 +5,8 @@ class_name LightConfig extends Resource
 ## Исполняет C_Mechanisms (общий компонент механизмов и света, ATTN_16_mechanisms.md).
 ########################
 ## Источник создаётся КОДОМ в точке из этого конфига, в сцене модели маркеры ставить не нужно.
-## Реализованы: kind = SPOT / OMNI, rule = COMMAND.
-## Остальное - заготовки под следующие шаги (EMISSIVE: L6, правила: L3, L7, L8).
+## Реализованы: kind = SPOT / OMNI, rule = COMMAND / NIGHT / DIRECTION / ALWAYS.
+## Остальное - заготовки под следующие шаги (EMISSIVE: L6, правила POWERED и SPEED: L8, ROUTE: L7).
 ##
 ## Координаты. Если anchor_role пусто, позиция считается в системе корня сцены модели (instance):
 ##   то же пространство, что у bogie_configs и coupler_offset. Ось -Z = FRONT (нос), +Z = REAR (хвост),
@@ -16,8 +16,16 @@ class_name LightConfig extends Resource
 ## Единицы: 1 юнит = 1 см модели, стол 200 x 100. Дальность фары около 20-40, окна дома около 10-20.
 
 enum Kind { SPOT, OMNI, EMISSIVE }
-## Когда включается. COMMAND реализован, остальное заготовки
+## Кто выставляет состояние. COMMAND: только игрок. NIGHT: по времени суток. DIRECTION: по направлению движения.
+## ALWAYS: горит с создания. POWERED, SPEED, ROUTE пока заготовки.
+## Команда игрока (InfoPanel, I) ставит manual и перекрывает правило до события-сброса:
+## смена времени суток (NIGHT), смена направления (DIRECTION), кнопка "Авто" в InfoPanel.
 enum Rule { COMMAND, NIGHT, DIRECTION, POWERED, SPEED, ROUTE, ALWAYS }
+## DIRECTION: к какому торцу относится источник
+enum End { FRONT, REAR }
+
+## Предел множителя яркости в InfoPanel
+const GAIN_MAX := 2.0
 
 @export var id: StringName = &"headlight_front"
 ## Подпись для InfoPanel
@@ -26,6 +34,11 @@ enum Rule { COMMAND, NIGHT, DIRECTION, POWERED, SPEED, ROUTE, ALWAYS }
 @export_category("Что и как светит")
 @export var kind: Kind = Kind.SPOT
 @export var rule: Rule = Rule.COMMAND
+## DIRECTION: горит, когда состав идёт этим торцем вперёд. FRONT - нос (-Z), REAR - хвост (+Z).
+## Пока стоит, остаётся направление последнего движения (до первого движения - нос вперёд)
+@export var dir_end: End = End.FRONT
+## NIGHT: id времён суток (GFX), когда горит
+@export var night_times: PackedStringArray = ["evening", "night"]
 
 @export_category("Где")
 ## Роль узла-родителя (Custom Property "role" либо имя узла). Пусто: корень сцены модели
@@ -40,6 +53,8 @@ enum Rule { COMMAND, NIGHT, DIRECTION, POWERED, SPEED, ROUTE, ALWAYS }
 @export var color: Color = Color(1.0, 0.95, 0.8)
 ## Энергия при состоянии 1.0
 @export var energy: float = 2.0
+## Стартовый множитель яркости (в игре меняется слайдером в InfoPanel, 0..GAIN_MAX)
+@export_range(0.0, 2.0) var brightness: float = 1.0
 ## Дальность, юниты
 @export var light_range: float = 30.0
 ## SPOT: половина угла конуса, градусы

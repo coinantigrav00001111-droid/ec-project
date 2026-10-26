@@ -682,37 +682,49 @@ func _add_light_row(item: Dictionary) -> void:
 	title.custom_minimum_size.x = 110
 	row.add_child(title)
 
+	# Слайдер = яркость: множитель к energy из конфига (0..GAIN_MAX). Включение и выключение - кнопка "Горит"
 	var slider := HSlider.new()
 	slider.min_value = 0.0
-	slider.max_value = 1.0
-	slider.step = 0.01
+	slider.max_value = LightConfig.GAIN_MAX
+	slider.step = 0.05
+	slider.tooltip_text = "Яркость (множитель к энергии из конфига)"
 	slider.custom_minimum_size.x = 140
 	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	slider.drag_started.connect(func(): _light_drag = id)
 	slider.drag_ended.connect(func(_changed): _light_drag = &"")
-	slider.value_changed.connect(func(v): if _light_drag == id: _send_light(id, v))
+	slider.value_changed.connect(func(v): if _light_drag == id: _send_light_gain(id, v))
 	row.add_child(slider)
+
+	var gain_label := Label.new()
+	gain_label.custom_minimum_size.x = 44
+	row.add_child(gain_label)
 
 	var check := CheckButton.new()
 	check.text = "Горит"
 	check.toggled.connect(func(on): _send_light(id, 1.0 if on else 0.0))
 	row.add_child(check)
 
+	var auto := Button.new()
+	auto.text = "Авто"
+	auto.tooltip_text = "Вернуть источник правилу (ночь, направление движения)"
+	auto.pressed.connect(func(): _send_light_auto(id))
+	row.add_child(auto)
+
 	var en := CheckBox.new()
 	en.text = "вкл"
-	en.tooltip_text = "Выключенный источник не реагирует на команды"
+	en.tooltip_text = "Выключенный источник не реагирует на команды и правила"
 	en.toggled.connect(func(on):
 		var comp := _get_mech_comp()
 		if comp: comp.set_light_enabled(id, on))
 	row.add_child(en)
 
 	var status := Label.new()
-	status.custom_minimum_size.x = 70
+	status.custom_minimum_size.x = 80
 	row.add_child(status)
 
 	_mech_list.add_child(row)
-	_light_rows[id] = {"slider": slider, "check": check, "enabled": en, "status": status}
+	_light_rows[id] = {"slider": slider, "gain_label": gain_label, "check": check, "auto": auto, "enabled": en, "status": status}
 
 
 ## Каждый кадр, пока вкладка открыта. Только синхронизация вида, команд не шлёт (set_*_no_signal)
@@ -747,24 +759,44 @@ func _update_light_rows(comp: C_Mechanisms) -> void:
 		if r.is_empty():
 			continue
 		var usable: bool = item.enabled and item.found
+		var has_rule: bool = item.rule != LightConfig.Rule.COMMAND
 		if _light_drag != item.id:
-			r.slider.set_value_no_signal(item.t)
+			r.slider.set_value_no_signal(item.gain)
 		r.slider.editable = usable
+		r.gain_label.text = "%d%%" % roundi(item.gain * 100.0)
 		r.check.set_pressed_no_signal(item.target > 0.5)
 		r.check.disabled = not usable
+		r.auto.disabled = not (usable and has_rule and item.manual)
 		r.enabled.set_pressed_no_signal(item.enabled)
 		r.enabled.disabled = not item.found
+		r.status.modulate = Color.WHITE
 		if not item.found:
 			r.status.text = "нет света"
 			r.status.modulate = Color(1.0, 0.302, 0.043)
+		elif item.culled:
+			r.status.text = "бюджет"
+			r.status.modulate = Color(1.0, 0.75, 0.2)
+		elif item.changing:
+			r.status.text = "..."
+		elif has_rule:
+			r.status.text = "ручн." if item.manual else "авто"
 		else:
-			r.status.text = "..." if item.changing else "%d%%" % roundi(item.t * 100.0)
-			r.status.modulate = Color.WHITE
+			r.status.text = "%d%%" % roundi(item.t * 100.0)
 
 
 func _send_light(id: StringName, state: float) -> void:
 	if current_target:
 		current_target.send_event("on_light_set", {"id": id, "state": state})
+
+
+func _send_light_gain(id: StringName, gain: float) -> void:
+	if current_target:
+		current_target.send_event("on_light_gain", {"id": id, "gain": gain})
+
+
+func _send_light_auto(id: StringName) -> void:
+	if current_target:
+		current_target.send_event("on_light_auto", {"id": id})
 
 
 func _on_light_all(state: float) -> void:
