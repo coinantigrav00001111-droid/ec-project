@@ -19,6 +19,8 @@ func _ready():
 	_build_mech_tab()
 	# Таб материала листа пенопласта (T7), тоже кодом
 	_build_terrain_tab()
+	# XX claude-terra 13.1.7: строки уровня, подъема и уклона в блоке трака, тоже кодом
+	_build_track_rows()
 
 
 # Для TransformTab (если нужны живые координаты)
@@ -63,6 +65,13 @@ func _process(_delta):
 			%SpeedSLabel.text = "%0.2f" % [_spd_s] if abs(_spd_s) > 0.05 else '0.0'
 			
 			
+	# XX claude-terra 13.1.7: уровень и уклон живые (призрак трака и трак в драге двигаются), не чаще 4 раз в секунду
+	if visible and current_target and _track_rows_ready:
+		_track_acc += _delta
+		if _track_acc >= TRACK_ROWS_PERIOD:
+			_track_acc = 0.0
+			_update_track_rows()
+
 	if visible and current_target and tab_container.current_tab == 4:  # 4 - дебаг 
 		_update_debug_tab()
 	
@@ -145,6 +154,7 @@ func _populate_main_tab():
 					%RadiusLabel.text = str(_path.radius) + ' u/sm'
 					%DegLabel.text = str(_path.deg) + '°'
 					%LengthLabel.text = str(_path.get_length()) + ' u/sm'
+				_update_track_rows()   # XX claude-terra 13.1.7
 			&'terrain':
 				%TrackContainer.hide()
 				%TrainContainer.hide()
@@ -887,3 +897,71 @@ func _refresh_terrain_info(layer: C_TerrainLayer) -> void:
 func _on_stage_selected(index: int) -> void:
 	if _get_terrain_layer():
 		current_target.send_event("on_terrain_stage_set", {"stage": index})
+
+
+
+# ==========================================
+# XX claude-terra 13.1.7. Трак: уровень, подъем, уклон
+# ==========================================
+
+const TRACK_ROWS_PERIOD := 0.25
+
+var _track_rows_ready := false
+var _track_acc := 0.0
+var _lvl_label: Label
+var _rise_label: Label
+var _slope_label: Label
+
+
+func _build_track_rows() -> void:
+	var grid := %TrackContainer as GridContainer
+	_lvl_label = _add_track_row(grid, "Level: ")
+	_rise_label = _add_track_row(grid, "Rise: ")
+	_slope_label = _add_track_row(grid, "Slope: ")
+	_track_rows_ready = true
+
+
+func _add_track_row(grid: GridContainer, title: String) -> Label:
+	var t := Label.new()
+	t.text = title
+	grid.add_child(t)
+	var v := Label.new()
+	grid.add_child(v)
+	return v
+
+
+## Уровень (низ балласта в слоях над столом), подъем и уклон выбранного трака, призрака или трака в драге.
+## Жесткий трак: подъем rise из TrackConfig, длина вдоль уклона. Flex: подъем и уклон из C_FlexShape (максимальный)
+func _update_track_rows() -> void:
+	var path := current_target.get_comp(C_Path) as C_Path if current_target else null
+	if path == null or not is_instance_valid(path) or not current_target.is_inside_tree():
+		return
+	var T: float = Global.settings.layer_height
+
+	# низ балласта: самая низкая точка кривой (у пандуса нижний конец), origin пандуса стоит в середине
+	var y_low := current_target.global_position.y
+	var samples := path.ballast_samples(4.0)
+	if not samples.is_empty():
+		y_low = INF
+		for d in samples:
+			y_low = minf(y_low, float(d["y"]))
+	_lvl_label.text = "%.1f сл. (%.1f ю)" % [y_low / T, y_low]
+
+	var flex := current_target.get_comp(C_FlexShape) as C_FlexShape
+	var rise := path.rise
+	var slope_pct := 0.0
+	var slope_deg := 0.0
+	if flex:
+		rise = flex.dy
+		slope_pct = flex.grade * 100.0
+		slope_deg = rad_to_deg(atan(flex.grade))
+		%LengthLabel.text = "%.1f u/sm" % flex.length
+		%RadiusLabel.text = "inf" if is_inf(flex.radius) else "%d u/sm" % roundi(flex.radius)
+		%DegLabel.text = "-"
+	else:
+		var L := path.get_length()   # у жесткого трака длина вдоль уклона
+		if absf(rise) > 0.0001 and L > absf(rise):
+			slope_deg = rad_to_deg(asin(absf(rise) / L))
+			slope_pct = absf(rise) / sqrt(L * L - rise * rise) * 100.0
+	_rise_label.text = "%+.1f ю" % rise if absf(rise) > 0.0001 else "0"
+	_slope_label.text = "%.2f%% (%.1f°)" % [slope_pct, slope_deg] if slope_pct > 0.0 else "0"

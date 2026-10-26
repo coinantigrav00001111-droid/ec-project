@@ -69,6 +69,55 @@ func on_drag_moved(_data: Dictionary) -> void:
 	else:
 		# Снапа нет — обычное движение по поверхности
 		_apply_regular_movement(target_pos)
+	_update_level_label()   # XX claude-terra 13.1.7
+
+
+# XX claude-terra 13.1.7 ===== Метка уровня над призраком и траком в драге =====
+
+var _level_label: Label3D
+
+
+func on_component_added(t: Script) -> void:
+	if (t == C_Ghost or t == C_Drag) and not entity.has_comp(C_FlexShape):   # у flex своя метка L / R / уклон
+		_ensure_level_label()
+
+
+func on_component_removed(t: Script) -> void:
+	if t == C_Drag and _level_label and not entity.has_comp(C_Ghost):
+		_level_label.queue_free()
+		_level_label = null
+
+
+func _ensure_level_label() -> void:
+	if _level_label:
+		return
+	_level_label = Label3D.new()
+	_level_label.name = "LevelLabel"
+	_level_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_level_label.fixed_size = true
+	_level_label.no_depth_test = true
+	_level_label.pixel_size = 0.0015
+	_level_label.font_size = 32
+	_level_label.outline_size = 8
+	_level_label.position = Vector3(0.0, 6.0, 0.0)
+	entity.add_child(_level_label)
+
+
+## "Ур. 3.0 · +1.0 ю (4.37%)": уровень низа трака над столом в слоях, у пандуса еще подъем и уклон.
+## Красная, пока призрак не валиден (C_Blocked, C_Invalid)
+func _update_level_label() -> void:
+	if _level_label == null:
+		return
+	var T: float = Global.settings.layer_height
+	var txt := "Ур. %.1f" % ((entity.global_position.y - _anchor_offset()) / T)
+	var p := entity.get_comp(C_Path) as C_Path
+	if p and absf(p.rise) > 0.0001:
+		var L := p.get_length()
+		var pct := absf(p.rise) / sqrt(maxf(L * L - p.rise * p.rise, 0.0001)) * 100.0
+		txt += " · %+.1f ю (%.2f%%)" % [p.rise, pct]
+	if txt != _level_label.text:
+		_level_label.text = txt
+	_level_label.modulate = Color(1.0, 0.35, 0.35) if (entity.has_comp(C_Blocked) or entity.has_comp(C_Invalid)) else Color.WHITE
 
 
 # XX claude-terra

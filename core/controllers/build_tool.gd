@@ -15,6 +15,7 @@ var rmb_pressed_pos := Vector2.ZERO
 
 # Параметры вращения
 const ROT_STEP := 45.0 # Градусы
+const ROT_FINE := 5.0 # Градусы, Shift+Q/E (XX claude-terra 13.1.7)
 
 # XX claude-terra: 0 - ставим начало flex, 1 - тянем конец
 var stretch_phase := 0
@@ -95,12 +96,14 @@ func handle_input(event: InputEvent):
 					controller.switch_tool(controller.select_tool)
 
 	# Транслируем намерение покрутить
-	if Input.is_action_just_pressed("key_q"):
-		ghost.send_event("on_rotate_input", {"axis": "y", "amount": ROT_STEP})
-	if Input.is_action_just_pressed("key_e"):
-		ghost.send_event("on_rotate_input", {"axis": "y", "amount": -ROT_STEP})
-	# XX claude-terra 13.1.4: с Shift R/F идут крупным шагом через ElevationInput, обычный шаг без Shift
+	# XX claude-terra 13.1.7: Shift+Q/E поворот на ROT_FINE (5°), без Shift ROT_STEP (45°)
 	var _shift := Input.is_key_pressed(KEY_SHIFT)
+	var _rot := ROT_FINE if _shift else ROT_STEP
+	if Input.is_action_just_pressed("key_q"):
+		ghost.send_event("on_rotate_input", {"axis": "y", "amount": _rot})
+	if Input.is_action_just_pressed("key_e"):
+		ghost.send_event("on_rotate_input", {"axis": "y", "amount": -_rot})
+	# XX claude-terra 13.1.4: с Shift R/F идут крупным шагом через ElevationInput, обычный шаг без Shift
 	if Input.is_action_just_pressed("key_r") and not _shift:
 		ghost.send_event("on_rotate_input", {"axis": "x", "amount": ROT_STEP})
 	if Input.is_action_just_pressed("key_f") and not _shift:

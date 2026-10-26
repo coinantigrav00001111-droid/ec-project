@@ -100,6 +100,7 @@ func _process(delta: float) -> void:
 	
 func on_drag_started(_data: Dictionary) -> void:
 	_mark_start()          # первой строкой, до await
+	lift_levels = 0        # XX claude-terra 13.1.7
 	initial_transform = entity.global_transform
 
 	var track_h = Vector3(0,  Global.settings.get_track_height() + 0.15, 0) 
@@ -172,12 +173,19 @@ func on_drag_ended(_data: Dictionary) -> void:
 	rotation_euler = entity.rotation
 
 
+# XX claude-terra 13.1.7. Уровень вагона над поверхностью под курсором, в слоях (GlobalSetting.layer_height).
+# R/F ±1, Shift+R/F и PageUp/PageDown ±5 (как у трака). Работает, пока вагон не на рельсах
+var lift_levels := 0
+
+
 # Реакция на поворот ентити кнопками
 func on_rotate_input(data: Dictionary):
-	
+	if data.axis == "x":   # XX claude-terra 13.1.7: R/F больше не наклон, а уровень, как у трака
+		lift_levels = maxi(0, lift_levels + int(signf(data.amount)))
+		return
+
 	var rad = deg_to_rad(data.amount)
 	if data.axis == "y": rotation_euler.y += rad
-	if data.axis == "x": rotation_euler.x += rad
 	
 	# 1. Применяем поворот к  сущности
 	entity.global_basis = Basis.from_euler(rotation_euler)
@@ -186,10 +194,19 @@ func on_rotate_input(data: Dictionary):
 	entity.send_event("on_force_rotate_physics", {"basis": entity.global_basis})
 
 
+## XX claude-terra 13.1.7. Крупный шаг уровня (Shift+R/F, PageUp/PageDown): ElevationInput, levels = ±5
+func on_elevation_input(data: Dictionary) -> void:
+	lift_levels = maxi(0, lift_levels + int(data.get("levels", 0)))
 
-func on_lift_input(data: Dictionary):
-	# высота драга мышью
-	drag_offset.y +=data.step
+
+## XX claude-terra 13.1.7. Home в драге: вагон колесами вниз, без поворота, на стартовой высоте
+## (верх трака + 0,15, около 1 ю над поверхностью), уровень R/F обнулен. Как Home у трака и листа
+func on_drag_reset(_data: Dictionary) -> void:
+	rotation_euler = Vector3.ZERO
+	lift_levels = 0
+	drag_offset.y = Global.settings.get_track_height() + 0.15
+	entity.global_basis = Basis.IDENTITY
+	entity.send_event("on_force_rotate_physics", {"basis": entity.global_basis})
 
 
 
@@ -256,7 +273,8 @@ func _apply_free_movement(world_mouse_pos: Vector3) -> void:
 	# transform не бьет ошибку если ентити не в дереве еще
 	#entity.position = world_mouse_pos + drag_offset
 
-	entity.transform.origin = world_mouse_pos + drag_offset
+	var T: float = Global.settings.layer_height
+	entity.transform.origin = world_mouse_pos + drag_offset + Vector3(0.0, lift_levels * T, 0.0)   # XX claude-terra 13.1.7
 	# 🛠️ Обязательно обнуляем стейт, когда вагон сорвался с рельсов
 	is_snapped_to_track = false # 🛠️
 	current_track = null        # 🛠️
