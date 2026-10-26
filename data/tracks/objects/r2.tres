@@ -15,7 +15,7 @@
 [ext_resource type="Script" uid="uid://bv065wdiw674c" path="res://core/components/comp_settings/socked_setting.gd" id="13_7bu2a"]
 [ext_resource type="Script" uid="uid://cjk51o364xfn" path="res://core/components/comp_settings/powertrack_setting.gd" id="14_cgqo6"]
 [ext_resource type="Script" uid="uid://cs257ge2f37bu" path="res://core/components/comp_settings/tracksupport_setting.gd" id="15_b5vun"]
-[ext_resource type="Texture2D" uid="uid://kg7asogbvkny" path="res://ui/icons/transport/rail_r2.svg" id="16_lv5gl"]
+[ext_resource type="Texture2D" uid="uid://dh8b8tfstgmlp" path="res://ui/icons/railroad/curve_wood_ballast.svg" id="16_6c0l0"]
 [ext_resource type="Script" uid="uid://do5hjkm3r2pdg" path="res://core/entity_setting.gd" id="17_be0vs"]
 
 [sub_resource type="Resource" id="Resource_bnru1"]
@@ -78,6 +78,6 @@ id = 1200
 name = "R2"
 description = "Радиусный трак 42,2см"
 tag = &"curve"
-icon = ExtResource("16_lv5gl")
+icon = ExtResource("16_6c0l0")
 components = Array[ExtResource("1_5ltqn")]([SubResource("Resource_vxtmo"), SubResource("Resource_yfcut"), SubResource("Resource_iqocg"), SubResource("Resource_0xkto"), SubResource("Resource_qqtt6"), SubResource("Resource_o7fpk"), SubResource("Resource_t8too"), SubResource("Resource_5an37"), SubResource("Resource_lnr61"), SubResource("Resource_3d062"), SubResource("Resource_eg6rk")])
 metadata/_custom_type_script = "uid://do5hjkm3r2pdg"

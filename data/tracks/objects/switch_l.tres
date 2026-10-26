@@ -18,10 +18,11 @@
 [ext_resource type="Script" uid="uid://cjk51o364xfn" path="res://core/components/comp_settings/powertrack_setting.gd" id="14_pwr"]
 [ext_resource type="Script" uid="uid://cs257ge2f37bu" path="res://core/components/comp_settings/tracksupport_setting.gd" id="15_sup"]
 [ext_resource type="Script" uid="uid://dxvppg2gy7tqj" path="res://core/components/comp_settings/switch_setting.gd" id="16_sw"]
-[ext_resource type="Texture2D" uid="uid://dcrw3j5b5bput" path="res://ui/icons/transport/rail_skretch2.svg" id="17_3stpo"]
+[ext_resource type="Texture2D" uid="uid://c6u7evbu7833i" path="res://ui/icons/railroad/wood_noballast/switch.svg" id="18_3stpo"]
 
 [sub_resource type="Resource" id="Resource_cfg"]
 script = ExtResource("3_cfg")
+diverge_radius = 90.8
 hand = -1
 radius = 23.9
 
@@ -76,8 +77,8 @@ script = ExtResource("16_sw")
 [resource]
 script = ExtResource("2_es")
 id = 1331
-name = "Switch L"
-description = "Стрелка левая. Ручная: клик по рычагу у носка. L 23.9, ответвление 15°."
+name = "Switch WL"
+description = "Стрелка левая. G239 + R9(r=90.8 d=15°). Ручная: клик по рычагу у носка. L 23.9, ответвление 15°."
 tag = &"switch"
-icon = ExtResource("17_3stpo")
+icon = ExtResource("18_3stpo")
 components = Array[ExtResource("1_cs")]([SubResource("Resource_id"), SubResource("Resource_vis"), SubResource("Resource_drag"), SubResource("Resource_piv"), SubResource("Resource_hov"), SubResource("Resource_sel"), SubResource("Resource_blk"), SubResource("Resource_path"), SubResource("Resource_shape"), SubResource("Resource_sock"), SubResource("Resource_pwr"), SubResource("Resource_sup"), SubResource("Resource_sw")])

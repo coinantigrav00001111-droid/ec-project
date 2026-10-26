@@ -648,7 +648,7 @@ func _update_mech_tab() -> void:
 		r.enabled.disabled = not item.found
 		if not item.found:
 			r.status.text = "нет части"
-			r.status.modulate = Color(1.0, 0.302, 0.043)
+			r.status.modulate = Color(1.0, 0.302, 0.043, 1.0)
 		else:
 			r.status.text = "..." if item.moving else "%d%%" % roundi(item.t * 100.0)
 			r.status.modulate = Color.WHITE

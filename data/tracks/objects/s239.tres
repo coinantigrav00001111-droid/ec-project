@@ -14,7 +14,7 @@
 [ext_resource type="Script" uid="uid://bv065wdiw674c" path="res://core/components/comp_settings/socked_setting.gd" id="12_4qu3e"]
 [ext_resource type="Script" uid="uid://cjk51o364xfn" path="res://core/components/comp_settings/powertrack_setting.gd" id="13_i3j1b"]
 [ext_resource type="Script" uid="uid://cs257ge2f37bu" path="res://core/components/comp_settings/tracksupport_setting.gd" id="14_tijak"]
-[ext_resource type="Texture2D" uid="uid://c8tndy1lksot8" path="res://ui/icons/transport/rail-road.svg" id="15_se2ph"]
+[ext_resource type="Texture2D" uid="uid://6jinwycjhleu" path="res://ui/icons/railroad/straight_wood_ballast.svg" id="15_urls7"]
 [ext_resource type="Script" uid="uid://do5hjkm3r2pdg" path="res://core/entity_setting.gd" id="16_lwvy1"]
 
 [sub_resource type="Resource" id="Resource_cfg"]
@@ -64,6 +64,6 @@ script = ExtResource("16_lwvy1")
 id = 1400
 name = "S239 (стиль)"
 description = "Прямой трак 23.9см, стиль из TrackStyle (балласт, h=0.85). Для сравнения с G239."
-icon = ExtResource("15_se2ph")
+icon = ExtResource("15_urls7")
 components = Array[ExtResource("1_b1byy")]([SubResource("Resource_id"), SubResource("Resource_vis"), SubResource("Resource_drag"), SubResource("Resource_piv"), SubResource("Resource_hov"), SubResource("Resource_sel"), SubResource("Resource_blk"), SubResource("Resource_sock"), SubResource("Resource_pwr"), SubResource("Resource_sup")])
 metadata/_custom_type_script = "uid://do5hjkm3r2pdg"
