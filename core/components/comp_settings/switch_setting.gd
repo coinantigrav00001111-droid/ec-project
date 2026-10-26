@@ -9,6 +9,10 @@ class_name SwitchSettings extends ComponentSettings
 @export var throw_time := 0.0
 ## E1: ток только на выбранную ветку (невыбранная мертвая, удобно для тупиков и депо). false: обе ветки под током
 @export var power_routing := false
+## E2: тип крестовины. Insulated: пластиковая, КЗ нет. Live fixed: токопроводящая, привязана к пути 0, на пути 1 при
+## проезде КЗ. Live switched: полярность крестовины переключается вместе со стрелкой (контакты привода, реле).
+## При power_routing КЗ нет в любом режиме
+@export_enum("Insulated", "Live fixed", "Live switched") var frog: int = 0
 
 
 func create_component(entity: Entity) -> Component:
@@ -17,5 +21,6 @@ func create_component(entity: Entity) -> Component:
 	comp.control = control as C_Switch.Drive
 	comp.throw_time = throw_time
 	comp.power_routing = power_routing
+	comp.frog = frog as C_Switch.Frog
 	entity.add_component(comp)
 	return comp

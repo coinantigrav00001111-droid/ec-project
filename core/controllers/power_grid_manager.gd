@@ -41,6 +41,8 @@ signal power_layer_toggled(is_active: bool)
 @warning_ignore("unused_signal")
 signal power_tab_updated()  # вся панель обновляется  
 signal power_updated(contour_id: int, new_voltage: float) # Обновл. данные трака по ручке
+# XX claude-switch: контур отключен защитой (КЗ на крестовине стрелки). Сброс: emergency_stop(false) или reset_contour
+signal contour_tripped(contour_id: int, reason: String)
 
 
 
@@ -146,6 +148,34 @@ func emergency_stop(_stop : bool) -> void:
 		if has_method("_update_shader_voltage"):
 			_update_shader_voltage(cid, _effective_voltage)
 
+
+
+# XX claude-switch. Отключает контур защитой по КЗ (как аварийный стоп, но для одного контура).
+# Сброс: reset_contour(cid) или emergency_stop(false) (кнопка аварийного стопа: включить и выключить)
+func trip_contour(_cid: int, reason: String = "") -> void:
+	if not power_pwm.has(_cid) or power_pwm[_cid]["is_stopped"]:
+		return
+	power_pwm[_cid]["is_stopped"] = true
+	for clip in active_clips:
+		if is_instance_valid(clip) and clip.contour_id == _cid:
+			clip.set_power(_cid, 0.0)
+	_update_shader_voltage(_cid, 0.0)
+	power_updated.emit(_cid, 0.0)
+	contour_tripped.emit(_cid, reason)
+	print("⚡ КЗ (", reason, "): контур ", _cid, " отключен")
+
+
+## Вернуть питание контура после отключения защитой
+func reset_contour(_cid: int) -> void:
+	if not power_pwm.has(_cid) or not power_pwm[_cid]["is_stopped"]:
+		return
+	power_pwm[_cid]["is_stopped"] = false
+	var v: float = power_pwm[_cid]["voltage"]
+	for clip in active_clips:
+		if is_instance_valid(clip) and clip.contour_id == _cid:
+			clip.set_power(_cid, v)
+	_update_shader_voltage(_cid, v)
+	power_updated.emit(_cid, v)
 
 
 # Создает клип на траке по кнопке инфопанели

@@ -290,7 +290,13 @@ func _set_power_view():
 # Подсветка активного пути
 # ==========================================
 
-func _flash_route(route: int) -> void:
+## КЗ на крестовине: вспышка активного пути красным
+func on_switch_short(_data: Dictionary) -> void:
+	var path := get_comp(C_Path) as C_Path
+	_flash_route(path.active_route if path else 0, Color(0.95, 0.15, 0.10))
+
+
+func _flash_route(route: int, color: Color = Color(0.0, 0.0, 0.0, 0.0)) -> void:
 	var path := get_comp(C_Path) as C_Path
 	if path == null or instance == null or route < 0 or route >= path.routes.size():
 		return
@@ -299,7 +305,7 @@ func _flash_route(route: int) -> void:
 		return
 	_clear_flash()
 
-	var col := COL_LEVER_DIV if route == 1 else COL_LEVER_OK
+	var col := color if color.a > 0.0 else (COL_LEVER_DIV if route == 1 else COL_LEVER_OK)
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
