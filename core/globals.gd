@@ -17,7 +17,6 @@ var settings: Resource = preload("res://setting/global_setting.tres")
 #DD Дебаги вкл
 var debug_mode := true
 
-##<<<<<<< HEAD
 ## Режим быстрой загрузки для отладки: без комнаты и карточек Observe, графика по умолчанию (Low, без SDFGI),
 ## землёй служит скрытый WoodFloor. Включается аргументом запуска `--fast` (Run with args: -- --fast)
 ## или настройкой проекта ec/fast_debug = true
@@ -26,7 +25,6 @@ var fast_debug := OS.get_cmdline_user_args().has("--fast") or bool(ProjectSettin
 ## Физика вагона во время драга. false (по умолчанию): rb замораживается и едет за ентити как ребёнок,
 ## без «догоняния» и броска. true: прежнее поведение, rb догоняет ентити скоростями (можно бросить вагон)
 var drag_physics := false
-##>>>>>>> hints system, drag_physics option + spawn plane fallback, outline ESSENTIAL mode (ghost/blocked on Low)
 
 ## Отладочные маркеры в кадре: куб над Entity, конусы и шарики сокетов. Отдельно от debug_mode,
 ## тот включён по умолчанию и держит другие отладочные вещи
@@ -34,7 +32,7 @@ var debug_markers := false
 
 ## Полуширина подсветки трака (зоны flex, лента активного пути стрелки) в долях rail_x стиля.
 ## 1.0 = от рельса до рельса, больше - шире колеи. Одна для всех подсветок
-var flash_width := 1.0
+var flash_width := 0.2
 
 ## Visual layer комнаты (номер 1..20 для set_layer_mask_value / cull_mask). 15-20 заняты контурами Outline
 const ROOM_VISUAL_LAYER := 12
