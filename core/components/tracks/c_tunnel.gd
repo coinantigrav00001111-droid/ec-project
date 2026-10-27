@@ -16,7 +16,7 @@ class_name C_Tunnel extends Component
 const LABEL_PIXEL_SIZE := 0.0015
 const LABEL_FONT_SIZE := 32
 
-var _label: Label3D
+var _label: TrackNote.Line   # строка общей метки TrackNote
 
 
 func _init() -> void:
@@ -53,17 +53,9 @@ func on_clone_state_to(data: Dictionary) -> void:
 func _ensure_label() -> void:
 	if _label:
 		return
-	_label = Label3D.new()
-	_label.name = "TunnelLabel"
+	_label = TrackNote.line(entity, &"tunnel", 20)   # самой нижней строкой
 	_label.text = "TUNNEL"
-	_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	_label.fixed_size = true
-	_label.no_depth_test = true
-	_label.pixel_size = LABEL_PIXEL_SIZE
-	_label.font_size = LABEL_FONT_SIZE
-	_label.outline_size = 8
 	_label.modulate = Color(0.45, 0.8, 1.0)
-	entity.add_child(_label)
 
 
 func _place_label() -> void:

@@ -69,7 +69,7 @@ class_name GlobalSetting extends Resource
 @export var flex_l_max := 190.0
 ## Максимальный уклон flex (доля)
 @export var flex_max_grade := 0.045
-@export var flex_max_bends := 2
+@export var flex_max_bends := 3   # XX claude-terra 13.1.7: третья ручка
 ## Длина одного сегмента коллизии flex, ю
 @export var flex_collision_step := 20.0
 ## Не чаще одной пересборки меша/коллизий за этот период, с

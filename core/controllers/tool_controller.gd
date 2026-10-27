@@ -67,6 +67,13 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# XX claude-terra 13.1.7: Z - показать или скрыть зоны проблем flex (радиус, уклон) в режиме Build
+	var kz := event as InputEventKey
+	if kz and kz.pressed and not kz.echo and kz.keycode == KEY_Z and Global.current_mode == &'build' \
+			and not (kz.ctrl_pressed or kz.alt_pressed or kz.shift_pressed or kz.meta_pressed):
+		Global.flex_zones = not Global.flex_zones
+		get_viewport().set_input_as_handled()
+		return
 	# XX claude-terra 13.1.4: V - дубль последнего объекта (в Build, из SelectTool и BuildTool)
 	var k := event as InputEventKey
 	if k and k.pressed and not k.echo and k.keycode == KEY_V \

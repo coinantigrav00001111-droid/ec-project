@@ -44,6 +44,19 @@ var current_mode :StringName = &'build'
 ## F2: контроль лимитов flex (R, L, уклон, "под землёй"). Переключается клавишей L в BuildTool
 var flex_limits := false
 
+## 13.1.7: зоны проблем flex (радиус меньше предела, уклон больше предела, близко к пределу) цветной полосой
+## над рельсами, клавиша Z. Сигнал: C_FlexShape перерисовывает полосу
+signal flex_zones_changed
+var flex_zones := true:
+	set(v):
+		if v != flex_zones:
+			flex_zones = v
+			flex_zones_changed.emit()
+
+## 13.1.6: вагон на рельсах ищет препятствия по ходу (стоящий вагон, опоры, низкий верхний трак), см. C_Coupler.
+## Выключатель на случай просадки по производительности или ложных ударов
+var rail_obstacles := true
+
 
 ######### TRACK ##############
  
@@ -62,7 +75,9 @@ func active_layers(data:Array) -> int:
 			'tracks' : i = i | 1 << 2
 			'sokets' : i = i | 1 << 3
 			'trains' : i = i | 1 << 4
-			'supports' : i = i | 1 << 5  # XX claude-terra опоры эстакады (StaticBody3D C_TrackSupport, сталкиваются вагоны, 13.1.5)
+			# XX claude-terra опоры эстакады (StaticBody3D C_TrackSupport, сталкиваются вагоны, 13.1.5). Бит 8, не 5:
+			# на бите 5 лежат Area3D сцепок вагонов (CouplerFront/RearArea3D, слой и маска 32)
+			'supports' : i = i | 1 << 8
 			'handles' : i = i | 1 << 6   # ручки flex (бит 5 занят опорами)
 			'room'   : i = i | 1 << 7    # пол, стены, мебель комнаты (Observe)
 			'ghost'  : i = i | 1 << 10

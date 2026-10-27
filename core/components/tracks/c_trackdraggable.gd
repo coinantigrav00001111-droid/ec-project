@@ -74,7 +74,7 @@ func on_drag_moved(_data: Dictionary) -> void:
 
 # XX claude-terra 13.1.7 ===== Метка уровня над призраком и траком в драге =====
 
-var _level_label: Label3D
+var _level_label: TrackNote.Line   # строка общей метки TrackNote (вместе с отказом снапа, тоннелем)
 
 
 func on_component_added(t: Script) -> void:
@@ -91,16 +91,8 @@ func on_component_removed(t: Script) -> void:
 func _ensure_level_label() -> void:
 	if _level_label:
 		return
-	_level_label = Label3D.new()
-	_level_label.name = "LevelLabel"
-	_level_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	_level_label.fixed_size = true
-	_level_label.no_depth_test = true
-	_level_label.pixel_size = 0.0015
-	_level_label.font_size = 32
-	_level_label.outline_size = 8
+	_level_label = TrackNote.line(entity, &"level", 0)
 	_level_label.position = Vector3(0.0, 6.0, 0.0)
-	entity.add_child(_level_label)
 
 
 ## "Ур. 3.0 · +1.0 ю (4.37%)": уровень низа трака над столом в слоях, у пандуса еще подъем и уклон.
@@ -115,8 +107,7 @@ func _update_level_label() -> void:
 		var L := p.get_length()
 		var pct := absf(p.rise) / sqrt(maxf(L * L - p.rise * p.rise, 0.0001)) * 100.0
 		txt += " · %+.1f ю (%.2f%%)" % [p.rise, pct]
-	if txt != _level_label.text:
-		_level_label.text = txt
+	_level_label.text = txt   # сеттер сам пропускает то же значение
 	_level_label.modulate = Color(1.0, 0.35, 0.35) if (entity.has_comp(C_Blocked) or entity.has_comp(C_Invalid)) else Color.WHITE
 
 
