@@ -25,7 +25,7 @@ class_name SuspensionConfig extends Resource
 @export_range(0.05, 1.0, 0.01) var yaw_zeta: float = 0.40
 
 @export_category("Travel limits (упоры)")
-@export var limit_heave: float = 0.05        ## ход по вертикали, ю (бывш. vertical_travel_y)
+@export var limit_heave: float = 0.05       ## ход по вертикали, ю (бывш. vertical_travel_y)
 @export var limit_sway: float = 0.03         ## боковой люфт, ю (бывш. lateral_play_x)
 @export var limit_pitch_deg: float = 3.0
 @export var limit_roll_deg: float = 4.0

@@ -1,6 +1,6 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://bm87a2nh7ibxy"]
 
-[ext_resource type="Script" path="res://tests/flex_solver_test.gd" id="1"]
+[ext_resource type="Script" uid="uid://c48oqsgl28jp2" path="res://tests/flex_solver_test.gd" id="1"]
 
-[node name="FlexSolverTest" type="Node"]
+[node name="FlexSolverTest" type="Node" unique_id=272034678]
 script = ExtResource("1")

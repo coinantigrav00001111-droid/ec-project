@@ -78,7 +78,6 @@ metadata/_custom_type_script = "uid://bwaluvayi2o8k"
 script = ExtResource("5_ufx6w")
 mass = 4.0
 max_grip = 400.0
-min_curve_radius = 15.0
 suspension = SubResource("Resource_0p1ic")
 has_engine = true
 max_theoretical_speed = 50.0
