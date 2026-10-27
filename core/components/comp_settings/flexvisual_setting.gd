@@ -5,7 +5,6 @@ class_name FlexVisualSetting extends ComponentSettings
 ## Порядок в массиве компонентов .tres: Identity, FlexSetting, Draggable, Pivot, Hoverable, Selectable,
 ## Blockable, Socket, PowerTrack, TrackSupport. Identity: TrackConfig с radius = 10 (начальная прямая).
 
-@export var settings: VisualStateSettings = preload("res://core/visual/visual_state.tres")
 ## Рельсы, шпалы, балласт. Пусто = TrackStyle по умолчанию (балласт, головка рельса 0.85)
 @export var style: TrackStyle
 
@@ -13,7 +12,6 @@ class_name FlexVisualSetting extends ComponentSettings
 func create_component(entity: Entity) -> Component:
 	# 1. Визуал (строит ноды Ballast / HeadStaticBody3D в коде)
 	var vis := C_FlexVisual.new()
-	vis.visual_settings = settings
 	vis.style = style
 
 	vis.name = 'C_FlexVisual'

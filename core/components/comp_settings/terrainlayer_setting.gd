@@ -5,8 +5,6 @@ class_name TerrainLayerSetting extends ComponentSettings
 ## Порядок в массиве компонентов .tres: Identity (TerrainConfig), TerrainLayer, TerrainDraggable, Hoverable, Selectable.
 ## Identity должен идти первым: размер и толщину берем из его TerrainConfig.
 
-@export var settings: VisualStateSettings = preload("res://core/visual/visual_state.tres")
-
 ## Материалы стадий. null = встроенные
 @export var style: TerrainStyle
 
@@ -28,7 +26,6 @@ func create_component(entity: Entity) -> Component:
 	# 2. Визуал и коллизия (строятся в on_entity_ready, когда контур уже на месте)
 	var layer := C_TerrainLayer.new()
 	layer.name = 'C_TerrainLayer'
-	layer.visual_settings = settings
 	layer.levels = maxi(1, levels)
 	layer.style = style
 	entity.add_component(layer)

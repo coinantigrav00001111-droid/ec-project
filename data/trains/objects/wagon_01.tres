@@ -8,7 +8,6 @@
 [ext_resource type="Script" uid="uid://b830vi2lx3hl5" path="res://core/components/comp_settings/trainvisual_setting.gd" id="3_4sxil"]
 [ext_resource type="PackedScene" uid="uid://cl6t7b6265rj" path="res://data/trains/default_bogie.tscn" id="3_7lf7j"]
 [ext_resource type="PackedScene" uid="uid://be7il350r4fss" path="res://data/trains/wheel_pair_01.tscn" id="4_3ukh4"]
-[ext_resource type="Resource" uid="uid://bqss7rh1mwv41" path="res://core/visual/visual_state.tres" id="4_5qo4f"]
 [ext_resource type="Script" uid="uid://gv2lrhu17dtf" path="res://setting/mechanism_config.gd" id="5_3ukh4"]
 [ext_resource type="Script" uid="uid://bkdny7eq5jthn" path="res://core/components/comp_settings/traindraggable_setting.gd" id="5_88nct"]
 [ext_resource type="Script" uid="uid://daeylhso0elsx" path="res://setting/light_config.gd" id="5_m6yoo"]

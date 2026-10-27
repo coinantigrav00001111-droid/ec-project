@@ -4,7 +4,6 @@
 [ext_resource type="Script" uid="uid://do5hjkm3r2pdg" path="res://core/entity_setting.gd" id="2_es"]
 [ext_resource type="Script" uid="uid://mpakwrr6lum8" path="res://core/components/comp_settings/identity_setting.gd" id="3_id"]
 [ext_resource type="Script" uid="uid://css4ljnmpdycf" path="res://setting/terrain_config.gd" id="4_tc"]
-[ext_resource type="Resource" uid="uid://bqss7rh1mwv41" path="res://core/visual/visual_state.tres" id="5_jp4ge"]
 [ext_resource type="Script" uid="uid://big2od71ptm65" path="res://core/components/comp_settings/terrainlayer_setting.gd" id="5_tl"]
 [ext_resource type="Script" uid="uid://dg5gk7o0jlrap" path="res://core/components/comp_settings/terraindraggable_setting.gd" id="6_td"]
 [ext_resource type="Script" uid="uid://cuumo0qj7r7gb" path="res://core/components/comp_settings/hoverable_setting.gd" id="7_hv"]

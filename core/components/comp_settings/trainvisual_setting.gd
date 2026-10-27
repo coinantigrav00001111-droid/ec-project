@@ -6,9 +6,6 @@ class_name TrainVisualSettings extends ComponentSettings
 # Сцена грузится из идентити
 #var scene: PackedScene = preload("res://data/trains/default_wagon.tscn")
 
-#TODO реализация теперь в EC?? Материалы. 
-@export var settings: VisualStateSettings = preload("res://core/visual/visual_state.tres")
-
 ## Фабрика запустит эту функцию создания
 func create_component(entity: Entity) -> Component:
 	var comp = C_TrainVisual.new()
@@ -17,8 +14,6 @@ func create_component(entity: Entity) -> Component:
 	if identity:
 		comp.scene = identity.get_config('scene', null)	
 		
-	#TODO реализация теперь в EC?? Материалы. 
-	comp.visual_settings = settings 
 	comp.name = 'C_TrainVisual'
 	entity.add_component(comp) # Добавили комп к объекту
 	
