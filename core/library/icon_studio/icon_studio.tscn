@@ -1,8 +1,8 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://dyey1r7153cyq"]
 
-[ext_resource type="Script" path="res://core/library/icon_studio/icon_studio.gd" id="1_studio"]
+[ext_resource type="Script" uid="uid://d4kg7xicwejvb" path="res://core/library/icon_studio/icon_studio.gd" id="1_studio"]
 
-[node name="IconStudio" type="Control"]
+[node name="IconStudio" type="Control" unique_id=847180293]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
