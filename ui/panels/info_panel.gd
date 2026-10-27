@@ -756,6 +756,9 @@ func _update_light_rows(comp: C_Mechanisms) -> void:
 		if not item.found:
 			r.status.text = "нет света"
 			r.status.modulate = Color(1.0, 0.302, 0.043)
+		elif item.no_power and item.target > 0.5:
+			r.status.text = "нет питания"
+			r.status.modulate = Color(1.0, 0.75, 0.2)
 		elif item.culled:
 			var q: QualityPreset = GFX.get_quality()
 			r.status.text = "свечение" if (q and q.entity_light_emissive_only) else "бюджет"

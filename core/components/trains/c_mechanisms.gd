@@ -70,13 +70,22 @@ class Lamp extends RefCounted:
 	var ghost := false          # сущность - призрак, источник скрыт
 	var culled := false         # скрыт бюджетом (LightBudget)
 	var delay := 0.0            # оставшаяся случайная задержка перед переходом (LightConfig.delay_jitter)
+	var uses_track := false     # питается с рельсов: светит только при напряжении под сущностью
+	var power := 1.0            # доля питания 0..1, плавно догоняет power_target
+	var power_target := 1.0
+
+	const POWER_FADE := 0.3     # секунд на полное изменение доли питания
 
 	func is_changing() -> bool:
-		return not is_equal_approx(t, target)
+		return not is_equal_approx(t, target) or not is_equal_approx(power, power_target)
+
+	## Итоговая яркость 0..1: состояние на долю питания
+	func level() -> float:
+		return t * power
 
 	## Light3D хочет гореть (до учёта бюджета)
 	func wants_on() -> bool:
-		return light != null and t > 0.001 and not ghost
+		return light != null and level() > 0.001 and not ghost
 
 	func has_output() -> bool:
 		return light != null or glow != null
@@ -84,8 +93,10 @@ class Lamp extends RefCounted:
 	## Возвращает true, если дошли до цели в этом шаге
 	func step(dt: float) -> bool:
 		var was := is_changing()
+		power = move_toward(power, power_target, dt / POWER_FADE)
 		if delay > 0.0:
 			delay -= dt
+			apply()
 			return false
 		t = move_toward(t, target, dt / maxf(cfg.fade_time, 0.01))
 		apply()
@@ -93,13 +104,13 @@ class Lamp extends RefCounted:
 
 	func apply() -> void:
 		if light != null and is_instance_valid(light):
-			light.light_energy = cfg.energy * gain * t
+			light.light_energy = cfg.energy * gain * level()
 			light.visible = wants_on() and not culled
 		if glow != null and is_instance_valid(glow):
-			var on := t > 0.001 and not ghost
+			var on := level() > 0.001 and not ghost
 			glow.visible = on
 			if on and glow_mat:
-				glow_mat.emission_energy_multiplier = cfg.glow_energy * gain * t
+				glow_mat.emission_energy_multiplier = cfg.glow_energy * gain * level()
 
 
 var _mechs: Dictionary = {}          # StringName -> Mech
@@ -112,6 +123,8 @@ var _gizmos_on := false
 var _ghost := false
 ## Направление движения для DIRECTION: 1 носом (-Z) вперёд, -1 хвостом
 var _dir := 1
+var _has_dir := false       # есть источники с правилом DIRECTION
+var _has_power := false     # есть источники, питающиеся с рельсов
 
 const DIR_SPEED_EPS := 0.05
 
@@ -307,17 +320,21 @@ func set_light_auto(id: StringName) -> void:
 # ==========================================
 
 func _setup_rules() -> void:
-	var has_dir := false
 	var has_night := false
+	_has_dir = false
+	_has_power = false
 	for id in _lamp_order:
-		match (_lamps[id] as Lamp).cfg.rule:
+		var l: Lamp = _lamps[id]
+		match l.cfg.rule:
 			LightConfig.Rule.DIRECTION:
-				has_dir = true
+				_has_dir = true
 			LightConfig.Rule.NIGHT:
 				has_night = true
+		if l.uses_track:
+			_has_power = true
 	if has_night and not GFX.time_of_day_changed.is_connected(_on_time_of_day_changed):
 		GFX.time_of_day_changed.connect(_on_time_of_day_changed)
-	set_physics_process(has_dir)
+	set_physics_process(_has_dir or _has_power)
 	_drive_all(true)
 
 
@@ -330,6 +347,9 @@ func _rule_value(l: Lamp) -> float:
 			return 1.0 if (l.cfg.dir_end == LightConfig.End.FRONT) == (_dir > 0) else 0.0
 		LightConfig.Rule.ALWAYS:
 			return 1.0
+		LightConfig.Rule.POWERED:
+			# горит, пока есть питание: доля питания учтена в Lamp.level()
+			return 1.0 if l.uses_track else 0.0
 	return -1.0
 
 
@@ -368,6 +388,64 @@ func _on_time_of_day_changed(_id: StringName) -> void:
 func _physics_process(_delta: float) -> void:
 	if _ghost:
 		return
+	_update_power()
+	_update_direction()
+
+
+# ==========================================
+# СВЕТ: питание с рельсов (LightConfig.power_source)
+# ==========================================
+
+func _uses_track(cfg: LightConfig) -> bool:
+	match cfg.power_source:
+		LightConfig.PowerSource.TRACK:
+			return true
+		LightConfig.PowerSource.AUTO:
+			return has_comp(C_Bogie)
+	return false
+
+
+## Напряжение под сущностью: тележки, стоящие на траке с контуром (как у C_Engine), берём наибольшее по модулю.
+## Не на рельсах или контур без питания: 0
+func _track_voltage() -> float:
+	var chassis := get_comp(C_Chassis) as C_Chassis
+	var bogie_comp := get_comp(C_Bogie) as C_Bogie
+	if chassis == null or bogie_comp == null or not chassis.is_on_rails:
+		return 0.0
+	var v := 0.0
+	for bogie in bogie_comp.bogies_data:
+		if not is_instance_valid(bogie.current_track):
+			continue
+		var power_track := bogie.current_track.get_comp(C_PowerTrack) as C_PowerTrack
+		if power_track == null:
+			continue
+		var cid := power_track.contour_of(bogie.route)
+		if cid == 0:
+			continue
+		var raw := PGM.get_power(cid)
+		if absf(raw) > absf(v):
+			v = raw
+	return v
+
+
+func _update_power() -> void:
+	if not _has_power:
+		return
+	var v := absf(_track_voltage())
+	for id in _lamp_order:
+		var l: Lamp = _lamps[id]
+		if not l.uses_track:
+			continue
+		var full := maxf(l.cfg.power_full_voltage, l.cfg.power_min_voltage + 0.01)
+		var f := clampf(inverse_lerp(l.cfg.power_min_voltage, full, v), 0.0, 1.0)
+		if not is_equal_approx(f, l.power_target):
+			l.power_target = f
+			set_process(true)
+
+
+func _update_direction() -> void:
+	if not _has_dir:
+		return
 	var ch := get_comp(C_Chassis) as C_Chassis
 	if ch == null or not ch.is_on_rails or absf(ch.current_speed) < DIR_SPEED_EPS:
 		return
@@ -394,6 +472,7 @@ func get_light_list() -> Array[Dictionary]:
 			"id": id, "title": l.cfg.title, "t": l.t, "target": l.target,
 			"found": l.anchor != null and l.has_output(), "enabled": l.enabled, "changing": l.is_changing(),
 			"gain": l.gain, "rule": l.cfg.rule, "manual": l.manual, "culled": l.culled and l.wants_on(),
+			"no_power": l.uses_track and l.power_target < 0.001,
 		})
 	return res
 
@@ -404,6 +483,10 @@ func _build_lamp(cfg: LightConfig, vis: C_Visual) -> Lamp:
 	l.enabled = cfg.enabled
 	l.gain = clampf(cfg.brightness, 0.0, LightConfig.GAIN_MAX)
 	l.ghost = _ghost
+	l.uses_track = _uses_track(cfg)
+	if l.uses_track:
+		l.power = 0.0          # до первого замера напряжения лампа не светит
+		l.power_target = 0.0
 	var parent: Node3D = vis.instance
 	if cfg.anchor_role != &"":
 		parent = vis.parts.find_one(cfg.anchor_role, cfg.anchor_aliases, &"Node3D", null, str(entity.name)) as Node3D
@@ -589,7 +672,8 @@ func get_debug_info() -> Array[String]:
 				"" if m.node else "[NO PART] ", "" if m.enabled else "[off]"])
 	for id in _lamp_order:
 		var l: Lamp = _lamps[id]
-		res.append("light %s: t=%.2f -> %.2f gain %.2f rule %s%s %s%s%s" % [id, l.t, l.target, l.gain,
+		res.append("light %s: t=%.2f -> %.2f gain %.2f power %s rule %s%s %s%s%s" % [id, l.t, l.target, l.gain,
+				"%.2f" % l.power if l.uses_track else "-",
 				LightConfig.Rule.keys()[l.cfg.rule], " (manual)" if l.manual else "",
 				"" if l.has_output() else "[NO LIGHT] ", "[culled] " if l.culled else "", "" if l.enabled else "[off]"])
 	return res

@@ -20,12 +20,16 @@ enum Kind { SPOT, OMNI, EMISSIVE }
 ## Форма светящегося элемента в точке источника. DISC: плоский диск, ось вдоль оси источника (линза фары)
 enum GlowShape { NONE, DISC, SPHERE }
 ## Кто выставляет состояние. COMMAND: только игрок. NIGHT: по времени суток. DIRECTION: по направлению движения.
-## ALWAYS: горит с создания. POWERED, SPEED, ROUTE пока заготовки.
+## ALWAYS: горит с создания. POWERED: горит, пока есть источник питания (см. power_source). SPEED, ROUTE пока заготовки.
 ## Команда игрока (InfoPanel, I) ставит manual и перекрывает правило до события-сброса:
 ## смена времени суток (NIGHT), смена направления (DIRECTION), кнопка "Авто" в InfoPanel.
 enum Rule { COMMAND, NIGHT, DIRECTION, POWERED, SPEED, ROUTE, ALWAYS }
 ## DIRECTION: к какому торцу относится источник
 enum End { FRONT, REAR }
+## Откуда источник берёт питание. AUTO: подвижной состав (есть тележки) питается с рельсов, остальное без питания (пока).
+## TRACK: свет горит, только если сущность стоит на токопроводящем треке с напряжением контура.
+## NONE: питание не нужно. Позже: CIRCUIT (цепь освещения, шаг C5), DECODER (DCC, шаг C4)
+enum PowerSource { AUTO, NONE, TRACK }
 
 ## Предел множителя яркости в InfoPanel
 const GAIN_MAX := 2.0
@@ -64,6 +68,13 @@ const GAIN_MAX := 2.0
 @export_range(1.0, 89.0) var spot_angle: float = 35.0
 ## SPOT: затухание к краю конуса (больше - мягче край)
 @export var spot_attenuation: float = 1.0
+
+@export_category("Питание")
+@export var power_source: PowerSource = PowerSource.AUTO
+## Напряжение (по модулю, шкала контроллера 0..100), с которого лампа начинает светиться
+@export var power_min_voltage: float = 10.0
+## Напряжение полной яркости. Между min и full яркость растёт плавно, как у лампы накаливания
+@export var power_full_voltage: float = 40.0
 
 @export_category("Свечение (L6)")
 ## Видимый светящийся элемент (линза, плафон) в точке источника, горит вместе с ним. Работает и когда Light3D скрыт
