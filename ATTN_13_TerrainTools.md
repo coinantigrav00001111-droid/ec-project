@@ -164,12 +164,13 @@
 
 #### 13.1.8. Технический долг
 
-- [ ] `KinematicsSetting` и `WagonConfig`: устаревшие `vertical_travel_y`, `lateral_play_x`, `suspension_stiffness`.
-- [ ] `C_Path`: `radius` у прямой означает длину; завести отдельное поле `length`.
+- [x] Устаревшие `vertical_travel_y`, `lateral_play_x`, `suspension_stiffness` удалены из `WagonConfig`, `C_Kinematics`, `KinematicsSetting`, `C_Chassis.get_wagon_props`, `InfoPanel` (код и `info_panel.tscn`). Подвеска читает `SuspensionConfig` (`limit_heave`, `limit_sway`). Проверено в редакторе.
+  - TODO (документация): написать инструкцию по настройке подвески и значениям полей `SuspensionConfig`. `limit_heave` и `limit_sway` это упоры, а не амплитуда: пока толчки (`irregularity_*`, `joint_kick`, `hunting_amp`) меньше упора, изменение упора не видно. Для проверки: `SuspMult` (`effect_multiplier`) 5-10 в InfoPanel, Debug, скорость 10-15 ю/с, в Debug оставить одну галочку канала (`EnableVert` или `EnableLateral`).
+- [ ] `C_Path`: `radius` у прямой означает длину; завести отдельное поле `length`. Отложено решением пользователя (28.10). Если вернёмся: 1) `length` вычисляемое поле, 2) читатели по одному (коллизии, подпись, наклон), 3) сейвы со старым ключом `radius`.
 - [x] `C_Path._generate_collision_segments0` удалена; `enter_0` и `_enter_spawn_and_drag_0` в `BuildTool` уже отсутствовали.
 - [x] `C_Socket`: отладочные конусы и шарики уже под флагом `Global.debug_markers`.
 - [x] `Entity._ready`: отладочный куб уже под `Global.debug_markers`.
-- [ ] `C_PowerClip` для траков flex и пандусов (позиция коробочки `Vector3(2.2, 0.3, -2.2)` привязана к прямому треку).
+- [x] `C_PowerClip` на flex и пандусах: работает (пандусы и стилизованные считают позицию по стилю в `C_StyleVisual.clip_transform`; у flex константа у начала трака, начало не меняется). Не техдолг. Возможная мелочь: подогнать позицию по ширине стиля.
 - [x] Автотесты `FlexSolver`: `tests/flex_solver_test.tscn` (F6, результат PASS/FAIL в Output): дуга, пределы, зеркальность, радиусы, цепочка Эрмита, высота. Прогнать в редакторе.
 - [x] `settings: VisualStateSettings` убран из всех `*VisualSetting` и `TerrainLayerSetting`: во всех `.tres` был один и тот же ресурс. Теперь `C_Visual.visual_settings` берёт `VisualStateSettings.shared()`; ссылки на `visual_state.tres` вычищены из `data/**/*.tres`.
 - [x] Ширина подсветки flex-зон и ленты стрелки: `Global.flash_width` * `style.rail_x` (полуширина), раньше 1.4 и `rail_x - 0.7`.
