@@ -31,6 +31,5 @@ class_name TrackConfig extends ObjectConfig
 
 # в С_Visual 
 # @export var scene: PackedScene = preload("res://data/tracks/default_track.tscn")
-# @export var settings: VisualStateSettings = preload("res://core/visual/visual_state.tres")
 # Pivot
 #@export var offset: Vector3 = Vector3.ZERO

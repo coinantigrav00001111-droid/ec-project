@@ -4,7 +4,6 @@
 [ext_resource type="Script" uid="uid://b7ds2l6clrm61" path="res://setting/track_config.gd" id="2_tc"]
 [ext_resource type="Script" uid="uid://mpakwrr6lum8" path="res://core/components/comp_settings/identity_setting.gd" id="3_id"]
 [ext_resource type="Script" uid="uid://1xmvhthiwc64" path="res://core/components/comp_settings/stylevisual_setting.gd" id="4_sv"]
-[ext_resource type="Resource" uid="uid://bqss7rh1mwv41" path="res://core/visual/visual_state.tres" id="5_vs"]
 [ext_resource type="Resource" uid="uid://cp5hybhfoslmf" path="res://data/tracks/styles/wood_ballast.tres" id="6_st"]
 [ext_resource type="Script" uid="uid://b1jwuxb32so7e" path="res://core/components/comp_settings/trackdraggable_setting.gd" id="7_dr"]
 [ext_resource type="Script" uid="uid://djbifkyei01t7" path="res://core/components/comp_settings/pivot_setting.gd" id="8_pv"]

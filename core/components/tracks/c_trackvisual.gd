@@ -8,7 +8,6 @@ class_name C_TrackVisual extends C_Visual
 
 #var instance: Node3D 
 #var scene: PackedScene
-#var visual_settings: VisualStateSettings
 
 #var mesh_nodes: Array[MeshInstance3D] 
 

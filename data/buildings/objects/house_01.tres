@@ -9,7 +9,6 @@
 [ext_resource type="Script" uid="uid://b1jwuxb32so7e" path="res://core/components/comp_settings/trackdraggable_setting.gd" id="10_5ia0v"]
 [ext_resource type="Script" uid="uid://b830vi2lx3hl5" path="res://core/components/comp_settings/trainvisual_setting.gd" id="10_egsua"]
 [ext_resource type="Texture2D" uid="uid://dq5kr15faei3w" path="res://ui/icons/house/house.svg" id="10_iu37o"]
-[ext_resource type="Resource" uid="uid://bqss7rh1mwv41" path="res://core/visual/visual_state.tres" id="11_ooqdm"]
 [ext_resource type="Script" uid="uid://cuumo0qj7r7gb" path="res://core/components/comp_settings/hoverable_setting.gd" id="13_mdc4e"]
 [ext_resource type="Script" uid="uid://deljgsmo4bpow" path="res://core/components/comp_settings/selectable_setting.gd" id="14_d1lf5"]
 [ext_resource type="Script" uid="uid://chprgtlxn3aub" path="res://core/components/comp_settings/blockable_setting.gd" id="15_uaa47"]

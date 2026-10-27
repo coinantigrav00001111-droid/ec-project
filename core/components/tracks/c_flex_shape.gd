@@ -493,7 +493,9 @@ func _zones_refresh(force := false) -> void:
 		return
 	var gs = Global.settings
 	var full := entity.has_comp(C_Ghost) or stretching or editing or entity.has_comp(C_Selected)
-	var mesh := FlexZones.build_mesh(path, gs.flex_r_min, gs.flex_max_grade, full)
+	var fv := get_comp(C_FlexVisual) as C_FlexVisual
+	var rail_x: float = fv.style.rail_x if fv and fv.style else 0.875
+	var mesh := FlexZones.build_mesh(path, gs.flex_r_min, gs.flex_max_grade, full, rail_x * Global.flash_width)
 	if mesh == null:
 		_zones_hide()
 		return
