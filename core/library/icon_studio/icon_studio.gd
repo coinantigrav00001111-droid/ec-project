@@ -288,8 +288,10 @@ func _build_center() -> void:
 	svc.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_aspect_box.add_child(svc)
 
+	# Один World3D на оба вида. own_world_3d не годится: у такого вида свойство world_3d пустое
+	var studio_world3d := World3D.new()
 	_viewport = SubViewport.new()
-	_viewport.own_world_3d = true
+	_viewport.world_3d = studio_world3d
 	_viewport.msaa_3d = Viewport.MSAA_4X
 	_viewport.handle_input_locally = false
 	svc.add_child(_viewport)
@@ -304,7 +306,7 @@ func _build_center() -> void:
 	_preview_vp = SubViewport.new()
 	_preview_vp.size = template.output_size
 	_preview_vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-	_preview_vp.world_3d = _viewport.world_3d
+	_preview_vp.world_3d = studio_world3d
 	add_child(_preview_vp)
 	_preview_cam = Camera3D.new()
 	_preview_cam.current = true
