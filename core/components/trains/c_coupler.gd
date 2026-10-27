@@ -87,6 +87,7 @@ var links: Array = [null, null]          # [FRONT, REAR] -> Link или null
 var _neighbors: Array[C_Coupler] = []
 var _scan_timer := 0.0
 # XX claude-terra 13.1.6: препятствия по ходу
+var _probe_dir := 0.0                        # знак последнего хода: направление пробы, когда вагон стоит у стены
 var _probe_shape: BoxShape3D                 # тело вагона, чуть меньше настоящего (см. PROBE_SHRINK)
 var _probe_exclude: Array[RID] = []          # свое тело, вагоны на рельсах, цепочка траков под вагоном
 var _probe_tracks := {}                      # те же траки как Entity (на случай, если RID не добрали)
@@ -204,7 +205,7 @@ func _physics_process(delta: float) -> void:
 
 	# XX claude-terra 13.1.6: препятствия по ходу
 	_probe_cd = maxf(_probe_cd - delta, 0.0)
-	if Global.rail_obstacles and _probe_cd <= 0.0:
+	if Global.rail_obstacles:
 		_probe_obstacles(delta, ch)
 
 	# 1. Новые контакты на свободных торцах
@@ -441,7 +442,11 @@ func _get_probe_shape(node: CollisionShape3D) -> BoxShape3D:
 ## Проба пути на этот тик: тело вагона едет по оси движения на |v| * dt + запас. Касание - удар
 func _probe_obstacles(delta: float, ch: C_Chassis) -> void:
 	var v := ch.current_speed
-	if absf(v) < PROBE_MIN_SPEED:
+	# на малой скорости (и при постоянной тяге у стены) направление берем с прошлого тика, иначе стена пропускает
+	var dir := signf(v) if absf(v) >= PROBE_MIN_SPEED else _probe_dir
+	if absf(v) >= PROBE_MIN_SPEED:
+		_probe_dir = dir
+	if dir == 0.0:
 		return
 	var k := entity.get_comp(C_Kinematics) as C_Kinematics
 	if k == null or not is_instance_valid(k.rb) or not k.rb.is_inside_tree():
@@ -453,12 +458,12 @@ func _probe_obstacles(delta: float, ch: C_Chassis) -> void:
 	if shape == null:
 		return
 
-	var n := ch.get_motion_axis() * signf(v)       # куда едем (мир)
+	var n := ch.get_motion_axis() * dir            # куда едем (мир)
 	var params := PhysicsShapeQueryParameters3D.new()
 	params.shape = shape
 	# коробка сжата снизу и с боков: центр сдвигаем вверх на половину сжатия по высоте, верх и перед не трогаем
 	params.transform = node.global_transform * Transform3D(Basis.IDENTITY, Vector3(0.0, PROBE_SHRINK.y * 0.5, 0.0))
-	params.motion = n * (absf(v) * delta + PROBE_LOOKAHEAD)
+	params.motion = n * (maxf(v * dir, 0.0) * delta + PROBE_LOOKAHEAD)
 	params.collision_mask = Global.active_layers(['tracks', 'trains', 'supports'])
 	params.collide_with_bodies = true
 	params.collide_with_areas = true               # балласт трака это Area3D
@@ -496,16 +501,20 @@ func _probe_obstacles(delta: float, ch: C_Chassis) -> void:
 ## Удар о препятствие. Масса неподвижного = бесконечность (mu = ma). Формулы те же, что в _on_first_contact
 func _on_obstacle_hit(ch: C_Chassis, n: Vector3, obstacle: Object) -> void:
 	var e := _entity_of(obstacle)
+	var rb2 := obstacle as RigidBody3D
 	var ma := _mass()
 	var mb := INF
 	var vb := Vector3.ZERO
-	var rb2 := obstacle as RigidBody3D
 	if rb2:
 		mb = maxf(rb2.mass, 0.01)
 		vb = rb2.linear_velocity
-	var v_close := absf(ch.current_speed) - vb.dot(n)     # скорость сближения вдоль хода
-	if v_close <= 0.0:
-		return                                            # препятствие уходит быстрее нас
+	var v_fwd := ch.current_speed * n.dot(ch.get_motion_axis())   # скорость вдоль n (может быть <= 0 у стены)
+	# неподвижное препятствие (колонна, трак): стена. Тяга не должна проталкивать вагон сквозь, гасим ход в его сторону
+	if rb2 == null and v_fwd > 0.0:
+		ch.current_speed = 0.0
+	var v_close := v_fwd - vb.dot(n)                      # скорость сближения вдоль хода
+	if v_close <= 0.02 or _probe_cd > 0.0:
+		return                                            # уходит быстрее нас, касание без удара или пауза после удара
 
 	var mu := ma if is_inf(mb) else ma * mb / (ma + mb)
 	var k := (1.0 + _restitution(buffer_zeta)) * mu * v_close
