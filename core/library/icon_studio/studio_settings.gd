@@ -109,7 +109,7 @@ func _usable_rect(w: Window) -> Rect2i:
 
 func _center(w: Window, size: Vector2i) -> void:
 	var r := _usable_rect(w)
-	w.position = r.position + (r.size - size) / 2
+	w.position = r.position + (r.size - size) / 2 as Vector2i
 
 
 ## Левый верхний угол окна (с запасом под заголовок) должен попадать на какой-то из экранов

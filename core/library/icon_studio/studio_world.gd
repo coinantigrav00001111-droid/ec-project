@@ -248,7 +248,7 @@ func handle_gui_input(event: InputEvent) -> void:
 					_drag_button = mb.button_index
 		elif mb.button_index == _drag_button:
 			_drag_button = 0
-	elif event is InputEventMotion and _drag_button != 0:
+	elif event is InputEventMouseMotion and _drag_button != 0:
 		var mm := event as InputEventMouseMotion
 		if mm == null:
 			return
