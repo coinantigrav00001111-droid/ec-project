@@ -166,11 +166,13 @@
 
 - [ ] `KinematicsSetting` и `WagonConfig`: устаревшие `vertical_travel_y`, `lateral_play_x`, `suspension_stiffness`.
 - [ ] `C_Path`: `radius` у прямой означает длину; завести отдельное поле `length`.
-- [ ] `C_Path._generate_collision_segments0` и старые `enter_0`, `_enter_spawn_and_drag_0` в `BuildTool`: удалить.
-- [ ] `C_Socket`: отладочные конусы и шарики вынести под флаг `Global.debug_mode`.
-- [ ] `Entity._ready`: отладочный куб над каждой сущностью.
+- [x] `C_Path._generate_collision_segments0` удалена; `enter_0` и `_enter_spawn_and_drag_0` в `BuildTool` уже отсутствовали.
+- [x] `C_Socket`: отладочные конусы и шарики уже под флагом `Global.debug_markers`.
+- [x] `Entity._ready`: отладочный куб уже под `Global.debug_markers`.
 - [ ] `C_PowerClip` для траков flex и пандусов (позиция коробочки `Vector3(2.2, 0.3, -2.2)` привязана к прямому треку).
-- [ ] Автотесты для `FlexSolver` (чистый `RefCounted`): дуга, пределы, цепочка Эрмита.
+- [x] Автотесты `FlexSolver`: `tests/flex_solver_test.tscn` (F6, результат PASS/FAIL в Output): дуга, пределы, зеркальность, радиусы, цепочка Эрмита, высота. Прогнать в редакторе.
+- [x] `settings: VisualStateSettings` убран из всех `*VisualSetting` и `TerrainLayerSetting`: во всех `.tres` был один и тот же ресурс. Теперь `C_Visual.visual_settings` берёт `VisualStateSettings.shared()`; ссылки на `visual_state.tres` вычищены из `data/**/*.tres`.
+- [x] Ширина подсветки flex-зон и ленты стрелки: `Global.flash_width` * `style.rail_x` (полуширина), раньше 1.4 и `rail_x - 0.7`.
 
 #### 13.1.9. Известные особенности (не баги)
 

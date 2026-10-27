@@ -8,7 +8,8 @@ class_name C_Visual extends Component
 
 var instance: Node3D
 var scene: PackedScene
-var visual_settings: VisualStateSettings
+## Общая палитра и материалы состояний (ghost, selected, hover, blocked, питание). Один ресурс на всю игру
+var visual_settings: VisualStateSettings = VisualStateSettings.shared()
 var mesh_nodes: Array[MeshInstance3D] = []
 var parts: PartRegistry
 

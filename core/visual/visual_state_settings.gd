@@ -1,5 +1,16 @@
 class_name VisualStateSettings extends Resource
 
+const SHARED_PATH := "res://core/visual/visual_state.tres"
+static var _shared: VisualStateSettings
+
+## Единственный ресурс визуальных состояний. Раньше его подставляли в каждый ComponentSettings полем settings,
+## во всех .tres он был один и тот же. load, а не preload: .tres сам ссылается на этот скрипт
+static func shared() -> VisualStateSettings:
+	if _shared == null:
+		_shared = load(SHARED_PATH) as VisualStateSettings
+	return _shared
+
+
 @export_category('Materials')
 @export var ghost_material: Material
 @export var selected_material: Material

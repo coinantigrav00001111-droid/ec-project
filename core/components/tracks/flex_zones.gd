@@ -15,7 +15,6 @@ class_name FlexZones extends RefCounted
 ## Чистая функция от кривой C_Path: без ссылок на сцену, кроме самого пути.
 
 const STEP := 1.0
-const HALF_WIDTH := 1.4
 const LIFT := 0.04            # над поверхностью катания, чтобы не мигало на рельсах
 const WARN_R := 1.15          # радиус меньше r_min * WARN_R: предупреждение
 const WARN_G := 0.85          # уклон больше max_grade * WARN_G: предупреждение
@@ -43,9 +42,9 @@ static func severity(radius: float, grade: float, r_min: float, max_grade: float
 	return Sev.OK
 
 
-## Полоса по участкам. full = false: рисуем только проблемные участки (желтые, оранжевые, красные).
+## Полоса по участкам, half_width - ее полуширина (Global.flash_width * rail_x). full = false: рисуем только проблемные участки (желтые, оранжевые, красные).
 ## Возвращает null, если рисовать нечего. Координаты в системе кривой C_Path (node.transform у вызывающего)
-static func build_mesh(path: C_Path, r_min: float, max_grade: float, full: bool) -> ArrayMesh:
+static func build_mesh(path: C_Path, r_min: float, max_grade: float, full: bool, half_width: float) -> ArrayMesh:
 	if path == null or path.curve == null:
 		return null
 	var curve := path.curve
@@ -61,7 +60,7 @@ static func build_mesh(path: C_Path, r_min: float, max_grade: float, full: bool)
 		var s := length * i / n
 		var t := curve.sample_baked_with_rotation(s)
 		pos.append(t.origin + Vector3(0.0, lift, 0.0))
-		right.append(t.basis.x.normalized() * HALF_WIDTH)
+		right.append(t.basis.x.normalized() * half_width)
 		rad.append(path.radius_at(s))
 
 	var st := SurfaceTool.new()

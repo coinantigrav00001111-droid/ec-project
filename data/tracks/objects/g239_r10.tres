@@ -5,7 +5,6 @@
 [ext_resource type="Script" uid="uid://mpakwrr6lum8" path="res://core/components/comp_settings/identity_setting.gd" id="3_rgjm8"]
 [ext_resource type="PackedScene" uid="uid://cu3x43vn1g05u" path="res://data/tracks/G239.tscn" id="4_q70kq"]
 [ext_resource type="Script" uid="uid://bulwl3x2rykxk" path="res://core/components/comp_settings/trackvisual_setting.gd" id="5_w7wqb"]
-[ext_resource type="Resource" uid="uid://bqss7rh1mwv41" path="res://core/visual/visual_state.tres" id="6_kscuw"]
 [ext_resource type="Script" uid="uid://b1jwuxb32so7e" path="res://core/components/comp_settings/trackdraggable_setting.gd" id="7_xugg5"]
 [ext_resource type="Script" uid="uid://djbifkyei01t7" path="res://core/components/comp_settings/pivot_setting.gd" id="8_hvhmh"]
 [ext_resource type="Script" uid="uid://cuumo0qj7r7gb" path="res://core/components/comp_settings/hoverable_setting.gd" id="9_bjgv1"]

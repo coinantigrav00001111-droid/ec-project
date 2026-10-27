@@ -6,7 +6,6 @@
 [ext_resource type="PackedScene" uid="uid://b5a0jw0b12rtr" path="res://data/tools/rulette.tscn" id="5_v5d68"]
 [ext_resource type="Script" uid="uid://bulwl3x2rykxk" path="res://core/components/comp_settings/trackvisual_setting.gd" id="6_agmc2"]
 [ext_resource type="Script" uid="uid://mpakwrr6lum8" path="res://core/components/comp_settings/identity_setting.gd" id="6_x5nwg"]
-[ext_resource type="Resource" uid="uid://bqss7rh1mwv41" path="res://core/visual/visual_state.tres" id="8_edjp5"]
 [ext_resource type="Texture2D" uid="uid://d0lx37eeopjln" path="res://ui/icons/tool/pencil-ruler.svg" id="10_8lu63"]
 [ext_resource type="Script" uid="uid://cuumo0qj7r7gb" path="res://core/components/comp_settings/hoverable_setting.gd" id="10_r0jsa"]
 [ext_resource type="Script" uid="uid://deljgsmo4bpow" path="res://core/components/comp_settings/selectable_setting.gd" id="11_mo680"]
