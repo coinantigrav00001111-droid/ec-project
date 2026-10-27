@@ -21,6 +21,11 @@ class_name C_Coupler extends ICapability
 ## поведение не зависит от масс, а omega дополнительно ограничена шагом физики
 ## (omega <= 0.3 / dt) - расчёт устойчив при любых массах и составах.
 ##
+## 4. ПРЕПЯТСТВИЯ ПО ХОДУ (13.1.6). Вагон на рельсах едет кинематически, физика его не останавливает, поэтому
+##    каждый тик он "пробует" путь перед собой телом вагона (cast_motion). Препятствие: вагон не на рельсах
+##    (сошедший, брошенный), опора эстакады, низко висящий чужой трак. Реакция как у удара сцепки: Δv по массам,
+##    больше impact_dv_limit - сход, иначе отскок. Стоящий вагон получает импульс (его толкает).
+##
 ## События наружу (для звука/анимации/InfoPanel):
 ##   on_coupled          {other, end, v_close}
 ##   on_coupler_impact   {v_close, dv, derailed}
@@ -36,6 +41,13 @@ const SCAN_MARGIN := 6.0   # м,  запас радиуса поиска сос�
 const MAX_OVERLAP := 2.0   # м,  глубже - считаем, что вагоны друг друга не касаются
 const RELEASE_GAP := 0.05  # м,  несцепленный контакт отпускаем при таком зазоре
 const BUMP_SPEED := 0.3    # м/с, ниже - событие "стук" не шлём
+
+# XX claude-terra 13.1.6
+const PROBE_LOOKAHEAD := 0.05    # м, запас перед касанием сверх пути за тик
+const PROBE_SHRINK := Vector3(0.2, 0.3, 0.0)   # на сколько кузов "сжат" (ширина, высота снизу, длина): свои рельсы не цепляем
+const PROBE_CHAIN_DEPTH := 4     # сколько траков вперед и назад от тележек не считаем препятствием (свой путь)
+const PROBE_COOLDOWN := 0.15     # с, пауза после удара
+const PROBE_MIN_SPEED := 0.05    # м/с, медленнее - не проверяем
 
 # --- Заполняются CouplerSetting из WagonConfig ---
 var offset_z: float = 8.0                 # от центра вагона до торца (сцепки), м
@@ -74,6 +86,11 @@ class Link:
 var links: Array = [null, null]          # [FRONT, REAR] -> Link или null
 var _neighbors: Array[C_Coupler] = []
 var _scan_timer := 0.0
+# XX claude-terra 13.1.6: препятствия по ходу
+var _probe_shape: BoxShape3D                 # тело вагона, чуть меньше настоящего (см. PROBE_SHRINK)
+var _probe_exclude: Array[RID] = []          # свое тело, вагоны на рельсах, цепочка траков под вагоном
+var _probe_tracks := {}                      # те же траки как Entity (на случай, если RID не добрали)
+var _probe_cd := 0.0                         # после удара не реагируем на то же препятствие
 var _saved_coupled: Array = [false, false]
 
 
@@ -185,6 +202,11 @@ func _physics_process(delta: float) -> void:
 
 	_refresh_neighbors(delta, ch)
 
+	# XX claude-terra 13.1.6: препятствия по ходу
+	_probe_cd = maxf(_probe_cd - delta, 0.0)
+	if Global.rail_obstacles and _probe_cd <= 0.0:
+		_probe_obstacles(delta, ch)
+
 	# 1. Новые контакты на свободных торцах
 	for end in 2:
 		if links[end] == null:
@@ -215,6 +237,7 @@ func _refresh_neighbors(delta: float, ch: C_Chassis) -> void:
 		var reach := offset_z + other.offset_z + SCAN_MARGIN + 2.0 * SCAN_PERIOD * v_sum
 		if my_pos.distance_squared_to(other.entity.global_position) <= reach * reach:
 			_neighbors.append(other)
+	_rebuild_probe_exclude()   # XX claude-terra 13.1.6
 
 
 ## Ищем контакт моего свободного торца с торцом соседа. Пару ведёт тот, у кого меньше id.
@@ -356,6 +379,167 @@ func _solve_link(l: Link, dt: float) -> void:
 		# Проекция на ось движения каждого вагона: в кривой часть силы уходит в рельсы
 		entity.send_event("on_coupler_force", {"force": (-n * f).dot(ax_a)})
 		cb.entity.send_event("on_coupler_force", {"force": (n * f).dot(ax_b)})
+
+
+# ==========================================
+# ПРЕПЯТСТВИЯ ПО ХОДУ (13.1.6)
+# ==========================================
+
+## Что не считаем препятствием: свое тело, вагоны на рельсах (их контакты ведут сцепки, они кинематические),
+## цепочка траков под вагоном (свои рельсы и балласт). Обновляем вместе со списком соседей
+func _rebuild_probe_exclude() -> void:
+	var ex: Array[RID] = []
+	var k := entity.get_comp(C_Kinematics) as C_Kinematics
+	if k and is_instance_valid(k.rb):
+		ex.append(k.rb.get_rid())
+	for other in _neighbors:
+		if not is_instance_valid(other) or not is_instance_valid(other.entity):
+			continue
+		var och := other._chassis()
+		var ok := other.entity.get_comp(C_Kinematics) as C_Kinematics
+		if och and och.is_on_rails and ok and is_instance_valid(ok.rb):
+			ex.append(ok.rb.get_rid())
+
+	var seen := {}
+	var frontier: Array[Entity] = []
+	var bc := entity.get_comp(C_Bogie) as C_Bogie
+	if bc:
+		for b in bc.bogies_data:
+			if is_instance_valid(b.current_track):
+				frontier.append(b.current_track)
+	for _depth in PROBE_CHAIN_DEPTH:
+		var next: Array[Entity] = []
+		for t in frontier:
+			if seen.has(t) or not is_instance_valid(t):
+				continue
+			seen[t] = true
+			var p := t.get_comp(C_Path) as C_Path
+			if p:
+				if is_instance_valid(p.ballast_node):
+					ex.append(p.ballast_node.get_rid())
+				if is_instance_valid(p.head_node):
+					ex.append(p.head_node.get_rid())
+			var sock := t.get_comp(C_Socket) as C_Socket
+			if sock:
+				next.append_array(sock.get_connected_entities())
+		frontier = next
+	_probe_exclude = ex
+	_probe_tracks = seen
+
+
+## Тело вагона для пробы: копия коробки вагона, сжатая по PROBE_SHRINK. Нижняя грань поднята, верх и перед на месте
+func _get_probe_shape(node: CollisionShape3D) -> BoxShape3D:
+	var src := node.shape as BoxShape3D
+	if src == null:
+		return null
+	if _probe_shape == null:
+		_probe_shape = BoxShape3D.new()
+	_probe_shape.size = (src.size - PROBE_SHRINK).max(Vector3(0.1, 0.1, 0.1))
+	return _probe_shape
+
+
+## Проба пути на этот тик: тело вагона едет по оси движения на |v| * dt + запас. Касание - удар
+func _probe_obstacles(delta: float, ch: C_Chassis) -> void:
+	var v := ch.current_speed
+	if absf(v) < PROBE_MIN_SPEED:
+		return
+	var k := entity.get_comp(C_Kinematics) as C_Kinematics
+	if k == null or not is_instance_valid(k.rb) or not k.rb.is_inside_tree():
+		return
+	var node := k.rb.get_node_or_null("WagonCollisionShape3D") as CollisionShape3D
+	if node == null:
+		return
+	var shape := _get_probe_shape(node)
+	if shape == null:
+		return
+
+	var n := ch.get_motion_axis() * signf(v)       # куда едем (мир)
+	var params := PhysicsShapeQueryParameters3D.new()
+	params.shape = shape
+	# коробка сжата снизу и с боков: центр сдвигаем вверх на половину сжатия по высоте, верх и перед не трогаем
+	params.transform = node.global_transform * Transform3D(Basis.IDENTITY, Vector3(0.0, PROBE_SHRINK.y * 0.5, 0.0))
+	params.motion = n * (absf(v) * delta + PROBE_LOOKAHEAD)
+	params.collision_mask = Global.active_layers(['tracks', 'trains', 'supports'])
+	params.collide_with_bodies = true
+	params.collide_with_areas = true               # балласт трака это Area3D
+	params.exclude = _probe_exclude
+
+	var space := k.rb.get_world_3d().direct_space_state
+	var res := space.cast_motion(params)
+	if res.size() < 2 or res[1] >= 1.0:
+		return
+
+	# где уперлись: смещаем тело в точку касания и спрашиваем, с чем пересекается
+	params.transform.origin += params.motion * res[1]
+	params.motion = Vector3.ZERO
+	var hits := space.intersect_shape(params, 8)
+	var best: Object = null
+	for h in hits:
+		var c: Object = h.get("collider")
+		if c == null:
+			continue
+		var e := _entity_of(c)
+		if e == entity:
+			continue
+		if e and _probe_tracks.has(e):
+			continue                               # свой путь
+		var och := (e.get_comp(C_Chassis) as C_Chassis) if e else null
+		if och and och.is_on_rails:
+			continue                               # вагон на рельсах: это дело сцепок
+		if best == null or (c is RigidBody3D and not (best is RigidBody3D)):
+			best = c                               # движущийся предмет (вагон) важнее неподвижного
+	if best == null:
+		return
+	_on_obstacle_hit(ch, n, best)
+
+
+## Удар о препятствие. Масса неподвижного = бесконечность (mu = ma). Формулы те же, что в _on_first_contact
+func _on_obstacle_hit(ch: C_Chassis, n: Vector3, obstacle: Object) -> void:
+	var e := _entity_of(obstacle)
+	var ma := _mass()
+	var mb := INF
+	var vb := Vector3.ZERO
+	var rb2 := obstacle as RigidBody3D
+	if rb2:
+		mb = maxf(rb2.mass, 0.01)
+		vb = rb2.linear_velocity
+	var v_close := absf(ch.current_speed) - vb.dot(n)     # скорость сближения вдоль хода
+	if v_close <= 0.0:
+		return                                            # препятствие уходит быстрее нас
+
+	var mu := ma if is_inf(mb) else ma * mb / (ma + mb)
+	var k := (1.0 + _restitution(buffer_zeta)) * mu * v_close
+	var dv_a := k / ma
+	var dv_b := 0.0 if is_inf(mb) else k / mb
+	var derail := dv_a > impact_dv_limit
+	_probe_cd = PROBE_COOLDOWN
+
+	# получатель удара: стоящий вагон толкаем (импульс по ходу), он сам решает, что делать дальше
+	if rb2:
+		rb2.sleeping = false
+		rb2.apply_central_impulse(n * k)
+		if e:
+			e.send_event("on_coupler_impact", {"v_close": v_close, "dv": dv_b, "derailed": false})
+
+	# мы: сход или отскок. Скорость после удара вдоль n: |v| - dv_a (отрицательная - летим назад)
+	var axis := ch.get_motion_axis()
+	if derail:
+		entity.send_event("on_derailed", {
+			"reason": "obstacle",
+			"current_velocity_3d": n * (absf(ch.current_speed) - dv_a),
+		})
+	else:
+		entity.send_event("on_impulse", {"impulse": ma * dv_a * (-n).dot(axis)})
+	entity.send_event("on_coupler_impact", {"v_close": v_close, "dv": dv_a, "derailed": derail, "obstacle": true})
+
+
+func _entity_of(node: Object) -> Entity:
+	var cur := node as Node
+	while cur:
+		if cur is Entity:
+			return cur
+		cur = cur.get_parent()
+	return null
 
 
 # ==========================================

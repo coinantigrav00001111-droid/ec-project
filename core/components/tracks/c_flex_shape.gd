@@ -46,7 +46,7 @@ var end_local := Vector3(0.0, 0.0, -10.0)
 var stretching := false
 var invalid := false
 
-var _label: Label3D
+var _label: TrackNote.Line   # строка общей метки TrackNote (вместе с тоннелем и т.п.)
 var _last_key: Array = []
 var _snap_id := 0
 
@@ -74,9 +74,12 @@ func _init() -> void:
 
 func on_entity_ready() -> void:
 	_apply(true)   # начальная короткая прямая через общий путь set_curve
+	Global.flex_zones_changed.connect(_on_zones_toggled)   # XX claude-terra 13.1.7
 
 
 func on_component_added(type: Script) -> void:
+	if type == C_Selected:   # XX claude-terra 13.1.7: у выбранного трака полоса полная (с зеленым)
+		_zones_refresh(true)
 	if type == C_Ghost:
 		relaxed = not Global.flex_limits
 		_ensure_label()
@@ -283,6 +286,7 @@ func _apply(force := false) -> void:
 	var last: Vector2 = pts[pts.size() - 1]
 	end_local = Vector3(last.x, y1, -last.y)
 	_update_label()
+	_zones_refresh()   # XX claude-terra 13.1.7
 	
 	entity.send_event("on_bends_changed", {})
 
@@ -351,11 +355,14 @@ func _update_label() -> void:
 
 
 func _process(_delta: float) -> void:
+	if _zones_pending:   # XX claude-terra 13.1.7: отложенная перерисовка зон
+		_zones_refresh()
 	if preshaped:   # XX claude-terra 13.1.4
 		_tick_preshaped()
 		return
 	if not _ground_pending or not (stretching or editing):
-		set_process(false)
+		if not _zones_pending:
+			set_process(false)
 		return
 	#if not _ground_pending or not stretching:
 		#set_process(false)
@@ -447,22 +454,74 @@ func _neighbor_slope() -> float:
 
 
 # ==========================================
+# XX claude-terra 13.1.7. Зоны проблем: цветная полоса над рельсами (FlexZones)
+# ==========================================
+
+const ZONES_PERIOD_MS := 60        # не чаще: призрак перестраивается на каждое движение мыши
+
+var _zones_mi: MeshInstance3D
+var _zones_ms := 0
+var _zones_pending := false
+
+
+func on_component_removed(type: Script) -> void:
+	if type == C_Selected:
+		_zones_refresh(true)
+
+
+func _on_zones_toggled() -> void:
+	_zones_refresh(true)
+
+
+## Полная полоса (с зеленым) у призрака, выбранного и редактируемого трака, у остальных только проблемные участки.
+## Пределы настоящие (flex_r_min, flex_max_grade), независимо от клавиши L: контроль выключен, а вагон все равно сойдет
+func _zones_refresh(force := false) -> void:
+	if entity == null or not entity.is_inside_tree():
+		return
+	if not Global.flex_zones:
+		_zones_hide()
+		return
+	var now := Time.get_ticks_msec()
+	if not force and now - _zones_ms < ZONES_PERIOD_MS:
+		_zones_pending = true
+		set_process(true)
+		return
+	_zones_ms = now
+	_zones_pending = false
+	var path := get_comp(C_Path) as C_Path
+	if path == null or path.curve == null or path.path_node == null:
+		return
+	var gs = Global.settings
+	var full := entity.has_comp(C_Ghost) or stretching or editing or entity.has_comp(C_Selected)
+	var mesh := FlexZones.build_mesh(path, gs.flex_r_min, gs.flex_max_grade, full)
+	if mesh == null:
+		_zones_hide()
+		return
+	if _zones_mi == null:
+		_zones_mi = MeshInstance3D.new()
+		_zones_mi.name = "FlexZones"
+		_zones_mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_zones_mi.material_override = FlexZones.material()
+		entity.add_child.call_deferred(_zones_mi)   # первый раз можем оказаться внутри _ready сущности
+	_zones_mi.mesh = mesh
+	_zones_mi.transform = path.path_node.transform
+	_zones_mi.visible = true
+
+
+func _zones_hide() -> void:
+	if _zones_mi:
+		_zones_mi.visible = false
+
+
+# ==========================================
 # Метка над призраком
 # ==========================================
 
 func _ensure_label() -> void:
 	if _label:
 		return
-	_label = Label3D.new()
-	_label.name = "FlexLabel"
-	_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	_label.fixed_size = true
-	_label.no_depth_test = true
-	_label.pixel_size = LABEL_PIXEL_SIZE
-	_label.font_size = LABEL_FONT_SIZE
-	_label.outline_size = 8
+	_label = TrackNote.line(entity, &"flex", 0)
 	_label.visible = false
-	entity.add_child(_label)
 
 # ==========================================
 # F3: изгибы (события шлет C_FlexHandle)
