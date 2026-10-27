@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://7vuxuiiysiji" path="res://setting/bogie_config.gd" id="2_hp0cg"]
 [ext_resource type="PackedScene" uid="uid://dpl2u278hhocd" path="res://data/trains/bogie_03.tscn" id="3_hp0cg"]
 [ext_resource type="PackedScene" uid="uid://gwsdt87qd0o8" path="res://data/trains/wheel_pair_03.tscn" id="4_ek6gf"]
+[ext_resource type="Script" uid="uid://daeylhso0elsx" path="res://setting/light_config.gd" id="5_40tj6"]
 [ext_resource type="Script" uid="uid://gv2lrhu17dtf" path="res://setting/mechanism_config.gd" id="5_ek6gf"]
 [ext_resource type="PackedScene" uid="uid://drd21qffg53gs" path="res://data/trains/wagon_02.tscn" id="5_h3v5j"]
 [ext_resource type="Script" uid="uid://bicjny5dv1h3s" path="res://setting/wagon_config.gd" id="6_dmkgj"]

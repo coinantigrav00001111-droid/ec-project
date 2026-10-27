@@ -11,6 +11,7 @@
 [ext_resource type="Resource" uid="uid://bqss7rh1mwv41" path="res://core/visual/visual_state.tres" id="4_5qo4f"]
 [ext_resource type="Script" uid="uid://gv2lrhu17dtf" path="res://setting/mechanism_config.gd" id="5_3ukh4"]
 [ext_resource type="Script" uid="uid://bkdny7eq5jthn" path="res://core/components/comp_settings/traindraggable_setting.gd" id="5_88nct"]
+[ext_resource type="Script" uid="uid://daeylhso0elsx" path="res://setting/light_config.gd" id="5_m6yoo"]
 [ext_resource type="Script" uid="uid://cuumo0qj7r7gb" path="res://core/components/comp_settings/hoverable_setting.gd" id="6_85qad"]
 [ext_resource type="Script" uid="uid://bicjny5dv1h3s" path="res://setting/wagon_config.gd" id="6_m6yoo"]
 [ext_resource type="Script" uid="uid://deljgsmo4bpow" path="res://core/components/comp_settings/selectable_setting.gd" id="7_3h2bg"]

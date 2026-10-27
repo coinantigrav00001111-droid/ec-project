@@ -64,9 +64,9 @@ class_name GlobalSetting extends Resource
 # XX claude-terra
 @export_group("Flex")
 ## Минимальный радиус flex (= min_curve_radius вагонов), ю
-@export var flex_r_min := 25.0
-@export var flex_l_min := 10.0
-@export var flex_l_max := 190.0
+@export var flex_r_min := 15.0
+@export var flex_l_min := 5.0
+@export var flex_l_max := 90.0
 ## Максимальный уклон flex (доля)
 @export var flex_max_grade := 0.045
 @export var flex_max_bends := 3   # XX claude-terra 13.1.7: третья ручка

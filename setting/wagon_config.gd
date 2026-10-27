@@ -20,7 +20,7 @@ class_name WagonConfig extends ObjectConfig
 ## Предел продольного сцепления для пробуксовки
 @export var longitudinal_grip: float = 3.0 
 ## Минимальный радиус сплайна (м), который проходит вагон без дерейла
-@export var min_curve_radius: float = 25.0 
+@export var min_curve_radius: float = 15.0 
 
 ## μ бокового юза колёс и скольжения лежащим корпусом (на столе)
 @export var slide_friction: float = 0.1
