@@ -286,6 +286,34 @@ func get_connected_entities() -> Array[Entity]:
 		func(e): return is_instance_valid(e) and not e.is_queued_for_deletion()
 	)
 	return connected_entities
+
+
+const JOINT_XZ := 1.2   # по горизонтали сокеты одного стыка ближе этого (диаметр капсулы сокета)
+
+
+## Электрические соседи: геометрический стык (connected_entities) и сокеты на одной высоте поверхности катания.
+## Если у стыкующихся траков разная head_height (ступенька, ATTN_15 §2.10), снапа нет и электрической связи тоже:
+## нужен переходный элемент. Для вагона (get_neighbor_at) список connected_entities не фильтруется:
+## сход на ступеньке решает физика (луч Bogie), как и задумано.
+func get_electric_neighbors() -> Array[Entity]:
+	var out: Array[Entity] = []
+	for n in get_connected_entities():
+		var other := n.get_comp(C_Socket) as C_Socket
+		if other and _has_level_joint(other):
+			out.append(n)
+	return out
+
+
+## Есть ли у нас и соседа пара сокетов в одной точке стыка на одной высоте
+func _has_level_joint(other: C_Socket) -> bool:
+	var tol: float = Global.settings.joint_level_tol
+	for a in sockets:
+		var pa: Vector3 = (a["socket"] as Area3D).global_position
+		for b in other.get_sockets():
+			var pb: Vector3 = (b["socket"] as Area3D).global_position
+			if Vector2(pa.x - pb.x, pa.z - pb.z).length() < JOINT_XZ and absf(pa.y - pb.y) <= tol:
+				return true
+	return false
 	
 
 

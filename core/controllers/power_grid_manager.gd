@@ -285,8 +285,8 @@ func _build_contour_from_clip(_clip: C_PowerClip) -> void:
 
 		if not current_track or not current_sock: continue
 
-		# get_connected_entities() отдает только живых соседей
-		var neighbors = current_sock.get_connected_entities()
+		# Только живые соседи со стыком на одной высоте (ступенька между стилями не проводит ток, ATTN_15 §2.10)
+		var neighbors = current_sock.get_electric_neighbors()
 
 		for neighbor_ent in neighbors:
 			var neighbor_track = neighbor_ent.get_comp(C_PowerTrack)
