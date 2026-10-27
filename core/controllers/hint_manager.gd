@@ -95,10 +95,10 @@ func set_context(key: StringName, on: bool) -> void:
 	_refresh()
 
 
-func set_extra(name: StringName) -> void:
-	if extra == name:
+func set_extra(_name: StringName) -> void:
+	if extra == _name:
 		return
-	extra = name
+	extra = _name
 	_refresh()
 
 

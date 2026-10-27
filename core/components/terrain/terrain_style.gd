@@ -65,7 +65,7 @@ static func _builtin(top: bool, stage: int) -> Material:
 
 
 ## Мелкая серая текстура-шум: умножается на albedo_color, дает неровность без файлов
-static func _noise(freq: float, lo: float, hi: float) -> NoiseTexture2D:
+static func _noise(freq: float, _lo: float, hi: float) -> NoiseTexture2D:
 	var n := FastNoiseLite.new()
 	n.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
 	n.frequency = freq * 0.08

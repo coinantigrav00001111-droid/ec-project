@@ -921,10 +921,10 @@ func _update_terrain_tab() -> void:
 func _refresh_terrain_info(layer: C_TerrainLayer) -> void:
 	var T: float = Global.settings.layer_height
 	var identity := current_target.get_comp(C_Identity) as C_Identity
-	var size: Vector2 = identity.get_config('size', Vector2.ZERO) if identity else Vector2.ZERO
+	var _size: Vector2 = identity.get_config('size', Vector2.ZERO) if identity else Vector2.ZERO
 	var base := roundi(layer.base_y() / T)
 	_terrain_info.text = "Размер: %d × %d u\nСлоёв: %d (высота %.1f u)\nНижний уровень: %d, верхний: %d\nВырезов: %d" % [
-		size.x, size.y, layer.levels, layer.levels * T, base, base + layer.levels, layer.cuts.size()]
+		_size.x, _size.y, layer.levels, layer.levels * T, base, base + layer.levels, layer.cuts.size()]
 
 
 func _on_stage_selected(index: int) -> void:

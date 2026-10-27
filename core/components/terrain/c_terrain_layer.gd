@@ -205,7 +205,7 @@ func _track_cuts(path: C_Path, mine: PackedVector2Array, inv: Transform3D) -> Ar
 	var th: float = Global.settings.get_track_height()
 	var clearance: float = Global.settings.tunnel_clearance
 	var tunnel := path.allows_underground()
-	var body := th + clearance if tunnel else th   # высота, которую занимает трак над низом балласта
+	var _body := th + clearance if tunnel else th   # высота, которую занимает трак над низом балласта
 	var base := base_y()
 	var top := top_y()
 	var lv := maxi(1, levels)
@@ -218,14 +218,14 @@ func _track_cuts(path: C_Path, mine: PackedVector2Array, inv: Transform3D) -> Ar
 		var y1: float = s[i + 1]["y"]
 		var lo := minf(y0, y1)
 		var hi := maxf(y0, y1)
-		if lo >= top - tol or hi + body <= base + TGM.EPS:
+		if lo >= top - tol or hi + _body <= base + TGM.EPS:
 			from_l.append(-1)
 			to_l.append(-1)
 			continue
 		var f := clampi(floori((lo - base) / T + 0.001), 0, lv - 1)
 		var e := lv
 		if tunnel:
-			e = clampi(ceili((hi + body - base) / T - 0.001), f + 1, lv)
+			e = clampi(ceili((hi + _body - base) / T - 0.001), f + 1, lv)
 		from_l.append(f)
 		to_l.append(e)
 
