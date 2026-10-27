@@ -26,11 +26,17 @@ func _ready() -> void:
 	_timer.start()
 
 
+## default = null допустим: ConfigFile на null-умолчании ругается, поэтому проверяем ключ сами
 func get_value(section: String, key: String, default: Variant = null) -> Variant:
-	return _cfg.get_value(section, key, default)
+	if not _cfg.has_section_key(section, key):
+		return default
+	return _cfg.get_value(section, key)
 
 
 func set_value(section: String, key: String, value: Variant) -> void:
+	# Массивы и словари храним копией: иначе правка «по месту» не отличается от сохранённого значения
+	if value is Array or value is Dictionary:
+		value = value.duplicate(true)
 	if _cfg.has_section_key(section, key) and _cfg.get_value(section, key) == value:
 		return
 	_cfg.set_value(section, key, value)
@@ -109,7 +115,12 @@ func _usable_rect(w: Window) -> Rect2i:
 
 func _center(w: Window, size: Vector2i) -> void:
 	var r := _usable_rect(w)
+<<<<<<< HEAD
 	w.position = r.position + ((r.size - size) / 2) as Vector2i
+=======
+	@warning_ignore("integer_division")
+	w.position = r.position + Vector2i((r.size.x - size.x) / 2, (r.size.y - size.y) / 2)
+>>>>>>> Icon Studio: камера, слоты, свет, фон, тень, качество, предпросмотр 1:1 (ATTN_18 I2-I4)
 
 
 ## Левый верхний угол окна (с запасом под заголовок) должен попадать на какой-то из экранов

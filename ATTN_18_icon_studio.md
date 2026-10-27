@@ -72,8 +72,8 @@ res://core/library/icon_studio/
 ├── studio_camera.gd            # орбитальная камера, Fit, слоты
 ├── studio_capture.gd           # съёмка, суперсэмплинг, коррекция, запись файлов
 ├── studio_settings.gd          # Resource-обёртка: сохранение и загрузка cfg, сброс
-├── icon_template.gd            # class_name IconTemplate extends Resource
-├── camera_slot.gd              # class_name CameraSlot extends Resource
+├── icon_template.gd            # # icon_template.gd (class_name не задан, подключается через preload). Ниже состав полей, точный список в файле
+extends Resource
 └── templates/                  # встроенные шаблоны .tres (wagon, track, building, terrain)
 ```
 
@@ -94,14 +94,49 @@ IconStudio (Control)                       icon_studio.gd
 │   │   │       │   ├── KeyLight / FillLight / RimLight  (DirectionalLight3D)
 │   │   │       ├── Camera3D               (studio_camera.gd)
 │   │   │       └── WorldEnvironment
-│   │   └── FrameOverlay (Control)         рамка кадра нужного соотношения сторон поверх вида
 │   └── RightPanel
 │       ├── PreviewViewport (SubViewport)  world_3d = WorldViewport.world_3d, размер = размер результата
 │       ├── PreviewRect (TextureRect)      показ 1:1, без масштабирования, на шахматном фоне
 │       └── кнопки: Снять, Папка, Сброс
 ```
 
-Предпросмотр делит один `World3D` с рабочим видом, у него своя камера с точной копией параметров рабочей. Рабочий вид нужен для орбиты мышью во всё окно, предпросмотр для проверки реального размера. Рамка `FrameOverlay` показывает, какая часть рабочего вида войдёт в кадр.
+Предпросмотр делит один `World3D` с рабочим видом, у него своя камера с точной копией параметров рабочей. Рабочий вид нужен для орбиты мышью во всё окно, предпросмотр для проверки реального размера. Центральный вид лежит в `AspectRatioContainer` с пропорциями результата, поэтому отдельная рамка не нужна: что видно в центре, то и попадёт в кадр. Мышь ловит вся область вокруг вида.
+
+### 18.3.3. Ресурсы
+
+```gdscript
+# Слот ракурса: Dictionary (отдельного класса нет), см. studio_world.capture_slot()
+# {yaw: градусы вокруг вертикали, pitch: отрицательный = смотрим сверху, ortho, fov,
+#  zoom: множитель к дистанции из Fit, pivot: сдвиг в долях диагонали AABB, переносится между объектами}
+
+class_name IconTemplate extends Resource
+└── templates/                  # встроенные шаблоны .tres (wagon, track, building, terrain)
+```
+
+Пользовательские шаблоны: `user://icon_studio/templates/*.tres`. Результаты по умолчанию: `res://core/library/icon_studio/icons/` [решено], путь можно сменить в окне. Godot подхватит файл при возврате фокуса в редактор. Запись в `res://` работает только при запуске из редактора, в экспортированной сборке студии нет (§18.0).
+
+### 18.3.2. Дерево сцены
+
+```
+IconStudio (Control)                       icon_studio.gd
+├── HSplit
+│   ├── LeftPanel (ScrollContainer)        список объектов, поиск, шаблон, настройки (вкладки)
+│   ├── CenterView
+│   │   ├── SubViewportContainer
+│   │   │   └── WorldViewport (SubViewport, own_world_3d)     studio_world.gd
+│   │   │       ├── Subject                (Node3D, сюда кладём Entity)
+│   │   │       ├── Ground                 (MeshInstance3D, пол/тень)
+│   │   │       ├── Rig                    (Node3D, поворачивается вместе с камерой)
+│   │   │       │   ├── KeyLight / FillLight / RimLight  (DirectionalLight3D)
+│   │   │       ├── Camera3D               (studio_camera.gd)
+│   │   │       └── WorldEnvironment
+│   └── RightPanel
+│       ├── PreviewViewport (SubViewport)  world_3d = WorldViewport.world_3d, размер = размер результата
+│       ├── PreviewRect (TextureRect)      показ 1:1, без масштабирования, на шахматном фоне
+│       └── кнопки: Снять, Папка, Сброс
+```
+
+Предпросмотр делит один `World3D` с рабочим видом, у него своя камера с точной копией параметров рабочей. Рабочий вид нужен для орбиты мышью во всё окно, предпросмотр для проверки реального размера. Центральный вид лежит в `AspectRatioContainer` с пропорциями результата, поэтому отдельная рамка не нужна: что видно в центре, то и попадёт в кадр. Мышь ловит вся область вокруг вида.
 
 ### 18.3.3. Ресурсы
 
@@ -119,7 +154,7 @@ class_name IconTemplate extends Resource
 @export var title: String
 @export var output_size := Vector2i(150, 150)   # старт 150×150 [решено], другие размеры добавим позже
 @export var fit_margin := 0.08        # поле вокруг объекта, доля кадра
-@export var slots: Array[CameraSlot] = []     # быстрые ракурсы (§18.4, I2)
+@export var slots: Array = []                 # 6 слотов: Dictionary {yaw, pitch, ortho, fov, zoom, pivot} или null (§18.4, I2)
 @export var active_slot := 0
 @export_category("Light")
 @export var light_follow_camera := true
@@ -159,7 +194,7 @@ class_name IconTemplate extends Resource
 | `ui` | ширина панелей, активные вкладки, последняя папка вывода, форматы вывода, шаблон имён файлов |
 | `state` | последний объект (`id`), id активного шаблона, текущее состояние камеры (слот или свободная) |
 | `template` | рабочая копия шаблона (все поля `IconTemplate`), чтобы несохранённые правки не терялись |
-| `object_overrides` | словарь `id объекта → CameraSlot[]`, если для конкретного объекта слоты переопределены |
+| `object_overrides` | словарь `имя файла объекта → массив слотов`, если для конкретного объекта слоты переопределены |
 
 ---
 
@@ -174,7 +209,7 @@ class_name IconTemplate extends Resource
 - [x] `icon_studio.tscn` и `icon_studio.gd`: три области (панель слева, вид по центру, предпросмотр справа), разделители тянутся.
 - [x] `studio_settings.gd`: загрузка и запись `user://icon_studio.cfg`, отложенная запись (таймер около 1 с после последнего изменения), запись при `NOTIFICATION_WM_CLOSE_REQUEST` и `_exit_tree`.
 - [x] Восстановление размера, позиции и режима окна при старте. Защита: если позиция вне доступных экранов или размер меньше минимума, ставим размер по умолчанию (1600×900) по центру.
-- [x] Кнопка «Сброс…» с подтверждением: «Сбросить всё» (окно, панели, камера, настройки списка) и «Только вид камеры». Пункт «Сбросить шаблон» появится в I6, когда будут шаблоны.
+- [x] Кнопка «Сброс…» с подтверждением: «Сбросить всё» (окно, панели, камера, настройки списка) и «Только шаблон» и «Только вид камеры».
 
 **Проверка в редакторе:**
 
@@ -208,30 +243,30 @@ class_name IconTemplate extends Resource
 
 #### I2. Камера, Fit, слоты
 
-- [ ] `studio_camera.gd`: орбита (`yaw`, `pitch`), пан средней кнопкой (`pivot_offset`), зум колесом, переключатель орто/перспектива, `fov`.
-- [ ] Fit: для перспективы `distance = radius / sin(fov/2) * (1 + fit_margin)` с корректировкой по соотношению сторон кадра, для орто `size` по проекции `AABB` на плоскость кадра. Fit вызывается при смене объекта (флажок «авто-Fit»).
-- [ ] Кнопки видов: сбоку, спереди, сверху, 3/4 (углы заданы константами, не слотами).
-- [ ] Слоты ракурса: 6 штук. Клавиши 1–6 переходят, Shift+клавиша запоминает (как закладки в Observe). Переход со сглаживанием 0,2 с, можно выключить.
-- [ ] Слот хранит углы, проекцию, `fov`, `zoom`, `pivot_offset` в долях `AABB` (§18.3.3), поэтому слот работает на другом объекте без перенастройки.
-- [ ] «Слоты для этого объекта»: флажок, который сохраняет слоты в `object_overrides` по `id`.
-- [ ] `FrameOverlay`: рамка кадра по `output_size`, всё вне рамки затемнено.
-- [ ] Flex «змейка» [решено]: для `flex_*` панель «Форма» с готовыми пресетами состояния `C_FlexShape`: прямая, дуга, S-образная змейка (два изгиба в `bends`, максимум `flex_max_bends = 2`). Пресет это словарь `{target: Vector2, bends: Array[Vector2], relaxed: true}`, применяется `entity.send_event("on_receive_flex_state", {"flex_state": ...})`, затем `on_flex_final`. Длина и амплитуда змейки подбираются по `flex_l_min`, `flex_l_max`, `flex_r_min` из `GlobalSetting`, чтобы форма была допустимой. Fit считается по `AABB` после построения меша.
+- [x] `studio_camera.gd`: орбита (`yaw`, `pitch`), пан средней кнопкой (`pivot_offset`), зум колесом, переключатель орто/перспектива, `fov`.
+- [x] Fit: для перспективы `distance = radius / sin(fov/2) * (1 + fit_margin)` с корректировкой по соотношению сторон кадра, для орто `size` по проекции `AABB` на плоскость кадра. Fit вызывается при смене объекта (флажок «авто-Fit»).
+- [x] Кнопки видов: сбоку, спереди, сверху, 3/4 (углы заданы константами, не слотами).
+- [x] Слоты ракурса: 6 штук. Клавиши 1–6 переходят, Shift+клавиша запоминает (как закладки в Observe). Переход со сглаживанием 0,2 с, можно выключить.
+- [x] Слот хранит углы, проекцию, `fov`, `zoom`, `pivot_offset` в долях `AABB` (§18.3.3), поэтому слот работает на другом объекте без перенастройки.
+- [x] «Слоты для этого объекта»: флажок, который сохраняет слоты в `object_overrides` по `id`.
+- [x] центральный вид имеет пропорции `output_size` (вместо рамки).
+- [x] Flex «змейка» [решено]: для `flex_*` панель «Форма» с готовыми пресетами состояния `C_FlexShape`: прямая, дуга, S-образная змейка (два изгиба в `bends`, максимум `flex_max_bends = 2`). Пресет это словарь `{target: Vector2, bends: Array[Vector2], relaxed: true}`, применяется `entity.send_event("on_receive_flex_state", {"flex_state": ...})`, затем `on_flex_final`. Длина и амплитуда змейки подбираются по `flex_l_min`, `flex_l_max`, `flex_r_min` из `GlobalSetting`, чтобы форма была допустимой. Fit считается по `AABB` после построения меша.
 
 #### I3. Свет, фон, тень
 
-- [ ] Три источника (`KeyLight`, `FillLight`, `RimLight`) в узле `Rig`. Флажок «свет следует за камерой»: `Rig` поворачивается по `yaw` камеры, углы ключевого света заданы относительно камеры. Выключен: свет фиксирован в мире.
-- [ ] Тень: у `KeyLight` вкл/выкл, мягкость (`shadow_blur`). Пол `Ground` ловит тень.
-- [ ] Фон, три режима: `transparent` (без фона, тень через `shadow_to_opacity`), `solid` (один цвет), `horizon` (процедурное небо и земля с горизонтом).
-- [ ] Тонмаппинг и коррекция в `Environment` студии (`tonemap_*`, `adjustment_brightness/contrast/saturation`): живой предпросмотр.
-- [ ] Кнопка «Взять из Look»: подставляет тонмаппинг, контраст и насыщенность из выбранного `GraphicsPreset` (`clean`, `toy`, `workshop`) как стартовые значения. Дальше правятся вручную.
+- [x] Три источника (`KeyLight`, `FillLight`, `RimLight`) в узле `Rig`. Флажок «свет следует за камерой»: `Rig` поворачивается по `yaw` камеры, углы ключевого света заданы относительно камеры. Выключен: свет фиксирован в мире.
+- [x] Тень: у `KeyLight` вкл/выкл, мягкость (`shadow_blur`). Пол `Ground` ловит тень.
+- [x] Фон, три режима: `transparent` (без фона, тень через `shadow_to_opacity`), `solid` (один цвет), `horizon` (процедурное небо и земля с горизонтом).
+- [x] Тонмаппинг и коррекция в `Environment` студии (`tonemap_*`, `adjustment_brightness/contrast/saturation`): живой предпросмотр.
+- [x] Кнопка «Взять из Look»: подставляет тонмаппинг, контраст и насыщенность из выбранного `GraphicsPreset` (`clean`, `toy`, `workshop`) как стартовые значения. Дальше правятся вручную.
 
 #### I4. Качество и предпросмотр 1:1
 
-- [ ] Список качества: `GFX.qualities` (`low`, `medium`, `high`) и студийный `icon_max` (MSAA 8x, атлас теней 8192, 4 каскада, SSAO high, SSIL, contact shadows, `soft_shadow_quality = 5`). `icon_max` создаётся кодом студии, `QualityPreset.builtin_ids()` не меняем.
-- [ ] Применение пресета к студии: `msaa_3d`, `screen_space_aa`, `positional_shadow_atlas_size` у SubViewport, SSAO/SSIL/contact shadows у `Environment` студии, размер и каскады теней через `RenderingServer` (в студии глобальные настройки теней принадлежат только студии).
-- [ ] Отдельная настройка суперсэмплинга `supersample` (1–8): съёмка идёт в SubViewport размером `output_size × supersample`.
-- [ ] Предпросмотр: `PreviewViewport` размером ровно `output_size`, `PreviewRect` показывает 1:1 (`stretch_mode = KEEP`, `texture_filter = NEAREST`), шахматный фон под прозрачностью. Переключатель «×1 / ×2 / ×4» увеличивает показ без перерисовки.
-- [ ] Предпросмотр рисуется на выбранном качестве (а не на упрощённом), `render_target_update_mode` = `WHEN_VISIBLE`, обновление только при изменении параметров (кнопка «обновлять всегда» для отладки).
+- [x] Список качества: `GFX.qualities` (`low`, `medium`, `high`) и студийный `icon_max` (MSAA 8x, атлас теней 8192, 4 каскада, SSAO high, SSIL, contact shadows, `soft_shadow_quality = 5`). `icon_max` создаётся кодом студии, `QualityPreset.builtin_ids()` не меняем.
+- [x] Применение пресета к студии: `msaa_3d`, `screen_space_aa`, `positional_shadow_atlas_size` у SubViewport, SSAO/SSIL/contact shadows у `Environment` студии, размер и каскады теней через `RenderingServer` (в студии глобальные настройки теней принадлежат только студии).
+- [x] Отдельная настройка суперсэмплинга `supersample` (1–8): съёмка идёт в SubViewport размером `output_size × supersample`.
+- [x] Предпросмотр: `PreviewViewport` размером ровно `output_size`, `PreviewRect` показывает 1:1 (`stretch_mode = KEEP`, `texture_filter = NEAREST`), шахматный фон под прозрачностью. Переключатель «×1 / ×2 / ×4» увеличивает показ без перерисовки.
+- [x] Предпросмотр рисуется на выбранном качестве (а не на упрощённом), `render_target_update_mode` = `UPDATE_ALWAYS` (fps не важен).
 
 **Проверка в редакторе (П2):**
 
