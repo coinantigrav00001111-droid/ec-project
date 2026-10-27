@@ -40,7 +40,6 @@ class_name WagonConfig extends ObjectConfig
 
 ## УСТАРЕЛО: три поля ниже подвеской больше не читаются (см. SuspensionConfig.limit_heave / limit_sway / *_hz).
 ## Их ещё читает KinematicsSetting - можно удалить вместе с ним.
-@export var vertical_travel_y: float = 0.05 #Вертикальный ход пружин(для имитации просадки на стыках)
 @export var lateral_play_x: float = 0.02 #Люфт колесной пары в колее (для поперечной раскачки)
 @export var suspension_stiffness: float = 10.0 # Жесткость амортизаторов
 

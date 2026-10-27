@@ -755,18 +755,6 @@ size_flags_vertical = 0
 max_value = 90.0
 value = 25.0
 
-[node name="Label6" type="Label" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer" unique_id=839670859]
-layout_mode = 2
-text = "vertical_travel_y"
-
-[node name="VerticalTravelY" type="SpinBox" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer" unique_id=926517909]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(77, 0)
-layout_mode = 2
-size_flags_vertical = 0
-max_value = 5.0
-step = 0.01
-
 [node name="Label5" type="Label" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer" unique_id=191067136]
 layout_mode = 2
 text = "yaw_spring"
@@ -862,7 +850,6 @@ fit_content = true
 [connection signal="value_changed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugEnableContainer/SuspMult" to="." method="_on_susp_mult_value_changed"]
 [connection signal="value_changed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer/LongGrip" to="." method="_on_long_grip_value_changed"]
 [connection signal="value_changed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer/MaxYawDeg" to="." method="_on_max_yaw_deg_value_changed"]
-[connection signal="value_changed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer/VerticalTravelY" to="." method="_on_vertical_travel_y_value_changed"]
 [connection signal="value_changed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer/YawSpring" to="." method="_on_yaw_spring_value_changed"]
 [connection signal="value_changed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer/LateralPlayX" to="." method="_on_lateral_play_x_value_changed"]
 [connection signal="value_changed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer/SusStiffness" to="." method="_on_sus_stiffness_value_changed"]

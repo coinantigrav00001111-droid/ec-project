@@ -355,7 +355,6 @@ func _on_debug_tab_draw() -> void:
 	%MinCurveRadius.value = _kinemat.min_curve_radius
 	%MaxYawDeg.value = _kinemat.max_yaw_deg
 	%YawSpring.value = _kinemat.yaw_spring
-	%VerticalTravelY.value = _kinemat.vertical_travel_y
 	%LateralPlayX.value = _kinemat.lateral_play_x
 	%SusStiffness.value = _kinemat.suspension_stiffness
 	
@@ -385,7 +384,6 @@ func set_suspension_k(_data: Dictionary):
 		'min_curve_radius': _kinemat.min_curve_radius = _val
 		'max_yaw_deg': _kinemat.max_yaw_deg = _val
 		'yaw_spring': _kinemat.yaw_spring = _val
-		'vertical_travel_y': _kinemat.vertical_travel_y = _val
 		'lateral_play_x': _kinemat.lateral_play_x = _val
 		'suspension_stiffness': _kinemat.suspension_stiffness = _val
 		
@@ -436,10 +434,6 @@ func _on_max_yaw_deg_value_changed(value: float) -> void:
 
 func _on_yaw_spring_value_changed(value: float) -> void:
 	set_suspension_k({'key':'yaw_spring', 'value': value })
-
-
-func _on_vertical_travel_y_value_changed(value: float) -> void:
-	set_suspension_k({'key':'vertical_travel_y', 'value': value })
 
 
 func _on_lateral_play_x_value_changed(value: float) -> void:
