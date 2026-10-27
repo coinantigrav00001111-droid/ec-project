@@ -4,6 +4,7 @@
 ::cd D:\Godot\ec-project
 
 
+git rebase --abort
 :: ==patch===
 git am -3 %1
 
@@ -16,6 +17,7 @@ git am -3 %1
 :: проверка диф
 :: git apply --check %1
 :: git am --show-current-patch=diff
+
 
 pause
 ::TIMEOUT /T 4
