@@ -766,18 +766,6 @@ layout_mode = 2
 size_flags_vertical = 0
 value = 5.0
 
-[node name="Label7" type="Label" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer" unique_id=52080279]
-layout_mode = 2
-text = "lateral_play_x"
-
-[node name="LateralPlayX" type="SpinBox" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer" unique_id=283676412]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(77, 0)
-layout_mode = 2
-size_flags_vertical = 0
-max_value = 2.0
-step = 0.01
-
 [node name="Label3" type="Label" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer" unique_id=696529341]
 layout_mode = 2
 text = "max_tractive_force: "
@@ -851,6 +839,5 @@ fit_content = true
 [connection signal="value_changed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer/LongGrip" to="." method="_on_long_grip_value_changed"]
 [connection signal="value_changed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer/MaxYawDeg" to="." method="_on_max_yaw_deg_value_changed"]
 [connection signal="value_changed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer/YawSpring" to="." method="_on_yaw_spring_value_changed"]
-[connection signal="value_changed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer/LateralPlayX" to="." method="_on_lateral_play_x_value_changed"]
 [connection signal="value_changed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer/SusStiffness" to="." method="_on_sus_stiffness_value_changed"]
 [connection signal="pressed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer/WagonCameraButton" to="." method="_on_wagon_camera_button_pressed"]

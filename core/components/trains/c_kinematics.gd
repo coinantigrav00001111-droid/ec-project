@@ -22,7 +22,6 @@ var max_yaw_deg: float = 25.0    # Максимальный угол повор�
 var yaw_spring: float = 5.0      # Сила возвратной пружины (стремление выровняться по оси кузова)
 
 #"Suspension (Travel & Play)"
-var lateral_play_x: float = 0.02 #Люфт колесной пары в колее (для поперечной раскачки)
 var suspension_stiffness: float = 10.0 # Жесткость амортизаторов
 
 var max_tractive_force: float = 0.0 # Максимальная сила тяги мотора (Н) # TODO в c_engine она есть
