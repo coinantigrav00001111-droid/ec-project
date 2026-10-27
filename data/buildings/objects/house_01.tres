@@ -14,57 +14,262 @@
 [ext_resource type="Script" uid="uid://chprgtlxn3aub" path="res://core/components/comp_settings/blockable_setting.gd" id="15_uaa47"]
 [ext_resource type="Script" uid="uid://do5hjkm3r2pdg" path="res://core/entity_setting.gd" id="21_q4ryd"]
 [ext_resource type="Script" uid="uid://daeylhso0elsx" path="res://setting/light_config.gd" id="30_lcfg"]
+[ext_resource type="Script" path="res://setting/glow_rect.gd" id="32_glrect"]
 [ext_resource type="Script" uid="uid://brbladjp7pfki" path="res://core/components/comp_settings/mechanisms_setting.gd" id="31_msetg"]
+
+[sub_resource type="Resource" id="Resource_gr1"]
+script = ExtResource("32_glrect")
+position = Vector3(0.40, 5.85, -5.13)
+rotation_deg = Vector3(0, 180, 0)
+size = Vector2(0.84, 1.04)
+
+[sub_resource type="Resource" id="Resource_gr2"]
+script = ExtResource("32_glrect")
+position = Vector3(-4.20, 5.85, -3.93)
+rotation_deg = Vector3(0, 180, 0)
+size = Vector2(1.54, 1.04)
+
+[sub_resource type="Resource" id="Resource_gr3"]
+script = ExtResource("32_glrect")
+position = Vector3(3.90, 2.85, -3.92)
+rotation_deg = Vector3(0, 180, 0)
+size = Vector2(1.34, 1.04)
+
+[sub_resource type="Resource" id="Resource_gr4"]
+script = ExtResource("32_glrect")
+position = Vector3(4.60, 9.86, -2.35)
+rotation_deg = Vector3(0, 180, 0)
+size = Vector2(0.54, 0.54)
+
+[sub_resource type="Resource" id="Resource_gr5"]
+script = ExtResource("32_glrect")
+position = Vector3(-3.88, 9.86, -2.35)
+rotation_deg = Vector3(0, 180, 0)
+size = Vector2(0.54, 0.54)
+
+[sub_resource type="Resource" id="Resource_gr6"]
+script = ExtResource("32_glrect")
+position = Vector3(-2.92, 9.86, -2.35)
+rotation_deg = Vector3(0, 180, 0)
+size = Vector2(0.54, 0.54)
+
+[sub_resource type="Resource" id="Resource_gr7"]
+script = ExtResource("32_glrect")
+position = Vector3(0.40, 8.37, -5.14)
+rotation_deg = Vector3(0, 180, 0)
+size = Vector2(0.44, 0.49)
+
+[sub_resource type="Resource" id="Resource_gr8"]
+script = ExtResource("32_glrect")
+position = Vector3(4.60, 5.85, -3.93)
+rotation_deg = Vector3(0, 180, 0)
+size = Vector2(0.74, 1.04)
+
+[sub_resource type="Resource" id="Resource_gr9"]
+script = ExtResource("32_glrect")
+position = Vector3(-3.10, 3.00, -3.92)
+rotation_deg = Vector3(0, 180, 0)
+size = Vector2(0.64, 0.54)
+
+[sub_resource type="Resource" id="Resource_gr10"]
+script = ExtResource("32_glrect")
+position = Vector3(3.10, 2.85, 3.92)
+rotation_deg = Vector3(0, 0, 0)
+size = Vector2(1.64, 1.04)
+
+[sub_resource type="Resource" id="Resource_gr11"]
+script = ExtResource("32_glrect")
+position = Vector3(-0.20, 2.85, 3.92)
+rotation_deg = Vector3(0, 0, 0)
+size = Vector2(0.84, 1.04)
+
+[sub_resource type="Resource" id="Resource_gr12"]
+script = ExtResource("32_glrect")
+position = Vector3(3.40, 9.86, 2.35)
+rotation_deg = Vector3(0, 0, 0)
+size = Vector2(0.54, 0.54)
+
+[sub_resource type="Resource" id="Resource_gr13"]
+script = ExtResource("32_glrect")
+position = Vector3(1.60, 9.86, 2.35)
+rotation_deg = Vector3(0, 0, 0)
+size = Vector2(0.54, 0.54)
+
+[sub_resource type="Resource" id="Resource_gr14"]
+script = ExtResource("32_glrect")
+position = Vector3(-0.20, 9.86, 2.35)
+rotation_deg = Vector3(0, 0, 0)
+size = Vector2(0.54, 0.54)
+
+[sub_resource type="Resource" id="Resource_gr15"]
+script = ExtResource("32_glrect")
+position = Vector3(-2.92, 9.86, 2.35)
+rotation_deg = Vector3(0, 0, 0)
+size = Vector2(0.54, 0.54)
+
+[sub_resource type="Resource" id="Resource_gr16"]
+script = ExtResource("32_glrect")
+position = Vector3(-3.88, 9.86, 2.35)
+rotation_deg = Vector3(0, 0, 0)
+size = Vector2(0.54, 0.54)
+
+[sub_resource type="Resource" id="Resource_gr17"]
+script = ExtResource("32_glrect")
+position = Vector3(3.00, 5.85, 3.93)
+rotation_deg = Vector3(0, 0, 0)
+size = Vector2(0.74, 1.04)
+
+[sub_resource type="Resource" id="Resource_gr18"]
+script = ExtResource("32_glrect")
+position = Vector3(1.10, 5.85, 3.93)
+rotation_deg = Vector3(0, 0, 0)
+size = Vector2(0.74, 1.04)
+
+[sub_resource type="Resource" id="Resource_gr19"]
+script = ExtResource("32_glrect")
+position = Vector3(-0.80, 5.85, 3.93)
+rotation_deg = Vector3(0, 0, 0)
+size = Vector2(0.74, 1.04)
+
+[sub_resource type="Resource" id="Resource_gr20"]
+script = ExtResource("32_glrect")
+position = Vector3(-3.85, 5.85, 3.93)
+rotation_deg = Vector3(0, 0, 0)
+size = Vector2(0.74, 1.04)
+
+[sub_resource type="Resource" id="Resource_gr21"]
+script = ExtResource("32_glrect")
+position = Vector3(-4.95, 5.85, 3.93)
+rotation_deg = Vector3(0, 0, 0)
+size = Vector2(0.74, 1.04)
+
+[sub_resource type="Resource" id="Resource_gr22"]
+script = ExtResource("32_glrect")
+position = Vector3(-3.32, 2.85, 3.90)
+rotation_deg = Vector3(0, 0, 0)
+size = Vector2(0.28, 0.34)
+
+[sub_resource type="Resource" id="Resource_gr23"]
+script = ExtResource("32_glrect")
+position = Vector3(-4.28, 2.85, 3.90)
+rotation_deg = Vector3(0, 0, 0)
+size = Vector2(0.28, 0.34)
+
+[sub_resource type="Resource" id="Resource_gr24"]
+script = ExtResource("32_glrect")
+position = Vector3(-5.93, 5.85, 1.40)
+rotation_deg = Vector3(0, -90, 0)
+size = Vector2(1.54, 1.04)
+
+[sub_resource type="Resource" id="Resource_gr25"]
+script = ExtResource("32_glrect")
+position = Vector3(-5.93, 8.65, -0.00)
+rotation_deg = Vector3(0, -90, 0)
+size = Vector2(0.74, 0.84)
+
+[sub_resource type="Resource" id="Resource_gr26"]
+script = ExtResource("32_glrect")
+position = Vector3(-5.92, 2.85, -0.50)
+rotation_deg = Vector3(0, -90, 0)
+size = Vector2(0.74, 1.04)
+
+[sub_resource type="Resource" id="Resource_gr27"]
+script = ExtResource("32_glrect")
+position = Vector3(-5.93, 5.67, -1.50)
+rotation_deg = Vector3(0, -90, 0)
+size = Vector2(0.64, 0.75)
+
+[sub_resource type="Resource" id="Resource_gr28"]
+script = ExtResource("32_glrect")
+position = Vector3(7.93, 2.70, 1.90)
+rotation_deg = Vector3(0, 90, 0)
+size = Vector2(0.74, 0.74)
+
+[sub_resource type="Resource" id="Resource_gr29"]
+script = ExtResource("32_glrect")
+position = Vector3(5.93, 8.65, -0.00)
+rotation_deg = Vector3(0, 90, 0)
+size = Vector2(0.74, 0.84)
+
+[sub_resource type="Resource" id="Resource_gr30"]
+script = ExtResource("32_glrect")
+position = Vector3(5.93, 5.85, -2.20)
+rotation_deg = Vector3(0, 90, 0)
+size = Vector2(0.74, 1.04)
+
+[sub_resource type="Resource" id="Resource_gr31"]
+script = ExtResource("32_glrect")
+position = Vector3(5.93, 5.85, 2.20)
+rotation_deg = Vector3(0, 90, 0)
+size = Vector2(0.74, 1.04)
+
+[sub_resource type="Resource" id="Resource_gr32"]
+script = ExtResource("32_glrect")
+position = Vector3(5.92, 3.00, -2.00)
+rotation_deg = Vector3(0, 90, 0)
+size = Vector2(0.64, 0.54)
 
 [sub_resource type="Resource" id="Resource_hw1"]
 script = ExtResource("30_lcfg")
 id = &"window_1"
-title = "Окно спереди"
+title = "Окна спереди"
 kind = 1
 rule = 1
-position = Vector3(0, 2.2, -6.8)
+position = Vector3(-0.02, 6.82, -5.17)
 color = Color(1, 0.78, 0.45, 1)
-energy = 1.2
-light_range = 6.0
+energy = 1.0
+light_range = 7.0
+glow_energy = 3.0
+glow_rects = Array[ExtResource("32_glrect")]([SubResource("Resource_gr1"), SubResource("Resource_gr2"), SubResource("Resource_gr3"), SubResource("Resource_gr4"), SubResource("Resource_gr5"), SubResource("Resource_gr6"), SubResource("Resource_gr7"), SubResource("Resource_gr8"), SubResource("Resource_gr9")])
+glow_rect_ratio = 0.7
 fade_time = 0.8
 delay_jitter = 8.0
 
 [sub_resource type="Resource" id="Resource_hw2"]
 script = ExtResource("30_lcfg")
 id = &"window_2"
-title = "Окно сзади"
+title = "Окна сзади"
 kind = 1
 rule = 1
-position = Vector3(0, 2.2, 5.4)
+position = Vector3(-0.87, 6.42, 4.86)
 color = Color(1, 0.78, 0.45, 1)
-energy = 1.2
-light_range = 6.0
+energy = 1.0
+light_range = 7.0
+glow_energy = 3.0
+glow_rects = Array[ExtResource("32_glrect")]([SubResource("Resource_gr10"), SubResource("Resource_gr11"), SubResource("Resource_gr12"), SubResource("Resource_gr13"), SubResource("Resource_gr14"), SubResource("Resource_gr15"), SubResource("Resource_gr16"), SubResource("Resource_gr17"), SubResource("Resource_gr18"), SubResource("Resource_gr19"), SubResource("Resource_gr20"), SubResource("Resource_gr21"), SubResource("Resource_gr22"), SubResource("Resource_gr23")])
+glow_rect_ratio = 0.7
 fade_time = 0.8
 delay_jitter = 8.0
 
 [sub_resource type="Resource" id="Resource_hw3"]
 script = ExtResource("30_lcfg")
 id = &"window_3"
-title = "Окно слева"
+title = "Окна слева"
 kind = 1
 rule = 1
-position = Vector3(-7.6, 2.2, 0)
+position = Vector3(-7.43, 5.76, -0.15)
 color = Color(1, 0.78, 0.45, 1)
-energy = 1.2
-light_range = 6.0
+energy = 1.0
+light_range = 7.0
+glow_energy = 3.0
+glow_rects = Array[ExtResource("32_glrect")]([SubResource("Resource_gr24"), SubResource("Resource_gr25"), SubResource("Resource_gr26"), SubResource("Resource_gr27")])
+glow_rect_ratio = 0.7
 fade_time = 0.8
 delay_jitter = 8.0
 
 [sub_resource type="Resource" id="Resource_hw4"]
 script = ExtResource("30_lcfg")
 id = &"window_4"
-title = "Окно справа"
+title = "Окна справа"
 kind = 1
 rule = 1
-position = Vector3(7.6, 2.2, 0)
+position = Vector3(7.83, 5.21, -0.02)
 color = Color(1, 0.78, 0.45, 1)
-energy = 1.2
-light_range = 6.0
+energy = 1.0
+light_range = 7.0
+glow_energy = 3.0
+glow_rects = Array[ExtResource("32_glrect")]([SubResource("Resource_gr28"), SubResource("Resource_gr29"), SubResource("Resource_gr30"), SubResource("Resource_gr31"), SubResource("Resource_gr32")])
+glow_rect_ratio = 0.7
 fade_time = 0.8
 delay_jitter = 8.0
 

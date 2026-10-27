@@ -5,8 +5,8 @@ class_name LightConfig extends Resource
 ## Исполняет C_Mechanisms (общий компонент механизмов и света, ATTN_16_mechanisms.md).
 ########################
 ## Источник создаётся КОДОМ в точке из этого конфига, в сцене модели маркеры ставить не нужно.
-## Реализованы: kind = SPOT / OMNI, rule = COMMAND / NIGHT / DIRECTION / ALWAYS.
-## Остальное - заготовки под следующие шаги (EMISSIVE: L6, правила POWERED и SPEED: L8, ROUTE: L7).
+## Реализованы: kind = SPOT / OMNI / EMISSIVE, rule = COMMAND / NIGHT / DIRECTION / ALWAYS, свечение (glow_*).
+## Остальное - заготовки под следующие шаги (правила POWERED и SPEED: L8, ROUTE: L7).
 ##
 ## Координаты. Если anchor_role пусто, позиция считается в системе корня сцены модели (instance):
 ##   то же пространство, что у bogie_configs и coupler_offset. Ось -Z = FRONT (нос), +Z = REAR (хвост),
@@ -15,7 +15,10 @@ class_name LightConfig extends Resource
 ##   Фара назад: (0, 180, 0). Наклон вниз: rotation_deg.x < 0 (например, -8).
 ## Единицы: 1 юнит = 1 см модели, стол 200 x 100. Дальность фары около 20-40, окна дома около 10-20.
 
+## EMISSIVE: без Light3D, только светящийся элемент (glow_*)
 enum Kind { SPOT, OMNI, EMISSIVE }
+## Форма светящегося элемента в точке источника. DISC: плоский диск, ось вдоль оси источника (линза фары)
+enum GlowShape { NONE, DISC, SPHERE }
 ## Кто выставляет состояние. COMMAND: только игрок. NIGHT: по времени суток. DIRECTION: по направлению движения.
 ## ALWAYS: горит с создания. POWERED, SPEED, ROUTE пока заготовки.
 ## Команда игрока (InfoPanel, I) ставит manual и перекрывает правило до события-сброса:
@@ -61,6 +64,21 @@ const GAIN_MAX := 2.0
 @export_range(1.0, 89.0) var spot_angle: float = 35.0
 ## SPOT: затухание к краю конуса (больше - мягче край)
 @export var spot_attenuation: float = 1.0
+
+@export_category("Свечение (L6)")
+## Видимый светящийся элемент (линза, плафон) в точке источника, горит вместе с ним. Работает и когда Light3D скрыт
+## бюджетом или качеством Low (QualityPreset.entity_light_emissive_only)
+@export var glow_shape: GlowShape = GlowShape.NONE
+## Диаметр элемента
+@export var glow_size: float = 0.5
+## Смещение элемента от position (в системе родителя)
+@export var glow_offset: Vector3 = Vector3.ZERO
+## Яркость свечения материала (больше 1 даёт HDR и bloom, если он включён в Look)
+@export var glow_energy: float = 3.0
+## Светящиеся прямоугольники (окна). Цвет берётся из color
+@export var glow_rects: Array[GlowRect] = []
+## Доля прямоугольников, которые горят (0..1). Выбор случайный, но стабильный в пределах сессии
+@export_range(0.0, 1.0) var glow_rect_ratio: float = 1.0
 
 @export_category("Состояние")
 ## Секунд на полное включение или выключение

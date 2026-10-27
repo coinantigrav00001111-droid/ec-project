@@ -58,7 +58,9 @@ class Mech extends RefCounted:
 class Lamp extends RefCounted:
 	var cfg: LightConfig
 	var anchor: Node3D          # родитель источника; null - узел-родитель не найден
-	var light: Light3D          # null - источник не создан (kind EMISSIVE до шага L6)
+	var light: Light3D          # null - Light3D не создан (kind EMISSIVE)
+	var glow: Node3D            # светящиеся элементы (LightConfig.glow_*), null - нет
+	var glow_mat: StandardMaterial3D
 	var gizmo: Node3D           # отладочная метка точки и направления
 	var t := 0.0                # текущая яркость 0..1
 	var target := 0.0
@@ -72,9 +74,12 @@ class Lamp extends RefCounted:
 	func is_changing() -> bool:
 		return not is_equal_approx(t, target)
 
-	## Хочет гореть (до учёта бюджета)
+	## Light3D хочет гореть (до учёта бюджета)
 	func wants_on() -> bool:
 		return light != null and t > 0.001 and not ghost
+
+	func has_output() -> bool:
+		return light != null or glow != null
 
 	## Возвращает true, если дошли до цели в этом шаге
 	func step(dt: float) -> bool:
@@ -87,10 +92,14 @@ class Lamp extends RefCounted:
 		return was and not is_changing()
 
 	func apply() -> void:
-		if light == null or not is_instance_valid(light):
-			return
-		light.light_energy = cfg.energy * gain * t
-		light.visible = wants_on() and not culled
+		if light != null and is_instance_valid(light):
+			light.light_energy = cfg.energy * gain * t
+			light.visible = wants_on() and not culled
+		if glow != null and is_instance_valid(glow):
+			var on := t > 0.001 and not ghost
+			glow.visible = on
+			if on and glow_mat:
+				glow_mat.emission_energy_multiplier = cfg.glow_energy * gain * t
 
 
 var _mechs: Dictionary = {}          # StringName -> Mech
@@ -383,7 +392,7 @@ func get_light_list() -> Array[Dictionary]:
 		var l: Lamp = _lamps[id]
 		res.append({
 			"id": id, "title": l.cfg.title, "t": l.t, "target": l.target,
-			"found": l.anchor != null and l.light != null, "enabled": l.enabled, "changing": l.is_changing(),
+			"found": l.anchor != null and l.has_output(), "enabled": l.enabled, "changing": l.is_changing(),
 			"gain": l.gain, "rule": l.cfg.rule, "manual": l.manual, "culled": l.culled and l.wants_on(),
 		})
 	return res
@@ -414,7 +423,7 @@ func _build_lamp(cfg: LightConfig, vis: C_Visual) -> Lamp:
 			o.omni_range = cfg.light_range
 			l.light = o
 		_:
-			push_warning("[C_Mechanisms] %s: источник '%s' типа EMISSIVE пока не поддержан (шаг L6)" % [entity.name, cfg.id])
+			pass   # EMISSIVE: только светящиеся элементы (_build_glow)
 
 	if l.light:
 		l.light.name = "Light_" + String(cfg.id)
@@ -426,6 +435,8 @@ func _build_lamp(cfg: LightConfig, vis: C_Visual) -> Lamp:
 		l.light.rotation_degrees = cfg.rotation_deg
 		parent.add_child(l.light)
 
+	_build_glow(l, parent)
+
 	l.gizmo = _make_gizmo(cfg)
 	l.gizmo.position = cfg.position
 	l.gizmo.rotation_degrees = cfg.rotation_deg
@@ -435,6 +446,72 @@ func _build_lamp(cfg: LightConfig, vis: C_Visual) -> Lamp:
 	l.t = cfg.start_state
 	l.target = cfg.start_state
 	return l
+
+
+## Светящиеся элементы: диск или шарик в точке источника и прямоугольники (окна)
+func _build_glow(l: Lamp, parent: Node3D) -> void:
+	var cfg := l.cfg
+	var rects: Array[GlowRect] = []
+	for i in cfg.glow_rects.size():
+		var gr: GlowRect = cfg.glow_rects[i]
+		if gr == null:
+			continue
+		if cfg.glow_rect_ratio < 1.0:
+			var h := absi(hash("%s/%s/%d" % [entity.name, cfg.id, i])) % 1000
+			if float(h) / 1000.0 >= cfg.glow_rect_ratio:
+				continue
+		rects.append(gr)
+	var has_point := cfg.glow_shape != LightConfig.GlowShape.NONE
+	if not has_point and rects.is_empty():
+		return
+
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color.BLACK
+	mat.emission_enabled = true
+	mat.emission = cfg.color
+	mat.emission_energy_multiplier = 0.0
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+
+	var holder := Node3D.new()
+	holder.name = "Glow_" + String(cfg.id)
+	holder.visible = false
+
+	if has_point:
+		var pt := Node3D.new()
+		pt.position = cfg.position + cfg.glow_offset
+		pt.rotation_degrees = cfg.rotation_deg
+		var mi := MeshInstance3D.new()
+		if cfg.glow_shape == LightConfig.GlowShape.SPHERE:
+			var sm := SphereMesh.new()
+			sm.radius = cfg.glow_size * 0.5
+			sm.height = cfg.glow_size
+			mi.mesh = sm
+		else:
+			var cm := CylinderMesh.new()
+			cm.top_radius = cfg.glow_size * 0.5
+			cm.bottom_radius = cfg.glow_size * 0.5
+			cm.height = cfg.glow_size * 0.15
+			mi.mesh = cm
+			mi.rotation_degrees = Vector3(90.0, 0.0, 0.0)   # ось цилиндра вдоль оси источника
+		mi.material_override = mat
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		pt.add_child(mi)
+		holder.add_child(pt)
+
+	for gr in rects:
+		var q := MeshInstance3D.new()
+		var qm := QuadMesh.new()
+		qm.size = gr.size
+		q.mesh = qm
+		q.material_override = mat
+		q.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		q.position = gr.position
+		q.rotation_degrees = gr.rotation_deg
+		holder.add_child(q)
+
+	parent.add_child(holder)
+	l.glow = holder
+	l.glow_mat = mat
 
 
 func _apply_all_lamps() -> void:
@@ -499,7 +576,7 @@ func print_layout() -> void:
 	for id in _lamp_order:
 		var l: Lamp = _lamps[id]
 		lines.append("  %s: pos %s rot %s %s" % [id, l.cfg.position, l.cfg.rotation_deg,
-				"" if l.anchor != null and l.light != null else "[NO LIGHT]"])
+				"" if l.anchor != null and l.has_output() else "[NO LIGHT]"])
 	print("\n".join(lines))
 
 
@@ -514,7 +591,7 @@ func get_debug_info() -> Array[String]:
 		var l: Lamp = _lamps[id]
 		res.append("light %s: t=%.2f -> %.2f gain %.2f rule %s%s %s%s%s" % [id, l.t, l.target, l.gain,
 				LightConfig.Rule.keys()[l.cfg.rule], " (manual)" if l.manual else "",
-				"" if l.light else "[NO LIGHT] ", "[culled] " if l.culled else "", "" if l.enabled else "[off]"])
+				"" if l.has_output() else "[NO LIGHT] ", "[culled] " if l.culled else "", "" if l.enabled else "[off]"])
 	return res
 
 

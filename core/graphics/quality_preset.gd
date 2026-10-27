@@ -59,7 +59,7 @@ class_name QualityPreset extends Resource
 ## Сколько источников света сущностей (фары, окна, сигналы) горят одновременно. Ближайшие к камере,
 ## остальные скрыты, их состояние сохраняется. 0 = все выключены
 @export var entity_light_max := 8
-## Заготовка (шаг L6): вместо Light3D только свечение материалов
+## Вместо Light3D только светящиеся элементы (LightConfig.glow_*). Дёшево: для Low
 @export var entity_light_emissive_only := false
 
 @export_category("Room (S7)")
@@ -80,7 +80,7 @@ static func builtin(_id: StringName) -> QualityPreset:
 				"msaa": 0, "fxaa": true,
 				"ssao": false, "ssil": false, "contact_shadows": false,
 				"tilt_shift": false, "dof": false, "outlines_all": false, "room_detail_lod": 0,
-				"entity_light_max": 3,
+				"entity_light_max": 3, "entity_light_emissive_only": true,
 			})
 		&"medium":
 			return _make(_id, "Medium", {

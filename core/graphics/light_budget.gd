@@ -31,7 +31,9 @@ func unregister(comp: Node) -> void:
 
 func get_max() -> int:
 	var q: QualityPreset = GFX.get_quality()
-	return q.entity_light_max if q else DEFAULT_MAX
+	if q == null:
+		return DEFAULT_MAX
+	return 0 if q.entity_light_emissive_only else q.entity_light_max
 
 
 func _process(delta: float) -> void:
