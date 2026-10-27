@@ -115,12 +115,10 @@ func _usable_rect(w: Window) -> Rect2i:
 
 func _center(w: Window, size: Vector2i) -> void:
 	var r := _usable_rect(w)
-<<<<<<< HEAD
+	@warning_ignore("integer_division")
 	w.position = r.position + ((r.size - size) / 2) as Vector2i
-=======
 	@warning_ignore("integer_division")
 	w.position = r.position + Vector2i((r.size.x - size.x) / 2, (r.size.y - size.y) / 2)
->>>>>>> Icon Studio: камера, слоты, свет, фон, тень, качество, предпросмотр 1:1 (ATTN_18 I2-I4)
 
 
 ## Левый верхний угол окна (с запасом под заголовок) должен попадать на какой-то из экранов

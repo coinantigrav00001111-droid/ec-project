@@ -232,7 +232,7 @@ func _update_ground() -> void:
 		return
 	var horizon := int(_template.bg_mode) == 2
 	_ground.visible = horizon or bool(_template.shadow)
-	_ground.material_override = _mat_ground if horizon else _mat_catcher
+	_ground.material_override = _mat_ground if horizon else _mat_catcher 
 	var c := bounds.get_center()
 	_ground.position = Vector3(c.x, bounds.position.y - 0.01, c.z)
 
