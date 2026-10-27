@@ -22,7 +22,6 @@ func create_component(entity) -> Component:
 		comp.max_yaw_deg = identity.get_config('max_yaw_deg', 0.0)	
 		comp.yaw_spring = identity.get_config('yaw_spring', 0.0)	
 		#"Suspension (Travel & Play)"
-		comp.suspension_stiffness = identity.get_config('suspension_stiffness', 0.0)	
 		
 	comp.name = 'C_Kinematics'
 	entity.add_component(comp) # Добавили комп к объекту

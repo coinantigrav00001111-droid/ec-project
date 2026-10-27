@@ -776,18 +776,6 @@ layout_mode = 2
 max_value = 10000.0
 value = 1.0
 
-[node name="Label8" type="Label" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer" unique_id=517258060]
-layout_mode = 2
-text = "stiffness"
-
-[node name="SusStiffness" type="SpinBox" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer" unique_id=1677843883]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(77, 0)
-layout_mode = 2
-size_flags_vertical = 0
-max_value = 10000.0
-value = 10.0
-
 [node name="Label9" type="Label" parent="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer" unique_id=2124212293]
 layout_mode = 2
 text = "max_speed: "
@@ -839,5 +827,4 @@ fit_content = true
 [connection signal="value_changed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer/LongGrip" to="." method="_on_long_grip_value_changed"]
 [connection signal="value_changed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer/MaxYawDeg" to="." method="_on_max_yaw_deg_value_changed"]
 [connection signal="value_changed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer/YawSpring" to="." method="_on_yaw_spring_value_changed"]
-[connection signal="value_changed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer/SusStiffness" to="." method="_on_sus_stiffness_value_changed"]
 [connection signal="pressed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer/WagonCameraButton" to="." method="_on_wagon_camera_button_pressed"]

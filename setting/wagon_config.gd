@@ -38,10 +38,6 @@ class_name WagonConfig extends ObjectConfig
 ## Подвеска кузова (частоты, упоры, стыки, hunting). Пусто - значения по умолчанию из SuspensionConfig.
 @export var suspension: SuspensionConfig
 
-## УСТАРЕЛО: три поля ниже подвеской больше не читаются (см. SuspensionConfig.limit_heave / limit_sway / *_hz).
-## Их ещё читает KinematicsSetting - можно удалить вместе с ним.
-@export var suspension_stiffness: float = 10.0 # Жесткость амортизаторов
-
 
 @export_category("Engine Settings (Мотор)")
 @export var has_engine: bool = false # Флаг, локомотив ли это # TODO лишний?

@@ -480,7 +480,6 @@ func get_wagon_props(_p: String) -> float:
 		'max_theoretical_speed': return _kin.max_theoretical_speed
 		'max_yaw_deg': return _kin.max_yaw_deg
 		'yaw_spring': return _kin.yaw_spring
-		'suspension_stiffness': return _kin.suspension_stiffness
 	return 0.0
 
 
