@@ -907,11 +907,20 @@ func _update_terrain_tab() -> void:
 ## Размер в плане, толщина и положение по уровням. Живые значения: вкладка обновляется при смене цели и стадии
 func _refresh_terrain_info(layer: C_TerrainLayer) -> void:
 	var T: float = Global.settings.layer_height
-	var identity := current_target.get_comp(C_Identity) as C_Identity
-	var _size: Vector2 = identity.get_config('size', Vector2.ZERO) if identity else Vector2.ZERO
+	# XX claude-terra 13.2 B1: размер берем из контура листа, а не из TerrainConfig (лист может быть любой формы)
+	var contour := current_target.get_comp(C_Contour) as C_Contour
+	var _size := Vector2.ZERO
+	if contour:
+		_size = contour.size()
+	else:
+		var identity := current_target.get_comp(C_Identity) as C_Identity
+		_size = identity.get_config('size', Vector2.ZERO) if identity else Vector2.ZERO
 	var base := roundi(layer.base_y() / T)
-	_terrain_info.text = "Размер: %d × %d u\nСлоёв: %d (высота %.1f u)\nНижний уровень: %d, верхний: %d\nВырезов: %d" % [
-		_size.x, _size.y, layer.levels, layer.levels * T, base, base + layer.levels, layer.cuts.size()]
+	var shape_text := ""
+	if contour and not contour.is_rect():
+		shape_text = "Вершин: %d, площадь: %.0f u²\n" % [contour.points.size(), contour.area()]
+	_terrain_info.text = "Размер: %d × %d u\n%sСлоёв: %d (высота %.1f u)\nНижний уровень: %d, верхний: %d\nВырезов: %d" % [
+		roundi(_size.x), roundi(_size.y), shape_text, layer.levels, layer.levels * T, base, base + layer.levels, layer.cuts.size()]
 
 
 func _on_stage_selected(index: int) -> void:

@@ -363,7 +363,9 @@ func _rebuild() -> void:
 	var pts := contour.normalized_points()
 
 	if Geometry2D.triangulate_polygon(pts).is_empty():
-		push_warning("[C_TerrainLayer] контур не триангулируется (вырожденный или самопересекающийся), лист не построен")
+		# XX claude-terra 13.2 B1: называем причину (самопересечение, короткое ребро и т.д.), если проверка её находит
+		var why := C_Contour.validate(pts)
+		push_warning("[C_TerrainLayer] контур не триангулируется, лист не построен%s" % ((": " + why) if why != "" else " (вырожденный контур)"))
 		_blocks.clear()
 		mesh_node.mesh = null
 		_clear_shapes()
