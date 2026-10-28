@@ -23,6 +23,7 @@ var debug_mode := true
 var fast_debug := OS.get_cmdline_user_args().has("--fast") or bool(ProjectSettings.get_setting("ec/fast_debug", false))
 ##=======
 ## Физика вагона во время драга. false (по умолчанию): rb замораживается и едет за ентити как ребёнок,
+## Физика вагона во время драга. false (по умолчанию): rb замораживается и едет за ентити как ребёнок,
 ## без «догоняния» и броска. true: прежнее поведение, rb догоняет ентити скоростями (можно бросить вагон)
 var drag_physics := false
 

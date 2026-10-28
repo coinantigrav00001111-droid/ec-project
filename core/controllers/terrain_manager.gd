@@ -151,7 +151,7 @@ func overlap_area(a: PackedVector2Array, b: PackedVector2Array) -> float:
 
 ## --- Отладка (Global.debug_mode) ---
 
-## F8: сверить аналитику с физическим лучом под курсором
+## F7: сверить аналитику с физическим лучом под курсором
 func _unhandled_input(event: InputEvent) -> void:
 	if not Global.debug_mode:
 		return
