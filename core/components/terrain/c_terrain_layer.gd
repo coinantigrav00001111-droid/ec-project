@@ -295,11 +295,19 @@ func _auto_signature(list: Array[FoamCut]) -> String:
 	return s
 
 
-## Вертикальный магнит (T5). Если верх листа ближе terrain_snap_dy к низу балласта плоского трака,
-## под которым (или внутри которого) лежит лист, поднимаем или опускаем лист, чтобы верх встал вплотную.
+## Вертикальный магнит (T5). Верх листа встаёт вплотную к низу балласта плоского трака, под которым (или внутри
+## которого) лежит лист. Две зоны:
+##  - трак чуть НИЖЕ верха листа (не дальше terrain_snap_dy): лист опускается;
+##  - трак ВЫШЕ верха листа (не дальше terrain_snap_levels слоёв, 13.2): лист поднимается под него.
+## Вторая зона нужна, потому что траки и листы стоят по уровням: между ними 0 или целые слои, и допуск 0,6 один
+## никогда не срабатывает. Выбирается ближайший трак. Alt: без магнита.
 ## y_floor: ниже этой отметки лист опускать нельзя (поверхность под курсором). Вызывает C_TerrainDraggable
 func snap_to_tracks(y_floor: float) -> void:
-	var dy_max: float = Global.settings.terrain_snap_dy
+	if Input.is_key_pressed(KEY_ALT):
+		return
+	var T: float = Global.settings.layer_height
+	var dy_down: float = Global.settings.terrain_snap_dy
+	var dy_up: float = float(Global.settings.terrain_snap_levels) * T
 	var mine := world_polygon()
 	var top := top_y()
 	var best := INF
@@ -307,7 +315,7 @@ func snap_to_tracks(y_floor: float) -> void:
 	for t in TGM.get_flat_tracks():
 		var path := t.get_comp(C_Path) as C_Path
 		var d := path.bottom_y() - top
-		if absf(d) > dy_max or absf(d) >= best:
+		if d > dy_up + TGM.EPS or d < -dy_down - TGM.EPS or absf(d) >= best:
 			continue
 		if TGM.overlap_area(mine, path.footprint_world()) <= TGM.MIN_OVERLAP_AREA:
 			continue
