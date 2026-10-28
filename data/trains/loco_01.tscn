@@ -123,9 +123,6 @@ height = 0.4
 [sub_resource type="BoxShape3D" id="BoxShape3D_3owqy"]
 size = Vector3(3.8068066, 4.625992, 8.961784)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_eg6rk"]
-size = Vector3(3, 1, 1)
-
 [node name="WagonRigidBody3D" type="RigidBody3D" unique_id=662628486]
 collision_layer = 16
 collision_mask = 1045
@@ -183,19 +180,3 @@ mesh = SubResource("SphereMesh_by7bw")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3128376, -0.16265488)
 shape = SubResource("BoxShape3D_3owqy")
 debug_color = Color(0, 0.6, 0.69803923, 1)
-
-[node name="CouplerFrontArea3D" type="Area3D" parent="." unique_id=1349808758]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -5.1)
-collision_layer = 32
-collision_mask = 32
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="CouplerFrontArea3D" unique_id=169618982]
-shape = SubResource("BoxShape3D_eg6rk")
-
-[node name="CouplerRearArea3D" type="Area3D" parent="." unique_id=422566572]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 4.9)
-collision_layer = 32
-collision_mask = 32
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="CouplerRearArea3D" unique_id=281443972]
-shape = SubResource("BoxShape3D_eg6rk")

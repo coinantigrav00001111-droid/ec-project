@@ -481,9 +481,6 @@ height = 0.4
 [sub_resource type="BoxShape3D" id="BoxShape3D_1l2rq"]
 size = Vector3(3.5399437, 3.8630037, 14.867363)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_abtlk"]
-size = Vector3(3, 1, 1)
-
 [sub_resource type="Animation" id="Animation_ibd7t"]
 length = 0.001
 
@@ -537,22 +534,6 @@ mesh = SubResource("SphereMesh_rpp56")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0045642853, 1.9356451, 0.015224457)
 shape = SubResource("BoxShape3D_1l2rq")
 debug_color = Color(0, 0.6, 0.69803923, 1)
-
-[node name="CouplerFrontArea3D" type="Area3D" parent="." unique_id=581434243]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -8.2)
-collision_layer = 32
-collision_mask = 32
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="CouplerFrontArea3D" unique_id=196988652]
-shape = SubResource("BoxShape3D_abtlk")
-
-[node name="CouplerRearArea3D" type="Area3D" parent="." unique_id=765606324]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 8.2)
-collision_layer = 32
-collision_mask = 32
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="CouplerRearArea3D" unique_id=628777583]
-shape = SubResource("BoxShape3D_abtlk")
 
 [node name="AnimationPlayerR" type="AnimationPlayer" parent="." unique_id=2009599796]
 libraries/ = SubResource("AnimationLibrary_10nmm")

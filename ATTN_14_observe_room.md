@@ -454,9 +454,9 @@ ObserveObjects:
 | 3 | 2 | `tracks` | траки |
 | 4 | 3 | `sokets` | сокеты |
 | 5 | 4 | `trains` | вагоны |
-| 6 | 5 | `supports` | опоры (резерв) |
 | 7 | 6 | `handles` | ручки flex |
 | **8** | **7** | **`room`** | **пол, стены, мебель комнаты** |
+| 9 | 8 | `supports` | опоры эстакады |
 | 11 | 10 | `ghost` | призраки и выбранное |
 
 Лучи тулов и `underground_depth` комнату **не видят** (`room` не в их маске). Вагоны (`rb.collision_mask`) комнату видят. Ножки стола тоже на `room`, верх столешницы на `ground`.
@@ -467,7 +467,7 @@ ObserveObjects:
 
 ## 14.9. Изменения в других разделах TDD
 
-- §6 «Слои»: добавить `supports` (5), `handles` (6), `room` (7).
+- §6 «Слои»: добавить `handles` (6), `room` (7), `supports` (8).
 - §3 / §7: `RoomRoot` и `EnvironmentRoot` как владельцы своих нод вне `EntitiesRoot`.
 - §10 Power: `PGM.toggle_power_layer(false)` при входе в Observe, вернуть при выходе (если был включён).
 - §11 Save/Load: `room_id`, `room variants`, `look`, `time_of_day`, закладки камер. Настройки качества в `user://settings.cfg`, не в сейве. Перенос `res://saves/` в `user://`.

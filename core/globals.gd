@@ -77,10 +77,9 @@ func active_layers(data:Array) -> int:
 			'tracks' : i = i | 1 << 2
 			'sokets' : i = i | 1 << 3
 			'trains' : i = i | 1 << 4
-			# XX claude-terra опоры эстакады (StaticBody3D C_TrackSupport, сталкиваются вагоны, 13.1.5). Бит 8, не 5:
-			# на бите 5 лежат Area3D сцепок вагонов (CouplerFront/RearArea3D, слой и маска 32)
+			# XX claude-terra опоры эстакады (StaticBody3D C_TrackSupport, сталкиваются вагоны, 13.1.5). Бит 8
 			'supports' : i = i | 1 << 8
-			'handles' : i = i | 1 << 6   # ручки flex (бит 5 занят опорами)
+			'handles' : i = i | 1 << 6   # ручки flex
 			'room'   : i = i | 1 << 7    # пол, стены, мебель комнаты (Observe)
 			'ghost'  : i = i | 1 << 10
 			## Контуры Outline это visual layers 15-20 (cull_mask), к физике не относятся
