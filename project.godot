@@ -446,12 +446,9 @@ key_ctrl_s={
 3d_physics/layer_4="sockets"
 3d_physics/layer_5="trains"
 3d_physics/layer_7="flex_handle"
+3d_physics/layer_8="room"
+3d_physics/layer_9="supports"
 3d_physics/layer_11="ghost"
-3d_physics/layer_16="outline"
-3d_physics/layer_17="outline"
-3d_physics/layer_18="outline"
-3d_physics/layer_19="outline"
-3d_physics/layer_20="outline"
 
 [physics]
 
