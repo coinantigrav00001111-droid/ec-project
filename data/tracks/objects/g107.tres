@@ -3,18 +3,17 @@
 [ext_resource type="Script" uid="uid://m4g5jbfwmaa0" path="res://core/component_setting.gd" id="1_bcc04"]
 [ext_resource type="Texture2D" uid="uid://c8tndy1lksot8" path="res://ui/icons/transport/rail-road.svg" id="1_xc5op"]
 [ext_resource type="Script" uid="uid://b7ds2l6clrm61" path="res://setting/track_config.gd" id="2_bok70"]
-[ext_resource type="PackedScene" uid="uid://lm53hit4fqho" path="res://data/tracks/G107.tscn" id="2_wapab"]
 [ext_resource type="Script" uid="uid://do5hjkm3r2pdg" path="res://core/entity_setting.gd" id="3_cfn0m"]
-[ext_resource type="Script" uid="uid://bulwl3x2rykxk" path="res://core/components/comp_settings/trackvisual_setting.gd" id="3_g5gim"]
 [ext_resource type="Script" uid="uid://mpakwrr6lum8" path="res://core/components/comp_settings/identity_setting.gd" id="3_g78cg"]
+[ext_resource type="Script" uid="uid://1xmvhthiwc64" path="res://core/components/comp_settings/stylevisual_setting.gd" id="4_h754m"]
 [ext_resource type="Script" uid="uid://b1jwuxb32so7e" path="res://core/components/comp_settings/trackdraggable_setting.gd" id="5_k5ypo"]
 [ext_resource type="Script" uid="uid://djbifkyei01t7" path="res://core/components/comp_settings/pivot_setting.gd" id="6_cn60n"]
 [ext_resource type="Script" uid="uid://cuumo0qj7r7gb" path="res://core/components/comp_settings/hoverable_setting.gd" id="7_h754m"]
 [ext_resource type="Script" uid="uid://deljgsmo4bpow" path="res://core/components/comp_settings/selectable_setting.gd" id="8_bok70"]
 [ext_resource type="Script" uid="uid://chprgtlxn3aub" path="res://core/components/comp_settings/blockable_setting.gd" id="9_g78cg"]
 [ext_resource type="Script" uid="uid://bv065wdiw674c" path="res://core/components/comp_settings/socked_setting.gd" id="10_8d5cd"]
-[ext_resource type="Script" uid="uid://b7f7dka1i3slu" path="res://core/components/comp_settings/path_setting.gd" id="11_qkg7p"]
 [ext_resource type="Script" uid="uid://cjk51o364xfn" path="res://core/components/comp_settings/powertrack_setting.gd" id="12_cn60n"]
+[ext_resource type="Script" uid="uid://cs257ge2f37bu" path="res://core/components/comp_settings/tracksupport_setting.gd" id="13_bok70"]
 
 [sub_resource type="Resource" id="Resource_7jyoi"]
 script = ExtResource("2_bok70")
@@ -26,10 +25,9 @@ script = ExtResource("3_g78cg")
 object_config = SubResource("Resource_7jyoi")
 metadata/_custom_type_script = "uid://mpakwrr6lum8"
 
-[sub_resource type="Resource" id="Resource_yfcut"]
-script = ExtResource("3_g5gim")
-scene = ExtResource("2_wapab")
-metadata/_custom_type_script = "uid://bulwl3x2rykxk"
+[sub_resource type="Resource" id="Resource_khprp"]
+script = ExtResource("4_h754m")
+metadata/_custom_type_script = "uid://1xmvhthiwc64"
 
 [sub_resource type="Resource" id="Resource_iqocg"]
 script = ExtResource("5_k5ypo")
@@ -51,11 +49,6 @@ metadata/_custom_type_script = "uid://deljgsmo4bpow"
 script = ExtResource("9_g78cg")
 metadata/_custom_type_script = "uid://chprgtlxn3aub"
 
-[sub_resource type="Resource" id="Resource_8d5cd"]
-script = ExtResource("11_qkg7p")
-radius = 10.7
-metadata/_custom_type_script = "uid://b7f7dka1i3slu"
-
 [sub_resource type="Resource" id="Resource_lnr61"]
 script = ExtResource("10_8d5cd")
 metadata/_custom_type_script = "uid://bv065wdiw674c"
@@ -64,11 +57,15 @@ metadata/_custom_type_script = "uid://bv065wdiw674c"
 script = ExtResource("12_cn60n")
 metadata/_custom_type_script = "uid://cjk51o364xfn"
 
+[sub_resource type="Resource" id="Resource_vy5g2"]
+script = ExtResource("13_bok70")
+metadata/_custom_type_script = "uid://cs257ge2f37bu"
+
 [resource]
 script = ExtResource("3_cfn0m")
 id = 13
 name = "G107"
 description = "Прямой трак 10.7см"
 icon = ExtResource("1_xc5op")
-components = Array[ExtResource("1_bcc04")]([SubResource("Resource_5an37"), SubResource("Resource_yfcut"), SubResource("Resource_iqocg"), SubResource("Resource_0xkto"), SubResource("Resource_qqtt6"), SubResource("Resource_o7fpk"), SubResource("Resource_t8too"), SubResource("Resource_8d5cd"), SubResource("Resource_lnr61"), SubResource("Resource_7h1k1")])
+components = Array[ExtResource("1_bcc04")]([SubResource("Resource_5an37"), SubResource("Resource_khprp"), SubResource("Resource_iqocg"), SubResource("Resource_0xkto"), SubResource("Resource_qqtt6"), SubResource("Resource_o7fpk"), SubResource("Resource_t8too"), SubResource("Resource_lnr61"), SubResource("Resource_7h1k1"), SubResource("Resource_vy5g2")])
 metadata/_custom_type_script = "uid://do5hjkm3r2pdg"

@@ -10,6 +10,7 @@
 [ext_resource type="Script" uid="uid://mpakwrr6lum8" path="res://core/components/comp_settings/identity_setting.gd" id="6_n280y"]
 [ext_resource type="Script" uid="uid://gv2lrhu17dtf" path="res://setting/mechanism_config.gd" id="6_yrtcf"]
 [ext_resource type="Script" uid="uid://b830vi2lx3hl5" path="res://core/components/comp_settings/trainvisual_setting.gd" id="7_i4jyf"]
+[ext_resource type="Script" uid="uid://cteud8ws67l53" path="res://setting/glow_rect.gd" id="7_ohs0c"]
 [ext_resource type="Script" uid="uid://bwaluvayi2o8k" path="res://setting/suspension_config.gd" id="8_i4jyf"]
 [ext_resource type="Script" uid="uid://bkdny7eq5jthn" path="res://core/components/comp_settings/traindraggable_setting.gd" id="9_maqnf"]
 [ext_resource type="Script" uid="uid://cuumo0qj7r7gb" path="res://core/components/comp_settings/hoverable_setting.gd" id="10_ohs0c"]
@@ -42,14 +43,14 @@ script = ExtResource("30_lcfg")
 title = "Фара передняя"
 kind = 1
 rule = 2
-glow_shape = 1
-glow_size = 1.0
-glow_offset = Vector3(0, 0, -0.15)
-glow_energy = 4.0
 position = Vector3(0, 3, -4.8)
 rotation_deg = Vector3(-6, 0, 0)
 light_range = 40.0
 spot_angle = 30.0
+glow_shape = 1
+glow_size = 1.0
+glow_offset = Vector3(0, 0, -0.15)
+glow_energy = 4.0
 
 [sub_resource type="Resource" id="Resource_lt_rear"]
 script = ExtResource("30_lcfg")
@@ -58,14 +59,13 @@ title = "Фара задняя"
 kind = 1
 rule = 2
 dir_end = 1
-glow_shape = 1
-glow_size = 0.8
-glow_offset = Vector3(0, 0, 0.15)
-glow_energy = 3.0
 position = Vector3(0, 3, 4.4)
 rotation_deg = Vector3(-6, 180, 0)
 color = Color(1, 0.15, 0.1, 1)
 light_range = 25.0
+glow_shape = 1
+glow_size = 0.8
+glow_offset = Vector3(0, 0, 0.15)
 
 [sub_resource type="Resource" id="Resource_lt_cab"]
 script = ExtResource("30_lcfg")

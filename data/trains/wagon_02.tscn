@@ -289,7 +289,7 @@ radius = 0.2
 height = 0.4
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_3owqy"]
-size = Vector3(3.4974213, 1.3488741, 12.031181)
+size = Vector3(3.4974213, 1.3488741, 12.882185)
 
 [node name="WagonRigidBody3D" type="RigidBody3D" unique_id=662628486]
 collision_layer = 16
@@ -309,6 +309,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -10)
 mesh = SubResource("SphereMesh_by7bw")
 
 [node name="WagonCollisionShape3D" type="CollisionShape3D" parent="." unique_id=1520040488]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32558346, 0.051792145)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32558346, -0.0056505203)
 shape = SubResource("BoxShape3D_3owqy")
 debug_color = Color(0, 0.6, 0.69803923, 1)
