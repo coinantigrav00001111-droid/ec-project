@@ -63,7 +63,7 @@
 
 ##### TerrainManager (`TGM`, `core/controllers/terrain_manager.gd`)
 
-Аналитические запросы без физического кадра, листы в группе `terrain_layer`, призраки, `C_Drag` и удаляемые отфильтрованы: `get_layers`, `surface_y(x, z)`, `depth_in_solid`, `layers_overlapping`, `overlap_area`, `get_flat_tracks`, `get_tracks`, сигнал `terrain_changed(aabb)`. Все запросы видят вырезы. Отладка: **F8**.
+Аналитические запросы без физического кадра, листы в группе `terrain_layer`, призраки, `C_Drag` и удаляемые отфильтрованы: `get_layers`, `surface_y(x, z)`, `depth_in_solid`, `layers_overlapping`, `overlap_area`, `get_flat_tracks`, `get_tracks`, сигнал `terrain_changed(aabb)`. Все запросы видят вырезы. Отладка: **F7**.
 
 ##### Траки и листы
 
@@ -79,7 +79,7 @@
 | R / F, Q / E | призрак или драг листа | уровень, поворот |
 | F7 | выбранный лист | ниша (Shift = окно, Alt = полоса тоннеля, Ctrl = убрать последний ручной вырез) |
 | U | BuildTool (призрак трака), SelectTool (выбранный трак) | флаг тоннеля |
-| F8 | везде | отладка `TGM` |
+| F7 | везде | отладка `TGM` |
 
 Вкладка «Материал» в InfoPanel (только настоящий лист): размер, слои, уровни, число вырезов, выбор стадии.
 
