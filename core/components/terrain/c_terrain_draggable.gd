@@ -79,10 +79,19 @@ func on_elevation_input(data: Dictionary) -> void:
 
 func on_clone_state_to(data: Dictionary) -> void:
 	var target_entity: Entity = data.target
-	target_entity.send_event("on_receive_draggable_state", {
+	var state := {
 		"rotation_euler": rotation_euler,
 		"elevation": elevation,
-	})
+	}
+	# XX claude-terra 13.2 B2: нарисованный лист (DRAW_POLYGON) переносит свою форму и толщину
+	if _is_drawn():
+		var contour := entity.get_comp(C_Contour) as C_Contour
+		var layer := entity.get_comp(C_TerrainLayer) as C_TerrainLayer
+		if contour:
+			state["points"] = contour.points.duplicate()
+		if layer:
+			state["levels"] = layer.levels
+	target_entity.send_event("on_receive_draggable_state", state)
 
 
 func on_receive_draggable_state(data: Dictionary) -> void:
@@ -90,6 +99,26 @@ func on_receive_draggable_state(data: Dictionary) -> void:
 		rotation_euler = data.rotation_euler
 	if data.has("elevation"):
 		elevation = data.elevation
+	# XX claude-terra 13.2 B2: форма и толщина нарисованного листа
+	if data.has("levels"):
+		var layer := entity.get_comp(C_TerrainLayer) as C_TerrainLayer
+		if layer:
+			layer.set_levels(int(data.levels))
+	if data.has("points"):
+		var contour := entity.get_comp(C_Contour) as C_Contour
+		if contour:
+			contour.set_points(data.points)
+		# призрак-дубль: форма готова, фаза рисования не нужна
+		var draw := entity.get_comp(C_PolygonDraw) as C_PolygonDraw
+		if draw:
+			draw.set_preshaped()
+
+
+## XX claude-terra 13.2 B2. Лист создан из пресета с build_behavior = DRAW_POLYGON (форму рисовал игрок)
+func _is_drawn() -> bool:
+	var identity := entity.get_comp(C_Identity) as C_Identity
+	return identity != null and identity.setting != null \
+			and identity.setting.build_behavior == EntitySetting.BuildBehavior.DRAW_POLYGON
 
 
 ## Сброс поворота и уровня (DragTool, Home)

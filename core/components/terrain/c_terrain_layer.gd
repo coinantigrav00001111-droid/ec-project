@@ -25,6 +25,9 @@ enum FoamStage { RAW, PLASTER, PAINT, GRASS }
 ## Площадь, меньше которой кусок после клиппинга считаем мусором (ю²)
 const MIN_PIECE_AREA := 0.0001
 
+## XX claude-terra 13.2 B2. Наибольшая толщина листа в слоях (D7)
+const MAX_LEVELS := 16
+
 ## Толщина в слоях (GlobalSetting.layer_height). Целое, минимум 1
 var levels := 1
 
@@ -133,6 +136,16 @@ func _apply_collision_layers(removing: Script = null) -> void:
 	var floating := (has_comp(C_Ghost) and removing != C_Ghost) or (has_comp(C_Drag) and removing != C_Drag)
 	body.collision_layer = Global.active_layers(['ghost']) if floating else Global.active_layers(['ground'])
 	body.collision_mask = 0   # статическое тело само ничего не ищет
+
+
+## XX claude-terra 13.2 B2. Задать толщину в слоях (1..MAX_LEVELS). Origin остается низом листа, верх растет.
+## Пересобирает меш и коллизию; _rebuild сам сообщает terrain_changed
+func set_levels(n: int) -> void:
+	n = clampi(n, 1, MAX_LEVELS)
+	if n == levels:
+		return
+	levels = n
+	_rebuild()
 
 
 ## --- Вырезы ---

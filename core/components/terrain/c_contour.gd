@@ -121,18 +121,39 @@ static func cleaned(p: PackedVector2Array) -> PackedVector2Array:
 
 
 ## Причина, по которой лист с таким контуром построить нельзя (D3), или пустая строка, если контур годен.
-## Проверяет: число вершин, длину рёбер, площадь, возвраты ребра назад и самопересечения (включая касание)
+## Проверяет: число вершин, длину рёбер, возвраты ребра назад и самопересечения (включая касание), площадь
 static func validate(p: PackedVector2Array, max_points: int = MAX_POINTS) -> String:
 	var n := p.size()
 	if n < 3:
 		return "Меньше 3 вершин"
 	if n > max_points:
 		return "Больше %d вершин" % max_points
-	for i in n:
+	var edges := _edge_problem(p, true)
+	if edges != "":
+		return edges
+	# площадь последней: у самопересекающегося контура она ничего не значит ("бабочка" может дать 0)
+	if absf(signed_area(p)) < MIN_AREA:
+		return "Площадь меньше %.0f ю²" % MIN_AREA
+	return ""
+
+
+## XX claude-terra 13.2 B2. Незамкнутая цепочка вершин (рисование): те же правила для рёбер, но замыкающего ребра нет
+## и число вершин и площадь не проверяются. Пустая строка: цепочку можно продолжать
+static func validate_chain(p: PackedVector2Array) -> String:
+	return _edge_problem(p, false)
+
+
+## Проверка рёбер: короткие, возврат назад, пересечения и касания несоседних рёбер.
+## closed = true: контур замкнут (последняя вершина соединена с первой)
+static func _edge_problem(p: PackedVector2Array, closed: bool) -> String:
+	var n := p.size()
+	var m := n if closed else n - 1   # число рёбер
+	for i in m:
 		if p[i].distance_to(p[(i + 1) % n]) < MIN_EDGE - EPS:
 			return "Ребро короче %.1f ю" % MIN_EDGE
 	# соседние рёбра: коллинеарные и направленные навстречу друг другу накладываются
-	for i in n:
+	var pairs := n if closed else n - 2
+	for i in pairs:
 		var a := p[i]
 		var b := p[(i + 1) % n]
 		var c := p[(i + 2) % n]
@@ -141,17 +162,14 @@ static func validate(p: PackedVector2Array, max_points: int = MAX_POINTS) -> Str
 		if absf(d1.cross(d2)) <= EPS * d1.length() * d2.length() and d1.dot(d2) < 0.0:
 			return "Ребро идёт назад"
 	# несоседние рёбра не должны пересекаться и касаться
-	for i in n:
+	for i in m:
 		var a0 := p[i]
 		var a1 := p[(i + 1) % n]
-		for j in range(i + 2, n):
-			if i == 0 and j == n - 1:
+		for j in range(i + 2, m):
+			if closed and i == 0 and j == m - 1:
 				continue   # последнее ребро соседнее с первым
 			if Geometry2D.segment_intersects_segment(a0, a1, p[j], p[(j + 1) % n]) != null:
 				return "Самопересечение"
-	# площадь последней: у самопересекающегося контура она ничего не значит ("бабочка" может дать 0)
-	if absf(signed_area(p)) < MIN_AREA:
-		return "Площадь меньше %.0f ю²" % MIN_AREA
 	return ""
 
 

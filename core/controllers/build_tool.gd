@@ -47,11 +47,16 @@ func enter():
 			_enter_spawn_and_drag()
 		EntitySetting.BuildBehavior.PLACE_THEN_STRETCH:   # XX claude-terra
 			_enter_ghost_place()
+		EntitySetting.BuildBehavior.DRAW_POLYGON:   # XX claude-terra 13.2 B2: лист любой формы, вершины кликами
+			_enter_ghost_place()
+			ghost.add_component(C_PolygonDraw.new())
 
 	# XX claude-terra 13.1.4: призрак-дубль получает состояние последнего объекта
 	if _dup_pending:
 		_dup_pending = false
 		_apply_duplicate_state()
+	# XX claude-terra 13.2 B2: подсказки рисования полигона (у дубля с готовой формой их нет)
+	Hints.set_context(&"polygon", _draw_active())
 
 
 func _enter_ghost_place() -> void:
@@ -82,7 +87,12 @@ func _enter_spawn_and_drag() -> void:
 
 func handle_input(event: InputEvent):
 	if not ghost: return
-	
+
+	# XX claude-terra 13.2 B2: пока рисуем полигон листа, ввод ведет отдельная функция
+	if _draw_active():
+		_handle_draw_input(event)
+		return
+
 	#  ПКМ 
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
 		if event.pressed:
@@ -177,6 +187,93 @@ func _place_real_object() -> Entity:
 	return real_entity
 
 
+# XX claude-terra 13.2 B2 ===== Рисование полигона листа (DRAW_POLYGON) =====
+
+## Компонент рисования на призраке (null: призрак не из DRAW_POLYGON)
+func _poly() -> C_PolygonDraw:
+	if ghost == null or not is_instance_valid(ghost):
+		return null
+	return ghost.get_comp(C_PolygonDraw) as C_PolygonDraw
+
+
+## Рисуем сами (не дубль с готовой формой): ввод идет в _handle_draw_input
+func _draw_active() -> bool:
+	var d := _poly()
+	return d != null and not d.preshaped
+
+
+## Ввод рисования. ЛКМ: первая вершина, следующие, замыкание кликом по первой вершине. Enter замыкает,
+## Backspace убирает вершину, ПКМ сбрасывает рисунок (без вершин выходит в SelectTool).
+## R/F, Shift+R/F, PgUp/PgDn: уровень (до первого клика маркер идет через C_TerrainDraggable). Ctrl+R/F: толщина.
+## Q/E не работают: yaw листа при рисовании всегда 0, повернуть готовый лист можно в драге
+func _handle_draw_input(event: InputEvent) -> void:
+	var d := _poly()
+
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
+		if event.pressed:
+			rmb_pressed_pos = event.position
+		elif rmb_pressed_pos.distance_to(event.position) < 5:
+			if d.drawing:
+				enter()   # сброс рисунка: новый призрак-маркер
+			else:
+				controller.switch_tool(controller.select_tool)
+		return
+
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		if not d.drawing:
+			if ghost.has_comp(C_Blocked) or ghost.has_comp(C_Invalid):
+				return   # маркер на чужом листе того же уровня
+			d.begin()
+		elif d.is_closing():
+			_close_polygon()
+		else:
+			d.add_vertex()
+		return
+
+	var k := event as InputEventKey
+	if k == null or not k.pressed or k.echo:
+		return
+	if k.keycode == KEY_ENTER or k.keycode == KEY_KP_ENTER:
+		if d.drawing:
+			_close_polygon()
+		return
+	if k.keycode == KEY_BACKSPACE:
+		d.undo_vertex()
+		return
+
+	# уровень или толщина
+	var dir := 0
+	var big := k.shift_pressed
+	if k.keycode == KEY_PAGEUP:
+		dir = 1
+		big = true
+	elif k.keycode == KEY_PAGEDOWN:
+		dir = -1
+		big = true
+	elif k.keycode == KEY_R or k.physical_keycode == KEY_R:
+		dir = 1
+	elif k.keycode == KEY_F or k.physical_keycode == KEY_F:
+		dir = -1
+	if dir == 0:
+		return
+	var n := dir * (ElevationInput.BIG_STEP if big else 1)
+	if k.ctrl_pressed:
+		d.add_levels(n)
+	elif d.drawing:
+		d.elevate(n)
+	else:
+		ghost.send_event("on_elevation_input", {"levels": n})
+
+
+## Замкнуть контур и поставить лист. Следом новый призрак: можно рисовать следующий лист
+func _close_polygon() -> void:
+	var d := _poly()
+	if d == null or not d.try_close():
+		return
+	if _place_real_object():
+		enter()
+
+
 # XX claude-terra 13.1.4 ===== Дубль последнего объекта =====
 
 func _remember(setting: EntitySetting, entity: Entity) -> void:
@@ -224,6 +321,13 @@ func _pick_mask() -> int:
 
 
 func process_tick(_delta):
+	# XX claude-terra 13.2 B2: после первого клика курсор ведет горизонтальная плоскость на высоте призрака (D5)
+	if ghost and _draw_active() and _poly().drawing:
+		var plane_hit := controller.get_mouse_plane_hit(ghost.global_position.y)
+		if not plane_hit.is_empty():
+			_poly().set_cursor(plane_hit.position)
+		$"../../UI/ModeLabel".text = name
+		return
 	#var hit = controller.get_mouse_ray((1 << 0) | (1 << 2)|(1 << 4))
 	# XX claude-terra слои из EntitySetting.pick_layers
 	var hit = controller.get_mouse_ray(_pick_mask()) 
@@ -241,6 +345,7 @@ func process_tick(_delta):
 
 ## Выполняется при выходе из инстр.
 func exit(_to_drag : bool = false):
+	Hints.set_context(&"polygon", false)   # XX claude-terra 13.2 B2
 	if ghost:
 		ghost.queue_free()
 		ghost = null

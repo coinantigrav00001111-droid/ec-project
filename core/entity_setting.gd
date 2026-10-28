@@ -21,7 +21,8 @@ class_name EntitySetting extends Resource
 @export var hide : bool = false # скрыть кнопку в UI 
 
 # XX claude-terra: PLACE_THEN_STRETCH - flex: клик ставит начало, второй клик ставит конец
-enum BuildBehavior { GHOST_PLACE, SPAWN_AND_DRAG, PLACE_THEN_STRETCH }
+# XX claude-terra 13.2: DRAW_POLYGON - лист пенопласта произвольной формы: вершины контура ставятся кликами (C_PolygonDraw)
+enum BuildBehavior { GHOST_PLACE, SPAWN_AND_DRAG, PLACE_THEN_STRETCH, DRAW_POLYGON }
 
 ## Как BuildTool ставит объект: гост + клик, или сразу спавн в драг
 @export var build_behavior: BuildBehavior = BuildBehavior.GHOST_PLACE

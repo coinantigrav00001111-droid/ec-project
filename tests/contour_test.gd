@@ -70,6 +70,20 @@ func _ready() -> void:
 	var touch := poly([Vector2(0, 0), Vector2(10, 0), Vector2(10, 10), Vector2(5, 0), Vector2(0, 10)])
 	check("validate: касание вершиной ребра", C_Contour.validate(touch) != "", "прошёл")
 
+	# --- validate_chain (13.2 B2): незамкнутая цепочка при рисовании ---
+	var c_open := poly([Vector2(0, 0), Vector2(10, 0), Vector2(10, 10), Vector2(0, 10)])
+	check("chain: одна вершина", C_Contour.validate_chain(poly([Vector2(0, 0)])) == "")
+	check("chain: две вершины", C_Contour.validate_chain(poly([Vector2(0, 0), Vector2(10, 0)])) == "")
+	check("chain: открытая С-образная", C_Contour.validate_chain(c_open) == "", C_Contour.validate_chain(c_open))
+	check("chain: короткое ребро", C_Contour.validate_chain(poly([Vector2(0, 0), Vector2(0.5, 0)])).begins_with("Ребро короче"))
+	check("chain: возврат назад", C_Contour.validate_chain(poly([Vector2(0, 0), Vector2(10, 0), Vector2(4, 0)])) == "Ребро идёт назад")
+	var cross_chain := poly([Vector2(0, 0), Vector2(10, 0), Vector2(10, 10), Vector2(5, -5)])
+	check("chain: самопересечение", C_Contour.validate_chain(cross_chain) == "Самопересечение", C_Contour.validate_chain(cross_chain))
+	check("chain: замкнутый тот же контур годен", C_Contour.validate(c_open) == "")
+	# последнее и первое рёбра цепочки не соседние: касание вершиной первого ребра отклоняется
+	var touch_chain := poly([Vector2(0, 0), Vector2(10, 0), Vector2(10, 10), Vector2(5, 0)])
+	check("chain: касание первого ребра", C_Contour.validate_chain(touch_chain) == "Самопересечение", C_Contour.validate_chain(touch_chain))
+
 	# --- cleaned ---
 	var dup := poly([Vector2(0, 0), Vector2(0, 0), Vector2(10, 0), Vector2(10, 10), Vector2(0, 10)])
 	check("cleaned: повторная вершина убрана", C_Contour.cleaned(dup).size() == 4, str(C_Contour.cleaned(dup).size()))
@@ -108,6 +122,11 @@ func _ready() -> void:
 			all_tri = false
 	check("Г с вырезом 2x2: площадь 71", near(total, 71.0, 0.05), str(total))
 	check("Г с вырезом: все куски триангулируются", all_tri)
+	# set_levels (13.2 B2): предел 1..MAX_LEVELS, без ноды меша только меняет число
+	layer.set_levels(99)
+	check("set_levels: не больше MAX_LEVELS", layer.levels == C_TerrainLayer.MAX_LEVELS, str(layer.levels))
+	layer.set_levels(-3)
+	check("set_levels: не меньше 1", layer.levels == 1, str(layer.levels))
 	var no_cut: Array[FoamCut] = []
 	pieces = layer._slab_polygons(C_Contour.cleaned(ell), no_cut)
 	check("Г без выреза: один полигон", pieces.size() == 1, str(pieces.size()))
