@@ -24,6 +24,8 @@ var is_power_view_active: bool = false
 var rail_surface_index :int = 1
 # Кэш материалов: ключ - contour_id, значение - ShaderMaterial
 static var power_materials_cache: Dictionary = {}
+# stripe_density по умолчанию в shader_power_track.gdshader
+const POWER_STRIPE_DENSITY := 4.0
 # Палитра цветов для контуров (0 - ошибка/нейтралка, 1..MAX - рабочие)
 
 #const CONTOUR_COLORS = { # перенес в визуал сетиинги
@@ -186,7 +188,8 @@ func _reset_power_view():
 # --- Хелпер сборки материала ---
 func _get_or_create_power_material(cid: int, _volt: float, is_flipped: bool) -> ShaderMaterial:
 	
-	var cache_key = str(cid) + "_" + str(is_flipped)
+	var stripe_scale := _power_stripe_scale()
+	var cache_key = str(cid) + "_" + str(is_flipped) + "_" + str(stripe_scale)
 	#Если материал для такого состояния уже есть — возвращаем его
 	if power_materials_cache.has(cache_key):
 		return power_materials_cache[cache_key] 
@@ -200,6 +203,14 @@ func _get_or_create_power_material(cid: int, _volt: float, is_flipped: bool) -> 
 	var _flip = - 1 if is_flipped else  1
 	new_mat.set_shader_parameter("contour_color", color)
 	new_mat.set_shader_parameter("scroll_speed", _volt * _flip * 0.01)
+	if not is_equal_approx(stripe_scale, 1.0):
+		new_mat.set_shader_parameter("stripe_density", POWER_STRIPE_DENSITY * stripe_scale)
 	power_materials_cache[cache_key] = new_mat
 
 	return new_mat
+
+
+## Множитель плотности полос слоя питания (1.0 = рельс с UV по умолчанию). Визуалы со стилем переопределяют:
+## свой тайл вдоль пути у рельса меняет UV.x, а шейдер считает полосы по нему
+func _power_stripe_scale() -> float:
+	return 1.0

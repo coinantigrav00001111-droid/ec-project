@@ -17,6 +17,9 @@ class_name TrackStyle extends Resource
 ##  с балластом (по умолчанию): head_height = 0.5 + (0.2 - 0.1) + 0.25 = 0.85
 ##  без балласта:               ballast_enabled = false, collision_width = 3.0 -> 0.2 + 0.25 = 0.45
 
+## Вдоль пути UV по умолчанию = 1 / TrackMeshBuilder.UV_V_SCALE
+const LEGACY_TILE_ALONG := 10.0
+
 @export var id: StringName = &"ballast"
 
 @export_category("Rails")
@@ -26,6 +29,10 @@ class_name TrackStyle extends Resource
 	Vector2(-0.1, 0.0), Vector2(-0.1, 0.25), Vector2(0.1, 0.25), Vector2(0.1, 0.0)])
 ## null = общий материал рельсов из C_FlexVisual
 @export var rail_material: Material
+## Размер тайла текстуры рельса, ю: x вдоль пути, y поперек (по длине ломаной профиля, от начала обхода).
+## 0 по оси = как раньше (вдоль 10 ю на тайл, поперёк UV растянуты на всю ширину; так нужно текстурам-атласам).
+## Плотность полос слоя питания считается с поправкой power_stripe_scale()
+@export var rail_uv_tile := Vector2.ZERO
 
 @export_category("Sleepers")
 ## null = BoxMesh размера sleeper_size
@@ -43,6 +50,8 @@ class_name TrackStyle extends Resource
 @export var ballast_profile := PackedVector2Array([
 	Vector2(-1.6, 0.0), Vector2(-1.1, 0.5), Vector2(1.1, 0.5), Vector2(1.6, 0.0)])
 @export var ballast_material: Material
+## Размер тайла текстуры балласта, ю: x вдоль пути, y поперек (по длине ломаной профиля). 0 по оси = как раньше (см. rail_uv_tile)
+@export var ballast_uv_tile := Vector2.ZERO
 
 @export_category("Collision")
 ## Ширина коллизии основания (балласт/шпалы), ю
@@ -92,6 +101,12 @@ func rail_width() -> float:
 ## Поверхность катания над origin пути. Единственный источник высоты для C_Path.head_height()
 func head_height() -> float:
 	return base_height() + rail_height()
+
+
+## Во сколько раз плотность полос слоя питания отличается от рельса с UV по умолчанию (тайл 10 ю вдоль пути).
+## Шейдер считает полосы по UV.x, поэтому при своём тайле вдоль пути плотность подгоняем, чтобы полосы не менялись
+func power_stripe_scale() -> float:
+	return rail_uv_tile.x / LEGACY_TILE_ALONG if rail_uv_tile.x > 0.0 else 1.0
 
 
 func _max_y(p: PackedVector2Array) -> float:

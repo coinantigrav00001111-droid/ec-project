@@ -7,7 +7,8 @@ extends Node
 ## Запись отложенная: раз в секунду проверяем, что изменилось, и пишем. Кнопка Stop в редакторе
 ## не присылает сигнал закрытия окна, поэтому одной записи на выходе мало (ATTN_18 §18.2, п. 6).
 
-const PATH := "user://icon_studio.cfg"
+## Путь файла настроек. По умолчанию Icon Studio; другие студии (Track Studio) ставят свой до add_child
+var path := "user://icon_studio.cfg"
 const DEFAULT_WINDOW_SIZE := Vector2i(1600, 900)
 const MIN_WINDOW_SIZE := Vector2i(900, 560)
 const SAVE_PERIOD := 1.0
@@ -18,7 +19,7 @@ var _timer: Timer
 
 
 func _ready() -> void:
-	_cfg.load(PATH)
+	_cfg.load(path)
 	_timer = Timer.new()
 	_timer.wait_time = SAVE_PERIOD
 	_timer.timeout.connect(flush)
@@ -48,11 +49,11 @@ func flush() -> void:
 	_capture_window()
 	if not _dirty:
 		return
-	var err := _cfg.save(PATH)
+	var err := _cfg.save(path)
 	if err == OK:
 		_dirty = false
 	else:
-		push_warning("IconStudio: не удалось записать %s (код %d)" % [PATH, err])
+		push_warning("Studio: не удалось записать %s (код %d)" % [path, err])
 
 
 ## Стирает все настройки (окно сбрасывается отдельно reset_window)

@@ -114,3 +114,8 @@ func _build_collision(curve: Curve3D, L: float) -> void:
 		var hr := TrackMeshBuilder.new_shape(bx.rail_size)
 		hr.transform = bx.rail_r_xf
 		head.add_child(hr)
+
+
+## Плотность полос питания с поправкой на тайл рельса стиля (TrackStyle.power_stripe_scale)
+func _power_stripe_scale() -> float:
+	return style.power_stripe_scale() if style else 1.0

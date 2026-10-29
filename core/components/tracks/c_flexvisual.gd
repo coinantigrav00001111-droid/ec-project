@@ -160,3 +160,8 @@ func _resize_pool(nseg: int) -> void:
 	while _head_shapes.size() > nseg * 3:
 		var old2: CollisionShape3D = _head_shapes.pop_back()
 		old2.queue_free()
+
+
+## Плотность полос питания с поправкой на тайл рельса стиля (TrackStyle.power_stripe_scale)
+func _power_stripe_scale() -> float:
+	return style.power_stripe_scale() if style else 1.0

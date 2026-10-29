@@ -443,3 +443,8 @@ func _set_lever_enabled(on: bool) -> void:
 	_lever_on = on
 	if lever_area:
 		lever_area.collision_layer = Global.active_layers(['handles']) if on else 0
+
+
+## Плотность полос питания с поправкой на тайл рельса стиля (TrackStyle.power_stripe_scale)
+func _power_stripe_scale() -> float:
+	return style.power_stripe_scale() if style else 1.0

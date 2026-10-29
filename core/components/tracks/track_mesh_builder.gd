@@ -140,33 +140,49 @@ static func build_mesh(style: TrackStyle, curve: Curve3D, L: float, preview: boo
 	if style.ballast_enabled and style.ballast_profile.size() >= 2:
 		var st := SurfaceTool.new()
 		st.begin(Mesh.PRIMITIVE_TRIANGLES)
-		st.set_material(style.ballast_material if style.ballast_material else _mat_ballast)
+		var bmat: Material = style.ballast_material if style.ballast_material else _mat_ballast
+		st.set_material(bmat)
 		var chain: Array = []
 		var hw := 0.01
 		for p in style.ballast_profile:
 			chain.append(p)
 			hw = maxf(hw, absf(p.x))
-		sweep(st, fr, chain, L, hw)
+		sweep(st, fr, chain, L, hw, style.ballast_uv_tile)
+		if _has_normal_map(bmat):
+			st.generate_tangents()
 		st.commit(am)
 
 	# Рельсы: поверхность rail_surface_index (1 с балластом, 0 без)
 	var rst := SurfaceTool.new()
 	rst.begin(Mesh.PRIMITIVE_TRIANGLES)
-	rst.set_material(style.rail_material if style.rail_material else _mat_rail)
+	var rmat: Material = style.rail_material if style.rail_material else _mat_rail
+	rst.set_material(rmat)
 	var base := style.base_height()
 	for sx in [-1.0, 1.0]:
 		var c: float = sx * style.rail_x
 		var chain: Array = []
 		for p in style.rail_profile:
 			chain.append(Vector2(c + p.x, base + p.y))
-		sweep(rst, fr, chain, L, style.rail_x + style.rail_width())
+		sweep(rst, fr, chain, L, style.rail_x + style.rail_width(), style.rail_uv_tile)
+	if _has_normal_map(rmat):
+		rst.generate_tangents()
 	rst.commit(am)
 	return am
 
 
-## Протягивает ломаную профиля (слева направо поверх) вдоль реперов. hw - полуширина для UV поперек
-static func sweep(st: SurfaceTool, fr: Array, chain: Array, L: float, hw: float) -> void:
+## Нормальной карте нужны тангенты, SurfaceTool сам их не строит
+static func _has_normal_map(mat: Material) -> bool:
+	var bm := mat as BaseMaterial3D
+	return bm != null and bm.normal_enabled and bm.normal_texture != null
+
+
+## Протягивает ломаную профиля (слева направо поверх) вдоль реперов.
+## UV: x вдоль трака, y поперек. tile (ю на тайл): по оси > 0 включает мировой масштаб (вдоль: расстояние / tile.x,
+## поперёк: длина ломаной от начала / tile.y), по оси 0 остаётся прежнее (вдоль 0.1 на ю, поперёк 0..1 по hw - полуширине)
+static func sweep(st: SurfaceTool, fr: Array, chain: Array, L: float, hw: float, tile := Vector2.ZERO) -> void:
 	var n := fr.size()
+	var u_scale := 1.0 / tile.x if tile.x > 0.0 else UV_V_SCALE
+	var acc := 0.0   # длина ломаной от начала до точки a
 	for j in chain.size() - 1:
 		var a: Vector2 = chain[j]
 		var b: Vector2 = chain[j + 1]
@@ -174,13 +190,20 @@ static func sweep(st: SurfaceTool, fr: Array, chain: Array, L: float, hw: float)
 		if d.length_squared() < 1e-8:
 			continue
 		var nrm := Vector2(-d.y, d.x).normalized()   # наружу
-		var ua := (a.x + hw) / (2.0 * hw)
-		var ub := (b.x + hw) / (2.0 * hw)
+		var ua: float
+		var ub: float
+		if tile.y > 0.0:
+			ua = acc / tile.y
+			ub = (acc + d.length()) / tile.y
+		else:
+			ua = (a.x + hw) / (2.0 * hw)
+			ub = (b.x + hw) / (2.0 * hw)
+		acc += d.length()
 		for i in n - 1:
 			var f0: Fr = fr[i]
 			var f1: Fr = fr[i + 1]
-			var v0 := -L * i / float(n - 1) * UV_V_SCALE
-			var v1 := -L * (i + 1) / float(n - 1) * UV_V_SCALE
+			var v0 := -L * i / float(n - 1) * u_scale
+			var v1 := -L * (i + 1) / float(n - 1) * u_scale
 			var n0 := (f0.r * nrm.x + f0.u * nrm.y).normalized()
 			var n1 := (f1.r * nrm.x + f1.u * nrm.y).normalized()
 			var p := [
