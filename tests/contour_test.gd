@@ -160,5 +160,15 @@ func _ready() -> void:
 	check("strip: одна точка контура не даёт", sd._strip_outline(poly([Vector2(0, 0)])).is_empty())
 	sd.free()
 
+	# --- автонасыпь (13.2 B6): высоты участков и склейка ---
+	var ch := PackedVector3Array([Vector3(0, 3.0, 0), Vector3(4, 3.0, 0), Vector3(8, 5.4, 0), Vector3(12, 7.0, 0), Vector3(16, 7.0, 0)])
+	var lv := Embankment._segment_levels(ch, 1.0)
+	check("embankment: слои по участкам [3, 3, 5, 7]", lv == [3, 3, 5, 7], str(lv))
+	var rn := Embankment._runs([0, 3, 3, 5, 0, 5])
+	check("embankment: участки (1-2 на 3), (3-3 на 5), (5-5 на 5)",
+			rn == [Vector3i(1, 2, 3), Vector3i(3, 3, 5), Vector3i(5, 5, 5)], str(rn))
+	check("embankment: трак на столе, насыпи нет", Embankment._runs(Embankment._segment_levels(
+			PackedVector3Array([Vector3(0, 0.0, 0), Vector3(4, 0.0, 0)]), 1.0)).is_empty())
+
 	print("--------")
 	print("contour_test: ", "PASS" if _fails == 0 else "FAIL (%d)" % _fails)

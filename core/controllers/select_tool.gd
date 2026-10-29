@@ -89,6 +89,13 @@ func handle_input(event: InputEvent):
 		#selected_entity.free()
 		#INFO ДЕРГАЕМ ПАНЕЛЬ!
 		controller.publish_selection(null)
+	# XX claude-terra 13.2 B6: B - автонасыпь под выбранным траком и цепочкой за ним (только Build)
+	if selected_entity and event is InputEventKey and event.pressed and not event.echo \
+			and (event.keycode == KEY_B or event.physical_keycode == KEY_B) \
+			and not (event.ctrl_pressed or event.alt_pressed or event.meta_pressed) \
+			and Global.current_mode == &'build' and selected_entity.has_comp(C_Path):
+		Embankment.build(selected_entity, controller)
+
 		
 	# XX claude-terra T6: тоннельный флаг выбранного трака (у не-траков события никто не слушает)
 	if selected_entity and event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_U:
