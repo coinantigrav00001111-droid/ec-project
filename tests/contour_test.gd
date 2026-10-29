@@ -127,6 +127,21 @@ func _ready() -> void:
 	check("set_levels: не больше MAX_LEVELS", layer.levels == C_TerrainLayer.MAX_LEVELS, str(layer.levels))
 	layer.set_levels(-3)
 	check("set_levels: не меньше 1", layer.levels == 1, str(layer.levels))
+	# try_set_levels (13.2 B4): вырезы подрезаются по новой толщине
+	layer.levels = 4
+	var cut_a := FoamCut.new()   # слои 0..4
+	cut_a.polygon = poly([Vector2(1, 1), Vector2(3, 1), Vector2(3, 3), Vector2(1, 3)])
+	cut_a.from_level = 0
+	cut_a.to_level = 4
+	var cut_b := FoamCut.new()   # верхний слой 3..4
+	cut_b.polygon = cut_a.polygon
+	cut_b.from_level = 3
+	cut_b.to_level = 4
+	layer.cuts = [cut_a, cut_b]
+	check("try_set_levels: без отказа", layer.try_set_levels(2) == "")
+	check("try_set_levels: вырез на всю толщину подрезан", layer.cuts.size() == 1 and layer.cuts[0].to_level == 2,
+			str(layer.cuts.size()))
+	layer.cuts = []
 	var no_cut: Array[FoamCut] = []
 	pieces = layer._slab_polygons(C_Contour.cleaned(ell), no_cut)
 	check("Г без выреза: один полигон", pieces.size() == 1, str(pieces.size()))

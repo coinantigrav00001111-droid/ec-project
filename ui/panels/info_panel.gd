@@ -77,6 +77,15 @@ func _process(_delta):
 			_track_acc = 0.0
 			_update_track_rows()
 
+	# XX claude-terra 13.2 B3/B4: форма и толщина листа меняются ручками, подпись вкладки "Материал" живая (4 раза в секунду)
+	if visible and current_target and _terrain_info:
+		_terrain_acc += _delta
+		if _terrain_acc >= TRACK_ROWS_PERIOD:
+			_terrain_acc = 0.0
+			var _tl := _get_terrain_layer()
+			if _tl:
+				_refresh_terrain_info(_tl)
+
 	if visible and current_target and tab_container.current_tab == 4:  # 4 - дебаг 
 		_update_debug_tab()
 	
@@ -873,6 +882,10 @@ const STAGE_NAMES := ["Сырой пенопласт", "Шпаклёвка", "К
 var _terrain_tab: VBoxContainer
 var _stage_option: OptionButton
 var _terrain_info: Label
+# XX claude-terra 13.2 B4: толщина листа
+var _levels_spin: SpinBox
+var _terrain_msg: Label
+var _terrain_acc := 0.0
 
 
 func _build_terrain_tab() -> void:
@@ -887,6 +900,22 @@ func _build_terrain_tab() -> void:
 	margin.add_child(box)
 	_terrain_info = Label.new()
 	box.add_child(_terrain_info)
+	# XX claude-terra 13.2 B4: толщина листа в слоях (верх растёт, низ на месте)
+	var row := HBoxContainer.new()
+	var row_lbl := Label.new()
+	row_lbl.text = "Толщина, слоёв  "
+	row.add_child(row_lbl)
+	_levels_spin = SpinBox.new()
+	_levels_spin.min_value = 1
+	_levels_spin.max_value = C_TerrainLayer.MAX_LEVELS
+	_levels_spin.step = 1
+	_levels_spin.rounded = true
+	_levels_spin.value_changed.connect(_on_levels_changed)
+	row.add_child(_levels_spin)
+	box.add_child(row)
+	_terrain_msg = Label.new()
+	_terrain_msg.modulate = Color(1.0, 0.35, 0.35)
+	box.add_child(_terrain_msg)
 	var lbl := Label.new()
 	lbl.text = "Стадия отделки листа"
 	box.add_child(lbl)
@@ -916,6 +945,7 @@ func _update_terrain_tab() -> void:
 	_set_terrain_tab_visible(layer != null)
 	if layer:
 		_stage_option.select(layer.stage)
+		_terrain_msg.text = ""
 		_refresh_terrain_info(layer)
 
 
@@ -936,6 +966,19 @@ func _refresh_terrain_info(layer: C_TerrainLayer) -> void:
 		shape_text = "Вершин: %d, площадь: %.0f u²\n" % [contour.points.size(), contour.area()]
 	_terrain_info.text = "Размер: %d × %d u\n%sСлоёв: %d (высота %.1f u)\nНижний уровень: %d, верхний: %d\nВырезов: %d" % [
 		roundi(_size.x), roundi(_size.y), shape_text, layer.levels, layer.levels * T, base, base + layer.levels, layer.cuts.size()]
+	if _levels_spin and int(_levels_spin.value) != layer.levels:   # не трогаем, пока значение то же (идет ввод)
+		_levels_spin.set_value_no_signal(layer.levels)
+
+
+## XX claude-terra 13.2 B4. Толщина из SpinBox: C_TerrainLayer либо принимает, либо пишет причину отказа в "error"
+func _on_levels_changed(value: float) -> void:
+	var layer := _get_terrain_layer()
+	if layer == null:
+		return
+	var d := {"levels": int(value)}
+	current_target.send_event("on_terrain_levels_set", d)
+	_terrain_msg.text = String(d.get("error", ""))
+	_refresh_terrain_info(layer)   # при отказе вернёт в SpinBox прежнее значение
 
 
 func _on_stage_selected(index: int) -> void:

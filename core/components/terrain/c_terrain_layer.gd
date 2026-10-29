@@ -148,6 +148,42 @@ func set_levels(n: int) -> void:
 	_rebuild()
 
 
+## XX claude-terra 13.2 B4. Событие InfoPanel: задать толщину {"levels": int}. При отказе пишет причину в data["error"]
+func on_terrain_levels_set(d: Dictionary) -> void:
+	var err := try_set_levels(int(d.get("levels", levels)))
+	if err != "":
+		d["error"] = err
+
+
+## Изменить толщину настоящего листа. Утолщение вверх не может налезть на другой лист (D6): тогда отказ.
+## Вырезы обрезаются по новой высоте. Возвращает причину отказа или пустую строку
+func try_set_levels(n: int) -> String:
+	n = clampi(n, 1, MAX_LEVELS)
+	if n == levels:
+		return ""
+	if n > levels and entity and entity.is_inside_tree() and not has_comp(C_Ghost):
+		var T: float = Global.settings.layer_height
+		var new_top := base_y() + float(n) * T
+		if not TGM.layers_overlapping(world_polygon(), top_y(), new_top, entity).is_empty():
+			return "Сверху другой лист: нет места"
+	levels = n
+	_prune_cuts()
+	_rebuild()
+	return ""
+
+
+## Вырезы за пределами новой толщины убираем, остальные подрезаем по верху. Автовырезы пересчитает recompute_auto_cuts
+func _prune_cuts() -> void:
+	var keep: Array[FoamCut] = []
+	for c in cuts:
+		if not c.auto:
+			c.to_level = mini(c.to_level, levels)
+			if c.from_level >= c.to_level:
+				continue
+		keep.append(c)
+	cuts = keep
+
+
 ## --- Вырезы ---
 
 ## Вырезать полигон (локальные XZ листа) из слоев [from_level, to_level). Слои считаем от низа листа
@@ -396,6 +432,8 @@ func _rebuild() -> void:
 	mesh_node.mesh = _build_mesh()
 	_build_collision()
 	_notify()
+	if entity:   # XX claude-terra 13.2 B3: ручки контура (C_ContourHandle) встают на новые места
+		entity.send_event("on_terrain_rebuilt", {})
 
 
 ## Блоки слоев: подряд идущие слои с одним набором вырезов склеиваем в одну призму

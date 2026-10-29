@@ -1,7 +1,7 @@
 class_name TerrainLayerSetting extends ComponentSettings
 
 # XX claude-terra (новый файл)
-## Собирает лист пенопласта одним компонентом настроек: C_Contour (прямоугольник по size) и C_TerrainLayer.
+## Собирает лист пенопласта одним компонентом настроек: C_Contour (прямоугольник по size), C_TerrainLayer и C_ContourHandle.
 ## Порядок в массиве компонентов .tres: Identity (TerrainConfig), TerrainLayer, TerrainDraggable, Hoverable, Selectable.
 ## Identity должен идти первым: размер и толщину берем из его TerrainConfig.
 
@@ -29,5 +29,9 @@ func create_component(entity: Entity) -> Component:
 	layer.levels = maxi(1, levels)
 	layer.style = style
 	entity.add_component(layer)
+
+	# 3. XX claude-terra 13.2 B3: ручки правки контура (видны только у выбранного листа)
+	var handle := C_ContourHandle.new()
+	entity.add_component(handle)
 
 	return layer
