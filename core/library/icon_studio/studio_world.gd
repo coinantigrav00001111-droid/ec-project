@@ -21,6 +21,21 @@ const GROUND_SCALE := 3000.0
 const FLEX_LENGTH := 60.0
 const CATCHER_STRENGTH := 0.7   # непрозрачность тени на «ловце»
 
+const CATCHER_SHADER := """
+shader_type spatial;
+render_mode blend_mix, depth_draw_never, specular_disabled;
+uniform float strength : hint_range(0.0, 1.0) = 0.7;
+// Пол чёрный и прозрачный. Прозрачность появляется только там, где свет закрыт тенью:
+// ATTENUATION в light() уже учитывает тень источника, у источников без тени он равен 1.
+void fragment() {
+	ALBEDO = vec3(0.0);
+	ALPHA = 0.002;
+}
+void light() {
+	ALPHA = max(ALPHA, (1.0 - ATTENUATION) * strength);
+}
+"""
+
 var yaw := 35.0
 var pitch := -25.0              ## отрицательный = смотрим сверху
 var fov := 30.0
@@ -47,7 +62,8 @@ var _sky: Sky
 var _sky_mat: ProceduralSkyMaterial
 var _ground: MeshInstance3D
 var _mat_ground: StandardMaterial3D
-var _mat_catcher: StandardMaterial3D   # «ловец тени»: чёрный, прозрачный везде, кроме тени
+var _mat_catcher: ShaderMaterial          # «ловец тени», способ 0: шейдер с light()
+var _mat_catcher_opacity: StandardMaterial3D   # способ 1: shadow_to_opacity
 var _tween: Tween
 var _token := 0                 # номер последнего запроса: устаревшие ответы отбрасываем
 var _drag_button := 0
@@ -89,12 +105,17 @@ func _ready() -> void:
 
 	_mat_ground = StandardMaterial3D.new()
 	_mat_ground.roughness = 1.0
-	_mat_catcher = StandardMaterial3D.new()
-	_mat_catcher.albedo_color = Color(0.0, 0.0, 0.0, CATCHER_STRENGTH)
-	_mat_catcher.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	_mat_catcher.shadow_to_opacity = true
-	_mat_catcher.roughness = 1.0
-	_mat_catcher.metallic_specular = 0.0
+	_mat_catcher = ShaderMaterial.new()
+	var sh := Shader.new()
+	sh.code = CATCHER_SHADER
+	_mat_catcher.shader = sh
+	_mat_catcher.set_shader_parameter("strength", CATCHER_STRENGTH)
+	_mat_catcher_opacity = StandardMaterial3D.new()
+	_mat_catcher_opacity.albedo_color = Color(0.0, 0.0, 0.0, CATCHER_STRENGTH)
+	_mat_catcher_opacity.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_mat_catcher_opacity.shadow_to_opacity = true
+	_mat_catcher_opacity.roughness = 1.0
+	_mat_catcher_opacity.metallic_specular = 0.0
 	_ground = MeshInstance3D.new()
 	_ground.name = "Ground"
 	var plane := PlaneMesh.new()
@@ -225,7 +246,12 @@ func _update_ground() -> void:
 		return
 	var horizon := int(_template.bg_mode) == 2
 	_ground.visible = horizon or bool(_template.shadow)
-	_ground.material_override = _mat_ground if horizon else _mat_catcher
+	if horizon:
+		_ground.material_override = _mat_ground
+	elif int(_template.catcher_mode) == 1:
+		_ground.material_override = _mat_catcher_opacity
+	else:
+		_ground.material_override = _mat_catcher
 	var c := bounds.get_center()
 	_ground.position = Vector3(c.x, bounds.position.y - 0.01, c.z)
 

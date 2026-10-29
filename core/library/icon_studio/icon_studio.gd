@@ -493,6 +493,7 @@ func _build_tab_background(box: VBoxContainer) -> void:
 	_add_color(box, "Небо, верх", "sky_top")
 	_add_color(box, "Небо, горизонт", "sky_horizon")
 	_add_color(box, "Поверхность", "ground_color")
+	_add_option(box, "Способ тени (прозр./цвет)", "catcher_mode", ["Шейдер light()", "shadow_to_opacity"], [0, 1])
 	var n := Label.new()
 	n.text = "Тень на прозрачном фоне и на ровном цвете рисуется «ловцом тени» (пол без цвета, виден только в тени)."
 	n.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

@@ -34,6 +34,8 @@ const SLOT_COUNT := 6
 @export var light_color := Color.WHITE
 @export var shadow := true
 @export var shadow_softness := 1.5
+## Как рисуется тень на прозрачном фоне и на ровном цвете: 0 шейдер с light() (ATTENUATION), 1 shadow_to_opacity
+@export var catcher_mode := 0
 
 @export_category("Background")
 ## 0 прозрачный, 1 цвет, 2 поверхность с горизонтом
