@@ -1,6 +1,6 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://rpxnen5ma1ew"]
 
-[ext_resource type="Script" path="res://tests/contour_test.gd" id="1"]
+[ext_resource type="Script" uid="uid://dqkep05y5aarv" path="res://tests/contour_test.gd" id="1"]
 
-[node name="ContourTest" type="Node"]
+[node name="ContourTest" type="Node" unique_id=1944635476]
 script = ExtResource("1")
