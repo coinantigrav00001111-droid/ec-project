@@ -50,13 +50,20 @@ func enter():
 		EntitySetting.BuildBehavior.DRAW_POLYGON:   # XX claude-terra 13.2 B2: лист любой формы, вершины кликами
 			_enter_ghost_place()
 			ghost.add_component(C_PolygonDraw.new())
+		EntitySetting.BuildBehavior.DRAW_STRIP:   # XX claude-terra 13.2 B5: лист-полоса по ломаной
+			_enter_ghost_place()
+			var strip_draw := C_PolygonDraw.new()
+			strip_draw.strip = true
+			ghost.add_component(strip_draw)
 
 	# XX claude-terra 13.1.4: призрак-дубль получает состояние последнего объекта
 	if _dup_pending:
 		_dup_pending = false
 		_apply_duplicate_state()
 	# XX claude-terra 13.2 B2: подсказки рисования полигона (у дубля с готовой формой их нет)
-	Hints.set_context(&"polygon", _draw_active())
+	var _strip := _draw_active() and _poly().strip
+	Hints.set_context(&"polygon", _draw_active() and not _strip)
+	Hints.set_context(&"strip", _strip)
 
 
 func _enter_ghost_place() -> void:
@@ -241,6 +248,14 @@ func _handle_draw_input(event: InputEvent) -> void:
 		d.undo_vertex()
 		return
 
+	# ширина полосы: [ и ] (по физической клавише, раскладка не важна), Shift ×5
+	if d.strip and (k.keycode == KEY_BRACKETLEFT or k.physical_keycode == KEY_BRACKETLEFT
+			or k.keycode == KEY_BRACKETRIGHT or k.physical_keycode == KEY_BRACKETRIGHT):
+		var wstep: float = Global.settings.terrain_grid_step * (5.0 if k.shift_pressed else 1.0)
+		var left := k.keycode == KEY_BRACKETLEFT or k.physical_keycode == KEY_BRACKETLEFT
+		d.add_width(-wstep if left else wstep)
+		return
+
 	# уровень или толщина
 	var dir := 0
 	var big := k.shift_pressed
@@ -345,6 +360,7 @@ func process_tick(_delta):
 ## Выполняется при выходе из инстр.
 func exit(_to_drag : bool = false):
 	Hints.set_context(&"polygon", false)   # XX claude-terra 13.2 B2
+	Hints.set_context(&"strip", false)
 	if ghost:
 		ghost.queue_free()
 		ghost = null

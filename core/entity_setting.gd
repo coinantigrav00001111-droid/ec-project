@@ -37,7 +37,8 @@ class_name EntitySetting extends Resource
 
 # XX claude-terra: PLACE_THEN_STRETCH - flex: клик ставит начало, второй клик ставит конец
 # XX claude-terra 13.2: DRAW_POLYGON - лист пенопласта произвольной формы: вершины контура ставятся кликами (C_PolygonDraw)
-enum BuildBehavior { GHOST_PLACE, SPAWN_AND_DRAG, PLACE_THEN_STRETCH, DRAW_POLYGON }
+# 13.2 B5: DRAW_STRIP - лист-полоса: клики ставят точки оси, ширина [ и ], контур = ось, смещённая на полширины
+enum BuildBehavior { GHOST_PLACE, SPAWN_AND_DRAG, PLACE_THEN_STRETCH, DRAW_POLYGON, DRAW_STRIP }
 
 ## Как BuildTool ставит объект: гост + клик, или сразу спавн в драг
 @export var build_behavior: BuildBehavior = BuildBehavior.GHOST_PLACE

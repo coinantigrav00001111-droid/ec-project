@@ -114,11 +114,13 @@ func on_receive_draggable_state(data: Dictionary) -> void:
 			draw.set_preshaped()
 
 
-## XX claude-terra 13.2 B2. Лист создан из пресета с build_behavior = DRAW_POLYGON (форму рисовал игрок)
+## XX claude-terra 13.2 B2. Лист создан из пресета с build_behavior = DRAW_POLYGON или DRAW_STRIP (форму рисовал игрок)
 func _is_drawn() -> bool:
 	var identity := entity.get_comp(C_Identity) as C_Identity
-	return identity != null and identity.setting != null \
-			and identity.setting.build_behavior == EntitySetting.BuildBehavior.DRAW_POLYGON
+	if identity == null or identity.setting == null:
+		return false
+	var b: int = identity.setting.build_behavior
+	return b == EntitySetting.BuildBehavior.DRAW_POLYGON or b == EntitySetting.BuildBehavior.DRAW_STRIP
 
 
 ## Сброс поворота и уровня (DragTool, Home)

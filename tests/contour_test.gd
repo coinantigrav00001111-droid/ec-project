@@ -147,5 +147,18 @@ func _ready() -> void:
 	check("Г без выреза: один полигон", pieces.size() == 1, str(pieces.size()))
 	layer.free()
 
+	# --- полоса по оси (13.2 B5): C_PolygonDraw._strip_outline ---
+	var sd := C_PolygonDraw.new()
+	sd.width = 6.0
+	var s1 := sd._strip_outline(poly([Vector2(0, 0), Vector2(10, 0)]))
+	check("strip: отрезок 10 на 6, 4 вершины и площадь 60", s1.size() == 4 and near(absf(C_Contour.signed_area(s1)), 60.0, 0.05),
+			"%d / %f" % [s1.size(), absf(C_Contour.signed_area(s1))])
+	sd.width = 4.0
+	var s2 := sd._strip_outline(poly([Vector2(0, 0), Vector2(10, 0), Vector2(10, 10)]))
+	check("strip: угол 90°, площадь 80", near(absf(C_Contour.signed_area(s2)), 80.0, 0.1), str(absf(C_Contour.signed_area(s2))))
+	check("strip: контур угла годен", not s2.is_empty() and C_Contour.validate(s2) == "", C_Contour.validate(s2))
+	check("strip: одна точка контура не даёт", sd._strip_outline(poly([Vector2(0, 0)])).is_empty())
+	sd.free()
+
 	print("--------")
 	print("contour_test: ", "PASS" if _fails == 0 else "FAIL (%d)" % _fails)

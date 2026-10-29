@@ -13,14 +13,26 @@ class_name C_PolygonDraw extends Component
 ##  3. Дубль (preshaped = true): контур уже готов (клон состояния последнего листа), рисовать нечего.
 ## Закрытие (try_close): контур чистится, Origin переносится в центр габарита на сетке (D2), точки остаются целыми.
 ## Состояние на реальный лист переносит C_TerrainDraggable.on_clone_state_to (points, levels).
-## Тул вызывает методы компонента напрямую: begin, add_vertex, undo_vertex, try_close, set_cursor, elevate, add_levels.
+## Режим полосы (13.2 B5, strip = true, BuildBehavior.DRAW_STRIP): клики ставят точки ОСИ, контур листа = ось, смещённая
+## на полширины в обе стороны (Geometry2D.offset_polyline, стык MITER, торцы прямые). Заканчивается клик по последней точке
+## или Enter, ширина [ и ]. Лист не помнит ось и ширину: после постановки правится ручками контура (B3).
+## Тул вызывает методы компонента напрямую: begin, add_vertex, undo_vertex, try_close, set_cursor, elevate, add_levels, add_width.
 
 const COL_OK := Color(1.0, 0.85, 0.3)
 const COL_BAD := Color(1.0, 0.3, 0.3)
 const COL_CLOSE := Color(0.4, 1.0, 0.5)
 const COL_DIM := Color(0.8, 0.8, 0.8, 0.6)
 const COL_CURSOR := Color(0.5, 0.9, 1.0)
+## Наибольшее число точек оси полосы (контур полосы почти вдвое больше: C_Contour.MAX_POINTS)
+const MAX_AXIS := 30
+const WIDTH_MIN := 2.0
+const WIDTH_MAX := 40.0
+const WIDTH_DEFAULT := 6.0
 
+## Режим полосы: вершины это ось, а не контур
+var strip := false
+## Ширина полосы, ю (только strip). Меняется add_width, предел WIDTH_MIN..WIDTH_MAX
+var width := WIDTH_DEFAULT
 ## Первый клик сделан, вершины ставятся
 var drawing := false
 ## Контур готов (дубль): рисовать нечего
@@ -39,6 +51,7 @@ var _contour: C_Contour
 var _marker := PackedVector2Array()   # контур-маркер до первого клика
 var _shown := PackedVector2Array()    # контур, который сейчас построен как призма на призраке
 var _has_cursor := false
+var _strip_why := ""                  # почему не вышел контур полосы (петля, дыра, мало точек)
 var _mi: MeshInstance3D
 var _imm: ImmediateMesh
 var _note: TrackNote.Line
@@ -95,12 +108,14 @@ func set_cursor(world: Vector3) -> void:
 	_refresh()
 
 
-## Курсор стоит на первой вершине и вершин хватает: клик замыкает контур
+## Курсор стоит на первой вершине (полоса: на последней точке оси) и вершин хватает: клик заканчивает рисунок
 func is_closing() -> bool:
-	if not drawing or verts.size() < 3:
+	if not drawing:
 		return false
 	var step: float = Global.settings.terrain_grid_step
-	return cursor.distance_to(verts[0]) < step * 0.5
+	if strip:
+		return verts.size() >= 2 and cursor.distance_to(verts[verts.size() - 1]) < step * 0.5
+	return verts.size() >= 3 and cursor.distance_to(verts[0]) < step * 0.5
 
 
 ## Поставить вершину в точке курсора. false: нельзя (причина в vertex_reason)
@@ -125,10 +140,13 @@ func undo_vertex() -> void:
 
 ## Закрыть контур. true: контур годен, Origin перенесен в центр габарита, призрак можно ставить
 func try_close() -> bool:
-	if not drawing or verts.size() < 3 or _contour == null or _layer == null:
+	if not drawing or verts.size() < (2 if strip else 3) or _contour == null or _layer == null:
 		return false
-	var fin := C_Contour.cleaned(verts)
-	var why := C_Contour.validate(fin)
+	var shape := verts
+	if strip:
+		shape = _strip_outline(verts)
+	var fin := C_Contour.cleaned(shape) if not shape.is_empty() else shape
+	var why := C_Contour.validate(fin) if not fin.is_empty() else _strip_why
 	if why == "":
 		_contour.set_points(fin)
 		if _overlaps():
@@ -179,6 +197,16 @@ func elevate(levels: int) -> void:
 		_refresh()
 
 
+## Ширина полосы (клавиши [ и ]), ю. Только в режиме полосы
+func add_width(delta: float) -> void:
+	if not strip:
+		return
+	width = clampf(snappedf(width + delta, 0.5), WIDTH_MIN, WIDTH_MAX)
+	if drawing:
+		_shown = PackedVector2Array()   # контур пересобрать
+		_refresh()
+
+
 ## Толщина (Ctrl+R/F), в слоях. Работает и у маркера
 func add_levels(delta: int) -> void:
 	if _layer == null:
@@ -215,6 +243,7 @@ func _refresh() -> void:
 	if not drawing or _contour == null or _layer == null:
 		return
 	var closing := is_closing()
+	# chain: вершины контура (полигон) или точки оси (полоса), с курсором в конце, пока рисунок не заканчивается
 	var chain := verts.duplicate()
 	if not closing:
 		chain.append(cursor)
@@ -222,18 +251,24 @@ func _refresh() -> void:
 	# 1. вершину в точке курсора ставить можно?
 	vertex_reason = ""
 	if not closing:
-		if verts.size() >= C_Contour.MAX_POINTS:
-			vertex_reason = "Больше %d вершин" % C_Contour.MAX_POINTS
+		if verts.size() >= (MAX_AXIS if strip else C_Contour.MAX_POINTS):
+			vertex_reason = "Больше %d вершин" % (MAX_AXIS if strip else C_Contour.MAX_POINTS)
 		else:
 			vertex_reason = C_Contour.validate_chain(chain)
 
-	# 2. замкнутый контур chain годен: показываем призму, иначе только линии
-	var poly_reason := C_Contour.validate(chain)
+	# 2. замкнутый контур годен: показываем призму, иначе только линии. У полосы контур строится из оси
+	var poly := chain
+	var poly_reason := ""
+	if strip:
+		poly = _strip_outline(chain)
+		poly_reason = _strip_why if poly.is_empty() else C_Contour.validate(poly)
+	else:
+		poly_reason = C_Contour.validate(chain)
 	var overlap := false
 	if poly_reason == "":
-		if _shown != chain:
-			_contour.set_points(chain)
-			_shown = chain.duplicate()
+		if _shown != poly:
+			_contour.set_points(poly)
+			_shown = poly.duplicate()
 		overlap = _overlaps()
 		_layer.mesh_node.visible = true
 	else:
@@ -248,9 +283,28 @@ func _refresh() -> void:
 	if not closing and msg == "" and overlap:
 		msg = "Налезает на другой лист"
 	var bad := msg != ""
+	var info := msg
+	if strip and not closing and not bad and poly_reason != "" and chain.size() >= 2:
+		info = poly_reason   # ось годна, а полоса пока нет: подсказка белым, не отказ
 	_set_invalid(bad)
 	_redraw(closing, bad)
-	_update_note(poly_reason == "", msg, bad)
+	_update_note(poly_reason == "", info, bad)
+
+
+## Контур полосы по оси: смещение на полширины в обе стороны. Пустой массив: не вышло (причина в _strip_why)
+func _strip_outline(axis: PackedVector2Array) -> PackedVector2Array:
+	_strip_why = ""
+	if axis.size() < 2:
+		_strip_why = "Нужно минимум 2 точки оси"
+		return PackedVector2Array()
+	var res := Geometry2D.offset_polyline(axis, width * 0.5, Geometry2D.JOIN_MITER, Geometry2D.END_BUTT)
+	if res.size() != 1:
+		_strip_why = "Полоса образует петлю или дыру"
+		return PackedVector2Array()
+	var out: PackedVector2Array = res[0]
+	for i in out.size():
+		out[i] = Vector2(snappedf(out[i].x, 0.001), snappedf(out[i].y, 0.001))   # без хвостов плавающей точки в сейве
+	return out
 
 
 func _overlaps() -> bool:
@@ -293,7 +347,11 @@ func _redraw(closing: bool, bad: bool) -> void:
 	var col := COL_BAD if bad else COL_OK
 
 	var line := verts.duplicate()
-	line.append(verts[0] if closing else cursor)
+	if strip:
+		if not closing:
+			line.append(cursor)   # полоса: ось не замыкается
+	else:
+		line.append(verts[0] if closing else cursor)
 	if line.size() >= 2:
 		_imm.surface_begin(Mesh.PRIMITIVE_LINE_STRIP)
 		for p in line:
@@ -301,12 +359,14 @@ func _redraw(closing: bool, bad: bool) -> void:
 		_imm.surface_end()
 
 	_imm.surface_begin(Mesh.PRIMITIVE_LINES)
-	if not closing and verts.size() >= 2:   # замыкающая линия, как выйдет контур
+	if not strip and not closing and verts.size() >= 2:   # замыкающая линия, как выйдет контур
 		_vtx(cursor, y, COL_DIM)
 		_vtx(verts[0], y, COL_DIM)
 	for i in verts.size():
-		var first_ok := i == 0 and verts.size() >= 3   # первая вершина: сюда клик замыкает
-		_cross(verts[i], y, 0.7 if first_ok else 0.35, COL_CLOSE if first_ok else col)
+		# полигон: первая вершина, сюда клик замыкает; полоса: последняя точка, сюда клик заканчивает
+		var target := i == (verts.size() - 1 if strip else 0)
+		var ok := target and verts.size() >= (2 if strip else 3)
+		_cross(verts[i], y, 0.7 if ok else 0.35, COL_CLOSE if ok else col)
 	if not closing:
 		_cross(cursor, y, 0.5, COL_CURSOR)
 	_imm.surface_end()
@@ -330,6 +390,8 @@ func _update_note(shaped: bool, msg: String, bad: bool) -> void:
 		return
 	var T: float = Global.settings.layer_height
 	var text := "Вершин %d · Слоёв %d · Ур. %d" % [verts.size(), _layer.levels, roundi(entity.global_position.y / T)]
+	if strip:
+		text = "Точек %d · Ширина %.1f · Слоёв %d · Ур. %d" % [verts.size(), width, _layer.levels, roundi(entity.global_position.y / T)]
 	if shaped:
 		text += " · %.0f ю²" % _contour.area()
 	if msg != "":
