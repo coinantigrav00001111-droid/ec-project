@@ -70,9 +70,11 @@ script = ExtResource("15_bs")
 
 [resource]
 script = ExtResource("2_es")
-id = 1340
 key = &"track.buffer.buffer_stop"
-facets = { "shape": "buffer" }
+facets = {
+"shape": "buffer"
+}
+id = 1340
 name = "Buffer Stop"
 description = "Упор. Тупиковый трак с буферным брусом на конце. L 11.9. Медленно: отскок на буферах, быстро: сход."
 tag = &"buffer"
