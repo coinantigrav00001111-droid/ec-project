@@ -60,6 +60,8 @@ script = ExtResource("14_y3bfa")
 [resource]
 script = ExtResource("16_56h3u")
 id = 1410
+key = &"track.straight.s239_nb"
+facets = { "ballast": "no", "shape": "straight" }
 name = "S239 без балласта (стиль)"
 description = "Прямой трак 23.9см, стиль без балласта (h=0.45). Для проверки ступеньки на стыке с балластным траком."
 icon = ExtResource("15_q6pca")

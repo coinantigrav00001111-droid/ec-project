@@ -79,6 +79,8 @@ frog = 2
 [resource]
 script = ExtResource("19_v83xo")
 id = 1332
+key = &"track.switch.switch_wl_wood"
+facets = { "ballast": "no", "shape": "switch", "sleeper": "wood" }
 name = "Switch WL-nobal"
 description = "Стрелка левая. G239 + R9(r=90.8 d=15°). Ручная: клик по рычагу у носка. L 23.9, ответвление 15°."
 tag = &"switch"

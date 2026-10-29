@@ -252,8 +252,8 @@ func _on_direction_slider_value_changed(value: float) -> void:
 ##Кнопка вкл\выкл видимости контроллера
 func _on_show_controller_button_pressed() -> void:
 	var contr_size = $".".size
-	var y_offset = 300 # смещение по вертикали на высоту BuildObjectsContainer
-	#var y_offset = $'../MainControl/BuildObjectsContainer'.size.y + 5 # смещение по вертикали на высоту BuildObjectsContainer
+	var y_offset = 300 # смещение по вертикали на высоту DockObjects
+	#var y_offset = $'../MainControl/BuildObjectsContainer'.size.y + 5 # смещение по вертикали на высоту DockObjects
 
 
 	if %ShowControllerButton.button_pressed:

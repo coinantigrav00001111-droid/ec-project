@@ -24,38 +24,34 @@ class_name ToolController extends Node3D
 
 
 
-# UI 
-@onready var build_controller: BuildController = $"../UI/BuildController"
-#@onready var operate_controller: OperateController = $"../UI/OperateController"
-@onready var info_controller: InfoController =  $"../UI/InfoController"
-@onready var entity_debugger = $"../Debug/EntityDebugger"
-@onready var info_panel: InfoPanel = $"../UI/InfoPanel"
-@onready var top_panel: TopPanel = $"../UI/TopPanel"
+# UI. Единственная связь с UI: ModeController (сигнал смены режима).
+# Остальное UI берёт из сигналов ниже (selection_changed, tool_changed, build_selection_cleared),
+# а панель инструментов (ToolbarController) сама находит этот узел по группе tool_controller
 
 
 # Текущий активный инструмент
 var active_tool: Node 
 
-# ⚡Сигнал обновляем инфу
-signal update_info
+## ⚡Сигнал: объект, который показывает инфопанель, сменился (null: ничего)
+signal selection_changed(entity: Entity)
+## ⚡Сигнал: сменился активный инструмент
+signal tool_changed(tool_name: StringName)
+## ⚡Сигнал: выбор объекта для стройки снят (UI снимает нажатие с кнопки объекта)
+signal build_selection_cleared
+
+## Сущность, о которой сейчас показывается информация (выбранная, призрак стройки)
+var current_target: Entity = null
 
 
 
 func _ready() -> void:
+	add_to_group(&"tool_controller")   # по группе его находит UI (ToolbarController)
+
 	# ⚡Сигнал из моде контроллера
 	$"../UI/ModeController".current_mode_changed.connect(on_current_mode_changed)
-	
-	# ⚡Сигнал из билд контроллера
-	build_controller.object_selected.connect(_on_build_selected)
-	#operate_controller.object_selected.connect(_on_operate_selected)
-	#build_controller.object_deselected.connect(build_controller._on_object_deselected)
-	
-	# ⚡Сигнал из топпанели нажат пункт меню контроллера
-	#top_panel.menu_button_pressed.connect(_on_menu_button_pressed)
-	
-	# XX claude-terra 13.1.4: дубль последнего объекта. Кнопка в панели Build и сигнал BuildTool обратно в кнопку
-	build_controller.duplicate_requested.connect(duplicate_last_object)
-	build_tool.last_changed.connect(build_controller.on_last_changed)
+
+	# Выбор объекта на панели (select_build_object) и кнопка «Дубль» (duplicate_last_object) подключает
+	# сам ToolbarController. Обратные сигналы: BuildTool.last_changed и build_selection_cleared
 
 	# Инициализируем инструменты, передав им ссылку на себя
 	for tool in %Tools.get_children():
@@ -104,6 +100,7 @@ func switch_tool(new_tool: Node):
 
 	active_tool = new_tool
 	Hints.set_tool(active_tool.name)
+	tool_changed.emit(active_tool.name)
 	active_tool.enter()
 
 
@@ -120,11 +117,18 @@ func duplicate_last_object() -> void:
 
 
 
-# ⚡Сигнал выбран объект для билда
-func _on_build_selected(setting: EntitySetting):
+## Инструменты сообщают, о каком объекте показывать информацию. UI подписан на selection_changed
+func publish_selection(entity: Entity) -> void:
+	current_target = entity
+	selection_changed.emit(entity)
+
+
+
+## Выбран объект для стройки (из панели инструментов). null: снять выбор
+func select_build_object(setting: EntitySetting) -> void:
 	if setting == null :
 		# Очищаем селекта в UI если null
-		build_controller.object_deselected()
+		build_selection_cleared.emit()
 		return
 
 	build_tool.ghost_setting = setting
@@ -190,7 +194,7 @@ func get_mouse_ray_vec() -> Dictionary:
 ## 💡--------------Меняем режим ---------------------------------
 
 func on_current_mode_changed(_new_mode):
-	Global.current_mode = _new_mode
+	# Global.current_mode уже записал ModeController
 	Hints.set_mode(_new_mode)
 	# Observe: инструмент без выбора и драга. Выход из прежнего инструмента сам снимает выделение и призрака
 	if observe_tool:
@@ -198,7 +202,6 @@ func on_current_mode_changed(_new_mode):
 			switch_tool(observe_tool)
 		elif active_tool == observe_tool:
 			switch_tool(select_tool)
-	update_info.emit() 
 
 
 ### Получаем текущий current mode

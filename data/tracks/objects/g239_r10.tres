@@ -73,6 +73,8 @@ metadata/_custom_type_script = "uid://cs257ge2f37bu"
 [resource]
 script = ExtResource("17_6oufe")
 id = 1120
+key = &"track.straight.g239_r10"
+facets = { "shape": "straight" }
 name = "G239-1"
 description = "Прямой трак 23.9см Уклон  1°"
 icon = ExtResource("16_irbtk")

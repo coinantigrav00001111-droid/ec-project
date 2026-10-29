@@ -10,7 +10,12 @@ signal s_select_entity( sel_entity:Variant, spdmetr_on: bool, vert :bool)
 
 
 func _ready():
+	add_to_group(&"info_panel")   # по группе её находит спидометр
 	hide() # Прячем панель на старте
+	# ⚡Сигнал из ToolController: какой объект показывать
+	var _tc := get_node_or_null("../../ToolController")
+	if _tc:
+		_tc.selection_changed.connect(set_target)
 	PGM.power_tab_updated.connect(_update_power_tab)
 	PGM.power_updated.connect(_on_power_track_updated)
 	#PGM.neighbor_updated.connect(_on_neighbor_updated)
@@ -76,7 +81,8 @@ func _process(_delta):
 		_update_debug_tab()
 	
 	if visible and current_target and tab_container.current_tab == 1: # 1 - Питание
-		_update_power_tab()
+		# Живые значения нужны только у поезда. Трак обновляется по сигналам PGM, список контуров не пересобираем
+		_update_train_power_live()
 
 	# Вкладка механизмов и света: статус и положения слайдеров
 	if visible and current_target and _mech_tab and tab_container.current_tab == tab_container.get_tab_idx_from_control(_mech_tab):
@@ -193,6 +199,7 @@ func _update_power_tab():
 	#await get_tree().physics_frame
 	if not current_target: return
 	var identity = current_target.get_comp(C_Identity)
+	if not identity: return
 	var _category = identity.get_category()
 	
 	# Power Track
@@ -255,32 +262,40 @@ func _update_power_tab():
 		&'train':
 			%PowerTrackTab.hide()
 			%PowerTrainTab.show()
-			
-			var _engine_comp = current_target.get_comp(C_Engine) as C_Engine
-			var _chassis_comp = current_target.get_comp(C_Chassis) as C_Chassis
+			_update_train_power_live()
 
-			if _engine_comp:
-				%EngineContourLabel.text = str(_engine_comp.power.contour_id)
-				%TrainVoltageLabel.text = str(_engine_comp.power.voltage)
 
-				
-				
-				var _spd = _chassis_comp.current_speed
-				%SpeedLabel.text = str( "%0.2f" % [_spd] if abs(_spd) > 0.05 else '0.0' )
-				var _c_force = _chassis_comp.centrifugal_force
-				%CentrifugalForceLabel.text = tr( "%0.2f" % [_c_force] if abs(_c_force) > 0.05 else '0.0' )
-				
-				# Цвета 
-				if  PGM.get_power(_engine_comp.power.contour_id) > 0:
-					%TrainVoltageLabel.modulate = Color(0.0, 0.824, 0.0, 1.0)
-					%SpeedLabel.modulate = Color(0.0, 0.824, 0.0, 1.0)
-				elif PGM.get_power(_engine_comp.power.contour_id) < 0:
-					%TrainVoltageLabel.modulate = Color(1.0, 0.302, 0.043, 1.0)
-					%SpeedLabel.modulate = Color(1.0, 0.302, 0.043, 1.0)
-				else:
-					%TrackVoltageLabel.modulate = Color(1.0, 1.0, 1.0, 1.0)
-					%SpeedLabel.modulate = Color(1.0, 1.0, 1.0, 1.0)
-				
+
+## Значения вкладки «Питание» для поезда. Дёшево (без пересборки списков), поэтому зовётся каждый кадр, пока вкладка открыта
+func _update_train_power_live() -> void:
+	if not current_target: return
+	var identity = current_target.get_comp(C_Identity)
+	if not identity or identity.get_category() != &'train': return
+
+	var _engine_comp = current_target.get_comp(C_Engine) as C_Engine
+	var _chassis_comp = current_target.get_comp(C_Chassis) as C_Chassis
+	if not _engine_comp or not _chassis_comp: return
+
+	%EngineContourLabel.text = str(_engine_comp.power.contour_id)
+	%TrainVoltageLabel.text = str(_engine_comp.power.voltage)
+
+	var _spd = _chassis_comp.current_speed
+	%SpeedLabel.text = str( "%0.2f" % [_spd] if abs(_spd) > 0.05 else '0.0' )
+	var _c_force = _chassis_comp.centrifugal_force
+	%CentrifugalForceLabel.text = tr( "%0.2f" % [_c_force] if abs(_c_force) > 0.05 else '0.0' )
+
+	# Цвета
+	var _pw: float = PGM.get_power(_engine_comp.power.contour_id)
+	if _pw > 0:
+		%TrainVoltageLabel.modulate = Color(0.0, 0.824, 0.0, 1.0)
+		%SpeedLabel.modulate = Color(0.0, 0.824, 0.0, 1.0)
+	elif _pw < 0:
+		%TrainVoltageLabel.modulate = Color(1.0, 0.302, 0.043, 1.0)
+		%SpeedLabel.modulate = Color(1.0, 0.302, 0.043, 1.0)
+	else:
+		%TrainVoltageLabel.modulate = Color(1.0, 1.0, 1.0, 1.0)
+		%SpeedLabel.modulate = Color(1.0, 1.0, 1.0, 1.0)
+
 
 
 

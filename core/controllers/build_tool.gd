@@ -66,7 +66,7 @@ func _enter_ghost_place() -> void:
 	ghost.send_event("on_select_layer", {'enabled': true})
 	if tunnel_mode:   # XX claude-terra T6: у не-траков события никто не слушает
 		ghost.send_event("on_tunnel_set", {"on": true})
-	controller.info_panel.set_target(ghost)
+	controller.publish_selection(ghost)
 
 
 
@@ -339,7 +339,6 @@ func process_tick(_delta):
 		else:
 			ghost.send_event("on_drag_moved", hit)
 
-	$"../../UI/ModeLabel".text = name
 
 
 
@@ -352,10 +351,10 @@ func exit(_to_drag : bool = false):
 		
 	
 	# Очищаем селекта в UI (null)
-	controller._on_build_selected(null)
+	controller.select_build_object(null)
 	
 	#INFO ОЧИЩАЕМ ПАНЕЛЬ!
-	controller.info_panel.set_target(null)
+	controller.publish_selection(null)
 
 
 

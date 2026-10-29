@@ -56,6 +56,8 @@ script = ExtResource("14_su")
 [resource]
 script = ExtResource("16_es")
 id = 1431
+key = &"track.straight.s239r05_concrete_ballast"
+facets = { "ballast": "yes", "shape": "straight", "sleeper": "concrete" }
 name = "S239-05 Бетон+балласт"
 description = "Прямой 23.9см, уклон 0.5, стиль «Бетон+балласт» (h=0.85)"
 tag = &"straight"

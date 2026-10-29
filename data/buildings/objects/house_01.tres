@@ -311,6 +311,7 @@ metadata/_custom_type_script = "uid://brbladjp7pfki"
 [resource]
 script = ExtResource("21_q4ryd")
 id = 5020
+key = &"building.house.house_01"
 name = "house_01"
 description = "большой_01"
 category = &"building"

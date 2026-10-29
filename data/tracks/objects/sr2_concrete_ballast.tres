@@ -56,6 +56,8 @@ script = ExtResource("14_su")
 [resource]
 script = ExtResource("16_es")
 id = 1435
+key = &"track.curve.sr2_concrete_ballast"
+facets = { "ballast": "yes", "shape": "curve", "sleeper": "concrete" }
 name = "SR2 Бетон+балласт"
 description = "Радиусный 42.2см, 30°, стиль «Бетон+балласт» (h=0.85)"
 tag = &"curve"

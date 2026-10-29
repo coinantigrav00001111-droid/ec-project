@@ -49,7 +49,10 @@ func _ready() -> void:
 
 	#Блок финиш на расстояние замера
 	$Finish.position.z = $Start.position.z - distance_m 
-	controller.info_panel.s_select_entity.connect(on_select_wagon)
+	# InfoPanel находим по группе: игровой код не держит ссылок на узлы UI
+	var _info := get_tree().get_first_node_in_group(&"info_panel")
+	if _info:
+		_info.s_select_entity.connect(on_select_wagon)
 	
 	
 

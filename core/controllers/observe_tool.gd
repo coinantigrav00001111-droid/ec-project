@@ -22,7 +22,7 @@ func exit(_to_drag: bool = false):
 
 
 func process_tick(_delta):
-	$"../../UI/ModeLabel".text = name
+	pass
 
 
 func handle_input(event: InputEvent):

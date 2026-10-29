@@ -15,7 +15,8 @@ var object_dirs := [	"res://data/tracks/objects/",
 var settings: Resource = preload("res://setting/global_setting.tres")
 
 #DD Дебаги вкл
-var debug_mode := true
+## true в редакторе и debug-сборке, false в релизе
+var debug_mode := OS.is_debug_build()
 
 ## Режим быстрой загрузки для отладки: без комнаты и карточек Observe, графика по умолчанию (Low, без SDFGI),
 ## землёй служит скрытый WoodFloor. Включается аргументом запуска `--fast` (Run with args: -- --fast)

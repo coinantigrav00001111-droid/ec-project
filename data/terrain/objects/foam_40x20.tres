@@ -34,6 +34,7 @@ script = ExtResource("8_sl")
 [resource]
 script = ExtResource("2_es")
 id = 6002
+key = &"terrain.foam.foam_40x20"
 name = "foam_40x20"
 description = "Лист пенопласта 40x20, толщина 1 слой"
 category = &"terrain"

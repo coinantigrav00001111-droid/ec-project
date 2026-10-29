@@ -27,6 +27,6 @@ func config(_cat) -> void:
 
 
 
-## ⚡Сигнал будет подключен к билдконтроллеру (через UIGenerator при создании кнопки), 
+## ⚡Сигнал подключает ToolbarController при создании кнопки
 func _on_pressed() -> void:
 	emit_signal("category_selected", category)

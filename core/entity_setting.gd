@@ -8,8 +8,23 @@ class_name EntitySetting extends Resource
 ## UI накидывает кнопки по категориям для каждого объекта папок /objects/
 
 #@export_category("Main & UI")
-#TODO а если id строковый сделать?
-@export var id :int = 0 # сортировка в панели кнопок
+## Стабильный уникальный ключ объекта: `категория.тег.вариант`, например `track.straight.s239_wood`.
+## По нему объект узнают UI, сейвы будущих версий и локализация (`obj.<key>.name`).
+## Ключ не меняют после выхода объекта. Решения принимаются по `facets`, а не разбором строки ключа.
+## Пусто = временный ключ из пути файла (get_key), но lint это отмечает.
+@export var key :StringName = &""
+
+## Признаки для фильтров каталога и выбора рамкой: {"shape": "straight", "sleeper": "wood", "ballast": "yes"}
+## Ключи и значения строками. Набор показываемых фильтров задан в CatalogMeta.FACET_SPECS
+@export var facets :Dictionary = {}
+
+## Порядок кнопки в своем теге (меньше = левее). Равные (в том числе все нули) идут по имени файла ресурса,
+## как было до U3a. Прежний `id` порядок не задает
+@export var sort_order :int = 0
+
+## УСТАРЕЛО: прежний числовой id. Читается как раньше (подпись на кнопке в debug), но ничего не решает.
+## Заменен на key. Удалим, когда все .tres и сейвы перейдут
+@export var id :int = 0
 @export var name :String = ''
 @export var description :String = 'Прямой трак 1,5см'
 
@@ -44,3 +59,21 @@ func get_pick_layers() -> Array:
 	if category == &'terrain':
 		return [&'ground']   # лист пенопласта ставится на стол или на верх другого листа
 	return [&'ground', &'tracks', &'trains']
+
+
+## Ключ объекта. Пустой `key` заменяется ключом из категории, тега и имени файла
+func get_key() -> StringName:
+	if key != &"":
+		return key
+	var stem := resource_path.get_file().get_basename()
+	if stem == "":
+		stem = name.to_snake_case()
+	return StringName("%s.%s.%s" % [category, tag, stem])
+
+
+## Значение признака строкой, пусто если признака нет. Ключи словаря сравниваются как строки
+func get_facet(facet: StringName) -> String:
+	for k in facets:
+		if str(k) == str(facet):
+			return str(facets[k])
+	return ""

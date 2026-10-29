@@ -27,7 +27,6 @@ const LOOKS_DIR := "res://data/graphics/looks/"
 const TIMES_DIR := "res://data/graphics/time/"
 const QUALITY_DIR := "res://data/graphics/quality/"
 ## Настройки игрока (не сейв): tier качества и последние Look и Time
-const SETTINGS_PATH := "user://settings.cfg"
 const DEFAULT_LOOK := &"toy"
 const DEFAULT_TIME := &"day"
 const DEFAULT_TRANSITION := 0.5
@@ -564,32 +563,27 @@ func _autodetect_quality() -> StringName:
 
 
 func _load_settings() -> void:
-	var cfg := ConfigFile.new()
-	cfg.load(SETTINGS_PATH)   # нет файла: get_value вернет значения по умолчанию
-	var q := StringName(cfg.get_value("graphics", "quality", ""))
+	var q := StringName(Settings.get_value("graphics", "quality", ""))
 	state.quality = q if qualities.has(q) else _autodetect_quality()
-	var l := StringName(cfg.get_value("graphics", "look", ""))
+	var l := StringName(Settings.get_value("graphics", "look", ""))
 	if looks.has(l):
 		state.look = l
-	var t := StringName(cfg.get_value("graphics", "time", ""))
+	var t := StringName(Settings.get_value("graphics", "time", ""))
 	if times.has(t):
 		state.time = t
 	# Ключа может не быть (первый запуск): get_value с null вместо умолчания дает ошибку, поэтому has_section_key
-	if cfg.has_section_key("graphics", "track_shadows"):
-		var ts = cfg.get_value("graphics", "track_shadows", false)
+	if Settings.has_value("graphics", "track_shadows"):
+		var ts = Settings.get_value("graphics", "track_shadows", false)
 		if ts is bool:
 			_track_shadows_override = 1 if ts else 0
 
 
 func _save_settings() -> void:
-	var cfg := ConfigFile.new()
-	cfg.load(SETTINGS_PATH)   # не затираем чужие секции
-	cfg.set_value("graphics", "quality", String(state.quality))
-	cfg.set_value("graphics", "look", String(state.look))
-	cfg.set_value("graphics", "time", String(state.time))
+	Settings.set_value("graphics", "quality", String(state.quality))
+	Settings.set_value("graphics", "look", String(state.look))
+	Settings.set_value("graphics", "time", String(state.time))
 	if _track_shadows_override >= 0:
-		cfg.set_value("graphics", "track_shadows", _track_shadows_override == 1)
-	cfg.save(SETTINGS_PATH)
+		Settings.set_value("graphics", "track_shadows", _track_shadows_override == 1)
 
 
 # ==========================================

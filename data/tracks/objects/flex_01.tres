@@ -63,6 +63,8 @@ script = ExtResource("14_tijak")
 [resource]
 script = ExtResource("16_lwvy1")
 id = 1310
+key = &"track.flex.flex_01"
+facets = { "shape": "flex" }
 name = "Flex"
 description = "Гибкий трак. Клик - начало, второй клик - конец. L 10-90, R от 32."
 tag = &"flex"

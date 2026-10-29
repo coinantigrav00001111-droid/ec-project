@@ -4,6 +4,12 @@ class_name ModeController extends Node
 ##    ModeController 
 ## 💡 LVL1 - Переключает текущий режим игры, обрабатывает события mode 
 ########################
+## Реестр режимов: у каждого режима есть обработчик его панели. Контракт обработчика:
+##   show_mode_ui(mode: StringName)   показать панель режима (с анимацией)
+##   hide_mode_ui()                   спрятать панель режима, сбросить выбранную категорию
+##   debug_open_category(index: int)  необязательно: открыть категорию по номеру (Global.active_ui_category)
+## Build и Operate обслуживает ToolbarController, Observe свой ObserveController.
+## У режима без обработчика (Library, заглушка) показывается простая панель из PLAIN_PANELS.
 
 
 @onready var tool_controller: ToolController = $"../../ToolController"
@@ -11,80 +17,85 @@ class_name ModeController extends Node
 
 ## ⚡ Сигнал наружу о смене режима
 signal current_mode_changed(_current_mode)
-signal update_info
+
+## режим -> обработчик
+var _handlers := {}
+## режим -> панель без обработчика
+var _plain_panels := {}
 
 
 func _ready() -> void:
 	#⚡Сигнал о выборе режима из панели коннектится с контроллером
 	%ModePanel.mode_selected.connect(on_mode_selected)
+	# Метка с именем активного инструмента (временная, уйдёт вместе с ModeLabel в U9)
+	tool_controller.tool_changed.connect(func(tool_name: StringName): %ModeLabel.text = str(tool_name))
+
+	var toolbar := get_node_or_null("%ToolbarController")
+	_handlers = {
+		&"build": toolbar,
+		&"operate": toolbar,
+		&"observe": get_node_or_null("%ObserveController"),
+	}
+	_plain_panels = {&"library": get_node_or_null("%LibraryPanel")}
 
 	# Задежка, чтобы создались кнопки в билдпанели
 	await get_tree().process_frame
 	await get_tree().process_frame
 	
 	# Выбор режима для старта по Global переменной
-	var _mode := Global.current_mode.capitalize()
-	var _controller = get_node('%' + _mode + 'Controller')
-	var _panel = get_node('%' + _mode + 'Panel')
-	_controller.animate_wrapper(_panel)# Показывает lvl2 контейнеры
-	#%OperateController.animate_wrapper(%OperatePanel)# Показывает lvl2 контейнеры
-	get_node("../ModePanel/VBoxContainer/" + _mode + 'Button').button_pressed = true
+	var _mode := Global.current_mode
+	_show_mode_ui(_mode)
+	var _mode_button := %ModePanel.get_node_or_null("VBoxContainer/" + _mode.capitalize() + "Button") as Button
+	if _mode_button:
+		_mode_button.button_pressed = true
 	
 	#DD дебаг Запускаем активную категорию 
 	if Global.debug_mode:
-		var _container = get_node('%' + _mode + 'BtnLvl2Container')
-		_container.get_child(Global.active_ui_category)._on_pressed()
+		var handler = _handlers.get(_mode)
+		if handler != null and handler.has_method("debug_open_category"):
+			handler.debug_open_category(Global.active_ui_category)
 
 
 
 
 ##⚡ Сигнал из панели ModePanel. Ставим новый режим
 func on_mode_selected(new_mode: StringName) -> void:
-	var current_m : = Global.current_mode
+	var current_m := Global.current_mode
 	
 	if new_mode == current_m:	return
 
-	# Выключаем текущую панель lvl2 (категории)
-	var current_panel := '%' + current_m.capitalize() + 'Panel'
-	get_node(current_panel).hide()
+	# Выключаем панель категорий текущего режима и сбрасываем его выбор
+	_hide_mode_ui(current_m)
 	
-	# Отключаем кнопку категории
-	var cur_controller_name := '%' + current_m.capitalize() + 'Controller'
-	var current_controller := get_node(cur_controller_name)
-	current_controller.current_cat = &'idle'
-	
-	# Выключаем контейнер объектов(кнопок)
-	var _obj_containers = %MainControl.get_children()
-	for _cont in _obj_containers:
+	# Выключаем контейнеры объектов (кнопок) и остальные панели
+	for _cont in %MainControl.get_children():
 		_cont.hide()
 
 	# Отключаем все кнопки
-	var _group = get_tree().get_nodes_in_group('category_buttons')
-	for _btn in _group:
+	for _btn in get_tree().get_nodes_in_group('category_buttons'):
 		_btn.button_pressed = false
 		
-	# Включаем новую кат lvl2
-	current_m = new_mode
-	current_panel = '%' + current_m.capitalize() + 'Panel'
+	# Включаем панель нового режима
+	_show_mode_ui(new_mode)
 
-	# Выезд контейнера
-	var _new_panel = get_node(current_panel)
-	current_controller.animate_wrapper(_new_panel)
-
+	# Режим пишем сюда, не в ToolController: ModeController владелец режима
+	Global.current_mode = new_mode
 	# ⚡Сигнал наружу
-	current_mode_changed.emit(current_m)
-	# ⚡Сигнал обновление инфы
-	update_info.emit()
+	current_mode_changed.emit(new_mode)
 
 
 
-## Отключает кнопки лвл2 на выходе из состояния
-func _toggle_off_panel_buttons(_group_name):
-	#var _group = get_tree().get_nodes_in_group(_group_name)
-	#
-	### Отключаем категорию
-	##%BuildController.current_cat = &'idle' 
-#    
-	#for _btn in _group:
-		#_btn.button_pressed = false
-	pass
+func _show_mode_ui(mode: StringName) -> void:
+	var handler = _handlers.get(mode)
+	if handler != null:
+		handler.show_mode_ui(mode)
+		return
+	var panel := _plain_panels.get(mode) as Control
+	if panel:
+		panel.show()
+
+
+func _hide_mode_ui(mode: StringName) -> void:
+	var handler = _handlers.get(mode)
+	if handler != null:
+		handler.hide_mode_ui()

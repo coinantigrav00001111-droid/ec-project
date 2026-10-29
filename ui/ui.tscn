@@ -9,12 +9,8 @@
 [ext_resource type="Texture2D" uid="uid://bykn7sk7nse02" path="res://ui/icons/electric/joystick.svg" id="4_gycre"]
 [ext_resource type="Script" uid="uid://daixlawn7cjwi" path="res://ui/observe_controller.gd" id="4_ju45i"]
 [ext_resource type="Script" uid="uid://bm2guc8626oc2" path="res://ui/operate_controller.gd" id="4_mf2ns"]
-[ext_resource type="Script" uid="uid://rchslhllkc5n" path="res://ui/build_controller.gd" id="4_x7jpl"]
-[ext_resource type="Script" uid="uid://158m73il43vw" path="res://ui/info_controller.gd" id="5_bi8hs"]
-[ext_resource type="Material" uid="uid://c7d06kfrh0miq" path="res://data/textures/materials/power_schema_r.tres" id="5_diyc5"]
+[ext_resource type="Script" path="res://ui/toolbar/toolbar_controller.gd" id="4_tbc"]
 [ext_resource type="Texture2D" uid="uid://djywpcxpy5ypw" path="res://ui/icons/tool/tinker.svg" id="5_pa1oa"]
-[ext_resource type="Material" uid="uid://dn01p4ufqoa3q" path="res://data/textures/materials/power_schema_l.tres" id="6_mf2ns"]
-[ext_resource type="Material" uid="uid://bu5nt4oy25mqq" path="res://data/textures/materials/power_schema_i.tres" id="7_ju45i"]
 [ext_resource type="PackedScene" uid="uid://boj0kanwn0n0e" path="res://ui/panels/info_panel.tscn" id="10_ay4pc"]
 [ext_resource type="PackedScene" uid="uid://d8t1asbj2c3s" path="res://ui/panels/top_panel.tscn" id="12_hrmpd"]
 
@@ -26,9 +22,9 @@
 unique_name_in_owner = true
 script = ExtResource("2_bi8hs")
 
-[node name="BuildController" type="Node" parent="." unique_id=844442580]
+[node name="ToolbarController" type="Node" parent="." unique_id=844442580]
 unique_name_in_owner = true
-script = ExtResource("4_x7jpl")
+script = ExtResource("4_tbc")
 
 [node name="OperateController" type="Node" parent="." unique_id=530409928]
 unique_name_in_owner = true
@@ -41,15 +37,6 @@ script = ExtResource("4_ju45i")
 [node name="UIGenerator" type="Node" parent="." unique_id=231375352]
 unique_name_in_owner = true
 script = ExtResource("1_ay4pc")
-
-[node name="InfoController" type="Node" parent="." unique_id=303003333]
-unique_name_in_owner = true
-script = ExtResource("5_bi8hs")
-m_colors = {
-"schema_i": ExtResource("7_ju45i"),
-"schema_l": ExtResource("6_mf2ns"),
-"schema_r": ExtResource("5_diyc5")
-}
 
 [node name="ModePanel" type="MarginContainer" parent="." unique_id=937983992]
 unique_name_in_owner = true
@@ -109,7 +96,7 @@ anchor_bottom = 1.0
 grow_vertical = 0
 theme_type_variation = &"ToolPanelContainer"
 
-[node name="BuildObjectsContainer" type="MarginContainer" parent="MainControl" unique_id=138862998]
+[node name="DockObjects" type="MarginContainer" parent="MainControl" unique_id=138862998]
 unique_name_in_owner = true
 editor_description = "главный контейнер, хранит кнопки объектов в своем ObjContainer, задает отступы от краев и ездит при вызове"
 layout_mode = 1
@@ -124,51 +111,51 @@ mouse_filter = 2
 theme_override_constants/margin_left = 10
 theme_override_constants/margin_bottom = 55
 
-[node name="AnimatedWrapper" type="Control" parent="MainControl/BuildObjectsContainer" unique_id=318673553]
+[node name="AnimatedWrapper" type="Control" parent="MainControl/DockObjects" unique_id=318673553]
 layout_mode = 2
 offset_transform_enabled = true
 mouse_filter = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="MainControl/BuildObjectsContainer/AnimatedWrapper" unique_id=1276423400]
+[node name="HBoxContainer" type="HBoxContainer" parent="MainControl/DockObjects/AnimatedWrapper" unique_id=1276423400]
 editor_description = "Контейнер со всеми кнопками траков и фильтров. Филтры переключают контейнеры с кнопками траков"
 layout_mode = 0
 offset_right = 326.0
 offset_bottom = 428.0
 mouse_filter = 2
 
-[node name="ScrollContainer" type="ScrollContainer" parent="MainControl/BuildObjectsContainer/AnimatedWrapper/HBoxContainer" unique_id=1193114638]
+[node name="ScrollContainer" type="ScrollContainer" parent="MainControl/DockObjects/AnimatedWrapper/HBoxContainer" unique_id=1193114638]
 custom_minimum_size = Vector2(500, 0)
 custom_maximum_size = Vector2(-1, 235)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 19
 
-[node name="PanelContainer" type="PanelContainer" parent="MainControl/BuildObjectsContainer/AnimatedWrapper/HBoxContainer/ScrollContainer" unique_id=872628203]
+[node name="PanelContainer" type="PanelContainer" parent="MainControl/DockObjects/AnimatedWrapper/HBoxContainer/ScrollContainer" unique_id=872628203]
 editor_description = "для фона"
 custom_minimum_size = Vector2(0, 235)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MainControl/BuildObjectsContainer/AnimatedWrapper/HBoxContainer/ScrollContainer/PanelContainer" unique_id=1013616715]
+[node name="VBoxContainer" type="VBoxContainer" parent="MainControl/DockObjects/AnimatedWrapper/HBoxContainer/ScrollContainer/PanelContainer" unique_id=1013616715]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="BuCatTitle" type="Label" parent="MainControl/BuildObjectsContainer/AnimatedWrapper/HBoxContainer/ScrollContainer/PanelContainer/VBoxContainer" unique_id=1465564848]
+[node name="DockTitle" type="Label" parent="MainControl/DockObjects/AnimatedWrapper/HBoxContainer/ScrollContainer/PanelContainer/VBoxContainer" unique_id=1465564848]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
 theme_type_variation = &"HeaderSmall"
 text = "Track"
 
-[node name="BuBtnGridContainer" type="GridContainer" parent="MainControl/BuildObjectsContainer/AnimatedWrapper/HBoxContainer/ScrollContainer/PanelContainer/VBoxContainer" unique_id=1221843301]
+[node name="DockGrid" type="GridContainer" parent="MainControl/DockObjects/AnimatedWrapper/HBoxContainer/ScrollContainer/PanelContainer/VBoxContainer" unique_id=1221843301]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 columns = 4
 
-[node name="BuTagPanel" type="GridContainer" parent="MainControl/BuildObjectsContainer/AnimatedWrapper/HBoxContainer" unique_id=2092356052]
+[node name="DockTags" type="GridContainer" parent="MainControl/DockObjects/AnimatedWrapper/HBoxContainer" unique_id=2092356052]
 unique_name_in_owner = true
 editor_description = "Тут лежат кнопки фильтры,
 сигналы в build_panels.gd "
@@ -176,67 +163,6 @@ layout_mode = 2
 size_flags_vertical = 0
 mouse_filter = 2
 columns = 2
-
-[node name="OperateObjectsContainer" type="MarginContainer" parent="MainControl" unique_id=1202635813]
-unique_name_in_owner = true
-editor_description = "главный контейнер, хранит кнопки объектов в своем ObjContainer, задает отступы от краев и ездит при вызове"
-visible = false
-layout_mode = 1
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_top = -282.0
-offset_right = 292.0
-grow_vertical = 0
-offset_transform_enabled = true
-mouse_filter = 2
-theme_override_constants/margin_left = 10
-theme_override_constants/margin_bottom = 55
-
-[node name="AnimatedWrapper" type="Control" parent="MainControl/OperateObjectsContainer" unique_id=1983241164]
-layout_mode = 2
-offset_transform_enabled = true
-mouse_filter = 2
-
-[node name="HBoxContainer" type="HBoxContainer" parent="MainControl/OperateObjectsContainer/AnimatedWrapper" unique_id=1062554658]
-editor_description = "Контейнер со всеми кнопками траков и фильтров. Филтры переключают контейнеры с кнопками траков"
-layout_mode = 0
-offset_right = 282.0
-offset_bottom = 227.0
-mouse_filter = 2
-
-[node name="PanelContainer" type="PanelContainer" parent="MainControl/OperateObjectsContainer/AnimatedWrapper/HBoxContainer" unique_id=634192752]
-editor_description = "для фона"
-layout_mode = 2
-size_flags_horizontal = 3
-mouse_filter = 2
-
-[node name="VBoxContainer" type="VBoxContainer" parent="MainControl/OperateObjectsContainer/AnimatedWrapper/HBoxContainer/PanelContainer" unique_id=1074118491]
-layout_mode = 2
-mouse_filter = 2
-
-[node name="OpCatTitle" type="Label" parent="MainControl/OperateObjectsContainer/AnimatedWrapper/HBoxContainer/PanelContainer/VBoxContainer" unique_id=1724398502]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 0
-theme_type_variation = &"HeaderSmall"
-text = "DC Controller"
-
-[node name="OpBtnGridContainer" type="GridContainer" parent="MainControl/OperateObjectsContainer/AnimatedWrapper/HBoxContainer/PanelContainer/VBoxContainer" unique_id=235769859]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-columns = 4
-
-[node name="OpTagPanel" type="VBoxContainer" parent="MainControl/OperateObjectsContainer/AnimatedWrapper/HBoxContainer" unique_id=1041447753]
-unique_name_in_owner = true
-editor_description = "Тут лежат кнопки фильтры,
-сигналы в build_panels.gd "
-layout_mode = 2
-size_flags_vertical = 8
-mouse_filter = 2
-theme_override_constants/separation = 6
 
 [node name="ObserveObjectsContainer" type="MarginContainer" parent="MainControl" unique_id=2143498036]
 unique_name_in_owner = true
@@ -290,7 +216,7 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 columns = 4
 
-[node name="BuildPanel" type="MarginContainer" parent="MainControl" unique_id=1406194884]
+[node name="DockCategories" type="MarginContainer" parent="MainControl" unique_id=1406194884]
 unique_name_in_owner = true
 editor_description = "панель режима build с его кнопками. Которые выбирают тип - что строить. траки, поезда, дома, декор, терраформ"
 layout_mode = 1
@@ -307,46 +233,12 @@ theme_override_constants/margin_top = 4
 theme_override_constants/margin_right = 4
 theme_override_constants/margin_bottom = 10
 
-[node name="AnimatedWrapper" type="Control" parent="MainControl/BuildPanel" unique_id=1838173788]
+[node name="AnimatedWrapper" type="Control" parent="MainControl/DockCategories" unique_id=1838173788]
 layout_mode = 2
 offset_transform_enabled = true
 mouse_filter = 2
 
-[node name="BuildBtnLvl2Container" type="HBoxContainer" parent="MainControl/BuildPanel/AnimatedWrapper" unique_id=481295536]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_top = -36.0
-offset_right = 192.0
-grow_vertical = 0
-mouse_filter = 2
-theme_override_constants/separation = 3
-
-[node name="OperatePanel" type="MarginContainer" parent="MainControl" unique_id=202757296]
-unique_name_in_owner = true
-visible = false
-layout_mode = 1
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_top = -44.0
-offset_right = 161.0
-grow_vertical = 0
-offset_transform_enabled = true
-mouse_filter = 2
-theme_override_constants/margin_left = 10
-theme_override_constants/margin_top = 4
-theme_override_constants/margin_right = 4
-theme_override_constants/margin_bottom = 10
-
-[node name="AnimatedWrapper" type="Control" parent="MainControl/OperatePanel" unique_id=536611611]
-layout_mode = 2
-offset_transform_enabled = true
-mouse_filter = 2
-
-[node name="OperateBtnLvl2Container" type="HBoxContainer" parent="MainControl/OperatePanel/AnimatedWrapper" unique_id=28184622]
+[node name="DockCategoryBar" type="HBoxContainer" parent="MainControl/DockCategories/AnimatedWrapper" unique_id=481295536]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 2
@@ -419,7 +311,7 @@ text = "mode"
 
 [node name="InfoPanel" parent="." unique_id=1788166654 instance=ExtResource("10_ay4pc")]
 
-[node name="DCСontrolPanel" parent="." unique_id=1088175003 instance=ExtResource("1_bi8hs")]
+[node name="DCControlPanel" parent="." unique_id=1088175003 instance=ExtResource("1_bi8hs")]
 unique_name_in_owner = true
 offset_top = -610.0
 offset_bottom = -291.0
@@ -429,15 +321,6 @@ offset_left = 7.0
 offset_top = 41.0
 offset_right = 71.0
 offset_bottom = 74.0
-
-[node name="Labeltest" type="Label" parent="." unique_id=679488139]
-unique_name_in_owner = true
-offset_left = 17.0
-offset_top = 249.0
-offset_right = 105.0
-offset_bottom = 268.0
-theme_override_colors/font_color = Color(1, 0.14117648, 1, 1)
-text = "0"
 
 [connection signal="pressed" from="ModePanel/VBoxContainer/LibraryButton" to="ModePanel" method="_on_library_button_pressed"]
 [connection signal="pressed" from="ModePanel/VBoxContainer/ObserveButton" to="ModePanel" method="_on_observe_button_pressed"]

@@ -56,6 +56,8 @@ script = ExtResource("14_su")
 [resource]
 script = ExtResource("16_es")
 id = 1432
+key = &"track.curve.sr2_wood"
+facets = { "ballast": "no", "shape": "curve", "sleeper": "wood" }
 name = "SR2 Дерево"
 description = "Радиусный 42.2см, 30°, стиль «Дерево» (h=0.45)"
 tag = &"curve"

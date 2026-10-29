@@ -87,6 +87,7 @@ metadata/_custom_type_script = "uid://mqrnwkjfweqr"
 [resource]
 script = ExtResource("2_kg4t1")
 id = 2010
+key = &"train.boxcar.wagon_01"
 name = "wagon_01"
 description = "крытый 01"
 category = &"train"

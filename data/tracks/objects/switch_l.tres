@@ -76,6 +76,8 @@ script = ExtResource("16_sw")
 [resource]
 script = ExtResource("2_es")
 id = 1331
+key = &"track.switch.switch_l"
+facets = { "shape": "switch" }
 name = "Switch WL"
 description = "Стрелка левая. G239 + R9(r=90.8 d=15°). Ручная: клик по рычагу у носка. L 23.9, ответвление 15°."
 tag = &"switch"

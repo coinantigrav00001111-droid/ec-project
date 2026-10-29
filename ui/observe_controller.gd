@@ -4,8 +4,8 @@ class_name ObserveController extends Node
 ##    ObserveController -  UI
 ## 💡 Занимается обработкой нажатий в режиме игры OBSERVE 💡
 ########################
-## Интерфейс как у BuildController / OperateController: ModeController и UIGenerator зовут его по именам
-## (current_cat, category_list, on_category_selected, on_tag_selected, animate_wrapper).
+## Обработчик режима для ModeController (show_mode_ui / hide_mode_ui) с категориями Observe
+## (current_cat, category_list, on_category_selected, on_tag_selected). В U4 перейдет на общий каталог (ToolbarController).
 ## Про графику и камеры контроллер ничего не знает: нажатие карточки уходит сигналом observe_action,
 ## на него подпишутся GraphicsManager (S3-S5), камеры и фоторежим (S9).
 ## Выбор и выделение отключает ToolController (переключает инструмент на ObserveTool).
@@ -143,6 +143,21 @@ func _on_exit() -> void:
 
 
 # ==============================================
+# Контракт режима (зовет ModeController)
+# ==============================================
+
+## Показать панель категорий режима
+func show_mode_ui(_mode: StringName) -> void:
+	animate_wrapper(%ObservePanel)
+
+
+## Спрятать панель: сбросить выбранную категорию (сами панели прячет ModeController)
+func hide_mode_ui() -> void:
+	current_cat = &'idle'
+	current_tag = &'idle'
+
+
+# ==============================================
 # Кнопки
 # ==============================================
 
@@ -248,24 +263,6 @@ func _card_data(_cat: StringName, _id: StringName) -> Dictionary:
 	return {}
 
 
-## Анимированный показ панели (копия из BuildController / OperateController)
+## Анимированный показ панели
 func animate_wrapper(_panel) -> void:
-	var wrapper = _panel.get_node_or_null('AnimatedWrapper')
-
-	if !wrapper: # Если без враппера то и  без аниме
-		_panel.show()
-		return
-
-	var _tween := create_tween().set_parallel(true)\
-						.set_trans(Tween.TRANS_QUINT)\
-						.set_trans(Tween.TRANS_BACK)\
-						.set_ease(Tween.EASE_OUT)
-
-	wrapper.get_parent().show()
-
-	var start_offset :int = wrapper.size.y
-	wrapper.modulate.a = 0
-	wrapper.offset_transform_position.y = start_offset
-
-	_tween.tween_property(wrapper, "offset_transform_position:y", 0, anim_time)
-	_tween.tween_property(wrapper, "modulate:a", 1.0, anim_time)
+	UIAnim.slide_up(_panel, anim_time)

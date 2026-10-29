@@ -56,6 +56,8 @@ metadata/_custom_type_script = "uid://cjk51o364xfn"
 [resource]
 script = ExtResource("13_pjhqk")
 id = 25
+key = &"track.curve.r1_75"
+facets = { "shape": "curve" }
 name = "R1-75"
 description = "Радиусный трак 36см 7,5гр"
 tag = &"curve"

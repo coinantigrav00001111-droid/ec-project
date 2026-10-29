@@ -35,6 +35,6 @@ func select_as_default() -> void:
 
 
 
-## ⚡Сигнал будет подключен к билдконтроллеру (через UIGenerator при создании кнопки), 
+## ⚡Сигнал подключает ToolbarController при создании кнопки
 func _on_pressed() -> void:
 	emit_signal("tag_selected", tag)

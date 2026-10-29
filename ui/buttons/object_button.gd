@@ -4,7 +4,8 @@ class_name ObjectButton extends Button
 ## Класс для создания кнопок объектов 4lvl 
 #####################################
 ## 
-## При создании экземпляра кнопки ObjectButton в UIgenerator ⚡Сигнал object_selected коннектится  к билд-контроллеру(ui), у которого есть свой ⚡Сигнал object_selected. ⚡Сигнал Билд-контроллера уже ловит и обрабатывает Tool контроллер.
+## Кнопку создает ToolbarController и подключает к себе ⚡Сигнал btn_pressed_object_selected. Дальше объект уходит приемнику режима
+## (Build: сигнал ToolbarController.object_selected, его ловит ToolController).
 
 ##💡 Все свойства объекта тут
 var object: Resource
@@ -25,6 +26,8 @@ func config(_obj: Resource) -> void:
 	object = _obj
 	$NameLabel.text = _obj.name
 	self.icon = _obj.icon
+	# Оранжевая подпись с числом нужна только разработчику; вид кнопки целиком переделает U3b
+	$IndexLabel.visible = Global.debug_mode
 	$IndexLabel.text = str(_obj.id)
 	
 	# для 2d тегов(вс контроллеры делаем побольше кнопки) (68 обычные)
@@ -41,6 +44,6 @@ func select_as_default() -> void:
 
 
 
-## ⚡Сигнал будет подключен к билдконтроллеру (через UIGenerator при создании кнопки), 
+## ⚡Сигнал подключает ToolbarController при создании кнопки
 func _on_pressed() -> void:
 	emit_signal("btn_pressed_object_selected", object)

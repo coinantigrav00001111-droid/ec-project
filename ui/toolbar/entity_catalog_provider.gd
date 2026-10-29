@@ -1,0 +1,112 @@
+class_name EntityCatalogProvider extends CatalogProvider
+
+###########################
+## EntityCatalogProvider. Каталог объектов из .tres (EntitySetting)
+###########################
+## Заменяет данные и словари, которые раньше держал UIGenerator и два контроллера (category_list).
+## Какие категории у режима, их порядок и иконки: CatalogMeta. Порядок тегов: CatalogMeta.TAGS.
+## Порядок объектов в теге: EntitySetting.sort_order, при равных по имени файла (как было до U3a).
+##
+## Объекты загружаются один раз на запуск (кэш), провайдеры разных режимов делят его.
+
+## Загруженные объекты, общие для всех провайдеров
+static var _cache: Array[EntitySetting] = []
+static var _loaded := false
+
+var mode: StringName
+## category -> tag -> Array[EntitySetting]
+var _data := {}
+
+
+func _init(for_mode: StringName) -> void:
+	mode = for_mode
+	_build_data(load_all())
+
+
+## Все объекты из Global.object_dirs. Объект с пустым или повторным key пропускается с ошибкой (проверка U3a)
+static func load_all() -> Array[EntitySetting]:
+	if _loaded:
+		return _cache
+	_loaded = true
+	var seen := {}
+	for dir in Global.object_dirs:
+		for path in list_resources(dir):
+			var res := load(path) as EntitySetting
+			if res == null:
+				continue   # другой тип ресурса (например DCControllerSetting): не объект каталога
+			var k := res.get_key()
+			if res.key == &"":
+				push_warning("Catalog: у %s нет key, временный ключ %s" % [path, k])
+			if seen.has(k):
+				push_error("Catalog: повтор key '%s' (%s и %s), второй пропущен" % [k, seen[k], path])
+				continue
+			seen[k] = path
+			_cache.append(res)
+	return _cache
+
+
+## Пути к .tres в папке. ResourceLoader.list_directory работает и в экспортированной игре (DirAccess там
+## видит .remap и .import вместо ресурсов). Запасной вариант: DirAccess
+static func list_resources(dir: String) -> PackedStringArray:
+	var out := PackedStringArray()
+	var base := dir if dir.ends_with("/") else dir + "/"
+	var names := ResourceLoader.list_directory(base)
+	if names.is_empty():
+		names = DirAccess.get_files_at(base)
+	for n in names:
+		if n.ends_with(".tres"):
+			out.append(base + n)
+		elif n.ends_with(".tres.remap"):
+			out.append(base + n.trim_suffix(".remap"))
+	out.sort()
+	return out
+
+
+func _build_data(objects: Array[EntitySetting]) -> void:
+	_data.clear()
+	for obj in objects:
+		if not _data.has(obj.category):
+			_data[obj.category] = {}
+		if not _data[obj.category].has(obj.tag):
+			_data[obj.category][obj.tag] = []
+		_data[obj.category][obj.tag].append(obj)
+	for cat in _data:
+		for tag in _data[cat]:
+			_data[cat][tag].sort_custom(_sort_objects)
+
+
+static func _sort_objects(a: EntitySetting, b: EntitySetting) -> bool:
+	if a.sort_order != b.sort_order:
+		return a.sort_order < b.sort_order
+	return a.resource_path < b.resource_path
+
+
+func get_categories() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for cat in CatalogMeta.categories_for_mode(mode):
+		out.append(CatalogMeta.category_info(cat))
+	return out
+
+
+func get_tags(category: StringName) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if not _data.has(category):
+		return out
+	for tag in CatalogMeta.sort_tags(category, _data[category].keys()):
+		out.append({"id": tag, "name": str(tag), "icon": _tag_icon(category, tag)})
+	return out
+
+
+func get_items(category: StringName, tag: StringName) -> Array:
+	if not _data.has(category) or not _data[category].has(tag):
+		return []
+	return _data[category][tag]
+
+
+## Иконка тега: из CatalogMeta, если задана, иначе у первого объекта тега (как было до U3a)
+func _tag_icon(category: StringName, tag: StringName) -> Texture2D:
+	var meta_icon: Texture2D = CatalogMeta.tag_info(category, tag).get("icon", null)
+	if meta_icon != null:
+		return meta_icon
+	var items: Array = _data[category][tag]
+	return items[0].icon if not items.is_empty() else null

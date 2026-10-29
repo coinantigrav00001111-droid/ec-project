@@ -24,7 +24,7 @@ func enter():
 
 	if selected_entity and controller.to_drag:
 		#INFO ДЕРГАЕМ ПАНЕЛЬ!
-		controller.info_panel.set_target(selected_entity)
+		controller.publish_selection(selected_entity)
 		controller.to_drag = false
 		_start_drag(selected_entity)
 
@@ -38,7 +38,6 @@ func process_tick(_delta):
 		selected_entity.send_event("on_handle_drag", controller.get_mouse_ray_vec())
 	else:
 		_update_hover()
-	$"../../UI/ModeLabel".text = name
 
 
 
@@ -89,7 +88,7 @@ func handle_input(event: InputEvent):
 		selected_entity.kill_me() #entity сама почистит за собой
 		#selected_entity.free()
 		#INFO ДЕРГАЕМ ПАНЕЛЬ!
-		controller.info_panel.set_target(null)
+		controller.publish_selection(null)
 		
 	# XX claude-terra T6: тоннельный флаг выбранного трака (у не-траков события никто не слушает)
 	if selected_entity and event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_U:
@@ -130,7 +129,7 @@ func set_selection(entity_to_select: Entity):
 		selected_entity.send_event("on_select_layer", {'enabled':true})
 		
 	#INFO ДЕРГАЕМ ПАНЕЛЬ!
-	controller.info_panel.set_target(selected_entity)
+	controller.publish_selection(selected_entity)
 
 
 
@@ -145,7 +144,10 @@ func _start_drag(target: Entity):
 func _update_hover():
 	# (1 << 0) | (1 << 2) | (1 << 10)
 	# Слои земля, трак, вагон
-	var result = controller.get_mouse_ray(Global.active_layers(['ground','tracks','trains','ghost'])) 
+	# Курсор над панелью UI: объект за ней не подсвечиваем
+	var result = {}
+	if not UIPointer.is_over_ui(get_viewport()):
+		result = controller.get_mouse_ray(Global.active_layers(['ground','tracks','trains','ghost']))
 	var new_hover = null
 	
 
@@ -218,7 +220,7 @@ func _clear_selection():
 	Hints.set_context(&"selected", false)
 	
 	#INFO ОЧИЩАЕМ ПАНЕЛЬ! +
-	controller.info_panel.set_target(null)
+	controller.publish_selection(null)
 
 
 
@@ -239,7 +241,7 @@ func exit(_to_drag : bool = false):
 		if !_to_drag: # если выход не в драг, то убираем селект полностью
 			_clear_selection()
 			#INFO Очищаем панель
-			controller.info_panel.set_target(null) 
+			controller.publish_selection(null) 
 		
 	if hovered_entity:
 		if is_instance_valid(hovered_entity):

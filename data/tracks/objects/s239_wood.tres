@@ -55,6 +55,8 @@ script = ExtResource("14_su")
 [resource]
 script = ExtResource("16_es")
 id = 1420
+key = &"track.straight.s239_wood"
+facets = { "ballast": "no", "shape": "straight", "sleeper": "wood" }
 name = "S239 Дерево"
 description = "Прямой 23.9см, стиль «Дерево» (h=0.45)"
 tag = &"straight"

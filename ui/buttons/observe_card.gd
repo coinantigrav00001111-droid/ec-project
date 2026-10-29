@@ -39,5 +39,4 @@ func config(_cat: StringName, _data: Dictionary, _group: ButtonGroup = null) -> 
 
 
 func _on_pressed() -> void:
-	printt(category, id, button_pressed)
 	card_pressed.emit(category, id, button_pressed)

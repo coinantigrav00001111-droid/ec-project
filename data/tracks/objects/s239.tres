@@ -61,6 +61,8 @@ script = ExtResource("14_tijak")
 [resource]
 script = ExtResource("16_lwvy1")
 id = 1400
+key = &"track.straight.s239"
+facets = { "ballast": "yes", "shape": "straight" }
 name = "S239 (стиль)"
 description = "Прямой трак 23.9см, стиль из TrackStyle (балласт, h=0.85). Для сравнения с G239."
 icon = ExtResource("15_urls7")

@@ -14,7 +14,7 @@ const REFERENCE_DIR = "res://data/debug/"
 # Ссылка на узел дерева, где лежат все рельсы
 @onready var world_entities_root = "/root/GameRoot/EntitiesRoot"
 @onready var entity_factory: EntityFactory = $"/root/GameRoot/EntityFactory"
-@onready var info_panel: InfoPanel = $"/root/GameRoot/UI/InfoPanel"
+@onready var tool_controller: ToolController = get_node_or_null("/root/GameRoot/ToolController")
 
 
 func _ready() -> void:
@@ -126,7 +126,8 @@ func clear_scene() -> void:
 		child.queue_free()
 		
 	#INFO ДЕРГАЕМ ПАНЕЛЬ!
-	info_panel.set_target(null) # Очищаем панель на всякий случай
+	if tool_controller:
+		tool_controller.publish_selection(null) # Очищаем панель на всякий случай
 
 
 #-------LOAD----------

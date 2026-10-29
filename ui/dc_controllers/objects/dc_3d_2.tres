@@ -7,6 +7,7 @@
 [resource]
 script = ExtResource("3_cnmtp")
 id = 524
+key = &"dc_controller.3d.dc_3d_2"
 name = "DC 3d"
 description = "тестим 3д"
 category = &"dc_controller"

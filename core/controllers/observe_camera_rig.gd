@@ -14,7 +14,6 @@ class_name ObserveCameraRig extends Node
 enum Mode { NONE, FOLLOW, POV, ORBIT }
 
 const BOOKMARK_COUNT := 5
-const SETTINGS_PATH := "user://settings.cfg"
 const SCREENSHOT_DIR := "user://screenshots/"
 
 @export var orbit_speed_deg := 8.0
@@ -231,9 +230,7 @@ func _valid_bookmark(bm) -> bool:
 
 
 func _load_bookmarks() -> void:
-	var cfg := ConfigFile.new()
-	cfg.load(SETTINGS_PATH)
-	var stored = cfg.get_value("camera", "bookmarks", [])
+	var stored = Settings.get_value("camera", "bookmarks", [])
 	_bookmarks.clear()
 	for i in BOOKMARK_COUNT:
 		var bm = stored[i] if stored is Array and i < stored.size() else null
@@ -241,10 +238,7 @@ func _load_bookmarks() -> void:
 
 
 func _save_bookmarks() -> void:
-	var cfg := ConfigFile.new()
-	cfg.load(SETTINGS_PATH)   # не затираем секцию graphics
-	cfg.set_value("camera", "bookmarks", _bookmarks)
-	cfg.save(SETTINGS_PATH)
+	Settings.set_value("camera", "bookmarks", _bookmarks.duplicate(true))
 
 
 # ==========================================

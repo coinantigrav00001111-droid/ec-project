@@ -50,7 +50,6 @@ func process_tick(_delta):
 		# Отправляем приказ в сущность. Оттуда C_TrackDraggable сам разберется.
 		target_entity.send_event("on_drag_moved", hit)
 		pass
-	$"../../UI/ModeLabel".text = name
 
 
 

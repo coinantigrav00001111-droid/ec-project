@@ -512,3 +512,4 @@ Observe это созерцательная награда за Build/Operate: �
 - [ATTN_15_track_styles.md](ATTN_15_track_styles.md) — Track Styles:  Стили траков
 - [ATTN_17_ui.md](ATTN_17_ui.md) — UI и контроллеры интерфейса: анализ, архитектура, план U0–U20.
 - [ATTN_18_icon_studio.md](ATTN_18_icon_studio.md) — Icon Studio: сцена-инструмент для генерации иконок и скриншотов объектов, план I0–I6.
+- [ATTN_19_game_flow.md](ATTN_19_game_flow.md) — Цикл игры и экраны: меню, пауза, роутер сцен, быстрый запуск (набросок).

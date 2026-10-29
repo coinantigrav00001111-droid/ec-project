@@ -55,6 +55,8 @@ metadata/_custom_type_script = "uid://cjk51o364xfn"
 [resource]
 script = ExtResource("2_k5kj6")
 id = 14
+key = &"track.straight.g15"
+facets = { "shape": "straight" }
 name = "G15"
 icon = ExtResource("2_vte2m")
 components = Array[ExtResource("1_qn7s1")]([SubResource("Resource_yfcut"), SubResource("Resource_iqocg"), SubResource("Resource_0xkto"), SubResource("Resource_qqtt6"), SubResource("Resource_o7fpk"), SubResource("Resource_t8too"), SubResource("Resource_5an37"), SubResource("Resource_lnr61"), SubResource("Resource_fts14")])

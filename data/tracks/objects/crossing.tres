@@ -62,6 +62,8 @@ script = ExtResource("14_sup")
 [resource]
 script = ExtResource("2_es")
 id = 1350
+key = &"track.crossing.crossing"
+facets = { "shape": "crossing" }
 name = "Crossing"
 description = "Кросс. Пересечение двух путей под 15°. L 23.9. Электрика: оба пути один контур."
 tag = &"crossing"

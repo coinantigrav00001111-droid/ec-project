@@ -1,0 +1,205 @@
+class_name ToolbarController extends Node
+
+########################
+##    ToolbarController - UI
+## 💡 Единая панель инструментов (ToolDock) для режимов Build и Operate 💡
+########################
+## Заменяет BuildController и OperateController, которые были копиями друг друга.
+## Строит кнопки «категория → тег → объект» из CatalogProvider режима. Что делать с нажатым объектом,
+## знает приемник режима (Callable), его регистрирует адаптер режима через register_mode().
+##
+## Узлы панели (в ui.tscn): DockCategories (ряд категорий внизу), DockObjects (теги, сетка объектов).
+## Режимы подключаются к ModeController контрактом show_mode_ui / hide_mode_ui (см. ModeController).
+##
+## Связь с игрой через сигналы: object_selected и duplicate_requested уходят в ToolController,
+## сигналы BuildTool.last_changed и ToolController.build_selection_cleared приходят обратно (_connect_game).
+
+@export var anim_time := 0.4
+
+## ⚡Сигнал: выбран объект в режиме Build (приемник Build, его слушает ToolController)
+signal object_selected(setting: EntitySetting)
+## ⚡Сигнал: нажата кнопка «Дубль» (последний поставленный объект)
+signal duplicate_requested
+
+@onready var _categories: Control = %DockCategories
+@onready var _category_bar: Container = %DockCategoryBar
+@onready var _dock: Control = %DockObjects
+@onready var _title: Label = %DockTitle
+@onready var _grid: GridContainer = %DockGrid
+@onready var _tag_panel: Container = %DockTags
+
+var _cat_btn_scene := preload("res://ui/buttons/category_button.tscn")
+var _tag_btn_scene := preload("res://ui/buttons/tag_button.tscn")
+var _obj_btn_scene := preload("res://ui/buttons/object_button.tscn")
+
+## Текущие выбор: нужен ModeController и адаптерам режимов
+var current_cat: StringName = &'idle'
+var current_tag: StringName = &'idle'
+
+var _mode: StringName = &""
+var _providers := {}   # режим -> CatalogProvider
+var _receivers := {}   # режим -> Callable(setting)
+var _dup_btn: Button
+
+
+func _ready() -> void:
+	# Build: объекты каталога, приемник это сигнал object_selected
+	register_mode(&"build", EntityCatalogProvider.new(&"build"), _emit_build_selected)
+
+	_dup_btn = Button.new()
+	_dup_btn.text = "Дубль  (V)"
+	_dup_btn.focus_mode = Control.FOCUS_NONE   # чтобы Пробел и Enter не нажимали кнопку, а клавиши работали в игре
+	_dup_btn.disabled = true
+	_dup_btn.tooltip_text = "Еще один такой же, как последний построенный (клавиша V)"
+	_dup_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_dup_btn.pressed.connect(func() -> void: duplicate_requested.emit())
+	var box: Node = _title.get_parent()
+	box.add_child(_dup_btn)
+	box.move_child(_dup_btn, _title.get_index() + 1)
+
+	# ToolController к этому моменту может быть не готов, поэтому связываем в конце кадра
+	_connect_game.call_deferred()
+
+
+func _emit_build_selected(setting: Resource) -> void:
+	object_selected.emit(setting)
+
+
+## Адаптер режима сообщает: «у меня такой каталог, объект отдавать сюда»
+func register_mode(mode: StringName, provider: CatalogProvider, receiver: Callable) -> void:
+	_providers[mode] = provider
+	_receivers[mode] = receiver
+
+
+func _connect_game() -> void:
+	var tc := get_tree().get_first_node_in_group(&"tool_controller") as ToolController
+	if tc == null:
+		push_error("ToolbarController: ToolController не найден (группа tool_controller)")
+		return
+	object_selected.connect(tc.select_build_object)
+	duplicate_requested.connect(tc.duplicate_last_object)
+	tc.build_tool.last_changed.connect(on_last_changed)
+	tc.build_selection_cleared.connect(object_deselected)
+
+
+# ==============================================
+# Контракт режима (зовет ModeController)
+# ==============================================
+
+## Показать панель режима: нижний ряд категорий выезжает
+func show_mode_ui(mode: StringName) -> void:
+	_mode = mode
+	current_cat = &'idle'
+	current_tag = &'idle'
+	_dup_btn.visible = mode == &"build"   # дубль имеет смысл только в Build
+	_rebuild_category_bar()
+	UIAnim.slide_up(_categories, anim_time)
+
+
+## Спрятать панель режима
+func hide_mode_ui() -> void:
+	current_cat = &'idle'
+	current_tag = &'idle'
+	_categories.hide()
+	_dock.hide()
+
+
+## Только для отладки: открыть категорию по номеру кнопки (Global.active_ui_category)
+func debug_open_category(index: int) -> void:
+	if index < 0 or index >= _category_bar.get_child_count():
+		return
+	var btn := _category_bar.get_child(index) as CategoryButton
+	if btn:
+		btn.set_pressed_no_signal(true)   # кнопка выглядит нажатой, как после обычного клика
+		btn._on_pressed()
+
+
+# ==============================================
+# Кнопки
+# ==============================================
+
+func _rebuild_category_bar() -> void:
+	_clear(_category_bar)
+	var provider: CatalogProvider = _providers.get(_mode)
+	if provider == null:
+		return
+	for info in provider.get_categories():
+		var btn: CategoryButton = _cat_btn_scene.instantiate()
+		btn.config(info)
+		_category_bar.add_child(btn)
+		btn.category_selected.connect(_on_category_selected)
+
+
+## ⚡Сигнал из кнопок категорий
+func _on_category_selected(new_cat: StringName) -> void:
+	if new_cat == current_cat:
+		new_cat = &'idle'   # Кнопка отжата: в идл
+		current_tag = &'idle'
+	current_cat = new_cat
+	_show_category(current_cat)
+
+
+func _show_category(cat: StringName) -> void:
+	if cat == &'idle':
+		_dock.hide()
+		return
+	var provider: CatalogProvider = _providers.get(_mode)
+	_clear(_grid)   # У категории без тегов не должно остаться кнопок прежней
+	_clear(_tag_panel)
+	if provider != null:
+		var tags := provider.get_tags(cat)
+		for i in tags.size():
+			var btn: TagButton = _tag_btn_scene.instantiate()
+			btn.config(tags[i])
+			_tag_panel.add_child(btn)
+			btn.tag_selected.connect(_on_tag_selected)
+			if i == 0:
+				btn.select_as_default()   # первый тег нажат по умолчанию, он же наполнит сетку
+	_title.text = str(cat)
+	UIAnim.slide_up(_dock, anim_time)
+
+
+## ⚡Сигнал из кнопок тегов
+func _on_tag_selected(new_tag: StringName) -> void:
+	current_tag = new_tag
+	if current_cat != &'idle':
+		_fill_grid(current_cat, new_tag)
+
+
+func _fill_grid(cat: StringName, tag: StringName) -> void:
+	_clear(_grid)
+	var provider: CatalogProvider = _providers.get(_mode)
+	if provider == null:
+		return
+	for item in provider.get_items(cat, tag):
+		var btn: ObjectButton = _obj_btn_scene.instantiate()
+		btn.config(item)
+		_grid.add_child(btn)
+		btn.btn_pressed_object_selected.connect(_on_object_pressed)
+
+
+## ⚡Сигнал из кнопки объекта
+func _on_object_pressed(item: Resource) -> void:
+	var receiver: Callable = _receivers.get(_mode, Callable())
+	if receiver.is_valid():
+		receiver.call(item)
+
+
+## Снимает нажатие с кнопок объектов (ПКМ в Build, выход из инструмента стройки)
+func object_deselected() -> void:
+	for btn in _grid.get_children():
+		if btn is Button:
+			btn.button_pressed = false
+
+
+## ⚡Сигнал BuildTool.last_changed: появился или сменился последний поставленный объект
+func on_last_changed(setting: EntitySetting) -> void:
+	_dup_btn.disabled = setting == null
+	if setting != null:
+		_dup_btn.tooltip_text = "Еще один: %s (клавиша V)" % setting.name
+
+
+static func _clear(box: Node) -> void:
+	for c in box.get_children():
+		box.remove_child(c)
+		c.queue_free()

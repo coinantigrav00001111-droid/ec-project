@@ -11,11 +11,10 @@ extends Node
 ##   set_context(key, on)  SelectTool: "selected" (есть выбранный объект), ObserveCameraRig: "photo" (UI скрыт)
 ##   set_extra(name)       ObserveCameraRig: режим камеры follow, pov, orbit или ""
 ## Тексты лежат в HINTS ниже: правятся только там. Ключ "режим/контекст" перекрывает общий "контекст".
-## Включение сохраняется в user://settings.cfg, кнопка в меню верхней панели.
+## Включение сохраняется через Settings ([ui] hints_enabled), кнопка в меню верхней панели.
 
 signal enabled_changed(on: bool)
 
-const SETTINGS_PATH := "user://settings.cfg"
 const KEY_COLOR := "#ffd54a"
 const DIM_COLOR := "#9aa4b2"
 const BOTTOM_MARGIN := 14.0
@@ -56,9 +55,7 @@ var _tween: Tween
 
 
 func _ready() -> void:
-	var cfg := ConfigFile.new()
-	cfg.load(SETTINGS_PATH)
-	enabled = bool(cfg.get_value("ui", "hints_enabled", true))
+	enabled = bool(Settings.get_value("ui", "hints_enabled", true))
 	_build_ui()
 	_refresh()
 
@@ -71,10 +68,7 @@ func set_enabled(on: bool) -> void:
 	if on == enabled:
 		return
 	enabled = on
-	var cfg := ConfigFile.new()
-	cfg.load(SETTINGS_PATH)   # не затираем чужие секции
-	cfg.set_value("ui", "hints_enabled", enabled)
-	cfg.save(SETTINGS_PATH)
+	Settings.set_value("ui", "hints_enabled", enabled)
 	enabled_changed.emit(enabled)
 	_refresh()
 
