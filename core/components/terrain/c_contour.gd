@@ -22,8 +22,8 @@ var points := PackedVector2Array()
 
 
 ## Прямоугольник size (X, Z) с центром в начале координат Entity
-func set_rect(size: Vector2) -> void:
-	var h := size * 0.5
+func set_rect(_size: Vector2) -> void:
+	var h := _size * 0.5
 	set_points(PackedVector2Array([
 		Vector2(-h.x, -h.y), Vector2(h.x, -h.y),
 		Vector2(h.x, h.y), Vector2(-h.x, h.y)]))
