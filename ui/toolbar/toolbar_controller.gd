@@ -4,7 +4,7 @@ class_name ToolbarController extends Node
 ##    ToolbarController - UI
 ## 💡 Единая панель инструментов (ToolDock) для режимов Build и Operate 💡
 ########################
-## Заменяет BuildController и OperateController, которые были копиями друг друга.
+## Заменила BuildController, OperateController и отрисовку в ObserveController (копии друг друга).
 ## Строит кнопки «категория → тег → объект» из CatalogProvider режима. Что делать с нажатым объектом,
 ## знает приемник режима (Callable), его регистрирует адаптер режима через register_mode().
 ##
@@ -30,7 +30,6 @@ signal duplicate_requested
 
 var _cat_btn_scene := preload("res://ui/buttons/category_button.tscn")
 var _tag_btn_scene := preload("res://ui/buttons/tag_button.tscn")
-var _obj_btn_scene := preload("res://ui/buttons/object_button.tscn")
 
 ## Текущие выбор: нужен ModeController и адаптерам режимов
 var current_cat: StringName = &'idle'
@@ -148,6 +147,8 @@ func _show_category(cat: StringName) -> void:
 	_clear(_tag_panel)
 	if provider != null:
 		var tags := provider.get_tags(cat)
+		if tags.is_empty():
+			_fill_grid(cat, &"")   # тегов нет (Observe): кнопки категории сразу
 		for i in tags.size():
 			var btn: TagButton = _tag_btn_scene.instantiate()
 			btn.config(tags[i])
@@ -171,24 +172,15 @@ func _fill_grid(cat: StringName, tag: StringName) -> void:
 	var provider: CatalogProvider = _providers.get(_mode)
 	if provider == null:
 		return
-	for item in provider.get_items(cat, tag):
-		var btn: ObjectButton = _obj_btn_scene.instantiate()
-		btn.config(item)
-		_grid.add_child(btn)
-		btn.btn_pressed_object_selected.connect(_on_object_pressed)
-
-
-## ⚡Сигнал из кнопки объекта
-func _on_object_pressed(item: Resource) -> void:
 	var receiver: Callable = _receivers.get(_mode, Callable())
-	if receiver.is_valid():
-		receiver.call(item)
+	for btn in provider.create_buttons(cat, tag, receiver):
+		_grid.add_child(btn)
 
 
 ## Снимает нажатие с кнопок объектов (ПКМ в Build, выход из инструмента стройки)
 func object_deselected() -> void:
 	for btn in _grid.get_children():
-		if btn is Button:
+		if btn is ObjectButton:   # карточки Observe не трогаем
 			btn.button_pressed = false
 
 

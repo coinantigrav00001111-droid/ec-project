@@ -1,6 +1,5 @@
 [gd_scene format=3 uid="uid://57xnplsftgls"]
 
-[ext_resource type="Script" uid="uid://0ilntl31lfwu" path="res://ui/ui_generator.gd" id="1_ay4pc"]
 [ext_resource type="PackedScene" uid="uid://dcnqkqoa46nif" path="res://ui/dc_controllers/dc_controller_mini.tscn" id="1_bi8hs"]
 [ext_resource type="Script" uid="uid://bb1e4f7q4ak76" path="res://ui/panels/mode_panel.gd" id="1_tf0e0"]
 [ext_resource type="Script" uid="uid://cvw0jh02ub51b" path="res://ui/mode_controller.gd" id="2_bi8hs"]
@@ -33,10 +32,6 @@ script = ExtResource("4_mf2ns")
 [node name="ObserveController" type="Node" parent="." unique_id=2034197721]
 unique_name_in_owner = true
 script = ExtResource("4_ju45i")
-
-[node name="UIGenerator" type="Node" parent="." unique_id=231375352]
-unique_name_in_owner = true
-script = ExtResource("1_ay4pc")
 
 [node name="ModePanel" type="MarginContainer" parent="." unique_id=937983992]
 unique_name_in_owner = true
@@ -164,58 +159,6 @@ size_flags_vertical = 0
 mouse_filter = 2
 columns = 2
 
-[node name="ObserveObjectsContainer" type="MarginContainer" parent="MainControl" unique_id=2143498036]
-unique_name_in_owner = true
-editor_description = "главный контейнер, хранит кнопки объектов в своем ObjContainer, задает отступы от краев и ездит при вызове"
-visible = false
-layout_mode = 1
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_top = -282.0
-offset_right = 292.0
-grow_vertical = 0
-offset_transform_enabled = true
-mouse_filter = 2
-theme_override_constants/margin_left = 10
-theme_override_constants/margin_bottom = 55
-
-[node name="AnimatedWrapper" type="Control" parent="MainControl/ObserveObjectsContainer" unique_id=1652551545]
-layout_mode = 2
-offset_transform_enabled = true
-mouse_filter = 2
-
-[node name="HBoxContainer" type="HBoxContainer" parent="MainControl/ObserveObjectsContainer/AnimatedWrapper" unique_id=2025415987]
-editor_description = "Контейнер со всеми кнопками траков и фильтров. Филтры переключают контейнеры с кнопками траков"
-layout_mode = 0
-offset_right = 282.0
-offset_bottom = 227.0
-mouse_filter = 2
-
-[node name="PanelContainer" type="PanelContainer" parent="MainControl/ObserveObjectsContainer/AnimatedWrapper/HBoxContainer" unique_id=2018077680]
-editor_description = "для фона"
-layout_mode = 2
-size_flags_horizontal = 3
-mouse_filter = 2
-
-[node name="VBoxContainer" type="VBoxContainer" parent="MainControl/ObserveObjectsContainer/AnimatedWrapper/HBoxContainer/PanelContainer" unique_id=216331091]
-layout_mode = 2
-mouse_filter = 2
-
-[node name="ObCatTitle" type="Label" parent="MainControl/ObserveObjectsContainer/AnimatedWrapper/HBoxContainer/PanelContainer/VBoxContainer" unique_id=1332667115]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 0
-theme_type_variation = &"HeaderSmall"
-text = "DC Controller"
-
-[node name="ObBtnGridContainer" type="GridContainer" parent="MainControl/ObserveObjectsContainer/AnimatedWrapper/HBoxContainer/PanelContainer/VBoxContainer" unique_id=946609352]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-columns = 4
-
 [node name="DockCategories" type="MarginContainer" parent="MainControl" unique_id=1406194884]
 unique_name_in_owner = true
 editor_description = "панель режима build с его кнопками. Которые выбирают тип - что строить. траки, поезда, дома, декор, терраформ"
@@ -239,40 +182,6 @@ offset_transform_enabled = true
 mouse_filter = 2
 
 [node name="DockCategoryBar" type="HBoxContainer" parent="MainControl/DockCategories/AnimatedWrapper" unique_id=481295536]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_top = -36.0
-offset_right = 192.0
-grow_vertical = 0
-mouse_filter = 2
-theme_override_constants/separation = 3
-
-[node name="ObservePanel" type="MarginContainer" parent="MainControl" unique_id=1928714729]
-unique_name_in_owner = true
-visible = false
-layout_mode = 1
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_top = -44.0
-offset_right = 161.0
-grow_vertical = 0
-offset_transform_enabled = true
-mouse_filter = 2
-theme_override_constants/margin_left = 10
-theme_override_constants/margin_top = 4
-theme_override_constants/margin_right = 4
-theme_override_constants/margin_bottom = 10
-
-[node name="AnimatedWrapper" type="Control" parent="MainControl/ObservePanel" unique_id=606249371]
-layout_mode = 2
-offset_transform_enabled = true
-mouse_filter = 2
-
-[node name="ObserveBtnLvl2Container" type="HBoxContainer" parent="MainControl/ObservePanel/AnimatedWrapper" unique_id=1928302826]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 2

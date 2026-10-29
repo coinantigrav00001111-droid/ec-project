@@ -14,6 +14,7 @@ static var _cache: Array[EntitySetting] = []
 static var _loaded := false
 
 var mode: StringName
+var _obj_btn_scene := preload("res://ui/buttons/object_button.tscn")
 ## category -> tag -> Array[EntitySetting]
 var _data := {}
 
@@ -97,10 +98,18 @@ func get_tags(category: StringName) -> Array[Dictionary]:
 	return out
 
 
-func get_items(category: StringName, tag: StringName) -> Array:
+## Кнопки объектов. Нажатие: on_pressed.call(setting)
+func create_buttons(category: StringName, tag: StringName, on_pressed: Callable) -> Array[Button]:
+	var out: Array[Button] = []
 	if not _data.has(category) or not _data[category].has(tag):
-		return []
-	return _data[category][tag]
+		return out
+	for item in _data[category][tag]:
+		var btn: ObjectButton = _obj_btn_scene.instantiate()
+		btn.config(item)
+		if on_pressed.is_valid():
+			btn.btn_pressed_object_selected.connect(on_pressed)
+		out.append(btn)
+	return out
 
 
 ## Иконка тега: из CatalogMeta, если задана, иначе у первого объекта тега (как было до U3a)

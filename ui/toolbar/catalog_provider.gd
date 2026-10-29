@@ -7,7 +7,8 @@ class_name CatalogProvider extends RefCounted
 ## сейчас это объекты из .tres (EntityCatalogProvider), в U4 появится провайдер карточек Observe.
 ##
 ## Словари для кнопок: {"id": StringName, "name": String, "icon": Texture2D или null}.
-## Элемент каталога (item) для кнопки объекта: Resource (EntitySetting). Что с ним делать, решает приемник режима.
+## Кнопки элементов создает сам провайдер (create_buttons): он знает, что это, объект или карточка, и с какими
+## аргументами звать приемник режима on_pressed (объекты: on_pressed.call(setting), карточки: (category, id, pressed)).
 
 
 ## Категории (нижний ряд кнопок) в порядке показа
@@ -20,6 +21,6 @@ func get_tags(_category: StringName) -> Array[Dictionary]:
 	return []
 
 
-## Элементы категории и тега в порядке показа
-func get_items(_category: StringName, _tag: StringName) -> Array:
+## Кнопки элементов категории и тега в порядке показа. Тегов нет: tag пустой
+func create_buttons(_category: StringName, _tag: StringName, _on_pressed: Callable) -> Array[Button]:
 	return []

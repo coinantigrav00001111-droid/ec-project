@@ -8,7 +8,7 @@ class_name ModeController extends Node
 ##   show_mode_ui(mode: StringName)   показать панель режима (с анимацией)
 ##   hide_mode_ui()                   спрятать панель режима, сбросить выбранную категорию
 ##   debug_open_category(index: int)  необязательно: открыть категорию по номеру (Global.active_ui_category)
-## Build и Operate обслуживает ToolbarController, Observe свой ObserveController.
+## Build, Operate и Observe обслуживает ToolbarController (каталог режима регистрирует адаптер).
 ## У режима без обработчика (Library, заглушка) показывается простая панель из PLAIN_PANELS.
 
 
@@ -34,9 +34,15 @@ func _ready() -> void:
 	_handlers = {
 		&"build": toolbar,
 		&"operate": toolbar,
-		&"observe": get_node_or_null("%ObserveController"),
+		&"observe": toolbar,
 	}
 	_plain_panels = {&"library": get_node_or_null("%LibraryPanel")}
+
+	# Режим быстрой загрузки: Observe недоступен, кнопка режима скрыта
+	if Global.fast_debug:
+		var observe_btn := %ModePanel.get_node_or_null("VBoxContainer/ObserveButton") as Control
+		if observe_btn:
+			observe_btn.hide()
 
 	# Задежка, чтобы создались кнопки в билдпанели
 	await get_tree().process_frame

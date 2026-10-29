@@ -440,7 +440,7 @@ Godot импортирует CSV сам при открытии проекта �
 
 **Файлы:** новые `ui/toolbar/toolbar_controller.gd`, `ui/toolbar/catalog_provider.gd`, `ui/toolbar/entity_catalog_provider.gd`, `ui/core/ui_anim.gd`; правки `ui/ui.tscn`, `ui/ui_generator.gd` (усох до кнопок категорий Observe), `ui/mode_controller.gd`, `ui/observe_controller.gd`, `ui/operate_controller.gd` (адаптер режима), `core/controllers/tool_controller.gd`, `build_tool.gd`; удалён `build_controller.gd`. **Отклонение:** `catalog_button.tscn` не создаётся, остаётся `object_button.tscn`: вид кнопки целиком меняет U3b.
 
-- [x] Одна пара узлов вместо трёх: `DockCategories` (ряд категорий, бывший `BuildPanel`) и `DockObjects` (теги, сетка; бывший `BuildObjectsContainer`). Контейнеры и панель Operate удалены из `ui.tscn`; Observe пока со своими (U4). **Отклонение:** переименованием существующих узлов, а не новой сценой `ToolDock`: так внешний вид гарантированно тот же.
+- [x] Одна пара узлов вместо трёх: `DockCategories` (ряд категорий, бывший `BuildPanel`) и `DockObjects` (теги, сетка; бывший `BuildObjectsContainer`). Контейнеры и панель Operate удалены из `ui.tscn`; Observe перешёл на ту же панель в U4. **Отклонение:** переименованием существующих узлов, а не новой сценой `ToolDock`: так внешний вид гарантированно тот же.
 - [x] `ToolbarController` строит кнопки из провайдера (`CatalogProvider`: `get_categories`, `get_tags`, `get_items`). Слои «категория, тег, объект» как были; анимация одна, `UIAnim.slide_up` (копии `animate_wrapper` в трёх контроллерах убраны). Категория без тегов больше не оставляет кнопки прежней категории.
 - [x] `ModeController` держит реестр `режим → обработчик` (контракт `show_mode_ui`, `hide_mode_ui`, необязательно `debug_open_category`). Build и Operate обслуживает `ToolbarController`, Observe свой `ObserveController`, Library простая панель. Строки `'%' + name + 'Controller'` уходят. Провайдер и приёмник режима регистрирует адаптер через `ToolbarController.register_mode(mode, provider, receiver)`.
 - [x] Приёмник Build: сигнал `ToolbarController.object_selected` → `ToolController.select_build_object` (бывший `_on_build_selected`). Приёмник Operate: `OperateController.on_object_selected` (создание 2D DC), сам контроллер усох до адаптера.
@@ -465,12 +465,12 @@ Godot импортирует CSV сам при открытии проекта �
 
 **Цель:** `ObserveController` перестаёт рисовать, остаётся логика режима.
 
-**Файлы:** `ui/observe_controller.gd`, новый `ui/toolbar/card_catalog_provider.gd`, `ui/buttons/observe_card.gd` (удалить), `ui/ui.tscn`.
+**Файлы:** `ui/observe_controller.gd`, новый `ui/toolbar/card_catalog_provider.gd`, `ui/toolbar/catalog_provider.gd`, `entity_catalog_provider.gd`, `toolbar_controller.gd`, `ui/mode_controller.gd`, `ui/ui.tscn`; удалён `ui/ui_generator.gd`. **Отклонение:** `ui/buttons/observe_card.gd` остаётся: карточка по-прежнему создаётся кодом, её вид переделает U3b вместе с кнопкой объекта.
 
-- [ ] Данные `CARDS` переезжают в `CardCatalogProvider`. Группы (радио) и переключатели через ключи `group` и `toggle`, как сейчас.
-- [ ] `ObserveController` остаётся: вход и выход из режима (контуры, слой питания, закладки), `observe_action`, состояние карточек.
-- [ ] `set_group_state` и `set_toggle_state` вызываются без изменений (их использует `GraphicsManager` и `ObserveCameraRig`).
-- [ ] Скрытие кнопки Observe в `fast_debug` без `find_child`: через реестр режимов.
+- [x] Данные `CARDS` и состояние групп и переключателей переехали в `CardCatalogProvider`. Контракт провайдера уточнён: вместо `get_items` теперь `create_buttons(category, tag, on_pressed)` (провайдер сам знает, объект это или карточка). Тегов у Observe нет, кнопки категории строятся сразу.
+- [x] `ObserveController` остался только логикой режима: вход и выход (контуры, слой питания), `observe_action`, `observe_entered`, `observe_exited`. Свой список категорий, кнопки, анимация и контракт `show_mode_ui` убраны: панель режима показывает `ToolbarController`. Observe использует общую панель Build (раньше своя без прокрутки).
+- [x] `set_group_state` и `set_toggle_state` вызываются без изменений (их использует `GraphicsManager` и `ObserveCameraRig`), внутри передают провайдеру.
+- [x] Скрытие кнопки Observe в `fast_debug` без `find_child`: `ModeController` скрывает её сам, провайдер в `fast_debug` не отдаёт категории. `UIGenerator` удалён целиком, узлы Observe из `ui.tscn` убраны.
 
 **Проверка в редакторе:**
 
@@ -479,6 +479,8 @@ Godot импортирует CSV сам при открытии проекта �
 3. Camera: закладки 1–5, Follow, POV, Orbit как раньше.
 4. Photo: «Скрыть UI», «Снять» работают, подсказки в кадр не попадают.
 5. Режим `--fast`: кнопки Observe нет, ошибок нет.
+6. Комната (14 карточек): в панели есть прокрутка, если не помещаются; вид карточек и размеры те же, панель шире прежней (общая с Build). Сравнить по скриншотам до и после.
+7. Build → Observe → Build: выбранный объект и карточки не мешают друг другу, ПКМ в Build по-прежнему снимает выбор.
 
 #### U3b. Фильтры каталога и информация на кнопке объекта
 
