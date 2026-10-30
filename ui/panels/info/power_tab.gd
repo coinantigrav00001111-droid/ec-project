@@ -83,7 +83,7 @@ func update_tab() -> void:
 		&'train':
 			_n("PowerTrackTab").hide()
 			_n("PowerTrainTab").show()
-			_update_train_power_live()
+			refresh()
 
 
 func refresh() -> void:

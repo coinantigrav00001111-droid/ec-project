@@ -107,3 +107,4 @@ func _on_levels_changed(value: float) -> void:
 
 func _on_stage_selected(index: int) -> void:
 	if _get_terrain_layer():
+		target.send_event("on_terrain_stage_set", {"stage": index})
