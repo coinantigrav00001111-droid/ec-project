@@ -1,8 +1,10 @@
 [gd_resource type="Resource" script_class="EntitySetting" format=3 uid="uid://by1g3s64m11yp"]
 
 [ext_resource type="Script" uid="uid://m4g5jbfwmaa0" path="res://core/component_setting.gd" id="1_mviqy"]
+[ext_resource type="Script" uid="uid://b7ds2l6clrm61" path="res://setting/track_config.gd" id="2_gy5yf"]
 [ext_resource type="PackedScene" uid="uid://bvu8jqqhgg8ng" path="res://data/tracks/R1_75.tscn" id="2_mviqy"]
 [ext_resource type="Script" uid="uid://bulwl3x2rykxk" path="res://core/components/comp_settings/trackvisual_setting.gd" id="3_lbnqa"]
+[ext_resource type="Script" uid="uid://mpakwrr6lum8" path="res://core/components/comp_settings/identity_setting.gd" id="3_mltbj"]
 [ext_resource type="Script" uid="uid://b1jwuxb32so7e" path="res://core/components/comp_settings/trackdraggable_setting.gd" id="5_mltbj"]
 [ext_resource type="Script" uid="uid://djbifkyei01t7" path="res://core/components/comp_settings/pivot_setting.gd" id="6_tn8sd"]
 [ext_resource type="Script" uid="uid://cuumo0qj7r7gb" path="res://core/components/comp_settings/hoverable_setting.gd" id="7_c2x51"]
@@ -13,6 +15,18 @@
 [ext_resource type="Texture2D" uid="uid://kg7asogbvkny" path="res://ui/icons/transport/rail_r2.svg" id="12_kb5u3"]
 [ext_resource type="Script" uid="uid://cjk51o364xfn" path="res://core/components/comp_settings/powertrack_setting.gd" id="12_weju8"]
 [ext_resource type="Script" uid="uid://do5hjkm3r2pdg" path="res://core/entity_setting.gd" id="13_pjhqk"]
+[ext_resource type="Script" uid="uid://cs257ge2f37bu" path="res://core/components/comp_settings/tracksupport_setting.gd" id="14_tn8sd"]
+
+[sub_resource type="Resource" id="Resource_x615q"]
+script = ExtResource("2_gy5yf")
+radius = 36.0
+deg = 7.5
+metadata/_custom_type_script = "uid://b7ds2l6clrm61"
+
+[sub_resource type="Resource" id="Resource_25owg"]
+script = ExtResource("3_mltbj")
+object_config = SubResource("Resource_x615q")
+metadata/_custom_type_script = "uid://mpakwrr6lum8"
 
 [sub_resource type="Resource" id="Resource_yfcut"]
 script = ExtResource("3_lbnqa")
@@ -53,14 +67,20 @@ metadata/_custom_type_script = "uid://bv065wdiw674c"
 script = ExtResource("12_weju8")
 metadata/_custom_type_script = "uid://cjk51o364xfn"
 
+[sub_resource type="Resource" id="Resource_t3fwt"]
+script = ExtResource("14_tn8sd")
+metadata/_custom_type_script = "uid://cs257ge2f37bu"
+
 [resource]
 script = ExtResource("13_pjhqk")
-id = 25
 key = &"track.curve.r1_75"
-facets = { "shape": "curve" }
+facets = {
+"shape": "curve"
+}
+id = 25
 name = "R1-75"
 description = "Радиусный трак 36см 7,5гр"
 tag = &"curve"
 icon = ExtResource("12_kb5u3")
-components = Array[ExtResource("1_mviqy")]([SubResource("Resource_yfcut"), SubResource("Resource_iqocg"), SubResource("Resource_0xkto"), SubResource("Resource_qqtt6"), SubResource("Resource_o7fpk"), SubResource("Resource_t8too"), SubResource("Resource_5an37"), SubResource("Resource_lnr61"), SubResource("Resource_5pl4h")])
+components = Array[ExtResource("1_mviqy")]([SubResource("Resource_25owg"), SubResource("Resource_yfcut"), SubResource("Resource_iqocg"), SubResource("Resource_0xkto"), SubResource("Resource_qqtt6"), SubResource("Resource_o7fpk"), SubResource("Resource_t8too"), SubResource("Resource_5an37"), SubResource("Resource_lnr61"), SubResource("Resource_5pl4h"), SubResource("Resource_t3fwt")])
 metadata/_custom_type_script = "uid://do5hjkm3r2pdg"

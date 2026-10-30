@@ -36,8 +36,8 @@ material = SubResource("StandardMaterial3D_dk0ka")
 radius = 0.8
 height = 0.8
 
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_qaoxm"]
-friction = 0.9
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_dk0ka"]
+friction = 0.0
 
 [node name="R1" type="Node3D" unique_id=1344828765]
 
@@ -52,16 +52,7 @@ mesh = SubResource("SphereMesh_3owqy")
 collision_layer = 4
 collision_mask = 4
 
-[node name="HeadL" type="StaticBody3D" parent="." unique_id=1745794947]
-unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
-collision_layer = 1024
-collision_mask = 1024
-physics_material_override = SubResource("PhysicsMaterial_qaoxm")
-
-[node name="HeadR" type="StaticBody3D" parent="." unique_id=1480549828]
-unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
-collision_layer = 1024
-collision_mask = 1024
-physics_material_override = SubResource("PhysicsMaterial_qaoxm")
+[node name="HeadStaticBody3D" type="StaticBody3D" parent="." unique_id=866850490]
+collision_layer = 4
+collision_mask = 1028
+physics_material_override = SubResource("PhysicsMaterial_dk0ka")

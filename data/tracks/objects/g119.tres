@@ -1,7 +1,9 @@
 [gd_resource type="Resource" script_class="EntitySetting" format=3 uid="uid://b43e5hkrfu0xr"]
 
 [ext_resource type="Script" uid="uid://m4g5jbfwmaa0" path="res://core/component_setting.gd" id="1_fwhcn"]
+[ext_resource type="Script" uid="uid://b7ds2l6clrm61" path="res://setting/track_config.gd" id="2_4uqrk"]
 [ext_resource type="PackedScene" uid="uid://drfbtduq5mgdf" path="res://data/tracks/G119.tscn" id="2_fwhcn"]
+[ext_resource type="Script" uid="uid://mpakwrr6lum8" path="res://core/components/comp_settings/identity_setting.gd" id="3_7ytxe"]
 [ext_resource type="Script" uid="uid://bulwl3x2rykxk" path="res://core/components/comp_settings/trackvisual_setting.gd" id="3_88m5e"]
 [ext_resource type="Script" uid="uid://b1jwuxb32so7e" path="res://core/components/comp_settings/trackdraggable_setting.gd" id="5_slk1w"]
 [ext_resource type="Script" uid="uid://djbifkyei01t7" path="res://core/components/comp_settings/pivot_setting.gd" id="6_b3num"]
@@ -13,6 +15,17 @@
 [ext_resource type="Script" uid="uid://cjk51o364xfn" path="res://core/components/comp_settings/powertrack_setting.gd" id="12_0koo6"]
 [ext_resource type="Texture2D" uid="uid://c8tndy1lksot8" path="res://ui/icons/transport/rail-road.svg" id="12_ixre1"]
 [ext_resource type="Script" uid="uid://do5hjkm3r2pdg" path="res://core/entity_setting.gd" id="13_m6m5w"]
+[ext_resource type="Script" uid="uid://cs257ge2f37bu" path="res://core/components/comp_settings/tracksupport_setting.gd" id="14_6j5nk"]
+
+[sub_resource type="Resource" id="Resource_r7xkx"]
+script = ExtResource("2_4uqrk")
+radius = 11.9
+metadata/_custom_type_script = "uid://b7ds2l6clrm61"
+
+[sub_resource type="Resource" id="Resource_ye4jh"]
+script = ExtResource("3_7ytxe")
+object_config = SubResource("Resource_r7xkx")
+metadata/_custom_type_script = "uid://mpakwrr6lum8"
 
 [sub_resource type="Resource" id="Resource_yfcut"]
 script = ExtResource("3_88m5e")
@@ -53,13 +66,19 @@ metadata/_custom_type_script = "uid://bv065wdiw674c"
 script = ExtResource("12_0koo6")
 metadata/_custom_type_script = "uid://cjk51o364xfn"
 
+[sub_resource type="Resource" id="Resource_yluyn"]
+script = ExtResource("14_6j5nk")
+metadata/_custom_type_script = "uid://cs257ge2f37bu"
+
 [resource]
 script = ExtResource("13_m6m5w")
-id = 12
 key = &"track.straight.g119"
-facets = { "shape": "straight" }
+facets = {
+"shape": "straight"
+}
+id = 12
 name = "G119"
 description = "Прямой трак 11.9см"
 icon = ExtResource("12_ixre1")
-components = Array[ExtResource("1_fwhcn")]([SubResource("Resource_yfcut"), SubResource("Resource_iqocg"), SubResource("Resource_0xkto"), SubResource("Resource_qqtt6"), SubResource("Resource_o7fpk"), SubResource("Resource_t8too"), SubResource("Resource_5an37"), SubResource("Resource_lnr61"), SubResource("Resource_xol3d")])
+components = Array[ExtResource("1_fwhcn")]([SubResource("Resource_ye4jh"), SubResource("Resource_yfcut"), SubResource("Resource_iqocg"), SubResource("Resource_0xkto"), SubResource("Resource_qqtt6"), SubResource("Resource_o7fpk"), SubResource("Resource_t8too"), SubResource("Resource_5an37"), SubResource("Resource_lnr61"), SubResource("Resource_xol3d"), SubResource("Resource_yluyn")])
 metadata/_custom_type_script = "uid://do5hjkm3r2pdg"
