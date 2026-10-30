@@ -38,6 +38,7 @@ const DEFAULTS := {
 	"use_height": false,
 	"height_scale": 0.05,
 	"triplanar": false,
+	"vertex_color": false,  # множить цвет на вершинный цвет меша (подкладки шпалы другого цвета)
 	"mesh_uv_units": false, # UV меша в ю (меши генератора): тайл через uv1_scale. false = UV как есть
 	"tile": Vector2(1.0, 1.0),
 }
@@ -46,7 +47,7 @@ const DEFAULTS := {
 const PRESETS := {
 	"rail": {"metallic": 1.0, "roughness": 1.0, "tile": Vector2(1.0, 1.0), "triplanar": false, "use_ao": false},
 	"ballast": {"metallic": -1.0, "roughness": 1.0, "tile": Vector2(1.0, 1.0), "triplanar": false, "use_ao": true},
-	"sleeper": {"metallic": -1.0, "roughness": 1.0, "tile": Vector2(1.0, 1.0), "triplanar": true, "use_ao": true},
+	"sleeper": {"metallic": -1.0, "roughness": 1.0, "tile": Vector2(1.0, 1.0), "triplanar": false, "mesh_uv_units": true, "vertex_color": true, "use_ao": true},
 }
 
 
@@ -256,6 +257,10 @@ static func build(tex: Dictionary, params: Dictionary) -> StandardMaterial3D:
 		m.heightmap_enabled = true
 		m.heightmap_texture = tex["height"]
 		m.heightmap_scale = p["height_scale"]
+
+	if p["vertex_color"]:
+		m.vertex_color_use_as_albedo = true
+		m.vertex_color_is_srgb = true
 
 	if p["triplanar"]:
 		# Координаты в локальных единицах меша (ю): один тайл = tile ю

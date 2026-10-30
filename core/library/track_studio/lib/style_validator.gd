@@ -170,6 +170,12 @@ static func _check_sleeper_mesh(r: Array[Dictionary], style: TrackStyle) -> void
 		_add(r, Level.WARN, "Меш шпалы: низ на y = %s, должен быть на 0" % _f(a.position.y))
 	if a.size.x < a.size.z:
 		_add(r, Level.WARN, "Меш шпалы: длинная сторона вдоль пути (X %s, Z %s). Шпала лежит поперёк пути: длинная сторона должна быть по X" % [_f(a.size.x), _f(a.size.z)])
+	var seat := float(style.sleeper_mesh.get_meta("seat_height", 0.0))
+	if seat > 0.0:
+		if seat >= a.size.y:
+			_add(r, Level.WARN, "Меш шпалы: seat_height %s не ниже высоты меша %s, смысла в метаданных нет" % [_f(seat), _f(a.size.y)])
+		else:
+			_add(r, Level.INFO, "Меш шпалы: рельс стоит на высоте %s (seat_height), детали выше (подкладки) не поднимают его" % _f(seat))
 	var t := _tris(style.sleeper_mesh)
 	if t > SLEEPER_TRIS_WARN:
 		_add(r, Level.WARN, "Меш шпалы: %d треугольников, шпал на трак сотни (ориентир до %d)" % [t, SLEEPER_TRIS_WARN])

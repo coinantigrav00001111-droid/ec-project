@@ -7,12 +7,41 @@ extends VBoxContainer
 ## (origin в центре площади опоры, низ на y = 0, длинная сторона по X). Логика в lib/sleeper_factory.gd.
 
 const OUT_DIR := "res://data/tracks/meshes"
-const KINDS := [["Дерево", "wood"], ["Бетон (с площадками)", "concrete"]]
+const PROFILES := [["Прямоугольное (фаски со всех рёбер)", "rect"], ["Трапеция (низ шире верха)", "trapezoid"]]
+const LIVE_DELAY := 0.25
+
+# Числовые параметры генератора: [ключ, название, мин, макс, шаг, подсказка]
+const BODY_SPINS := [
+	["length", "Длина (X, поперёк пути)", 0.5, 10.0, 0.01, ""],
+	["height", "Высота корпуса", 0.02, 2.0, 0.005, ""],
+	["width", "Ширина (Z, вдоль пути)", 0.02, 2.0, 0.005, ""],
+	["chamfer", "Фаска", 0.0, 0.2, 0.005, "0 = без фасок, лишних рёбер нет"],
+	["taper", "Трапеция: сужение верха", 0.0, 0.3, 0.005, "Только для сечения «Трапеция»"],
+]
+const PAD_SPINS := [
+	["pad_x", "Центр от оси шпалы (X)", 0.0, 4.0, 0.005, "По умолчанию половина колеи стиля. Площадка и рельс независимы: рельс можно поставить и на корпус рядом с площадкой"],
+	["pad_length", "Длина (X)", 0.02, 3.0, 0.01, ""],
+	["pad_width", "Ширина (Z)", 0.0, 2.0, 0.005, "0 = на всю плоскую часть верха"],
+	["pad_height", "Высота (Y)", 0.0, 0.3, 0.005, "Над верхом корпуса"],
+]
+const RELIEF_SPINS := [
+	["top_dip", "Прогиб верха между площадками", 0.0, 0.2, 0.005, "0 = верх плоский, рёбра не создаются"],
+	["side_notch", "Выемки на боках под рельсами", 0.0, 0.2, 0.005, "0 = борта плоские, рёбра не создаются"],
+	["side_notch_length", "Длина выемки (X)", 0.02, 2.0, 0.01, ""],
+	["relief_slope", "Длина скосов (X)", 0.005, 1.0, 0.005, "У прогиба и выемок"],
+]
 
 var studio                      # track_studio.gd: get_style(), set_field(), say()
 
-var _kind_opt: OptionButton
+var _profile_opt: OptionButton
 var _spin := {}                 # ключ спецификации -> SpinBox
+var _pads_chk: CheckBox
+var _lifts_chk: CheckBox
+var _pad_color: ColorPickerButton
+var _uv_rot: CheckBox
+var _live: CheckBox
+var _live_active := false       # живое обновление включается после первой генерации
+var _timer: Timer
 var _gen_name: LineEdit
 var _gen_mesh: ArrayMesh
 
@@ -45,33 +74,64 @@ func _build() -> void:
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sc.add_child(v)
 
+	_timer = Timer.new()
+	_timer.one_shot = true
+	_timer.wait_time = LIVE_DELAY
+	_timer.timeout.connect(func(): _on_generate(false))
+	add_child(_timer)
+
 	# --- Генератор ---
-	_title(v, "Генератор")
-	var rk := _row(v, "Тип")
-	_kind_opt = OptionButton.new()
-	_kind_opt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	for k in KINDS:
-		_kind_opt.add_item(k[0])
-	rk.add_child(_kind_opt)
-	_spin_row(v, "length", "Длина (X, поперёк пути)", 0.5, 10.0, 0.01)
-	_spin_row(v, "height", "Высота", 0.02, 2.0, 0.005)
-	_spin_row(v, "width", "Ширина (Z, вдоль пути)", 0.02, 2.0, 0.005)
-	_spin_row(v, "chamfer", "Фаска", 0.0, 0.2, 0.005)
-	_spin_row(v, "taper", "Бетон: сужение верха", 0.0, 0.3, 0.005)
-	_spin_row(v, "pad_height", "Бетон: высота площадок", 0.0, 0.2, 0.005)
-	_spin_row(v, "pad_length", "Бетон: длина площадок", 0.05, 2.0, 0.01)
+	_title(v, "Генератор: корпус")
+	var rk := _row(v, "Сечение")
+	_profile_opt = OptionButton.new()
+	_profile_opt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for k in PROFILES:
+		_profile_opt.add_item(k[0])
+	_profile_opt.item_selected.connect(func(_i: int): _changed())
+	rk.add_child(_profile_opt)
+	for sp in BODY_SPINS:
+		_spin_row(v, sp)
+
+	_title(v, "Площадки под рельс")
+	_pads_chk = _check(v, "Площадки включены (на любом сечении)", false)
+	_pads_chk.toggled.connect(func(_on: bool): _changed())
+	for sp in PAD_SPINS:
+		_spin_row(v, sp)
+	var rc := _row(v, "Цвет площадок")
+	_pad_color = ColorPickerButton.new()
+	_pad_color.custom_minimum_size = Vector2(80, 0)
+	_pad_color.edit_alpha = false
+	_pad_color.color = Color(0.30, 0.30, 0.33)
+	_pad_color.tooltip_text = "Цвет хранится в вершинах меша: один материал и одна поверхность, на нагрузку не влияет. Умножается на текстуру материала шпалы."
+	_pad_color.color_changed.connect(func(_c: Color): _changed())
+	rc.add_child(_pad_color)
+	_lifts_chk = _check(v, "Рельс стоит на площадке (поднимает рельс)", true)
+	_lifts_chk.tooltip_text = "Выключено: площадки только деталь (костыль), рельс стоит на корпусе, высота постели = высота корпуса"
+	_lifts_chk.toggled.connect(func(_on: bool): _changed())
+
+	_title(v, "Рельеф")
+	for sp in RELIEF_SPINS:
+		_spin_row(v, sp)
+
+	_title(v, "UV")
+	_uv_rot = _check(v, "Повернуть UV на 90° (волокна поперёк)", false)
+	_uv_rot.toggled.connect(func(_on: bool): _changed())
 	var hint := Label.new()
-	hint.text = "UV генератора в ю: для материала шпалы выберите проекцию «UV меша в ю». Площадки бетона ставятся на rail_x стиля и входят в высоту шпалы."
+	hint.text = "UV генератора в ю: в материале шпалы выберите проекцию «UV меша в ю». Материалу нужно «Цвет вершин» (в пресете шпалы включено)."
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.modulate = Color(1, 1, 1, 0.6)
 	v.add_child(hint)
+
+	_live = _check(v, "Обновлять сразу после первой генерации", true)
 	var rg := HBoxContainer.new()
 	v.add_child(rg)
-	_button(rg, "Сгенерировать в стиль", _on_generate)
-	_button(rg, "Убрать меш (BoxMesh)", func(): studio.set_field("sleeper_mesh", null))
+	_button(rg, "Сгенерировать в стиль", func(): _on_generate(true))
+	_button(rg, "Убрать меш (BoxMesh)", func():
+		_live_active = false
+		studio.set_field("sleeper_mesh", null))
 	var rn := _row(v, "Имя файла")
 	_gen_name = LineEdit.new()
-	_gen_name.text = "sleeper_wood"
+	_gen_name.text = "sleeper_01"
 	_gen_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_gen_name.tooltip_text = "res://data/tracks/meshes/<имя>.res"
 	rn.add_child(_gen_name)
@@ -125,7 +185,6 @@ func _build() -> void:
 	_dialog.file_selected.connect(_on_source_picked)
 	add_child(_dialog)
 
-	_fill_defaults(null)
 
 
 func _title(parent: Control, text: String) -> void:
@@ -156,9 +215,13 @@ func _spin_plain(parent: Control, lo: float, hi: float, step: float, value: floa
 	return s
 
 
-func _spin_row(parent: Control, key: String, text: String, lo: float, hi: float, step: float) -> void:
-	var r := _row(parent, text)
-	_spin[key] = _spin_plain(r, lo, hi, step, float(TrackSleeperFactory.GENERATED_DEFAULTS[key]))
+func _spin_row(parent: Control, sp: Array) -> void:
+	var r := _row(parent, sp[1])
+	r.tooltip_text = sp[5]
+	var key: String = sp[0]
+	var box := _spin_plain(r, sp[2], sp[3], sp[4], float(TrackSleeperFactory.GENERATED_DEFAULTS[key]))
+	box.value_changed.connect(func(_v: float): _changed())
+	_spin[key] = box
 
 
 func _check(parent: Control, text: String, on: bool) -> CheckBox:
@@ -181,43 +244,73 @@ func _button(parent: Control, text: String, cb: Callable) -> Button:
 # Состояние
 # ==========================================
 
-## Студия вызывает при открытии стиля: размеры генератора берутся из sleeper_size стиля
+## Студия вызывает при открытии стиля. Меш, собранный генератором, возвращает свои параметры (метаданные track_spec);
+## иначе размеры берутся из sleeper_size, центр площадок из rail_x стиля
 func refresh_from_style() -> void:
 	var style: TrackStyle = studio.get_style() if studio else null
-	_fill_defaults(style)
-
-
-func _fill_defaults(style: TrackStyle) -> void:
-	if _spin.is_empty():
+	_live_active = false
+	_gen_mesh = null
+	if style == null or _spin.is_empty():
 		return
-	if style:
-		(_spin["length"] as SpinBox).value = style.sleeper_size.x
-		(_spin["height"] as SpinBox).value = style.sleeper_size.y
-		(_spin["width"] as SpinBox).value = style.sleeper_size.z
-		_kind_opt.select(1 if not style.ballast_enabled else 0)
+	var spec := {}
+	if style.sleeper_mesh and style.sleeper_mesh.has_meta("track_spec"):
+		spec = style.sleeper_mesh.get_meta("track_spec")
+		if style.sleeper_mesh is ArrayMesh:
+			_gen_mesh = style.sleeper_mesh
+	else:
+		spec = TrackSleeperFactory.GENERATED_DEFAULTS.duplicate()
+		spec["length"] = style.sleeper_size.x
+		spec["height"] = style.sleeper_size.y
+		spec["width"] = style.sleeper_size.z
+		spec["pad_x"] = style.rail_x
+	_set_ui(spec)
+
+
+func _set_ui(spec: Dictionary) -> void:
+	var d: Dictionary = TrackSleeperFactory.GENERATED_DEFAULTS.duplicate()
+	d.merge(spec, true)
+	for k in _spin:
+		(_spin[k] as SpinBox).set_value_no_signal(float(d[k]))
+	for i in PROFILES.size():
+		if PROFILES[i][1] == d["profile"]:
+			_profile_opt.select(i)
+	_pads_chk.set_pressed_no_signal(bool(d["pads"]))
+	_lifts_chk.set_pressed_no_signal(bool(d["pad_lifts_rail"]))
+	_pad_color.color = d["pad_color"]
+	_uv_rot.set_pressed_no_signal(bool(d["uv_rotate"]))
 
 
 func _spec() -> Dictionary:
-	var spec := {"kind": KINDS[_kind_opt.selected][1]}
+	var spec := {
+		"profile": PROFILES[_profile_opt.selected][1],
+		"pads": _pads_chk.button_pressed,
+		"pad_lifts_rail": _lifts_chk.button_pressed,
+		"pad_color": _pad_color.color,
+		"uv_rotate": _uv_rot.button_pressed,
+	}
 	for k in _spin:
 		spec[k] = (_spin[k] as SpinBox).value
-	var style: TrackStyle = studio.get_style()
-	if style:
-		spec["rail_x"] = style.rail_x
 	return spec
+
+
+func _changed() -> void:
+	if _live_active and _live.button_pressed:
+		_timer.start()
 
 
 # ==========================================
 # Генератор
 # ==========================================
 
-func _on_generate() -> void:
+func _on_generate(announce := true) -> void:
 	if studio.get_style() == null:
 		return
 	_gen_mesh = TrackSleeperFactory.generate(_spec())
+	_live_active = true
 	studio.set_field("sleeper_mesh", _gen_mesh)
-	var inf := TrackSleeperFactory.info(_gen_mesh)
-	studio.say("Шпала сгенерирована: %d треугольников" % inf["triangles"])
+	if announce:
+		var inf := TrackSleeperFactory.info(_gen_mesh)
+		studio.say("Шпала сгенерирована: %d треугольников" % inf["triangles"])
 
 
 func _on_save_generated() -> void:
@@ -236,6 +329,7 @@ func _save(mesh: ArrayMesh, nm: String) -> void:
 	if err != OK:
 		studio.say("Не удалось записать %s (код %d)" % [path, err], true)
 		return
+	_live_active = false   # дальше правки не должны затирать записанный файл
 	studio.set_field("sleeper_mesh", mesh)
 	studio.say("Меш записан: %s" % path)
 

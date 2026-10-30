@@ -97,6 +97,9 @@ static func ensure_materials() -> void:
 	_mat_sleeper = StandardMaterial3D.new()
 	_mat_sleeper.albedo_color = Color(0.30, 0.20, 0.13)
 	_mat_sleeper.roughness = 0.9
+	# Меши шпал могут нести вершинный цвет (подкладки другого цвета без второго материала); у BoxMesh цвета нет, множитель 1
+	_mat_sleeper.vertex_color_use_as_albedo = true
+	_mat_sleeper.vertex_color_is_srgb = true
 
 
 # ==========================================
@@ -245,6 +248,8 @@ static func create_sleepers_node(style: TrackStyle) -> MultiMeshInstance3D:
 		mm.mesh = style.sleeper_mesh
 		if style.sleeper_material:
 			node.material_override = style.sleeper_material
+		elif style.sleeper_mesh.get_surface_count() > 0 and style.sleeper_mesh.surface_get_material(0) == null:
+			node.material_override = _mat_sleeper   # у меша нет своих материалов: общий вместо белого по умолчанию
 	else:
 		var bm := BoxMesh.new()
 		bm.size = style.sleeper_size

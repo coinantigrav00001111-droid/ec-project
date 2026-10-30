@@ -6,17 +6,30 @@ class_name TrackSleeperFactory extends RefCounted
 ## Без интерфейса. Контракт меша шпалы (ATTN_15 §2, ATTN_20 §20.3.3): origin в центре площади опоры,
 ## низ на y = 0, длинная сторона поперёк пути по X (там рельсы), шаг вдоль Z.
 ## Меши генератора одноповерхностные, UV в ю (1 единица UV = 1 ю): материал масштабирует тайл через uv1_scale.
+## Площадки под рельс красятся вершинным цветом, а не вторым материалом: цена та же, что у шпалы без них.
 
 const GENERATED_DEFAULTS := {
-	"kind": "wood",        # wood | concrete
-	"length": 3.0,         # по X, поперёк пути
-	"height": 0.2,         # без подрельсовых площадок
-	"width": 0.3,          # по Z, вдоль пути
-	"chamfer": 0.02,       # фаска рёбер, ю
-	"taper": 0.03,         # бетон: на сколько верх уже низа с каждой стороны, ю
-	"pad_height": 0.02,    # бетон: высота подрельсовых площадок (0 = без них)
-	"pad_length": 0.4,     # бетон: длина площадки по X
-	"rail_x": 0.875,       # бетон: где стоят площадки (половина колеи)
+	"profile": "rect",         # rect: прямоугольное сечение, фаски со всех рёбер; trapezoid: низ шире верха (taper)
+	"length": 3.0,             # по X, поперёк пути
+	"height": 0.2,             # высота корпуса без площадок
+	"width": 0.3,              # по Z, вдоль пути
+	"chamfer": 0.02,           # фаска рёбер, ю (0 = без фасок)
+	"taper": 0.03,             # trapezoid: на сколько верх уже низа с каждой стороны, ю
+	# Площадки под рельс (на любом сечении)
+	"pads": false,
+	"pad_x": 0.875,            # центр площадки от оси шпалы (по умолчанию половина колеи стиля)
+	"pad_length": 0.4,         # по X
+	"pad_width": 0.0,          # по Z, 0 = на всю плоскую часть верха
+	"pad_height": 0.02,        # над верхом корпуса
+	"pad_color": Color(0.30, 0.30, 0.33),   # вершинный цвет: бесплатно, один материал и одна поверхность
+	"pad_lifts_rail": true,    # true: рельс стоит на площадке; false: рельс на корпусе, площадка только деталь (костыль)
+	# Рельеф (0 = не создаётся ни вершин, ни рёбер)
+	"top_dip": 0.0,            # прогиб верха между площадками, ю
+	"side_notch": 0.0,         # глубина выемок на боковых плоскостях под рельсами, ю
+	"side_notch_length": 0.3,  # длина выемки по X
+	"relief_slope": 0.08,      # длина скоса у прогиба и выемок по X
+	# UV
+	"uv_rotate": false,        # повернуть UV на 90° (волокна вдоль / поперёк)
 }
 
 
@@ -24,6 +37,9 @@ const GENERATED_DEFAULTS := {
 # Генератор
 # ==========================================
 
+## Меш шпалы по спецификации (см. GENERATED_DEFAULTS). Корпус собирается из сечений вдоль X: без рельефа это
+## два сечения (концы), каждая выемка и прогиб добавляют только нужные сечения. В метаданных меша:
+## track_spec (как собран) и seat_height (высота постели рельса, если площадки её не поднимают)
 static func generate(spec: Dictionary) -> ArrayMesh:
 	var s: Dictionary = GENERATED_DEFAULTS.duplicate()
 	s.merge(spec, true)
@@ -31,70 +47,180 @@ static func generate(spec: Dictionary) -> ArrayMesh:
 	var H := maxf(float(s["height"]), 0.02)
 	var W := maxf(float(s["width"]), 0.02)
 	var c := clampf(float(s["chamfer"]), 0.0, minf(H, W) * 0.45)
-	var concrete: bool = s["kind"] == "concrete"
-	var tp := clampf(float(s["taper"]), 0.0, W * 0.3) if concrete else 0.0
-
-	# Сечение в плоскости (z, y), против часовой, низ слева направо
-	var prof: Array[Vector2] = []
+	var trapezoid: bool = s["profile"] == "trapezoid"
 	var hw := W * 0.5
-	var tw := hw - tp
-	if concrete:
-		prof = _dedupe([
-			Vector2(-hw, 0.0), Vector2(hw, 0.0),
-			Vector2(tw, H - c), Vector2(tw - c, H),
-			Vector2(-tw + c, H), Vector2(-tw, H - c)])
-	else:
-		prof = _dedupe([
-			Vector2(-hw + c, 0.0), Vector2(hw - c, 0.0), Vector2(hw, c), Vector2(hw, H - c),
-			Vector2(hw - c, H), Vector2(-hw + c, H), Vector2(-hw, H - c), Vector2(-hw, c)])
+	var tp := clampf(float(s["taper"]), 0.0, W * 0.3) if trapezoid else 0.0
+	var rot: bool = s["uv_rotate"]
 
+	# --- рельеф: кусочно-линейные функции вдоль X ---
+	var slope := clampf(float(s["relief_slope"]), 0.005, 1.0)
+	var seat_x := absf(float(s["pad_x"]))
+	var seat_len := clampf(float(s["pad_length"]), 0.02, L)
+	var dip := clampf(float(s["top_dip"]), 0.0, maxf(H - 2.0 * c - 0.01, 0.0))
+	var notch := clampf(float(s["side_notch"]), 0.0, maxf(hw - tp - c - 0.01, 0.0))
+	var drop_pts: Array = []        # [[x, значение], ...] по возрастанию x
+	var windows: Array = []         # список таких же списков, по одному на выемку
+	if dip > 0.0:
+		var x_in := seat_x - seat_len * 0.5
+		if x_in > 0.02:
+			var sl := minf(slope, x_in * 0.5)
+			drop_pts = [[-x_in, 0.0], [-x_in + sl, dip], [x_in - sl, dip], [x_in, 0.0]]
+	if notch > 0.0:
+		var nl := clampf(float(s["side_notch_length"]), 0.02, L)
+		for sgn in [-1.0, 1.0]:
+			var a: float = sgn * seat_x - nl * 0.5
+			var b: float = sgn * seat_x + nl * 0.5
+			windows.append([[a - slope, 0.0], [a, notch], [b, notch], [b + slope, 0.0]])
+
+	# --- сечения ---
+	var xs: Array[float] = [-L * 0.5, L * 0.5]
+	for pt in drop_pts:
+		xs.append(clampf(pt[0], -L * 0.5, L * 0.5))
+	for w in windows:
+		for pt in w:
+			xs.append(clampf(pt[0], -L * 0.5, L * 0.5))
+	xs.sort()
+	var uniq: Array[float] = []
+	for x in xs:
+		if uniq.is_empty() or x - uniq[uniq.size() - 1] > 0.0005:
+			uniq.append(x)
+	xs = uniq
+
+	var keep := _keep_indices(_profile_raw(hw, tp, H, c, 0.0, 0.0, trapezoid))
+	var slices: Array = []          # по сечению на каждый x: массив Vector2 (z, y)
+	for x in xs:
+		var drop := _interp(drop_pts, x)
+		var inset := 0.0
+		for w in windows:
+			inset = maxf(inset, _interp(w, x))
+		var raw := _profile_raw(hw, tp, H, c, drop, inset, trapezoid)
+		var pts: Array[Vector2] = []
+		for i in keep:
+			pts.append(raw[i])
+		slices.append(pts)
+
+	var use_color: bool = s["pads"] and float(s["pad_height"]) > 0.001
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	if use_color:
+		st.set_color(Color.WHITE)
 
-	# Боковая поверхность: прямоугольники вдоль X
-	var perim := 0.0
-	for i in prof.size():
-		var a: Vector2 = prof[i]
-		var b: Vector2 = prof[(i + 1) % prof.size()]
-		var d := b - a
-		var seg := d.length()
-		var n := Vector3(0.0, -d.x, d.y).normalized()   # наружу: (dy, -dz) в осях (z, y)
-		var p0 := Vector3(-L * 0.5, a.y, a.x)
-		var p1 := Vector3(L * 0.5, a.y, a.x)
-		var p2 := Vector3(L * 0.5, b.y, b.x)
-		var p3 := Vector3(-L * 0.5, b.y, b.x)
-		TrackMeshBuilder.quad(st, [p0, p1, p2, p3], [n, n, n, n],
-			[Vector2(0.0, perim), Vector2(L, perim), Vector2(L, perim + seg), Vector2(0.0, perim + seg)])
-		perim += seg
+	# --- боковая поверхность между соседними сечениями ---
+	for si in slices.size() - 1:
+		var p0: Array = slices[si]
+		var p1: Array = slices[si + 1]
+		var x0: float = xs[si]
+		var x1: float = xs[si + 1]
+		var per0 := _perimeter(p0)
+		var per1 := _perimeter(p1)
+		for i in p0.size():
+			var j := (i + 1) % p0.size()
+			var a0 := Vector3(x0, p0[i].y, p0[i].x)
+			var b0 := Vector3(x0, p0[j].y, p0[j].x)
+			var a1 := Vector3(x1, p1[i].y, p1[i].x)
+			var b1 := Vector3(x1, p1[j].y, p1[j].x)
+			var e := b0 - a0
+			if e.length_squared() < 1e-10:
+				e = b1 - a1
+			var expected := Vector3.RIGHT.cross(e)   # наружу для сечения против часовой
+			var n := (b1 - a0).cross(b0 - a1)
+			if n.length_squared() < 1e-12:
+				continue
+			n = n.normalized()
+			if n.dot(expected) < 0.0:
+				n = -n
+			var l0 := (p0[j] - p0[i]).length()
+			var l1 := (p1[j] - p1[i]).length()
+			TrackMeshBuilder.quad(st, [a0, a1, b1, b0], [n, n, n, n], [
+				_uv(x0, per0[i], rot), _uv(x1, per1[i], rot), _uv(x1, per1[i] + l1, rot), _uv(x0, per0[i] + l0, rot)])
 
-	# Торцы: веер из выпуклого многоугольника
-	for end_sign in [-1.0, 1.0]:
-		var x: float = end_sign * L * 0.5
-		var n := Vector3(end_sign, 0.0, 0.0)
+	# --- торцы: веер из выпуклого многоугольника ---
+	for end in [0, slices.size() - 1]:
+		var pts: Array = slices[end]
+		var x: float = xs[end]
+		var n := Vector3(-1.0 if end == 0 else 1.0, 0.0, 0.0)
 		var center := Vector2.ZERO
-		for v in prof:
+		for v in pts:
 			center += v
-		center /= prof.size()
-		for i in prof.size():
-			var a: Vector2 = prof[i]
-			var b: Vector2 = prof[(i + 1) % prof.size()]
+		center /= pts.size()
+		for i in pts.size():
+			var a: Vector2 = pts[i]
+			var b: Vector2 = pts[(i + 1) % pts.size()]
 			_tri(st, Vector3(x, center.y, center.x), Vector3(x, a.y, a.x), Vector3(x, b.y, b.x), n,
-				Vector2(center.x, center.y), a, b)
+				_uv(center.x, center.y, rot), _uv(a.x, a.y, rot), _uv(b.x, b.y, rot))
 
-	# Бетон: подрельсовые площадки
-	if concrete and float(s["pad_height"]) > 0.001:
-		var ph := float(s["pad_height"])
-		var pl := minf(float(s["pad_length"]), L * 0.4)
-		var pw := (tw - c) * 2.0
+	# --- площадки ---
+	var pad_h := float(s["pad_height"])
+	if use_color:
+		var pl := clampf(float(s["pad_length"]), 0.02, L)
+		var pw := float(s["pad_width"])
+		pw = minf(pw, W) if pw > 0.0 else maxf((hw - tp - c) * 2.0, 0.02)
+		var px := minf(seat_x, L * 0.5 - pl * 0.5)
+		st.set_color(s["pad_color"])
 		for sx in [-1.0, 1.0]:
-			_box(st, Vector3(sx * float(s["rail_x"]) - pl * 0.5, H, -pw * 0.5), Vector3(pl, ph, pw))
+			_box(st, Vector3(sx * px - pl * 0.5, H, -pw * 0.5), Vector3(pl, pad_h, pw), rot)
+		st.set_color(Color.WHITE)
 
 	st.generate_tangents()
-	return st.commit()
+	var mesh := st.commit()
+	mesh.set_meta("track_spec", s)
+	if use_color and not bool(s["pad_lifts_rail"]):
+		mesh.set_meta("seat_height", H)
+	return mesh
+
+
+## Сечение в плоскости (z, y), против часовой, фиксированное число точек (дубликаты убирает _keep_indices)
+static func _profile_raw(hw: float, tp: float, H: float, c: float, drop: float, inset: float, trapezoid: bool) -> Array[Vector2]:
+	var hb := hw - inset
+	var top := H - drop
+	if trapezoid:
+		var ht := hw - tp - inset
+		return [Vector2(-hb, 0.0), Vector2(hb, 0.0), Vector2(ht, top - c), Vector2(ht - c, top),
+			Vector2(-ht + c, top), Vector2(-ht, top - c)]
+	return [Vector2(-hb + c, 0.0), Vector2(hb - c, 0.0), Vector2(hb, c), Vector2(hb, top - c),
+		Vector2(hb - c, top), Vector2(-hb + c, top), Vector2(-hb, top - c), Vector2(-hb, c)]
+
+
+## Индексы точек без подряд идущих повторов (фаска 0 схлопывает пары точек)
+static func _keep_indices(raw: Array[Vector2]) -> Array[int]:
+	var out: Array[int] = []
+	for i in raw.size():
+		if out.is_empty() or not raw[out[out.size() - 1]].is_equal_approx(raw[i]):
+			out.append(i)
+	if out.size() > 1 and raw[out[0]].is_equal_approx(raw[out[out.size() - 1]]):
+		out.remove_at(out.size() - 1)
+	return out
+
+
+## Значение кусочно-линейной функции [[x, v], ...] (по возрастанию x); вне диапазона 0
+static func _interp(pts: Array, x: float) -> float:
+	if pts.size() < 2 or x <= pts[0][0] or x >= pts[pts.size() - 1][0]:
+		return 0.0
+	for i in pts.size() - 1:
+		var a: Array = pts[i]
+		var b: Array = pts[i + 1]
+		if x >= a[0] and x <= b[0]:
+			var t := 0.0 if is_equal_approx(a[0], b[0]) else (x - a[0]) / (b[0] - a[0])
+			return lerpf(a[1], b[1], t)
+	return 0.0
+
+
+## Накопленная длина вдоль замкнутой ломаной до каждой точки
+static func _perimeter(p: Array) -> Array[float]:
+	var out: Array[float] = []
+	var acc := 0.0
+	for i in p.size():
+		out.append(acc)
+		acc += (p[(i + 1) % p.size()] - p[i]).length()
+	return out
+
+
+static func _uv(u: float, v: float, rotate: bool) -> Vector2:
+	return Vector2(v, u) if rotate else Vector2(u, v)
 
 
 ## Коробка с плоскими нормалями и UV в ю. pos = минимальный угол
-static func _box(st: SurfaceTool, pos: Vector3, size: Vector3) -> void:
+static func _box(st: SurfaceTool, pos: Vector3, size: Vector3, rotate := false) -> void:
 	var a := pos
 	var b := pos + size
 	# грани: [нормаль, 4 угла]
@@ -113,11 +239,11 @@ static func _box(st: SurfaceTool, pos: Vector3, size: Vector3) -> void:
 		for p in pts:
 			# планарная проекция по оси нормали
 			if absf(n.y) > 0.5:
-				uvs.append(Vector2(p.x, p.z))
+				uvs.append(_uv(p.x, p.z, rotate))
 			elif absf(n.x) > 0.5:
-				uvs.append(Vector2(p.z, p.y))
+				uvs.append(_uv(p.z, p.y, rotate))
 			else:
-				uvs.append(Vector2(p.x, p.y))
+				uvs.append(_uv(p.x, p.y, rotate))
 		TrackMeshBuilder.quad(st, pts, [n, n, n, n], uvs)
 
 
@@ -133,16 +259,6 @@ static func _tri(st: SurfaceTool, p0: Vector3, p1: Vector3, p2: Vector3, n: Vect
 		st.set_normal(n)
 		st.set_uv(uvs[k])
 		st.add_vertex(ps[k])
-
-
-static func _dedupe(pts: Array) -> Array[Vector2]:
-	var out: Array[Vector2] = []
-	for p in pts:
-		if out.is_empty() or not out[out.size() - 1].is_equal_approx(p):
-			out.append(p)
-	if out.size() > 1 and out[0].is_equal_approx(out[out.size() - 1]):
-		out.remove_at(out.size() - 1)
-	return out
 
 
 # ==========================================
@@ -277,7 +393,7 @@ static func _transform_arrays(arrays: Array, xf: Transform3D) -> Array:
 
 ## Добавляет массивы поверхности в общий набор; индексы сдвигаются на offset вершин
 static func _merge_into(merged: Dictionary, arrays: Array, offset: int) -> void:
-	for k in [Mesh.ARRAY_VERTEX, Mesh.ARRAY_NORMAL, Mesh.ARRAY_TANGENT, Mesh.ARRAY_TEX_UV]:
+	for k in [Mesh.ARRAY_VERTEX, Mesh.ARRAY_NORMAL, Mesh.ARRAY_TANGENT, Mesh.ARRAY_COLOR, Mesh.ARRAY_TEX_UV]:
 		if arrays[k] == null:
 			continue
 		if not merged.has(k):

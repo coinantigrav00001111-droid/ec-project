@@ -62,8 +62,16 @@ const LEGACY_TILE_ALONG := 10.0
 # Производные высоты
 # ==========================================
 
+## Размер шпалы: AABB меша или sleeper_size. Высота (y) это высота постели рельса: если меш говорит, что рельс стоит
+## ниже его верхней точки (метаданные seat_height: площадки-«костыли» выше постели), берётся она
 func sleeper_dims() -> Vector3:
-	return sleeper_mesh.get_aabb().size if sleeper_mesh else sleeper_size
+	if sleeper_mesh == null:
+		return sleeper_size
+	var d := sleeper_mesh.get_aabb().size
+	var seat := float(sleeper_mesh.get_meta("seat_height", 0.0))
+	if seat > 0.0 and seat < d.y:
+		d.y = seat
+	return d
 
 
 func sleeper_step() -> float:
