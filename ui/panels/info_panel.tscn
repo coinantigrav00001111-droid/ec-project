@@ -804,27 +804,3 @@ size_flags_vertical = 2
 bbcode_enabled = true
 text = "[color=yellow]текст[/color]"
 fit_content = true
-
-[connection signal="pressed" from="VBoxContainer/TabContainer/PowerTab/PowerTrackTab/HBoxContainer1/GridContainer2/PowerClipButton" to="." method="_on_power_clip_button_pressed"]
-[connection signal="item_selected" from="VBoxContainer/TabContainer/PowerTab/PowerTrackTab/HBoxContainer1/GridContainer2/ClipContourIDButton" to="." method="_on_contour_id_item_selected"]
-[connection signal="draw" from="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/WagonKContainer" to="." method="_on_wagon_k_container_draw"]
-[connection signal="value_changed" from="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/WagonKContainer/FrictionSpinB" to="." method="_on_friction_spin_b_value_changed"]
-[connection signal="value_changed" from="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/WagonKContainer/MassWSpinB" to="." method="_on_mass_w_spin_b_value_changed"]
-[connection signal="value_changed" from="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/WagonKContainer/LinearDampSpinB" to="." method="_on_linear_damp_spin_b_value_changed"]
-[connection signal="value_changed" from="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/WagonKContainer/RollResSpinB" to="." method="_on_roll_res_spin_b_value_changed"]
-[connection signal="value_changed" from="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/WagonKContainer/AngularDampSpinB" to="." method="_on_angular_damp_spin_b_value_changed"]
-[connection signal="value_changed" from="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/WagonKContainer/MaxGripSpinB" to="." method="_on_max_grip_spin_b_value_changed"]
-[connection signal="value_changed" from="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer3/WagonKContainer/MinCurveRadius" to="." method="_on_min_curve_radius_value_changed"]
-[connection signal="toggled" from="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer4/SpeedometerCheckBox" to="." method="_on_speedometer_check_box_toggled"]
-[connection signal="toggled" from="VBoxContainer/TabContainer/TransformTab/VBoxContainer/HBoxContainer4/SpeedometerVCheck" to="." method="_on_speedometer_vert_toggled"]
-[connection signal="draw" from="VBoxContainer/TabContainer/DebugTab" to="." method="_on_debug_tab_draw"]
-[connection signal="pressed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugEnableContainer/EnableSusp" to="." method="_on_enable_susp_pressed"]
-[connection signal="pressed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugEnableContainer/EnableVert" to="." method="_on_enable_vert_pressed"]
-[connection signal="pressed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugEnableContainer/EnablePitch" to="." method="_on_enable_pitch_pressed"]
-[connection signal="pressed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugEnableContainer/EnableRoll" to="." method="_on_enable_roll_pressed"]
-[connection signal="pressed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugEnableContainer/EnableLateral" to="." method="_on_enable_lateral_pressed"]
-[connection signal="value_changed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugEnableContainer/SuspMult" to="." method="_on_susp_mult_value_changed"]
-[connection signal="value_changed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer/LongGrip" to="." method="_on_long_grip_value_changed"]
-[connection signal="value_changed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer/MaxYawDeg" to="." method="_on_max_yaw_deg_value_changed"]
-[connection signal="value_changed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer/YawSpring" to="." method="_on_yaw_spring_value_changed"]
-[connection signal="pressed" from="VBoxContainer/TabContainer/DebugTab/HBoxContainer4/DebugContainer/WagonCameraButton" to="." method="_on_wagon_camera_button_pressed"]
