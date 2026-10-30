@@ -115,8 +115,8 @@ metadata/_custom_type_script = "uid://brbladjp7pfki"
 
 [resource]
 script = ExtResource("20_1e1go")
-id = 2030
 key = &"train.boxcar.wagon_03"
+id = 2030
 name = "wagon_03"
 description = "крытый 02"
 category = &"train"
