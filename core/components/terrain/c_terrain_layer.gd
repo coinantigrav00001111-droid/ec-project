@@ -186,19 +186,32 @@ func _prune_cuts() -> void:
 
 ## --- Вырезы ---
 
-## Вырезать полигон (локальные XZ листа) из слоев [from_level, to_level). Слои считаем от низа листа
-func add_cut(polygon: PackedVector2Array, from_level: int, to_level: int) -> void:
+## Вырезать полигон (локальные XZ листа) из слоев [from_level, to_level). Слои считаем от низа листа.
+## 13.3 S1: возвращает созданный вырез (null: вырезать нечего) - по нему его можно снять через remove_cut
+func add_cut(polygon: PackedVector2Array, from_level: int, to_level: int) -> FoamCut:
 	if polygon.size() < 3:
-		return
+		return null
 	var lv := maxi(1, levels)
 	var c := FoamCut.new()
 	c.polygon = polygon
 	c.from_level = clampi(from_level, 0, lv)
 	c.to_level = clampi(to_level, 0, lv)
 	if c.to_level <= c.from_level:
-		return
+		return null
 	cuts.append(c)
 	_rebuild()
+	return c
+
+
+## XX claude-terra 13.3 S1. Снять конкретный вырез (откат терморезака). false: такого выреза в листе уже нет
+## (лист мог подрезать его при уменьшении толщины)
+func remove_cut(c: FoamCut) -> bool:
+	var i := cuts.find(c)
+	if i < 0:
+		return false
+	cuts.remove_at(i)
+	_rebuild()
+	return true
 
 
 ## Убрать последний ручной вырез (автовырезы под траки пересчитываются сами)
@@ -782,13 +795,47 @@ func overlaps(polygon: PackedVector2Array, y_from: float, y_to: float) -> bool:
 
 ## Лист не должен занимать то же место, что другой лист (D6): иначе C_Invalid (красный призрак,
 ## BuildTool не ставит, DragTool откатит). Вызывает C_TerrainDraggable после каждого движения.
-## Свои вырезы не учитываем (проверяем внешнюю призму): лист в нише другого листа пока красный
+## 13.3 S1: если внешняя призма задевает чужой лист, но у листа есть ручные вырезы (бухта, окно, ниша), считаем
+## по его настоящим блокам: чужой лист в бухте не делает этот лист красным. Автовырезы не учитываем: у листа в драге
+## они остаются от прежнего места
 func update_validity() -> void:
 	var bad := not TGM.layers_overlapping(world_polygon(), base_y(), top_y(), entity).is_empty()
+	if bad and _has_manual_cuts():
+		bad = _solid_overlaps_others()
 	if bad and not has_comp(C_Invalid):
 		entity.add_component(C_Invalid.new())
 	elif not bad and has_comp(C_Invalid):
 		entity.remove_component(C_Invalid)
+
+
+func _has_manual_cuts() -> bool:
+	for c in cuts:
+		if not c.auto:
+			return true
+	return false
+
+
+## Занимает ли твёрдое тело листа (контур минус ручные вырезы, по блокам слоёв) место другого листа
+func _solid_overlaps_others() -> bool:
+	var contour := get_comp(C_Contour) as C_Contour
+	if contour == null or entity == null:
+		return false
+	var T: float = Global.settings.layer_height
+	var saved := cuts
+	var manual: Array[FoamCut] = []
+	for c in cuts:
+		if not c.auto:
+			manual.append(c)
+	cuts = manual
+	var blocks := _compute_blocks(contour.normalized_points())
+	cuts = saved
+	var xf := entity.global_transform
+	var base := base_y()
+	for b in blocks:
+		for poly: PackedVector2Array in b["polys"]:
+			if not TGM.layers_overlapping(_to_world(poly, xf), base + float(b["y0"]) * T, base + float(b["y1"]) * T, entity).is_empty():
+				return true
+	return false
 
 
 ## --- Помощники ---
