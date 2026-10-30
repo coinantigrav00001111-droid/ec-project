@@ -46,6 +46,7 @@ const BUMP_SPEED := 0.3    # м/с, ниже - событие "стук" не ш
 const PROBE_LOOKAHEAD := 0.05    # м, запас перед касанием сверх пути за тик
 const PROBE_SHRINK := Vector3(0.2, 0.3, 0.0)   # на сколько кузов "сжат" (ширина, высота снизу, длина): свои рельсы не цепляем
 const PROBE_CHAIN_DEPTH := 4     # сколько траков вперед и назад от тележек не считаем препятствием (свой путь)
+const PROBE_LAYERS := ['ground', 'tracks', 'trains', 'supports', 'room']   # твёрдые слои, которые вагон на рельсах считает препятствием
 const PROBE_COOLDOWN := 0.15     # с, пауза после удара
 const PROBE_MIN_SPEED := 0.05    # м/с, медленнее - не проверяем
 
@@ -464,7 +465,9 @@ func _probe_obstacles(delta: float, ch: C_Chassis) -> void:
 	# коробка сжата снизу и с боков: центр сдвигаем вверх на половину сжатия по высоте, верх и перед не трогаем
 	params.transform = node.global_transform * Transform3D(Basis.IDENTITY, Vector3(0.0, PROBE_SHRINK.y * 0.5, 0.0))
 	params.motion = n * (maxf(v * dir, 0.0) * delta + PROBE_LOOKAHEAD)
-	params.collision_mask = Global.active_layers(['tracks', 'trains', 'supports'])
+	# 13.2: проба смотрит ВСЕ твёрдые слои (раньше список был коротким, и лист пенопласта 'ground' и комната 'room'
+	# вагон не замечал). Не смотрим только служебные: sockets, handles, ghost. Новый твёрдый слой добавлять сюда
+	params.collision_mask = Global.active_layers(PROBE_LAYERS)
 	params.collide_with_bodies = true
 	params.collide_with_areas = true               # балласт трака это Area3D
 	params.exclude = _probe_exclude
