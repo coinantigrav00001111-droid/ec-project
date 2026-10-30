@@ -10,6 +10,8 @@ extends Control
 
 const StudioSettings := preload("res://core/library/icon_studio/studio_settings.gd")
 const StudioView := preload("res://core/library/track_studio/studio_view.gd")
+const MaterialPanel := preload("res://core/library/track_studio/material_panel.gd")
+const SleeperPanel := preload("res://core/library/track_studio/sleeper_panel.gd")
 
 const SETTINGS_PATH := "user://track_studio.cfg"
 const REFRESH_DELAY := 0.12
@@ -70,6 +72,8 @@ var _syncing := false
 var _rail_text: TextEdit
 var _ballast_text: TextEdit
 var _prof_status: Label
+var _materials: MaterialPanel
+var _sleepers: SleeperPanel
 var _shape_opt: OptionButton
 var _len_spin: SpinBox
 var _rad_spin: SpinBox
@@ -358,6 +362,16 @@ func _build_right_panel() -> void:
 	_prof_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	prof.add_child(_prof_status)
 
+	# --- Материалы (T2) и Шпала (T3) ---
+	_materials = MaterialPanel.new()
+	_materials.name = "Материалы"
+	tabs.add_child(_materials)
+	_materials.setup(self)
+	_sleepers = SleeperPanel.new()
+	_sleepers.name = "Шпала"
+	tabs.add_child(_sleepers)
+	_sleepers.setup(self)
+
 
 func _profile_editor(parent: Control, title: String, key: String) -> TextEdit:
 	var l := Label.new()
@@ -579,6 +593,8 @@ func _open_style(style: TrackStyle, path: String, dirty: bool) -> void:
 	_current_path = path
 	_dirty = dirty
 	_sync_controls()
+	_materials.refresh_from_style()
+	_sleepers.refresh_from_style()
 	view.set_style(_style)
 	view.fit()
 	_update_passport()
@@ -609,7 +625,7 @@ func _on_duplicate() -> void:
 # ПРАВКА ПОЛЕЙ
 # ==========================================
 
-func _sync_controls() -> void:
+func _sync_controls(include_profiles := true) -> void:
 	_syncing = true
 	for spec in PROPS:
 		if spec.has("sec"):
@@ -632,9 +648,29 @@ func _sync_controls() -> void:
 			"res":
 				(c as Label).text = TrackStyleIO.describe(v)
 	_syncing = false
-	_fill_profile_text("rail_profile", _rail_text)
-	_fill_profile_text("ballast_profile", _ballast_text)
-	_prof_status.text = ""
+	if include_profiles:
+		_fill_profile_text("rail_profile", _rail_text)
+		_fill_profile_text("ballast_profile", _ballast_text)
+		_prof_status.text = ""
+
+
+# --- интерфейс для вкладок материалов и шпал ---
+
+func get_style() -> TrackStyle:
+	return _style
+
+
+## Задаёт поле стиля из вкладки (материал, меш, тайл): обновляет элементы, превью и паспорт
+func set_field(key: String, value: Variant) -> void:
+	if _style == null:
+		return
+	_style.set(key, value)
+	_sync_controls(false)
+	_mark_dirty()
+
+
+func say(text: String, error := false) -> void:
+	_say(text, error)
 
 
 func _set_prop(key: String, value: Variant) -> void:
@@ -695,6 +731,8 @@ func _apply_profile(key: String, te: TextEdit) -> void:
 func _open_pick(key: String, base: String) -> void:
 	_pick_key = key
 	_pick_base = base
+	var start := "res://data/tracks/materials" if base == "Material" else "res://data/tracks/meshes"
+	_file_dialog.current_dir = start if DirAccess.dir_exists_absolute(start) else "res://data"
 	_file_dialog.popup_centered(Vector2i(900, 600))
 
 
