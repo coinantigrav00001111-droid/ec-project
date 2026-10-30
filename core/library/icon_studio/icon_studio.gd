@@ -283,6 +283,15 @@ func _build_center() -> void:
 	_aspect_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_view_area.add_child(_aspect_box)
 
+	# Шахматка под видом: видна при прозрачном фоне (как в предпросмотре)
+	var view_checker := TextureRect.new()
+	view_checker.texture = _make_checker()
+	view_checker.stretch_mode = TextureRect.STRETCH_TILE
+	view_checker.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	view_checker.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	view_checker.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_aspect_box.add_child(view_checker)
+
 	var svc := SubViewportContainer.new()
 	svc.stretch = true
 	svc.mouse_filter = Control.MOUSE_FILTER_IGNORE
