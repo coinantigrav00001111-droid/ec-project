@@ -1,8 +1,8 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://dcmq4g2bt21t3"]
 
-[ext_resource type="Script" path="res://core/library/track_studio/track_studio.gd" id="1_studio"]
+[ext_resource type="Script" uid="uid://8x7juwasvd7m" path="res://core/library/track_studio/track_studio.gd" id="1_studio"]
 
-[node name="TrackStudio" type="Control"]
+[node name="TrackStudio" type="Control" unique_id=2122200784]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0

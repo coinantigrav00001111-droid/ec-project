@@ -1,0 +1,35 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://data/textures/track/Gravel018_1K-JPG/Gravel018_1K-JPG_Color.jpg" id="1_m7evl"]
+[ext_resource type="Texture2D" path="res://data/textures/track/Gravel018_1K-JPG/Gravel018_1K-JPG_AmbientOcclusion.jpg" id="2_wyutk"]
+[ext_resource type="Texture2D" path="res://data/textures/track/Gravel018_1K-JPG/Gravel018_1K-JPG_NormalGL.jpg" id="3_7wfr6"]
+[ext_resource type="Texture2D" path="res://data/textures/track/Gravel018_1K-JPG/Gravel018_1K-JPG_Roughness.jpg" id="4_37oko"]
+
+[resource]
+albedo_color = Color(0.09081641, 0.09081641, 0.09081641, 1)
+albedo_texture = ExtResource("1_m7evl")
+roughness = 2.0
+roughness_texture = ExtResource("4_37oko")
+roughness_texture_channel = 4
+normal_enabled = true
+normal_scale = 2.0
+normal_texture = ExtResource("3_7wfr6")
+ao_enabled = true
+ao_texture = ExtResource("2_wyutk")
+ao_texture_channel = 4
+texture_filter = 5
+metadata/track_role = "ballast"
+metadata/track_source = "res://data/textures/track/Gravel018_1K-JPG"
+metadata/track_params = {
+"ao_light_affect": 0.0,
+"height_scale": 0.5,
+"mesh_uv_units": false,
+"metallic": -1.0,
+"normal_scale": 2.0,
+"roughness": 2.0,
+"tile": Vector2(10, 10),
+"tint": Color(0.09081641, 0.09081641, 0.09081641, 1),
+"triplanar": false,
+"use_ao": true,
+"use_height": false
+}

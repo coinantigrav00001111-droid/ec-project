@@ -1,18 +1,19 @@
 [gd_resource type="Resource" script_class="TrackStyle" format=3 uid="uid://ccshvdiu0c4os"]
 
+[ext_resource type="Material" path="res://data/tracks/materials/rail_metal007.tres" id="1_crynw"]
 [ext_resource type="Script" uid="uid://cfpx56q1cgoy5" path="res://core/components/tracks/track_style.gd" id="1_ts"]
-
-[sub_resource type="StandardMaterial3D" id="Mat_sleeper"]
-albedo_color = Color(0.62, 0.62, 0.6, 1)
-roughness = 0.95
+[ext_resource type="ArrayMesh" path="res://data/tracks/meshes/concrete_test.res" id="2_0b8au"]
+[ext_resource type="Material" path="res://data/tracks/materials/sleeper_concrete030.tres" id="3_q0qrn"]
 
 [resource]
 script = ExtResource("1_ts")
 id = &"concrete"
 rail_profile = null
+rail_material = ExtResource("1_crynw")
+sleeper_mesh = ExtResource("2_0b8au")
 sleeper_size = Vector3(3, 0.2, 0.34)
 sleeper_gap = 0.36
-sleeper_material = SubResource("Mat_sleeper")
+sleeper_material = ExtResource("3_q0qrn")
 ballast_enabled = false
 ballast_profile = null
 collision_width = 3.0

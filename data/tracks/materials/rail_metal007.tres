@@ -1,0 +1,33 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://data/textures/track/Metal007_1K-JPG/Metal007_1K-JPG_Color.jpg" id="1_pseus"]
+[ext_resource type="Texture2D" path="res://data/textures/track/Metal007_1K-JPG/Metal007_1K-JPG_Metalness.jpg" id="2_tx7p0"]
+[ext_resource type="Texture2D" path="res://data/textures/track/Metal007_1K-JPG/Metal007_1K-JPG_NormalGL.jpg" id="3_elcii"]
+[ext_resource type="Texture2D" path="res://data/textures/track/Metal007_1K-JPG/Metal007_1K-JPG_Roughness.jpg" id="4_csyh6"]
+
+[resource]
+albedo_texture = ExtResource("1_pseus")
+metallic = 1.0
+metallic_texture = ExtResource("2_tx7p0")
+metallic_texture_channel = 4
+roughness_texture = ExtResource("4_csyh6")
+roughness_texture_channel = 4
+normal_enabled = true
+normal_scale = 2.0
+normal_texture = ExtResource("3_elcii")
+texture_filter = 5
+metadata/track_role = "rail"
+metadata/track_source = "res://data/textures/track/Metal007_1K-JPG"
+metadata/track_params = {
+"ao_light_affect": 0.0,
+"height_scale": 0.0,
+"mesh_uv_units": false,
+"metallic": 1.0,
+"normal_scale": 2.0,
+"roughness": 1.0,
+"tile": Vector2(10, 10),
+"tint": Color(1, 1, 1, 1),
+"triplanar": false,
+"use_ao": true,
+"use_height": false
+}

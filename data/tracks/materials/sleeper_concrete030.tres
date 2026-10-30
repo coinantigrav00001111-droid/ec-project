@@ -1,0 +1,32 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://data/textures/track/Concrete030_1K-JPG/Concrete030_1K-JPG_Color.jpg" id="1_jod3l"]
+[ext_resource type="Texture2D" path="res://data/textures/track/Concrete030_1K-JPG/Concrete030_1K-JPG_AmbientOcclusion.jpg" id="2_khdnu"]
+[ext_resource type="Texture2D" path="res://data/textures/track/Concrete030_1K-JPG/Concrete030_1K-JPG_NormalGL.jpg" id="3_roclh"]
+[ext_resource type="Texture2D" path="res://data/textures/track/Concrete030_1K-JPG/Concrete030_1K-JPG_Roughness.jpg" id="4_e8agh"]
+
+[resource]
+albedo_texture = ExtResource("1_jod3l")
+roughness_texture = ExtResource("4_e8agh")
+roughness_texture_channel = 4
+normal_enabled = true
+normal_texture = ExtResource("3_roclh")
+ao_enabled = true
+ao_texture = ExtResource("2_khdnu")
+ao_texture_channel = 4
+texture_filter = 5
+metadata/track_role = "sleeper"
+metadata/track_source = "res://data/textures/track/Concrete030_1K-JPG"
+metadata/track_params = {
+"ao_light_affect": 0.0,
+"height_scale": 0.05,
+"mesh_uv_units": true,
+"metallic": -1.0,
+"normal_scale": 1.0,
+"roughness": 1.0,
+"tile": Vector2(1, 1),
+"tint": Color(1, 1, 1, 1),
+"triplanar": false,
+"use_ao": true,
+"use_height": false
+}
