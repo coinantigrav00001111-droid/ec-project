@@ -38,8 +38,8 @@ func scenario(title: String, clip_on_d: bool) -> void:
 	print("== ", title)
 
 	for comp in sw_s.components:
-		if comp is SwitchSettings:
-			comp.power_routing = true
+		if comp is IdentitySetting:   # режимы стрелки живут в паспорте (SwitchConfig), в компонент попадают при создании
+			(comp.object_config as SwitchConfig).power_routing = true
 	var sw: Entity = EntityFactory.new().create_from_setting(sw_s)
 	add_child(sw)
 	sw.global_position = Vector3.ZERO

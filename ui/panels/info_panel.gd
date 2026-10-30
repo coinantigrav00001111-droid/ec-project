@@ -26,6 +26,8 @@ func _ready():
 	_build_terrain_tab()
 	# XX claude-terra 13.1.7: строки уровня, подъема и уклона в блоке трака, тоже кодом
 	_build_track_rows()
+	# XX claude-switch: отладочная вкладка стрелки, тоже кодом
+	_build_switch_tab()
 
 
 # Для TransformTab (если нужны живые координаты)
@@ -85,6 +87,13 @@ func _process(_delta):
 			var _tl := _get_terrain_layer()
 			if _tl:
 				_refresh_terrain_info(_tl)
+
+	# XX claude-switch: статус стрелки живой (рычаг, привод и пульт меняют положение без участия панели)
+	if visible and current_target and _sw_tab:
+		_sw_acc += _delta
+		if _sw_acc >= TRACK_ROWS_PERIOD:
+			_sw_acc = 0.0
+			_update_switch_tab()
 
 	if visible and current_target and tab_container.current_tab == 4:  # 4 - дебаг 
 		_update_debug_tab()
@@ -148,6 +157,8 @@ func _populate_data():
 	_rebuild_mech_tab()
 	# Вкладка материал листа
 	_update_terrain_tab()
+	# XX claude-switch: вкладка стрелки
+	_update_switch_tab()
 
 
 func _populate_main_tab():
@@ -1052,3 +1063,145 @@ func _update_track_rows() -> void:
 			slope_pct = absf(rise) / sqrt(L * L - rise * rise) * 100.0
 	_rise_label.text = "%+.1f ю" % rise if absf(rise) > 0.0001 else "0"
 	_slope_label.text = "%.2f%% (%.1f°)" % [slope_pct, slope_deg] if slope_pct > 0.0 else "0"
+
+
+# ==========================================
+# XX claude-switch. Вкладка "Стрелка" (отладка). Меняет СОСТОЯНИЕ C_Switch в игре, паспорт (SwitchConfig) не трогает
+# ==========================================
+
+const SWITCH_REASONS := {
+	&"moving": "идет перекладка",
+	&"occupied": "на стрелке вагон (замок)",
+	&"single_route": "у трака один маршрут",
+	&"bad_route": "нет такого маршрута",
+	&"manual_only": "стрелка ручная",
+	&"remote_only": "стрелка дистанционная",
+}
+
+var _sw_tab: VBoxContainer
+var _sw_status: Label
+var _sw_msg: Label
+var _sw_control: OptionButton
+var _sw_routing: CheckBox
+var _sw_frog: OptionButton
+var _sw_acc := 0.0
+var _sw_syncing := false   # идет программная расстановка виджетов: сигналы не обрабатываем
+
+
+func _build_switch_tab() -> void:
+	_sw_tab = VBoxContainer.new()
+	_sw_tab.name = "Стрелка"
+	tab_container.add_child(_sw_tab)
+	var margin := MarginContainer.new()
+	for side in ["left", "right", "top", "bottom"]:
+		margin.add_theme_constant_override("margin_" + side, 10)
+	_sw_tab.add_child(margin)
+	var box := VBoxContainer.new()
+	margin.add_child(box)
+
+	var hint := Label.new()
+	hint.text = "Отладка: меняет состояние стрелки в игре, паспорт не трогает"
+	hint.modulate = Color(1, 1, 1, 0.55)
+	box.add_child(hint)
+
+	_sw_status = Label.new()
+	box.add_child(_sw_status)
+
+	var throw_btn := Button.new()
+	throw_btn.text = "Переложить (в обход рычага)"
+	throw_btn.pressed.connect(_on_switch_throw_pressed)
+	box.add_child(throw_btn)
+
+	_sw_msg = Label.new()
+	_sw_msg.modulate = Color(1.0, 0.35, 0.35)
+	box.add_child(_sw_msg)
+
+	var l1 := Label.new()
+	l1.text = "Управление"
+	box.add_child(l1)
+	_sw_control = OptionButton.new()
+	_sw_control.add_item("Ручное (рычаг у носка)")
+	_sw_control.add_item("Дистанционное (пульт, клавиша T)")
+	_sw_control.item_selected.connect(_on_switch_control_selected)
+	box.add_child(_sw_control)
+
+	_sw_routing = CheckBox.new()
+	_sw_routing.text = "Power routing (E1): ток только на выбранную ветку"
+	_sw_routing.toggled.connect(_on_switch_routing_toggled)
+	box.add_child(_sw_routing)
+
+	var l2 := Label.new()
+	l2.text = "Крестовина (E2)"
+	box.add_child(l2)
+	_sw_frog = OptionButton.new()
+	_sw_frog.add_item("Пластиковая (КЗ нет)")
+	_sw_frog.add_item("Токопроводящая, привязана к пути 0")
+	_sw_frog.add_item("Токопроводящая, переключаемая")
+	_sw_frog.item_selected.connect(_on_switch_frog_selected)
+	box.add_child(_sw_frog)
+
+	_set_switch_tab_visible(false)
+
+
+func _set_switch_tab_visible(on: bool) -> void:
+	var idx = tab_container.get_tab_idx_from_control(_sw_tab)
+	tab_container.set_tab_hidden(idx, not on)
+	if not on and tab_container.current_tab == idx:
+		tab_container.current_tab = 0
+
+
+func _get_switch() -> C_Switch:
+	if current_target == null or current_target.has_comp(C_Ghost):
+		return null
+	return current_target.get_comp(C_Switch) as C_Switch
+
+
+func _update_switch_tab() -> void:
+	var sw := _get_switch()
+	_set_switch_tab_visible(sw != null)
+	if sw == null:
+		return
+	var path := current_target.get_comp(C_Path) as C_Path
+	var pt := current_target.get_comp(C_PowerTrack) as C_PowerTrack
+	var route_txt := "Прямо (0)" if sw.route == 0 else "Ответвление (%d)" % sw.route
+	var state_txt := "идет перекладка" if sw.state == C_Switch.State.MOVING else "готова"
+	var lock_txt := "на стрелке вагон" if sw.is_occupied() else "свободна"
+	var frog_txt := "нет"
+	if sw.frog_s.size() >= 2 and sw.frog_s[1] >= 0.0:
+		frog_txt = "%.1f ю (прямо), %.1f ю (ответвление)" % [sw.frog_s[0], sw.frog_s[1]]
+	_sw_status.text = "Положение: %s\nСостояние: %s\nЗамок: %s\nКонтур: %s\nКрестовина на: %s" % [
+			route_txt, state_txt, lock_txt, pt.contour_text() if pt else "-", frog_txt]
+	_sw_syncing = true
+	_sw_control.select(int(sw.control))
+	_sw_routing.set_pressed_no_signal(sw.power_routing)
+	_sw_frog.select(int(sw.frog))
+	_sw_syncing = false
+
+
+func _on_switch_throw_pressed() -> void:
+	var sw := _get_switch()
+	if sw == null:
+		return
+	var d := {"route": -1, "source": &"force"}
+	current_target.send_event("on_switch_request", d)
+	_sw_msg.text = "" if d.get("ok", false) else "Отказ: %s" % SWITCH_REASONS.get(d.get("reason", &""), String(d.get("reason", &"")))
+	_update_switch_tab()
+
+
+func _on_switch_control_selected(index: int) -> void:
+	var sw := _get_switch()
+	if sw and not _sw_syncing:
+		sw.set_control(index as C_Switch.Drive)
+
+
+func _on_switch_routing_toggled(on: bool) -> void:
+	var sw := _get_switch()
+	if sw and not _sw_syncing:
+		sw.set_power_routing(on)
+
+
+func _on_switch_frog_selected(index: int) -> void:
+	var sw := _get_switch()
+	if sw and not _sw_syncing:
+		sw.set_frog_mode(index as C_Switch.Frog)
+

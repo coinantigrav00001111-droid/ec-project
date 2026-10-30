@@ -14,7 +14,7 @@ class_name C_BufferStop extends ICapability
 ##     оверлеи выделения/наведения).
 ##  3. Закрытый стык: сокет у стены выключается, к упору можно пристыковаться только открытым концом.
 ## Должен стоять в массиве компонентов ПОСЛЕ C_Path и C_Socket.
-## Конфиг (C_Identity): BufferStopConfig (stop_at_end, max_speed).
+## Параметры (stop_at_end, max_speed, zeta) задает BufferStopSettings из паспорта (BufferStopConfig).
 ## События наружу (звук/анимация): on_buffer_impact {wagon, v_close, dv, derailed}
 ##   Вагону уходят те же события, что при ударе сцепок: on_coupler_impact, on_derailed, on_coupler_force.
 
@@ -47,11 +47,6 @@ func _init() -> void:
 
 
 func on_entity_ready() -> void:
-	var identity := get_comp(C_Identity) as C_Identity
-	if identity:
-		stop_at_end = bool(identity.get_config('stop_at_end', true))
-		max_speed = float(identity.get_config('max_speed', 0.0))
-
 	var path := get_comp(C_Path) as C_Path
 	if path == null or path.curve == null:
 		push_error("C_BufferStop: нужен C_Path перед компонентом")

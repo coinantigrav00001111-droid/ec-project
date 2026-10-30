@@ -41,6 +41,25 @@ func get_tag() -> StringName:
 	return tag
 
 
+# XX claude-switch: get_config устаревает. Читайте паспорт типизированно (object_config as TrackConfig и т.д.,
+# или SwitchConfig.from_entity(entity)): опечатку в имени поля поймает парсер. Пока get_config работает как раньше,
+# но про имя, которого нет в конфиге, один раз пишет предупреждение: это опечатка, необязательное поле или конфиг другого семейства.
+# Когда предупреждения закончатся и вызовов не останется, функция удаляется.
+static var _warned := {}
+
+
+func _warn_missing(field: Variant) -> void:
+	if object_config == null:
+		return
+	var sc: Script = object_config.get_script()
+	var cfg_name: String = sc.resource_path.get_file() if sc else object_config.get_class()
+	var key := "%s.%s" % [cfg_name, field]
+	if _warned.has(key):
+		return
+	_warned[key] = true
+	push_warning("get_config('%s'): поля нет в %s (опечатка, необязательное поле или конфиг другого семейства). get_config устаревает: читайте паспорт типизированно" % [field, cfg_name])
+
+
 # Возвращает одно значение из object_config или default, если его нет
 func get_config(_s: Variant = null, default: Variant = null) -> Variant:
 	# Если аргумент не передан (или передан null / пустая строка), возвращаем весь ресурс
@@ -51,5 +70,6 @@ func get_config(_s: Variant = null, default: Variant = null) -> Variant:
 	if typeof(_s) == TYPE_STRING or typeof(_s) == TYPE_STRING_NAME:
 		if object_config and _s in object_config:
 			return object_config.get(_s)
+		_warn_missing(_s)
 			
 	return default

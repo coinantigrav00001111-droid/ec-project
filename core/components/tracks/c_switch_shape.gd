@@ -9,30 +9,28 @@ class_name C_SwitchShape extends ICapability
 ##   маршрут 0 - прямой, маршрут 1 - ответвление. Оба в системе координат C_Path, общий носок в начале.
 ## Должен стоять в массиве компонентов ПОСЛЕ C_Path и ДО C_Socket (сокеты берутся из всех маршрутов).
 
-var length := 0.0
+## Параметры задает SwitchShapeSettings из паспорта (SwitchConfig), компонент паспорт не читает
+var length := 23.9
 var diverge_deg := 15.0
 var diverge_radius := 0.0
 var hand := 1.0
+var start_route := 0
+var auto_fit := true
+var end_clearance := 0.1
 
 
 func on_entity_ready() -> void:
 	var path := get_comp(C_Path) as C_Path
-	var identity := get_comp(C_Identity) as C_Identity
-	if path == null or identity == null:
-		push_error("C_SwitchShape: нужен C_Path и C_Identity (SwitchConfig)")
+	if path == null:
+		push_error("C_SwitchShape: нужен C_Path перед компонентом")
 		return
-
-	length = float(identity.get_config('radius', 23.9))
-	diverge_deg = absf(float(identity.get_config('diverge_deg', 15.0)))
-	diverge_radius = float(identity.get_config('diverge_radius', 0.0))
-	hand = 1.0 if float(identity.get_config('hand', 1)) >= 0.0 else -1.0
-	var start := int(identity.get_config('start_route', 0))
+	var start := start_route
 
 	# Подгонка под коллизию: концы веток разнесены на L * tan(a / 2) (при R = L / sin a)
 	var vis := get_comp(C_SwitchVisual) as C_SwitchVisual
 	var width := vis.style.collision_width if vis and vis.style else 3.2
-	var need := width + float(identity.get_config('end_clearance', 0.1))
-	if bool(identity.get_config('auto_fit', true)) and diverge_radius <= 0.0 and length > 0.1:
+	var need := width + end_clearance
+	if auto_fit and diverge_radius <= 0.0 and length > 0.1:
 		diverge_deg = maxf(diverge_deg, rad_to_deg(2.0 * atan(need / length)))
 
 	var routes: Array[Curve3D] = build_routes(path, length, diverge_deg, diverge_radius, hand)

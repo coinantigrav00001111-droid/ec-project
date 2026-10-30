@@ -20,6 +20,7 @@
 
 [sub_resource type="Resource" id="Resource_cfg"]
 script = ExtResource("3_cfg")
+power_routing = true
 radius = 23.9
 
 [sub_resource type="Resource" id="Resource_id"]
@@ -61,7 +62,6 @@ script = ExtResource("15_sup")
 
 [sub_resource type="Resource" id="Resource_sw"]
 script = ExtResource("16_sw")
-power_routing = true
 
 [resource]
 script = ExtResource("2_es")

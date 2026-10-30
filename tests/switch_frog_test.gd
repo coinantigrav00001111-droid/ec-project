@@ -40,9 +40,10 @@ func clear_all() -> void:
 func scenario(title: String, frog_mode: int, routing: bool, route: int) -> void:
 	await clear_all()
 	for comp in sw_s.components:
-		if comp is SwitchSettings:
-			comp.frog = frog_mode
-			comp.power_routing = routing
+		if comp is IdentitySetting:   # режимы стрелки живут в паспорте (SwitchConfig), в компонент попадают при создании
+			var cfg := comp.object_config as SwitchConfig
+			cfg.frog = frog_mode
+			cfg.power_routing = routing
 
 	var sw: Entity = EntityFactory.new().create_from_setting(sw_s)
 	add_child(sw)

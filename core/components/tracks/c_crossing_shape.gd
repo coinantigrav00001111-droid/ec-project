@@ -14,27 +14,29 @@ class_name C_CrossingShape extends ICapability
 ## Электрика: CrossingConfig.separate_circuits (по умолчанию true) дает два независимых луча C_PowerTrack.
 ## Клип питания на кроссе питает путь 0, путь 1 получает ток от соседей (PGM ходит по лучам, см. power_grid_manager).
 
-var length := 0.0
+## Параметры задает CrossingShapeSettings из паспорта (CrossingConfig), компонент паспорт не читает
+var length := 23.9
 var cross_deg := 15.0
+var auto_fit := true
+var end_clearance := 0.1
+var separate_circuits := true
 
 
 func on_entity_ready() -> void:
 	var path := get_comp(C_Path) as C_Path
-	var identity := get_comp(C_Identity) as C_Identity
-	if path == null or identity == null:
-		push_error("C_CrossingShape: нужен C_Path и C_Identity (CrossingConfig)")
+	if path == null:
+		push_error("C_CrossingShape: нужен C_Path перед компонентом")
 		return
-	length = float(identity.get_config('radius', 23.9))
-	cross_deg = clampf(absf(float(identity.get_config('cross_deg', 15.0))), 5.0, 90.0)
+	cross_deg = clampf(absf(cross_deg), 5.0, 90.0)
 
 	# Подгонка под коллизию: соседние концы двух путей разнесены на L * sin(a / 2)
 	var vis := get_comp(C_SwitchVisual) as C_SwitchVisual
 	var width := vis.style.collision_width if vis and vis.style else 3.2
-	var need := width + float(identity.get_config('end_clearance', 0.1))
+	var need := width + end_clearance
 	if length > 0.1:
 		var sep := length * sin(deg_to_rad(cross_deg) * 0.5)
 		if sep < need - 0.01:
-			if bool(identity.get_config('auto_fit', true)):
+			if auto_fit:
 				cross_deg = clampf(rad_to_deg(2.0 * asin(minf(need / length, 1.0))), 5.0, 90.0)
 			else:
 				push_warning("C_CrossingShape: концы путей разнесены на %.2f, а коллизии соседей требуют %.2f. Увеличьте угол (или auto_fit)" % [sep, need])
@@ -42,7 +44,7 @@ func on_entity_ready() -> void:
 
 	# Электрика: два независимых луча (путь 0 и путь 1). Сокеты получат свой луч при сборке (C_Socket идет после формы)
 	var pt := get_comp(C_PowerTrack) as C_PowerTrack
-	if pt and bool(identity.get_config('separate_circuits', true)):
+	if pt and separate_circuits:
 		pt.set_legs(2)
 
 

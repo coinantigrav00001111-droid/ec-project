@@ -24,8 +24,11 @@ func flex_at(pos: Vector3) -> Entity:
 func switch_ent(hand: int, start: int) -> Entity:
 	var s: EntitySetting = load("res://data/tracks/objects/%s.tres" % ("switch_r" if hand > 0 else "switch_l"))
 	s = s.duplicate()
+	# Стартовое положение берется из паспорта при создании сущности, поэтому правим паспорт ДО фабрики
+	for comp in s.components:
+		if comp is IdentitySetting:
+			(comp.object_config as SwitchConfig).start_route = start
 	var e: Entity = EntityFactory.new().create_from_setting(s)
-	(e.get_comp(C_Identity).object_config as SwitchConfig).start_route = start
 	place(e, Vector3.ZERO)
 	return e
 

@@ -44,11 +44,14 @@ var power_routing := false
 var frog: Frog = Frog.INSULATED
 ## Где крестовина вдоль каждого маршрута (дистанция от носка), -1 нет. [путь 0, путь 1]
 var frog_s: Array[float] = []
+## Стартовое положение. Задает SwitchSettings из паспорта (SwitchConfig); дальше живет route
+var start_route := 0
 var state: State = State.SETTLED
 
 var _target := 0
 var _source: StringName = &"manual"
 var _t := 0.0
+var _last_reason: StringName = &""   # причина последнего отказа request(), для отладочного UI
 var _loaded := false      # load_data уже отработал: on_entity_ready не должен сбрасывать положение в стартовое
 var _frog_watch := false  # следим за зоной крестовины (E2, LIVE_FIXED на пути 1)
 
@@ -62,10 +65,9 @@ func on_added() -> void:
 
 
 func on_entity_ready() -> void:
-	var identity := get_comp(C_Identity) as C_Identity
 	# Если сейв уже принес положение (load_data раньше on_entity_ready), стартовое его не перезаписывает
-	if identity and not _loaded:
-		route = int(identity.get_config('start_route', 0))
+	if not _loaded:
+		route = start_route
 	_compute_frog()
 	_apply(route, &"init")
 
@@ -145,8 +147,10 @@ func _bogies_on_switch() -> Array[C_Bogie.BogieData]:
 # ==========================================
 
 func on_switch_request(data: Dictionary) -> void:
+	_last_reason = &""
 	var ok := request(int(data.get("route", -1)), data.get("source", &"remote"))
 	data["ok"] = ok
+	data["reason"] = _last_reason
 
 
 ## Клик в рычаг (SelectTool шлет, когда луч попал в слой handles и сущность имеет C_Switch).
@@ -206,6 +210,13 @@ func set_power_routing(on: bool) -> void:
 	_update_liveness()
 	_update_process()
 	_recalc_power()
+
+
+## Сменить способ управления в игре (отладка/аксессуар). Пока идет перекладка, не меняем
+func set_control(mode: Drive) -> void:
+	if state == State.MOVING:
+		return
+	control = mode
 
 
 ## Сменить тип крестовины в игре (E2)
@@ -280,6 +291,7 @@ func _recalc_power() -> void:
 
 
 func _reject(reason: StringName) -> bool:
+	_last_reason = reason
 	entity.send_event("on_switch_rejected", {"reason": reason})
 	return false
 

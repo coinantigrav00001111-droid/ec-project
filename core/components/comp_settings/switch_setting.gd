@@ -1,26 +1,21 @@
 class_name SwitchSettings extends ComponentSettings
 
 # XX claude-switch (новый файл)
-## Управление стрелкой (C_Switch). Последним в массиве компонентов .tres
-
-## MANUAL: рычаг у стрелки (клик). REMOTE: только команды управления (панель, позже провода и привод)
-@export_enum("Manual", "Remote") var control: int = 0
-## Время перекладки, с. 0 = мгновенно. У дистанционного привода обычно 0.3 .. 3
-@export var throw_time := 0.0
-## E1: ток только на выбранную ветку (невыбранная мертвая, удобно для тупиков и депо). false: обе ветки под током
-@export var power_routing := false
-## E2: тип крестовины. Insulated: пластиковая, КЗ нет. Live fixed: токопроводящая, привязана к пути 0, на пути 1 при
-## проезде КЗ. Live switched: полярность крестовины переключается вместе со стрелкой (контакты привода, реле).
-## При power_routing КЗ нет в любом режиме
-@export_enum("Insulated", "Live fixed", "Live switched") var frog: int = 0
-
+## Управление стрелкой (C_Switch). Последним в массиве компонентов .tres.
+## Значения (control, throw_time, power_routing, frog, start_route) берет из паспорта (SwitchConfig) и переносит
+## в компонент как начальное состояние. Дальше состояние живет в компоненте и сохраняется в save_data.
 
 func create_component(entity: Entity) -> Component:
 	var comp := C_Switch.new()
 	comp.name = 'C_Switch'
-	comp.control = control as C_Switch.Drive
-	comp.throw_time = throw_time
-	comp.power_routing = power_routing
-	comp.frog = frog as C_Switch.Frog
+	var cfg := SwitchConfig.from_entity(entity)
+	if cfg == null:
+		push_error("SwitchSettings: в паспорте (C_Identity.object_config) нет SwitchConfig, параметры по умолчанию")
+	else:
+		comp.control = cfg.control as C_Switch.Drive
+		comp.throw_time = cfg.throw_time
+		comp.power_routing = cfg.power_routing
+		comp.frog = cfg.frog as C_Switch.Frog
+		comp.start_route = cfg.start_route
 	entity.add_component(comp)
 	return comp
