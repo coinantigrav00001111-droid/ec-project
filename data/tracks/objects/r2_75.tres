@@ -20,7 +20,7 @@
 [sub_resource type="Resource" id="Resource_qpp13"]
 script = ExtResource("2_j2lsj")
 radius = 42.2
-deg = 30.0
+deg = 7.5
 metadata/_custom_type_script = "uid://b7ds2l6clrm61"
 
 [sub_resource type="Resource" id="Resource_403lk"]
