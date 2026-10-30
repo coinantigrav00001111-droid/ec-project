@@ -253,6 +253,7 @@ func _track_cuts(path: C_Path, mine: PackedVector2Array, inv: Transform3D) -> Ar
 	var tol: float = Global.settings.underground_tolerance
 	var th: float = Global.settings.get_track_height()
 	var clearance: float = Global.settings.tunnel_clearance
+	var margin: float = Global.settings.terrain_cut_margin
 	var tunnel := path.allows_underground()
 	var _body := th + clearance if tunnel else th   # высота, которую занимает трак над низом балласта
 	var base := base_y()
@@ -289,11 +290,9 @@ func _track_cuts(path: C_Path, mine: PackedVector2Array, inv: Transform3D) -> Ar
 			j += 1
 		var poly := PackedVector2Array()
 		for q in range(k, j + 2):
-			var lq: Vector2 = s[q]["l"]
-			poly.append(lq)
+			poly.append(_margin_edge(s, q, n, margin, true))
 		for q in range(j + 1, k - 1, -1):
-			var rq: Vector2 = s[q]["r"]
-			poly.append(rq)
+			poly.append(_margin_edge(s, q, n, margin, false))
 		if TGM.overlap_area(mine, poly) > TGM.MIN_OVERLAP_AREA:
 			var local := PackedVector2Array()
 			for p in poly:
@@ -307,6 +306,30 @@ func _track_cuts(path: C_Path, mine: PackedVector2Array, inv: Transform3D) -> Ar
 			res.append(c)
 		k = j + 1
 	return res
+
+
+## 13.2 B8. Край балласта в образце q, сдвинутый наружу на margin (зазор выреза). left: левый край, иначе правый.
+## На концах трака вырез ещё и продлевается вдоль оси: торцы тоже не вплотную
+func _margin_edge(s: Array, q: int, n: int, margin: float, left: bool) -> Vector2:
+	var l: Vector2 = s[q]["l"]
+	var r: Vector2 = s[q]["r"]
+	var e := l if left else r
+	if margin <= 0.0:
+		return e
+	var across := l - r
+	if across.length() < 0.0001:
+		return e
+	across = across.normalized()
+	e += across * margin if left else -across * margin
+	if q == 0 or q == n:
+		var along := Vector2(-across.y, across.x)   # перпендикуляр к ширине
+		var mid: Vector2 = (l + r) * 0.5
+		var other: Vector2 = s[1]["l"] if q == 0 else s[n - 1]["l"]
+		var om: Vector2 = (other + (s[1]["r"] if q == 0 else s[n - 1]["r"])) * 0.5
+		if along.dot(mid - om) < 0.0:
+			along = -along
+		e += along * margin
+	return e
 
 
 ## Заменить автовырезы на new_cuts. Перестроение только если набор изменился
