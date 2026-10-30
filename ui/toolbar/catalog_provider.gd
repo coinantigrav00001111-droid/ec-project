@@ -21,6 +21,12 @@ func get_tags(_category: StringName) -> Array[Dictionary]:
 	return []
 
 
-## Кнопки элементов категории и тега в порядке показа. Тегов нет: tag пустой
-func create_buttons(_category: StringName, _tag: StringName, _on_pressed: Callable) -> Array[Button]:
+## Фильтры, применимые к тегу: [{"id", "title", "options": [{"id", "name"}]}]. Независимы от тега и друг от друга
+func get_filters(_category: StringName, _tag: StringName) -> Array[Dictionary]:
+	return []
+
+
+## Кнопки элементов категории и тега в порядке показа. Тегов нет: tag пустой.
+## filters: {id фильтра: выбранное значение}, нет ключа или пусто = «любой»
+func create_buttons(_category: StringName, _tag: StringName, _on_pressed: Callable, _filters: Dictionary = {}) -> Array[Button]:
 	return []

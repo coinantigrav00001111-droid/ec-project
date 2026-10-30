@@ -8,33 +8,58 @@ resource_name = "object_buttons"
 allow_unpress = true
 
 [node name="ObjButton" type="Button" unique_id=1213302774]
-custom_minimum_size = Vector2(120, 80)
+custom_minimum_size = Vector2(120, 100)
 offset_right = 120.0
-offset_bottom = 80.0
+offset_bottom = 100.0
 theme_type_variation = &"ObjectButton"
-theme_override_constants/icon_max_width = 68
+theme_override_constants/icon_max_width = 56
 toggle_mode = true
 button_group = SubResource("ButtonGroup_2rg7e")
 icon_alignment = 1
+vertical_icon_alignment = 0
 script = ExtResource("1_2rg7e")
 
 [node name="NameLabel" type="Label" parent="." unique_id=1348475949]
-layout_mode = 0
-offset_left = 5.0
-offset_top = 2.0
-offset_right = 45.0
-offset_bottom = 21.0
-theme_override_colors/font_color = Color(1, 0.5294118, 0.03529412, 1)
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -34.0
+offset_bottom = -17.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_override_font_sizes/font_size = 13
 text = "G231"
+horizontal_alignment = 1
+clip_text = true
+
+[node name="SummaryLabel" type="Label" parent="." unique_id=1348475950]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -19.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+clip_text = true
 
 [node name="IndexLabel" type="Label" parent="." unique_id=375762665]
+visible = false
 layout_mode = 1
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_top = -23.0
-offset_right = 33.0
-grow_vertical = 0
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 14.0
+grow_horizontal = 2
+mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.5294118, 0.03529412, 1)
-text = "333"
-horizontal_alignment = 2
+theme_override_font_sizes/font_size = 9
+text = "key"
+horizontal_alignment = 1
+clip_text = true

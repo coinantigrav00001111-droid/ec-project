@@ -47,8 +47,8 @@ const TAG_META := {}
 ## Интерфейс фильтров делается в U3b, данные нужны уже сейчас для lint и выбора рамкой.
 const FACET_SPECS := {
 	&"track": [
-		{"id": &"ballast", "options": ["yes", "no"]},
-		{"id": &"sleeper", "options": ["wood", "concrete"]},
+		{"id": &"ballast", "title": "Балласт", "options": ["yes", "no"], "labels": {"yes": "с балластом", "no": "без балласта"}},
+		{"id": &"sleeper", "title": "Шпалы", "options": ["wood", "concrete"], "labels": {"wood": "дерево", "concrete": "бетон"}},
 	],
 }
 
@@ -96,3 +96,24 @@ static func allowed_facets(cat: StringName) -> Array[StringName]:
 	for f in EXTRA_FACETS:
 		out.append(f)
 	return out
+
+
+## Фильтры категории для показа: [{"id", "title", "options": [{"id", "name"}]}]
+static func filter_specs(cat: StringName) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for spec in FACET_SPECS.get(cat, []):
+		var opts: Array[Dictionary] = []
+		for o in spec["options"]:
+			opts.append({"id": o, "name": spec.get("labels", {}).get(o, o)})
+		out.append({"id": spec["id"], "title": spec.get("title", str(spec["id"])), "options": opts})
+	return out
+
+
+## Короткая сводка объекта для кнопки: подписи его значений фильтров через « · » (форма не входит)
+static func facet_summary(cat: StringName, facets_of: Callable) -> String:
+	var parts: Array[String] = []
+	for spec in FACET_SPECS.get(cat, []):
+		var v: String = facets_of.call(spec["id"])
+		if v != "":
+			parts.append(spec.get("labels", {}).get(v, v))
+	return " · ".join(parts)

@@ -98,18 +98,38 @@ func get_tags(category: StringName) -> Array[Dictionary]:
 	return out
 
 
-## Кнопки объектов. Нажатие: on_pressed.call(setting)
-func create_buttons(category: StringName, tag: StringName, on_pressed: Callable) -> Array[Button]:
+## Фильтры тега: только те, чьи признаки есть хотя бы у одного объекта тега
+func get_filters(category: StringName, tag: StringName) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var items: Array = _data.get(category, {}).get(tag, [])
+	for spec in CatalogMeta.filter_specs(category):
+		for item in items:
+			if item.get_facet(spec["id"]) != "":
+				out.append(spec)
+				break
+	return out
+
+
+## Кнопки объектов, прошедших фильтры. Нажатие: on_pressed.call(setting)
+func create_buttons(category: StringName, tag: StringName, on_pressed: Callable, filters: Dictionary = {}) -> Array[Button]:
 	var out: Array[Button] = []
-	if not _data.has(category) or not _data[category].has(tag):
-		return out
-	for item in _data[category][tag]:
+	for item in _data.get(category, {}).get(tag, []):
+		if not _passes(item, filters):
+			continue
 		var btn: ObjectButton = _obj_btn_scene.instantiate()
 		btn.config(item)
 		if on_pressed.is_valid():
 			btn.btn_pressed_object_selected.connect(on_pressed)
 		out.append(btn)
 	return out
+
+
+static func _passes(item: EntitySetting, filters: Dictionary) -> bool:
+	for f in filters:
+		var want := str(filters[f])
+		if want != "" and item.get_facet(f) != want:
+			return false
+	return true
 
 
 ## Иконка тега: из CatalogMeta, если задана, иначе у первого объекта тега (как было до U3a)

@@ -26,9 +26,17 @@ func config(_obj: Resource) -> void:
 	object = _obj
 	$NameLabel.text = _obj.name
 	self.icon = _obj.icon
-	# Оранжевая подпись с числом нужна только разработчику; вид кнопки целиком переделает U3b
+	# Вторая строка: сводка признаков (дерево · с балластом). Пусто у объектов без признаков
+	var summary := ""
+	if _obj is EntitySetting:
+		summary = CatalogMeta.facet_summary(_obj.category, _obj.get_facet)
+	$SummaryLabel.text = summary
+	$SummaryLabel.visible = summary != ""
+	# Ключ мелко внизу только в debug
 	$IndexLabel.visible = Global.debug_mode
-	$IndexLabel.text = str(_obj.id)
+	$IndexLabel.text = str(_obj.get_key()) if _obj is EntitySetting else str(_obj.id)
+	if _obj is EntitySetting:
+		tooltip_text = str(_obj.description)
 	
 	# для 2d тегов(вс контроллеры делаем побольше кнопки) (68 обычные)
 	if object.tag == &'2d':

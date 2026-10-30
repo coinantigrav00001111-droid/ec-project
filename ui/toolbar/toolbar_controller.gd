@@ -39,6 +39,8 @@ var _mode: StringName = &""
 var _providers := {}   # режим -> CatalogProvider
 var _receivers := {}   # режим -> Callable(setting)
 var _dup_btn: Button
+var _filter_bar: FilterBar
+var _filters := {}   # "режим/категория" -> {id фильтра: значение}, на время сессии
 
 
 func _ready() -> void:
@@ -55,6 +57,12 @@ func _ready() -> void:
 	var box: Node = _title.get_parent()
 	box.add_child(_dup_btn)
 	box.move_child(_dup_btn, _title.get_index() + 1)
+
+	# Ряд фильтров над сеткой объектов
+	_filter_bar = FilterBar.new()
+	_filter_bar.filters_changed.connect(_on_filters_changed)
+	box.add_child(_filter_bar)
+	box.move_child(_filter_bar, _grid.get_index())
 
 	# ToolController к этому моменту может быть не готов, поэтому связываем в конце кадра
 	_connect_game.call_deferred()
@@ -173,8 +181,22 @@ func _fill_grid(cat: StringName, tag: StringName) -> void:
 	if provider == null:
 		return
 	var receiver: Callable = _receivers.get(_mode, Callable())
-	for btn in provider.create_buttons(cat, tag, receiver):
+	var values: Dictionary = _filters.get(_filter_key(), {})
+	_filter_bar.setup(provider.get_filters(cat, tag), values)
+	var buttons := provider.create_buttons(cat, tag, receiver, values)
+	for btn in buttons:
 		_grid.add_child(btn)
+	_filter_bar.set_empty(buttons.is_empty() and not values.is_empty())
+
+
+func _filter_key() -> String:
+	return "%s/%s" % [_mode, current_cat]
+
+
+## ⚡Сигнал из FilterBar: фильтры изменились, пересобираем сетку (фильтры общие для тегов категории)
+func _on_filters_changed(values: Dictionary) -> void:
+	_filters[_filter_key()] = values
+	_fill_grid(current_cat, current_tag)
 
 
 ## Снимает нажатие с кнопок объектов (ПКМ в Build, выход из инструмента стройки)

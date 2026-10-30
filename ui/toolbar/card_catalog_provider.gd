@@ -89,7 +89,7 @@ func get_categories() -> Array[Dictionary]:
 	return out
 
 
-func create_buttons(category: StringName, _tag: StringName, on_pressed: Callable) -> Array[Button]:
+func create_buttons(category: StringName, _tag: StringName, on_pressed: Callable, _filters: Dictionary = {}) -> Array[Button]:
 	var out: Array[Button] = []
 	_groups.clear()
 	_cards.clear()
