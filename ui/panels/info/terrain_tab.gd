@@ -82,8 +82,8 @@ func _refresh_terrain_info(layer: C_TerrainLayer) -> void:
 	if contour:
 		_size = contour.size()
 	else:
-		var identity := target.get_comp(C_Identity) as C_Identity
-		_size = identity.get_config('size', Vector2.ZERO) if identity else Vector2.ZERO
+		var tcfg := TerrainConfig.from_entity(target)
+		_size = tcfg.size if tcfg else Vector2.ZERO
 	var base := roundi(layer.base_y() / T)
 	var shape_text := ""
 	if contour and not contour.is_rect():

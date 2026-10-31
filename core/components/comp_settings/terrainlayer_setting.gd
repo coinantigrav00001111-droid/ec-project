@@ -12,10 +12,12 @@ class_name TerrainLayerSetting extends ComponentSettings
 func create_component(entity: Entity) -> Component:
 	var size := Vector2(20.0, 20.0)
 	var levels := 1
-	var identity := entity.get_comp(C_Identity) as C_Identity
-	if identity:
-		size = identity.get_config('size', size)
-		levels = int(identity.get_config('levels', levels))
+	var cfg := TerrainConfig.from_entity(entity)
+	if cfg == null:
+		push_error("TerrainLayerSetting: в паспорте (C_Identity.object_config) нет TerrainConfig, лист по умолчанию")
+	else:
+		size = cfg.size
+		levels = cfg.levels
 
 	# 1. Контур. set_rect до add_component: entity еще нет, событие не шлется, данные просто лежат
 	var contour := C_Contour.new()

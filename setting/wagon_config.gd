@@ -5,7 +5,7 @@ class_name WagonConfig extends ObjectConfig
 ########################
 
 ## Цепляется в C_Identity (object_config). Читать типизированно: WagonConfig.from_entity(entity)
-## (опечатку в имени поля поймает парсер; get_config('имя', default) устаревает и ее не ловит).
+## (опечатку в имени поля поймает парсер).
 ## Читают только адаптеры ComponentSettings (Kinematics/Engine/Coupler/TrainVisual/Chassis/Bogie/Mechanisms/TrainDraggable),
 ## компоненты получают значения в свои поля при создании.
 
