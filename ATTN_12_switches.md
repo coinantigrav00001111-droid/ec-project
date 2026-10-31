@@ -132,7 +132,7 @@ Socket, PowerTrack, TrackSupport, **Switch**. Объекты: `data/tracks/objec
 `SwitchSettings`, `SwitchShapeSettings`, `CrossingShapeSettings`, `BufferStopSettings` без своих полей. Значения, раньше лежавшие в `SwitchSettings`
 (`power_routing` у `switch_r`, `frog` у `switch_wl_wood`), перенесены в паспорта этих `.tres`.
 `C_Identity.get_config` устаревает: работает как раньше, но один раз предупреждает об имени, которого нет в конфиге.
-Переход по семействам: стрелка, кросс, упор (S8), путь трака (S9, ниже), затем террейн и поезда; в конце функция удаляется.
+Переход по семействам: стрелка, кросс, упор (S8), путь трака (S9), поезда (S10), осталось террейн; в конце функция удаляется.
 
 **Путь трака (S9).** `PathSetting.apply_passport(path, entity)` единственное место, где путь читает паспорт (`TrackConfig`: `radius`, `deg`,
 `rise`, `height`, `allow_underground`). Им пользуются `PathSetting`, `FlexVisualSetting`, `StyleVisualSetting`. `C_Path` паспорт не читает:
@@ -144,6 +144,15 @@ Socket, PowerTrack, TrackSupport, **Switch**. Объекты: `data/tracks/objec
 **Вкладка «Стрелка»** (отладка, `info_panel.gd`, строится кодом): состояние, замок, контур, положение крестовины; кнопка «Переложить»
 в обход рычага (`source = force`, замок под вагоном остается), управление Manual/Remote, галка power routing, тип крестовины.
 Меняет состояние `C_Switch` (`set_control`, `set_power_routing`, `set_frog_mode`), паспорт не трогает.
+
+**Поезда (S10).** Паспорт `WagonConfig` читает только адаптер, через `WagonConfig.from_entity(entity)` (типизированно). Компоненты получают значения
+в поля при создании: `KinematicsSetting`, `EngineSetting`, `CouplerSetting` (как раньше, но типизированно), `TrainVisualSettings`
+(`scene`, `bogie_configs`, `offset_mesh_y` задаются до `add_component`: базовый `C_Visual` строит вагон в `on_added`), `ChassisSetting`
+(`bogie_configs`, `suspension_config`), `BogieSetting` (`bogie_configs`), `MechanismsSetting` (`mechanism_configs`, `light_configs`),
+`TrainDraggableSettings` (`coupler_offset`). `C_TrainVisual`, `C_Bogie`, `C_Chassis`, `C_Mechanisms`, `C_TrainDraggable` паспорт не читают.
+Без `WagonConfig` в паспорте адаптер пишет `push_error` и оставляет значения по умолчанию. Вкладка «Основное» (`main_tab.gd`): раньше читались
+несуществующие поля `'power'` и `'maxspeed'` (всегда дефолт 0.0 и 700.0). Теперь у локомотива показываются `max_tractive_force` и
+`max_theoretical_speed` из паспорта, у вагона «-»; масса по-прежнему `mass`.
 
 ## Правки по итогам тестов (S4)
 * **Подсветка активного пути.** После перекладки (`on_switch_changed`, кроме init и load) `C_SwitchVisual` рисует ленту над

@@ -1,29 +1,28 @@
 class_name KinematicsSetting extends ComponentSettings
 
+## Физика вагона. Значения берет из паспорта (WagonConfig) и переносит в C_Kinematics при создании.
+
 ## Фабрика запускает функцию создания
 func create_component(entity) -> Component:
-	var comp = C_Kinematics.new()
-	var identity = entity.get_comp(C_Identity)
-
-	if identity:
-		comp.mass = identity.get_config('mass', 0.0)	
-		comp.max_grip = identity.get_config('max_grip', 0.0)	
-		comp.roll_resistance = identity.get_config('roll_resistance', 0.0)	
-		
-		comp.longitudinal_grip = identity.get_config('longitudinal_grip', 0.0)	
-		comp.min_curve_radius = identity.get_config('min_curve_radius', 0.0)	
-		comp.slide_friction = identity.get_config('slide_friction', 0.1)
-		comp.locked_wheel_friction = identity.get_config('locked_wheel_friction', 3.0)
-		
-		comp.max_tractive_force = identity.get_config('max_tractive_force', 0.0)	
-		comp.max_theoretical_speed = identity.get_config('max_theoretical_speed', 0.0)	
-		
+	var comp := C_Kinematics.new()
+	var cfg := WagonConfig.from_entity(entity)
+	if cfg == null:
+		push_error("KinematicsSetting: в паспорте (C_Identity.object_config) нет WagonConfig, параметры по умолчанию")
+	else:
+		comp.mass = cfg.mass
+		comp.max_grip = cfg.max_grip
+		comp.roll_resistance = cfg.roll_resistance
+		comp.longitudinal_grip = cfg.longitudinal_grip
+		comp.min_curve_radius = cfg.min_curve_radius
+		comp.slide_friction = cfg.slide_friction
+		comp.locked_wheel_friction = cfg.locked_wheel_friction
+		comp.max_tractive_force = cfg.max_tractive_force
+		comp.max_theoretical_speed = cfg.max_theoretical_speed
 		# "Rotation Limits (YAW)"
-		comp.max_yaw_deg = identity.get_config('max_yaw_deg', 0.0)	
-		comp.yaw_spring = identity.get_config('yaw_spring', 0.0)	
-		#"Suspension (Travel & Play)"
-		
+		comp.max_yaw_deg = cfg.max_yaw_deg
+		comp.yaw_spring = cfg.yaw_spring
+
 	comp.name = 'C_Kinematics'
 	entity.add_component(comp) # Добавили комп к объекту
-	
+
 	return comp

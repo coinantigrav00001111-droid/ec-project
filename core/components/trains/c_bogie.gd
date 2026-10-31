@@ -22,17 +22,16 @@ const GROUP := &"bogie_owner"
 # Сами боги, их id, конфиги из TrainVisual перекидываются сюда
 var bogies_data: Array[BogieData] = []
 
+## Конфиги тележек из паспорта (WagonConfig.bogie_configs). Задает BogieSetting до add_component
+var bogie_configs: Array[BogieConfig] = []
+
 # все колеса {'wheel_node', 'radius'}
 var wheel_nodes: Array[Dictionary] = [] 
 
 
 func on_added() -> void:
 	entity.add_to_group(GROUP)   # XX claude-switch
-	#Собираем массив данных боги
-	var identity = entity.get_comp(C_Identity)
-	var bogie_configs
-	if identity:
-		bogie_configs = identity.get_config('bogie_configs')	
+	#Собираем массив данных боги (bogie_configs задал BogieSetting)
 
 	# Принимаем контроль боги из визуала
 	var comp = entity.get_comp(C_TrainVisual)
@@ -190,7 +189,6 @@ func _assist_check_transition(bogie: BogieData) -> void:
 		# XX claude-terra: старт луча = высота поверхности трака в точке экстраполяции + подъем датчика над поверхностью.
 		# Раньше look_ahead_pos + Vector3(0, sensor_pos.y, 0) складывало высоту дважды (на траке выше стола луч
 		# стартовал слишком высоко), а датчик навсегда оставался смещенным относительно тележки.
-		#var track_h = bogie.current_track.get_comp(C_Identity).get_config('height', 0.0)
 		var track_h = path_comp.head_height()
 		
 		## моя‼️Замена b_offset на b_offset_z
@@ -254,7 +252,6 @@ func _assist_update_calc_global_pos(bogie: BogieData) -> void:
 	
 	var path_comp = bogie.current_track.get_comp(C_Path)
 	var curve_len = path_comp.curve_of(bogie.route).get_baked_length()   # XX claude-switch
-	#var track_h = bogie.current_track.get_comp(C_Identity).get_config('height', 0.0)
 	var track_h = path_comp.head_height()
 	var wp_z = bogie.config.wheel_pair_position.z  if bogie.config else 0.0
 	

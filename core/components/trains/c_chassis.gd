@@ -24,6 +24,8 @@ var impulse_force: float = 0.0  # Разовый импульс силы (от �
 
 # Значения из инспектора
 var bogie_configs: Array[BogieConfig] = []
+## Подвеска из паспорта (WagonConfig.suspension). null = значения по умолчанию. Задает ChassisSetting
+var suspension_config: SuspensionConfig = null
 
 # Скорость поверхности колеса (для визуального вращения мешей)
 var wheel_surface_speed: float = 0.0
@@ -96,10 +98,7 @@ func on_added():
 ## Все компоненты уже на месте: кэшируем ссылки и собираем подвеску
 func on_entity_ready() -> void:
 	_ensure_refs()
-	var cfg: SuspensionConfig = null
-	var identity := get_comp(C_Identity) as C_Identity
-	if identity:
-		cfg = identity.get_config('suspension', null) as SuspensionConfig
+	var cfg: SuspensionConfig = suspension_config
 	if cfg == null:
 		cfg = SuspensionConfig.new() # значения по умолчанию
 

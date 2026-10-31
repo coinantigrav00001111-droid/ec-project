@@ -1,17 +1,18 @@
 class_name EngineSetting extends ComponentSettings
 
-# Данные заполняются в редакторе, в массиве сеттингов
+## Мотор. Значения берет из паспорта (WagonConfig) и переносит в C_Engine при создании.
+
 ## Фабрика запускает функцию создания
 func create_component(entity) -> Component:
-	var comp = C_Engine.new()
-	var identity = entity.get_comp(C_Identity)
+	var comp := C_Engine.new()
+	var cfg := WagonConfig.from_entity(entity)
+	if cfg == null:
+		push_error("EngineSetting: в паспорте (C_Identity.object_config) нет WagonConfig, параметры по умолчанию")
+	else:
+		comp.max_tractive_force = cfg.max_tractive_force
+		comp.max_theoretical_speed = cfg.max_theoretical_speed
 
-	if identity:
-		comp.max_tractive_force = identity.get_config('max_tractive_force', 0.0)	
-		comp.max_theoretical_speed = identity.get_config('max_theoretical_speed', 0.0)	
-		#comp.has_engine = identity.get_config('has_engine', 0.0)	
-	
 	comp.name = 'C_Engine'
 	entity.add_component(comp) # Добавили комп к объекту
-	
+
 	return comp

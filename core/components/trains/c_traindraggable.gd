@@ -16,6 +16,8 @@ var drag_offset := Vector3.ZERO # Смещение ентити
 # Ссылки на текущий трак, если мы над ним
 var current_track: Entity = null
 var current_curve_point: float = 0.0 # Смещение на кривой
+## От центра вагона до торца, ю (из паспорта WagonConfig.coupler_offset). Задает TrainDraggableSettings
+var coupler_offset := 6.0
 var current_route: int = 0           # XX claude-switch: маршрут на кроссе (ближайший к курсору)
 var _snap_route: int = -1
 var is_snapped_to_track := false # Флаг привязки к траку
@@ -39,8 +41,7 @@ func _init() -> void:
 func _mark_start() -> void:
 	if _mark:
 		return
-	var identity := get_comp(C_Identity) as C_Identity
-	var length = 2.0 * (identity.get_config('coupler_offset', 6.0) if identity else 6.0)
+	var length := 2.0 * coupler_offset
 	var margin := 1.0   # запас под ореол
 	var size := Vector3(MARK_WIDTH + 2.0 * margin, MARK_DEPTH, length + 2.0 * margin)
 

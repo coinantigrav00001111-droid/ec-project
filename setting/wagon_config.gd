@@ -4,9 +4,10 @@ class_name WagonConfig extends ObjectConfig
 ## настройки конкретного типа вагона
 ########################
 
-## Цепляется в C_Identity и доступ через
-## к значению: get_config('radius', 0.0) # 0.0 - подставляется если не найден 'radius'
-## к всему конфигу: get_config()
+## Цепляется в C_Identity (object_config). Читать типизированно: WagonConfig.from_entity(entity)
+## (опечатку в имени поля поймает парсер; get_config('имя', default) устаревает и ее не ловит).
+## Читают только адаптеры ComponentSettings (Kinematics/Engine/Coupler/TrainVisual/Chassis/Bogie/Mechanisms/TrainDraggable),
+## компоненты получают значения в свои поля при создании.
 
 # Kinematics
 # Данные заполняются в редакторе, в массиве сеттингов
@@ -63,3 +64,11 @@ class_name WagonConfig extends ObjectConfig
 @export_category("Mechanisms")
 @export var mechanisms: Array[MechanismConfig] = []
 @export var lights: Array[LightConfig] = []
+
+
+## Типизированное чтение паспорта. null, если у сущности нет паспорта или в нем конфиг другого семейства
+static func from_entity(entity: Entity) -> WagonConfig:
+	var idc := entity.get_comp(C_Identity) as C_Identity
+	if idc == null:
+		return null
+	return idc.object_config as WagonConfig

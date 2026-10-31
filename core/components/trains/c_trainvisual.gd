@@ -16,7 +16,10 @@ const WHEEL_SHADER := preload("res://core/visual/materials/shader_wheel01_materi
 # Массив нод с коллизиями
 var collision_nodes: Array[CollisionObject3D] 
 
+## Паспортные значения задает TrainVisualSettings до add_component, компонент паспорт не читает
 var bogie_configs: Array[BogieConfig] = []
+## Смещение меша от пола (меньше диаметра колеса на ~0.2)
+var offset_mesh_y := 1.2
 
 var bogie_nodes: Array[Node3D] = []
 
@@ -39,10 +42,7 @@ func _on_instance_ready() -> void:
 
 # XX claude функция вместо скрипта в on_added()
 func _build_bogies():
-	# достраиваем боги
-	bogie_configs = get_comp(C_Identity).get_config('bogie_configs')
-	var offset_mesh_y = get_comp(C_Identity).get_config('offset_mesh_y')
-	
+	# достраиваем боги (bogie_configs и offset_mesh_y пришли из паспорта через TrainVisualSettings)
 	for bogie in bogie_configs: 
 		# 1. Создаем сцену боги
 		var b_scene = bogie.scene.instantiate() 

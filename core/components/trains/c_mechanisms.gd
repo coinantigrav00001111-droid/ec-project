@@ -128,6 +128,10 @@ var _has_power := false     # есть источники, питающиеся 
 
 const DIR_SPEED_EPS := 0.05
 
+## Конфиги из паспорта (WagonConfig.mechanisms и WagonConfig.lights). Задает MechanismsSetting до add_component
+var mechanism_configs: Array[MechanismConfig] = []
+var light_configs: Array[LightConfig] = []
+
 
 func _init() -> void:
 	set_process(false)
@@ -136,12 +140,10 @@ func _init() -> void:
 
 func on_entity_ready() -> void:
 	var vis := get_comp(C_Visual) as C_Visual
-	var identity := get_comp(C_Identity) as C_Identity
-	if vis == null or vis.parts == null or identity == null:
+	if vis == null or vis.parts == null:
 		return
 	_ghost = has_comp(C_Ghost)
-	var cfgs: Variant = identity.get_config('mechanisms', [])
-	for c in cfgs:
+	for c in mechanism_configs:
 		var cfg := c as MechanismConfig
 		if cfg == null or _mechs.has(cfg.id):
 			continue
@@ -159,8 +161,7 @@ func on_entity_ready() -> void:
 	for id in _order:
 		_mechs[id].apply()
 
-	var lcfgs: Variant = identity.get_config('lights', [])
-	for c in lcfgs:
+	for c in light_configs:
 		var lc := c as LightConfig
 		if lc == null or _lamps.has(lc.id):
 			continue

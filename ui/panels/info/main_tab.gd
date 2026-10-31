@@ -89,10 +89,13 @@ func _on_bind() -> void:
 			&'train':
 				_n("TrackContainer").hide()
 				_n("TrainContainer").show()
-				identity.get_config('mass', 0.0)
-				_n("MassLabel").text = str(identity.get_config('mass', 0.0))
-				_n("PowerLabel").text = str(identity.get_config('power', 0.0))
-				_n("MaxSpeedLabel").text = str(identity.get_config('maxspeed', 700.0))
+				# Типизированное чтение. Раньше брались поля 'power' и 'maxspeed', которых в WagonConfig нет (всегда дефолт 0.0 и 700.0)
+				var wc := identity.object_config as WagonConfig
+				if wc:
+					var is_loco := target.has_comp(C_Engine)
+					_n("MassLabel").text = str(wc.mass)
+					_n("PowerLabel").text = str(wc.max_tractive_force) if is_loco else "-"
+					_n("MaxSpeedLabel").text = str(wc.max_theoretical_speed) if is_loco else "-"
 	else:
 		# Если это какой-то системный объект без паспорта
 		_n("HeaderLabel").text = "Системный объект"
