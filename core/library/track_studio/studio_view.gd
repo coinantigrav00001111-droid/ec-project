@@ -37,6 +37,7 @@ var _style: TrackStyle
 var _bounds := AABB(Vector3(-4, 0, -12), Vector3(8, 3, 24))
 var _drag_button := 0
 var _sleepers_visible := true
+var _rails_visible := true
 var _sleeper_nodes: Array[MultiMeshInstance3D] = []
 
 
@@ -121,7 +122,8 @@ func rebuild() -> void:
 
 		var mi := MeshInstance3D.new()
 		mi.name = "Mesh"
-		mi.mesh = TrackMeshBuilder.build_mesh(_style, curve, L, false)
+		var am := TrackMeshBuilder.build_mesh(_style, curve, L, false)
+		mi.mesh = am if _rails_visible else _without_rails(am)
 		holder.add_child(mi)
 
 		var sl := TrackMeshBuilder.create_sleepers_node(_style)
@@ -145,6 +147,23 @@ func rebuild() -> void:
 		lo -= Vector3(2.0, 0.0, 2.0)
 		hi += Vector3(2.0, 3.0, 2.0)
 		_bounds = AABB(lo, hi - lo)
+
+
+func set_rails_visible(on: bool) -> void:
+	_rails_visible = on
+	rebuild()
+
+
+## Копия меша без поверхности рельсов (1 при балласте, иначе 0): так видно профиль балласта и шпалы отдельно
+func _without_rails(am: ArrayMesh) -> ArrayMesh:
+	var rail_idx := 1 if _style.ballast_enabled else 0
+	var out := ArrayMesh.new()
+	for i in am.get_surface_count():
+		if i == rail_idx:
+			continue
+		out.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, am.surface_get_arrays(i))
+		out.surface_set_material(out.get_surface_count() - 1, am.surface_get_material(i))
+	return out
 
 
 func set_sleepers_visible(on: bool) -> void:

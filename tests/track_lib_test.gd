@@ -132,7 +132,7 @@ func _test_generator() -> void:
 	_check("корпус: центр опоры в 0, низ на 0", absf(a.get_center().x) < EPS and absf(a.get_center().z) < EPS and absf(a.position.y) < EPS)
 	_check("корпус: одна поверхность, 32 треугольника, без вершинного цвета", wood.get_surface_count() == 1 and base_tris == 32 and wood.surface_get_arrays(0)[Mesh.ARRAY_COLOR] == null)
 	_check("рельеф 0: лишних рёбер нет (те же 32 треугольника)",
-		TrackSleeperFactory.generate({"top_dip": 0.0, "side_notch": 0.0}).get_faces().size() / 3 == base_tris)
+		TrackSleeperFactory.generate({"top_dip": 0.0, "end_slope": 0.0}).get_faces().size() / 3 == base_tris)
 
 	var trap := TrackSleeperFactory.generate({"profile": "trapezoid"})
 	_check("трапеция: тот же габарит, треугольников 24 (6 граней)", _near(trap.get_aabb().size, Vector3(3.0, 0.2, 0.3)) and trap.get_faces().size() / 3 == 24)
@@ -166,12 +166,21 @@ func _test_generator() -> void:
 	# рельеф
 	var dip := TrackSleeperFactory.generate({"top_dip": 0.03})
 	_check("прогиб верха: треугольников больше, габарит прежний", dip.get_faces().size() / 3 > base_tris and _near(dip.get_aabb().size, Vector3(3.0, 0.2, 0.3)))
-	var notch := TrackSleeperFactory.generate({"side_notch": 0.03})
-	_check("выемки на боках: треугольников больше, габарит прежний", notch.get_faces().size() / 3 > base_tris and _near(notch.get_aabb().size, Vector3(3.0, 0.2, 0.3)))
-	var both := TrackSleeperFactory.generate({"top_dip": 0.03, "side_notch": 0.03, "profile": "trapezoid", "pads": true})
-	_check("рельеф с площадками и трапецией строится", both.get_faces().size() > 0 and both.get_surface_count() == 1)
+	var slope := TrackSleeperFactory.generate({"end_slope": 0.03})
+	_check("скос к краю: треугольников больше, габарит прежний (верх у площадок на полной высоте)", slope.get_faces().size() / 3 > base_tris and _near(slope.get_aabb().size, Vector3(3.0, 0.2, 0.3)))
+	# у торца верх опущен на высоту скоса: у вершин торца (x = 1.5) нет точек выше 0.17
+	var sv: PackedVector3Array = slope.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+	var end_top := 0.0
+	for v in sv:
+		if absf(v.x - 1.5) < 0.0001:
+			end_top = maxf(end_top, v.y)
+	_check("скос к краю: верх у торца ниже на 0.03", absf(end_top - 0.17) < EPS)
+	var no_room := TrackSleeperFactory.generate({"end_slope": 0.03, "pad_x": 1.45, "pad_length": 0.4})
+	_check("скос не создаётся, если площадка доходит до края", no_room.get_faces().size() / 3 == base_tris)
+	var both := TrackSleeperFactory.generate({"top_dip": 0.03, "end_slope": 0.03, "profile": "trapezoid", "pads": true})
+	_check("прогиб, скос, площадки и трапеция вместе строятся", both.get_faces().size() > 0 and both.get_surface_count() == 1)
 	var dip_only := TrackSleeperFactory.generate({"top_dip": 0.03}).get_faces().size()
-	_check("прогиб не трогает бока: те же вершины торцов (меньше, чем прогиб + выемки)", dip_only < TrackSleeperFactory.generate({"top_dip": 0.03, "side_notch": 0.03}).get_faces().size())
+	_check("прогиб и скос складываются: вместе треугольников больше, чем у одного прогиба", dip_only < TrackSleeperFactory.generate({"top_dip": 0.03, "end_slope": 0.03}).get_faces().size())
 
 	# UV
 	var uv_a: PackedVector2Array = TrackSleeperFactory.generate({}).surface_get_arrays(0)[Mesh.ARRAY_TEX_UV]
@@ -192,7 +201,7 @@ func _test_generator() -> void:
 			bad += 1
 	_check("валидатор: сгенерированная шпала без замечаний", bad == 0)
 	var padded_style := TrackStyle.new()
-	padded_style.sleeper_mesh = TrackSleeperFactory.generate({"pads": true, "pad_lifts_rail": false, "top_dip": 0.03, "side_notch": 0.03})
+	padded_style.sleeper_mesh = TrackSleeperFactory.generate({"pads": true, "pad_lifts_rail": false, "top_dip": 0.03, "end_slope": 0.03})
 	var bad2 := 0
 	for m in TrackStyleValidator.validate(padded_style):
 		if m["level"] >= TrackStyleValidator.Level.WARN:
@@ -207,14 +216,15 @@ func _test_generator() -> void:
 		if absf(verts[i].y - 0.2) < 0.0001 and norms[i].y > 0.9:
 			up += 1
 	_check("корпус: у вершин верха нормаль вверх", up >= 4)
-	# в рельефе нормали тоже наружу: ни одной нормали, смотрящей внутрь от центра сечения (грубо: низ смотрит вниз)
-	var rv: PackedVector3Array = dip.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
-	var rn: PackedVector3Array = dip.surface_get_arrays(0)[Mesh.ARRAY_NORMAL]
-	var inward := 0
-	for i in rv.size():
-		if rv[i].y < 0.0001 and rn[i].y > 0.5:
-			inward += 1
-	_check("прогиб: у вершин низа нет нормалей вверх", inward == 0)
+	# в рельефе нормали тоже наружу: у вершин низа нет нормалей вверх
+	for mesh in [dip, slope]:
+		var rv: PackedVector3Array = mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+		var rn: PackedVector3Array = mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL]
+		var inward := 0
+		for i in rv.size():
+			if rv[i].y < 0.0001 and rn[i].y > 0.5:
+				inward += 1
+		_check("рельеф: у вершин низа нет нормалей вверх", inward == 0)
 
 
 func _test_normalize() -> void:

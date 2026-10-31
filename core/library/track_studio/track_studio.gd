@@ -30,6 +30,8 @@ const PROPS := [
 		"tip": "Пусто = общий серый материал"},
 	{"key": "rail_uv_tile", "kind": "vec2", "label": "Тайл текстуры, ю", "min": 0.0, "max": 100.0,
 		"tip": "x вдоль пути, y поперек (по длине ломаной профиля). 0 = как раньше (для атласов)"},
+	{"key": "rail_uv_rotate", "kind": "bool", "label": "Повернуть текстуру на 90°",
+		"tip": "Оси UV меняются местами. Слой питания учитывает поворот"},
 	{"sec": "Шпалы"},
 	{"key": "sleeper_mesh", "kind": "res", "base": "Mesh", "label": "Меш шпалы",
 		"tip": "Пусто = BoxMesh размера sleeper_size. Контракт меша: origin в центре площади опоры, низ на y = 0, длинная сторона по X"},
@@ -46,6 +48,8 @@ const PROPS := [
 		"tip": "Пусто = общий серый материал"},
 	{"key": "ballast_uv_tile", "kind": "vec2", "label": "Тайл текстуры, ю", "min": 0.0, "max": 100.0,
 		"tip": "x вдоль пути, y поперек (по длине ломаной профиля). 0 = как раньше (для атласов)"},
+	{"key": "ballast_uv_rotate", "kind": "bool", "label": "Повернуть текстуру на 90°",
+		"tip": "Оси UV меняются местами"},
 	{"sec": "Коллизия"},
 	{"key": "collision_width", "kind": "float", "label": "Ширина основания", "min": 0.5, "max": 10.0,
 		"tip": "Ширина коллизии основания, ю. Должна совпадать с шириной балласта (или шпалы без балласта)"},
@@ -78,6 +82,7 @@ var _len_spin: SpinBox
 var _rad_spin: SpinBox
 var _ang_spin: SpinBox
 var _sleepers_chk: CheckBox
+var _rails_chk: CheckBox
 var _shadows_chk: CheckBox
 var _refresh_timer: Timer
 var _discard_dialog: ConfirmationDialog
@@ -224,6 +229,14 @@ func _build_left_panel() -> void:
 		view.set_sleepers_visible(on)
 		settings.set_value("preview", "sleepers", on))
 	lv.add_child(_sleepers_chk)
+
+	_rails_chk = CheckBox.new()
+	_rails_chk.text = "Показывать рельсы"
+	_rails_chk.button_pressed = true
+	_rails_chk.toggled.connect(func(on: bool):
+		view.set_rails_visible(on)
+		settings.set_value("preview", "rails", on))
+	lv.add_child(_rails_chk)
 
 	_shadows_chk = CheckBox.new()
 	_shadows_chk.text = "Тени"
@@ -503,6 +516,9 @@ func _apply_saved_ui() -> void:
 	_ang_spin.set_value_no_signal(view.angle)
 	var sl := bool(settings.get_value("preview", "sleepers", true))
 	var sh := bool(settings.get_value("preview", "shadows", true))
+	var rl := bool(settings.get_value("preview", "rails", true))
+	_rails_chk.set_pressed_no_signal(rl)
+	view.set_rails_visible(rl)
 	_sleepers_chk.set_pressed_no_signal(sl)
 	_shadows_chk.set_pressed_no_signal(sh)
 	view.set_sleepers_visible(sl)

@@ -4,6 +4,7 @@ render_mode unshaded;
 uniform vec4 contour_color : source_color = vec4(0.0, 0.8, 1.0, 1.0);
 uniform float scroll_speed = 0.0;
 uniform float stripe_density = 4.0;
+uniform bool swap_uv = false; // UV рельса повёрнуты на 90° (TrackStyle.rail_uv_rotate): вдоль пути UV.y
 
 uniform bool is_solid = false; // Глобальная заливка (true = весь рельс плотный)
 uniform float transparent_alpha = 0.8; // Прозрачность промежутков
@@ -11,7 +12,8 @@ uniform bool solid_stripes = true; // НОВЫЙ ПАРАМЕТР: Непроз�
 
 void fragment() {
 	// Вычисляем бегущую полосу
-	float moving_uv = UV.x + (TIME * scroll_speed);
+	float along = swap_uv ? UV.y : UV.x;
+	float moving_uv = along + (TIME * scroll_speed);
 	float pattern = fract(moving_uv * stripe_density);
 	float stripes = step(0.5, pattern);
 	

@@ -445,6 +445,6 @@ func _set_lever_enabled(on: bool) -> void:
 		lever_area.collision_layer = Global.active_layers(['handles']) if on else 0
 
 
-## Плотность полос питания с поправкой на тайл рельса стиля (TrackStyle.power_stripe_scale)
-func _power_stripe_scale() -> float:
-	return style.power_stripe_scale() if style else 1.0
+## Стиль для подгонки полос слоя питания под UV рельса (тайл, поворот)
+func _power_style() -> TrackStyle:
+	return style

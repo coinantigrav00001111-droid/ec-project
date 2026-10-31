@@ -188,8 +188,10 @@ func _reset_power_view():
 # --- Хелпер сборки материала ---
 func _get_or_create_power_material(cid: int, _volt: float, is_flipped: bool) -> ShaderMaterial:
 	
-	var stripe_scale := _power_stripe_scale()
-	var cache_key = str(cid) + "_" + str(is_flipped) + "_" + str(stripe_scale)
+	var pst := _power_style()
+	var stripe_scale := pst.power_stripe_scale() if pst else 1.0
+	var swap_uv := pst != null and pst.rail_uv_rotate
+	var cache_key = str(cid) + "_" + str(is_flipped) + "_" + str(stripe_scale) + "_" + str(swap_uv)
 	#Если материал для такого состояния уже есть — возвращаем его
 	if power_materials_cache.has(cache_key):
 		return power_materials_cache[cache_key] 
@@ -205,12 +207,14 @@ func _get_or_create_power_material(cid: int, _volt: float, is_flipped: bool) -> 
 	new_mat.set_shader_parameter("scroll_speed", _volt * _flip * 0.01)
 	if not is_equal_approx(stripe_scale, 1.0):
 		new_mat.set_shader_parameter("stripe_density", POWER_STRIPE_DENSITY * stripe_scale)
+	if swap_uv:
+		new_mat.set_shader_parameter("swap_uv", true)
 	power_materials_cache[cache_key] = new_mat
 
 	return new_mat
 
 
-## Множитель плотности полос слоя питания (1.0 = рельс с UV по умолчанию). Визуалы со стилем переопределяют:
-## свой тайл вдоль пути у рельса меняет UV.x, а шейдер считает полосы по нему
-func _power_stripe_scale() -> float:
-	return 1.0
+## Стиль, по UV рельса которого шейдер питания подгоняет полосы (тайл вдоль пути, поворот на 90°).
+## Визуалы со стилем переопределяют, null = рельс с UV по умолчанию
+func _power_style() -> TrackStyle:
+	return null

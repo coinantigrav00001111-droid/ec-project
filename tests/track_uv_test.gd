@@ -50,6 +50,17 @@ func _ready() -> void:
 	var b3 := _uv_range(TrackMeshBuilder.build_mesh(st3, curve, L, false), 0)
 	_check("тайл (0,1): вдоль как раньше, поперёк в мировых", absf(b3.position.x + L * 0.1) < EPS and b3.end.y > 1.5)
 
+	# --- 3б. Поворот текстуры на 90°: оси UV меняются местами ---
+	var st5 := TrackStyle.new()
+	st5.ballast_uv_tile = Vector2(2.0, 1.0)
+	st5.ballast_uv_rotate = true
+	st5.rail_uv_rotate = true
+	var am5 := TrackMeshBuilder.build_mesh(st5, curve, L, false)
+	var b5 := _uv_range(am5, 0)
+	_check("поворот: у балласта вдоль пути теперь UV.y, поперёк UV.x", absf(b5.position.y + L / 2.0) < EPS and absf(b5.end.y) < EPS and b5.end.x > 3.0)
+	var r5 := _uv_range(am5, 1)
+	_check("поворот: у рельса вдоль пути UV.y (0.1 на ю), поперёк UV.x в 0..1", absf(r5.position.y + L * 0.1) < EPS and r5.position.x > -EPS and r5.end.x < 1.0 + EPS)
+
 	# --- 4. Нормальная карта даёт тангенты ---
 	var st4 := TrackStyle.new()
 	var mat := StandardMaterial3D.new()

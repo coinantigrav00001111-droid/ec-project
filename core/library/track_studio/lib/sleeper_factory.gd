@@ -25,9 +25,8 @@ const GENERATED_DEFAULTS := {
 	"pad_lifts_rail": true,    # true: рельс стоит на площадке; false: рельс на корпусе, площадка только деталь (костыль)
 	# Рельеф (0 = не создаётся ни вершин, ни рёбер)
 	"top_dip": 0.0,            # прогиб верха между площадками, ю
-	"side_notch": 0.0,         # глубина выемок на боковых плоскостях под рельсами, ю
-	"side_notch_length": 0.3,  # длина выемки по X
-	"relief_slope": 0.08,      # длина скоса у прогиба и выемок по X
+	"relief_slope": 0.08,      # длина скоса внутрь: от края площадки в прогиб, по X
+	"end_slope": 0.0,          # высота скоса наружу: верх заваливается от края площадки до конца шпалы, ю
 	# UV
 	"uv_rotate": false,        # повернуть UV на 90° (волокна вдоль / поперёк)
 }
@@ -38,7 +37,7 @@ const GENERATED_DEFAULTS := {
 # ==========================================
 
 ## Меш шпалы по спецификации (см. GENERATED_DEFAULTS). Корпус собирается из сечений вдоль X: без рельефа это
-## два сечения (концы), каждая выемка и прогиб добавляют только нужные сечения. В метаданных меша:
+## два сечения (концы), прогиб и скос к концам добавляют только нужные сечения. В метаданных меша:
 ## track_spec (как собран) и seat_height (высота постели рельса, если площадки её не поднимают)
 static func generate(spec: Dictionary) -> ArrayMesh:
 	var s: Dictionary = GENERATED_DEFAULTS.duplicate()
@@ -52,32 +51,29 @@ static func generate(spec: Dictionary) -> ArrayMesh:
 	var tp := clampf(float(s["taper"]), 0.0, W * 0.3) if trapezoid else 0.0
 	var rot: bool = s["uv_rotate"]
 
-	# --- рельеф: кусочно-линейные функции вдоль X ---
+	# --- рельеф: падение верха как кусочно-линейная функция вдоль X ---
 	var slope := clampf(float(s["relief_slope"]), 0.005, 1.0)
 	var seat_x := absf(float(s["pad_x"]))
 	var seat_len := clampf(float(s["pad_length"]), 0.02, L)
-	var dip := clampf(float(s["top_dip"]), 0.0, maxf(H - 2.0 * c - 0.01, 0.0))
-	var notch := clampf(float(s["side_notch"]), 0.0, maxf(hw - tp - c - 0.01, 0.0))
-	var drop_pts: Array = []        # [[x, значение], ...] по возрастанию x
-	var windows: Array = []         # список таких же списков, по одному на выемку
+	var max_drop := maxf(H - 2.0 * c - 0.01, 0.0)
+	var dip := clampf(float(s["top_dip"]), 0.0, max_drop)
+	var end_slope := clampf(float(s["end_slope"]), 0.0, max_drop)
+	var drop_lists: Array = []      # каждый список [[x, значение], ...] по возрастанию x; падение = максимум по спискам
 	if dip > 0.0:
 		var x_in := seat_x - seat_len * 0.5
 		if x_in > 0.02:
 			var sl := minf(slope, x_in * 0.5)
-			drop_pts = [[-x_in, 0.0], [-x_in + sl, dip], [x_in - sl, dip], [x_in, 0.0]]
-	if notch > 0.0:
-		var nl := clampf(float(s["side_notch_length"]), 0.02, L)
-		for sgn in [-1.0, 1.0]:
-			var a: float = sgn * seat_x - nl * 0.5
-			var b: float = sgn * seat_x + nl * 0.5
-			windows.append([[a - slope, 0.0], [a, notch], [b, notch], [b + slope, 0.0]])
+			drop_lists.append([[-x_in, 0.0], [-x_in + sl, dip], [x_in - sl, dip], [x_in, 0.0]])
+	if end_slope > 0.0:
+		var x_out := seat_x + seat_len * 0.5
+		if x_out < L * 0.5 - 0.005:
+			drop_lists.append([[-L * 0.5, end_slope], [-x_out, 0.0]])
+			drop_lists.append([[x_out, 0.0], [L * 0.5, end_slope]])
 
 	# --- сечения ---
 	var xs: Array[float] = [-L * 0.5, L * 0.5]
-	for pt in drop_pts:
-		xs.append(clampf(pt[0], -L * 0.5, L * 0.5))
-	for w in windows:
-		for pt in w:
+	for lst in drop_lists:
+		for pt in lst:
 			xs.append(clampf(pt[0], -L * 0.5, L * 0.5))
 	xs.sort()
 	var uniq: Array[float] = []
@@ -86,14 +82,13 @@ static func generate(spec: Dictionary) -> ArrayMesh:
 			uniq.append(x)
 	xs = uniq
 
-	var keep := _keep_indices(_profile_raw(hw, tp, H, c, 0.0, 0.0, trapezoid))
+	var keep := _keep_indices(_profile_raw(hw, tp, H, c, 0.0, trapezoid))
 	var slices: Array = []          # по сечению на каждый x: массив Vector2 (z, y)
 	for x in xs:
-		var drop := _interp(drop_pts, x)
-		var inset := 0.0
-		for w in windows:
-			inset = maxf(inset, _interp(w, x))
-		var raw := _profile_raw(hw, tp, H, c, drop, inset, trapezoid)
+		var drop := 0.0
+		for lst in drop_lists:
+			drop = maxf(drop, _interp(lst, x))
+		var raw := _profile_raw(hw, tp, H, c, drop, trapezoid)
 		var pts: Array[Vector2] = []
 		for i in keep:
 			pts.append(raw[i])
@@ -170,15 +165,14 @@ static func generate(spec: Dictionary) -> ArrayMesh:
 
 
 ## Сечение в плоскости (z, y), против часовой, фиксированное число точек (дубликаты убирает _keep_indices)
-static func _profile_raw(hw: float, tp: float, H: float, c: float, drop: float, inset: float, trapezoid: bool) -> Array[Vector2]:
-	var hb := hw - inset
+static func _profile_raw(hw: float, tp: float, H: float, c: float, drop: float, trapezoid: bool) -> Array[Vector2]:
 	var top := H - drop
 	if trapezoid:
-		var ht := hw - tp - inset
-		return [Vector2(-hb, 0.0), Vector2(hb, 0.0), Vector2(ht, top - c), Vector2(ht - c, top),
+		var ht := hw - tp
+		return [Vector2(-hw, 0.0), Vector2(hw, 0.0), Vector2(ht, top - c), Vector2(ht - c, top),
 			Vector2(-ht + c, top), Vector2(-ht, top - c)]
-	return [Vector2(-hb + c, 0.0), Vector2(hb - c, 0.0), Vector2(hb, c), Vector2(hb, top - c),
-		Vector2(hb - c, top), Vector2(-hb + c, top), Vector2(-hb, top - c), Vector2(-hb, c)]
+	return [Vector2(-hw + c, 0.0), Vector2(hw - c, 0.0), Vector2(hw, c), Vector2(hw, top - c),
+		Vector2(hw - c, top), Vector2(-hw + c, top), Vector2(-hw, top - c), Vector2(-hw, c)]
 
 
 ## Индексы точек без подряд идущих повторов (фаска 0 схлопывает пары точек)
@@ -192,9 +186,9 @@ static func _keep_indices(raw: Array[Vector2]) -> Array[int]:
 	return out
 
 
-## Значение кусочно-линейной функции [[x, v], ...] (по возрастанию x); вне диапазона 0
+## Значение кусочно-линейной функции [[x, v], ...] (по возрастанию x), на границах включительно; вне диапазона 0
 static func _interp(pts: Array, x: float) -> float:
-	if pts.size() < 2 or x <= pts[0][0] or x >= pts[pts.size() - 1][0]:
+	if pts.size() < 2 or x < pts[0][0] or x > pts[pts.size() - 1][0]:
 		return 0.0
 	for i in pts.size() - 1:
 		var a: Array = pts[i]

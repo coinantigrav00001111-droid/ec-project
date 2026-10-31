@@ -116,6 +116,6 @@ func _build_collision(curve: Curve3D, L: float) -> void:
 		head.add_child(hr)
 
 
-## Плотность полос питания с поправкой на тайл рельса стиля (TrackStyle.power_stripe_scale)
-func _power_stripe_scale() -> float:
-	return style.power_stripe_scale() if style else 1.0
+## Стиль для подгонки полос слоя питания под UV рельса (тайл, поворот)
+func _power_style() -> TrackStyle:
+	return style

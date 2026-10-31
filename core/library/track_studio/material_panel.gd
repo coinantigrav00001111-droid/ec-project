@@ -39,6 +39,10 @@ var _tile_y: SpinBox
 var _name_edit: LineEdit
 var _live: CheckBox
 var _timer: Timer
+var _cleanup_dialog: ConfirmationDialog
+var _cleanup_text: RichTextLabel
+var _cleanup_height: CheckBox
+var _cleanup_items: Array[Dictionary] = []
 
 var _params := {}
 var _found := {}
@@ -107,6 +111,19 @@ func _build() -> void:
 	_convert_btn.pressed.connect(_on_convert)
 	r3.add_child(_convert_btn)
 
+	var r4 := HBoxContainer.new()
+	v.add_child(r4)
+	var pack := Button.new()
+	pack.text = "Упаковать ORM"
+	pack.tooltip_text = "AO, шероховатость и металличность в один PNG (R, G, B): три текстуры вместо одной, меньше памяти и выборок. Нужно минимум две карты."
+	pack.pressed.connect(_on_pack_orm)
+	r4.add_child(pack)
+	var clean := Button.new()
+	clean.text = "Удалить лишние файлы…"
+	clean.tooltip_text = "Покажет список файлов набора, которые студии не нужны (NormalDX, превью, маски, .blend, .mtlx, .usdc, готовый .tres), и удалит после подтверждения."
+	clean.pressed.connect(_on_cleanup)
+	r4.add_child(clean)
+
 	v.add_child(HSeparator.new())
 
 	_proj_opt = OptionButton.new()
@@ -170,6 +187,24 @@ func _build() -> void:
 	b2.text = "Сохранить файл и назначить"
 	b2.pressed.connect(func(): _apply(true))
 	rb2.add_child(b2)
+
+	_cleanup_dialog = ConfirmationDialog.new()
+	_cleanup_dialog.title = "Удалить лишние файлы набора"
+	_cleanup_dialog.ok_button_text = "Удалить"
+	_cleanup_dialog.cancel_button_text = "Отмена"
+	var cb := VBoxContainer.new()
+	_cleanup_dialog.add_child(cb)
+	_cleanup_height = CheckBox.new()
+	_cleanup_height.text = "Удалять карту высоты (Displacement)"
+	_cleanup_height.button_pressed = true
+	_cleanup_height.toggled.connect(func(_on: bool): _fill_cleanup())
+	cb.add_child(_cleanup_height)
+	_cleanup_text = RichTextLabel.new()
+	_cleanup_text.bbcode_enabled = true
+	_cleanup_text.custom_minimum_size = Vector2(600, 280)
+	cb.add_child(_cleanup_text)
+	_cleanup_dialog.confirmed.connect(_on_cleanup_confirmed)
+	add_child(_cleanup_dialog)
 
 
 func _row(parent: Control, text: String) -> HBoxContainer:
@@ -409,3 +444,62 @@ func _apply(save: bool) -> void:
 	studio.set_field(_role()[2], mat)
 	if _role()[3] != "":
 		studio.set_field(_role()[3], _params["tile"])
+
+
+# ==========================================
+# ORM и чистка набора
+# ==========================================
+
+func _on_pack_orm() -> void:
+	if _found.has("orm"):
+		studio.say("В наборе уже есть ORM")
+		return
+	var count := 0
+	for k in ["ao", "roughness", "metallic"]:
+		if _found.has(k):
+			count += 1
+	if count < 2:
+		studio.say("Для упаковки нужны минимум две карты из AO, шероховатости и металличности", true)
+		return
+	var path := TrackMaterialBuilder.orm_path(_set_dir())
+	var err := TrackMaterialBuilder.pack_orm(_found, path)
+	if err != OK:
+		studio.say("Не удалось упаковать ORM (код %d)" % err, true)
+		return
+	studio.say("Записано %s. Вернитесь в редактор, дождитесь импорта, затем «Подготовить импорт» и «Обновить». После этого отдельные карты можно удалить кнопкой «Удалить лишние файлы»." % path.get_file())
+	_on_set_changed(false)
+
+
+func _on_cleanup() -> void:
+	if _set_dir().is_empty():
+		return
+	_fill_cleanup()
+	_cleanup_dialog.popup_centered(Vector2i(660, 420))
+
+
+func _fill_cleanup() -> void:
+	_cleanup_items = TrackMaterialBuilder.cleanup_candidates(_set_dir(), _cleanup_height.button_pressed)
+	var total := 0
+	var t := "[b]%s[/b]\n" % _set_dir().get_file()
+	for it in _cleanup_items:
+		total += int(it["size"])
+		t += "%s  (%s): %s\n" % [String(it["path"]).get_file(), _size_text(int(it["size"])), it["why"]]
+	if _cleanup_items.is_empty():
+		t += "Лишних файлов нет."
+	else:
+		t += "\n[b]Всего: %d файлов, %s.[/b] Вместе с ними удаляются парные .import. Файлы можно вернуть из Git."  % [_cleanup_items.size(), _size_text(total)]
+	_cleanup_text.text = t
+	_cleanup_dialog.get_ok_button().disabled = _cleanup_items.is_empty()
+
+
+func _size_text(bytes: int) -> String:
+	return "%.1f МБ" % (bytes / 1048576.0) if bytes >= 1048576 else "%d КБ" % ceili(bytes / 1024.0)
+
+
+func _on_cleanup_confirmed() -> void:
+	var total := 0
+	for it in _cleanup_items:
+		total += int(it["size"])
+	var n := TrackMaterialBuilder.delete_files(_cleanup_items, SETS_DIR)
+	studio.say("Удалено файлов: %d (%s). Вернитесь в редактор, чтобы он обновил список файлов." % [n, _size_text(total)])
+	_on_set_changed(false)

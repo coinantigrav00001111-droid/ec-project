@@ -162,6 +162,6 @@ func _resize_pool(nseg: int) -> void:
 		old2.queue_free()
 
 
-## Плотность полос питания с поправкой на тайл рельса стиля (TrackStyle.power_stripe_scale)
-func _power_stripe_scale() -> float:
-	return style.power_stripe_scale() if style else 1.0
+## Стиль для подгонки полос слоя питания под UV рельса (тайл, поворот)
+func _power_style() -> TrackStyle:
+	return style

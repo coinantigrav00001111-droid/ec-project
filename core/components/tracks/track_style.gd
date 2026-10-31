@@ -33,6 +33,9 @@ const LEGACY_TILE_ALONG := 10.0
 ## 0 по оси = как раньше (вдоль 10 ю на тайл, поперёк UV растянуты на всю ширину; так нужно текстурам-атласам).
 ## Плотность полос слоя питания считается с поправкой power_stripe_scale()
 @export var rail_uv_tile := Vector2.ZERO
+## Повернуть текстуру рельса на 90° (оси UV меняются местами; тайл по-прежнему в ю вдоль и поперёк).
+## Слой питания учитывает поворот (swap_uv в шейдере)
+@export var rail_uv_rotate := false
 
 @export_category("Sleepers")
 ## null = BoxMesh размера sleeper_size
@@ -52,6 +55,8 @@ const LEGACY_TILE_ALONG := 10.0
 @export var ballast_material: Material
 ## Размер тайла текстуры балласта, ю: x вдоль пути, y поперек (по длине ломаной профиля). 0 по оси = как раньше (см. rail_uv_tile)
 @export var ballast_uv_tile := Vector2.ZERO
+## Повернуть текстуру балласта на 90° (как rail_uv_rotate)
+@export var ballast_uv_rotate := false
 
 @export_category("Collision")
 ## Ширина коллизии основания (балласт/шпалы), ю

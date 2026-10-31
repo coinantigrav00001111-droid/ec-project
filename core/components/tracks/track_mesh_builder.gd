@@ -150,7 +150,7 @@ static func build_mesh(style: TrackStyle, curve: Curve3D, L: float, preview: boo
 		for p in style.ballast_profile:
 			chain.append(p)
 			hw = maxf(hw, absf(p.x))
-		sweep(st, fr, chain, L, hw, style.ballast_uv_tile)
+		sweep(st, fr, chain, L, hw, style.ballast_uv_tile, style.ballast_uv_rotate)
 		if _has_normal_map(bmat):
 			st.generate_tangents()
 		st.commit(am)
@@ -166,7 +166,7 @@ static func build_mesh(style: TrackStyle, curve: Curve3D, L: float, preview: boo
 		var chain: Array = []
 		for p in style.rail_profile:
 			chain.append(Vector2(c + p.x, base + p.y))
-		sweep(rst, fr, chain, L, style.rail_x + style.rail_width(), style.rail_uv_tile)
+		sweep(rst, fr, chain, L, style.rail_x + style.rail_width(), style.rail_uv_tile, style.rail_uv_rotate)
 	if _has_normal_map(rmat):
 		rst.generate_tangents()
 	rst.commit(am)
@@ -181,8 +181,9 @@ static func _has_normal_map(mat: Material) -> bool:
 
 ## Протягивает ломаную профиля (слева направо поверх) вдоль реперов.
 ## UV: x вдоль трака, y поперек. tile (ю на тайл): по оси > 0 включает мировой масштаб (вдоль: расстояние / tile.x,
-## поперёк: длина ломаной от начала / tile.y), по оси 0 остаётся прежнее (вдоль 0.1 на ю, поперёк 0..1 по hw - полуширине)
-static func sweep(st: SurfaceTool, fr: Array, chain: Array, L: float, hw: float, tile := Vector2.ZERO) -> void:
+## поперёк: длина ломаной от начала / tile.y), по оси 0 остаётся прежнее (вдоль 0.1 на ю, поперёк 0..1 по hw - полуширине).
+## rotate: оси UV меняются местами (текстура повёрнута на 90°)
+static func sweep(st: SurfaceTool, fr: Array, chain: Array, L: float, hw: float, tile := Vector2.ZERO, rotate := false) -> void:
 	var n := fr.size()
 	var u_scale := 1.0 / tile.x if tile.x > 0.0 else UV_V_SCALE
 	var acc := 0.0   # длина ломаной от начала до точки a
@@ -217,6 +218,8 @@ static func sweep(st: SurfaceTool, fr: Array, chain: Array, L: float, hw: float,
 			var nm := [n0, n0, n1, n1]
 			# U вдоль трака, V поперек (шейдер тока едет по U)
 			var uv := [Vector2(v0, ua), Vector2(v0, ub), Vector2(v1, ub), Vector2(v1, ua)]
+			if rotate:   # текстура повёрнута на 90°: вдоль пути UV.y
+				uv = [Vector2(ua, v0), Vector2(ub, v0), Vector2(ub, v1), Vector2(ua, v1)]
 			quad(st, p, nm, uv)
 
 

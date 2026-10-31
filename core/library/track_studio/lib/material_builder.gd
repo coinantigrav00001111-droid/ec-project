@@ -290,3 +290,120 @@ static func stamp(mat: Material, role: String, dir: String, params: Dictionary) 
 	mat.set_meta("track_role", role)
 	mat.set_meta("track_source", dir)
 	mat.set_meta("track_params", params.duplicate(true))
+
+
+# ==========================================
+# Упаковка ORM и чистка набора
+# ==========================================
+
+## Упаковывает AO, шероховатость и металличность в один RGB PNG: R = AO, G = roughness, B = metallic.
+## Нет карты: AO и roughness = 1, metallic = 0. Размер по первой найденной карте, остальные подгоняются.
+## Возвращает Error (OK = 0). В материале ORM заменяет три текстуры одной (меньше памяти и выборок)
+static func pack_orm(found: Dictionary, out_path: String) -> int:
+	var maps := {}
+	var w := 0
+	var h := 0
+	for key in ["ao", "roughness", "metallic"]:
+		if not found.has(key):
+			continue
+		var img := Image.load_from_file(found[key])
+		if img == null or img.is_empty():
+			continue
+		img.convert(Image.FORMAT_L8)
+		if w == 0:
+			w = img.get_width()
+			h = img.get_height()
+		elif img.get_width() != w or img.get_height() != h:
+			img.resize(w, h, Image.INTERPOLATE_BILINEAR)
+		maps[key] = img.get_data()
+	if maps.is_empty():
+		return ERR_FILE_NOT_FOUND
+	var count := w * h
+	var data := PackedByteArray()
+	data.resize(count * 3)
+	var ao: PackedByteArray = maps.get("ao", PackedByteArray())
+	var ro: PackedByteArray = maps.get("roughness", PackedByteArray())
+	var me: PackedByteArray = maps.get("metallic", PackedByteArray())
+	var has_ao := not ao.is_empty()
+	var has_ro := not ro.is_empty()
+	var has_me := not me.is_empty()
+	for i in count:
+		var o := i * 3
+		data[o] = ao[i] if has_ao else 255
+		data[o + 1] = ro[i] if has_ro else 255
+		data[o + 2] = me[i] if has_me else 0
+	var out := Image.create_from_data(w, h, false, Image.FORMAT_RGB8, data)
+	return out.save_png(out_path)
+
+
+## Куда писать ORM набора: <имя папки>_ORM.png рядом с картами
+static func orm_path(dir: String) -> String:
+	return dir.path_join(dir.get_file() + "_ORM.png")
+
+
+## Файлы набора, которые студии не нужны: [{path, size, why}] (у каждого есть парный .import, он удаляется вместе).
+## include_height: считать лишней карту высоты (parallax в студии выключен по умолчанию).
+## Если рядом есть ORM, отдельные AO, шероховатость и металличность тоже в списке
+static func cleanup_candidates(dir: String, include_height := true) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var da := DirAccess.open(dir)
+	if da == null:
+		return out
+	var found := scan(dir)
+	var has_orm := found.has("orm")
+	var keep := {}
+	var keep_keys := ["albedo", "normal", "orm"]
+	if not has_orm:
+		keep_keys.append_array(["roughness", "metallic", "ao"])
+	if not include_height:
+		keep_keys.append("height")
+	for k in keep_keys:
+		if found.has(k):
+			keep[found[k]] = true
+	for f in da.get_files():
+		var ext := f.get_extension().to_lower()
+		if ext == "import" or ext == "uid":
+			continue
+		var path := dir.path_join(f)
+		if keep.has(path):
+			continue
+		var why := ""
+		if IMAGE_EXT.has(ext):
+			var role := _role_of(f.get_basename())
+			match role:
+				"":
+					why = "изображение без роли (превью, маска)"
+				"normal_dx", "normal_gl":
+					why = "нормаль в другом формате, используется %s" % String(found.get("normal", "")).get_file()
+				"height":
+					why = "карта высоты (parallax выключен)"
+				"roughness", "metallic", "ao":
+					why = "упакована в ORM"
+				_:
+					why = ""   # дубликат нужной роли: не трогаем
+		elif ["blend", "mtlx", "usdc", "usd", "usda", "usdz", "fbx", "obj", "mtl"].has(ext):
+			why = "исходник 3D или материал ambientCG"
+		elif ext == "tres":
+			why = "готовый материал ambientCG (с parallax), студия собирает свой"
+		if why.is_empty():
+			continue
+		var size := 0
+		var fa := FileAccess.open(path, FileAccess.READ)
+		if fa:
+			size = fa.get_length()
+		out.append({"path": path, "size": size, "why": why})
+	return out
+
+
+## Удаляет файлы и их .import. Только внутри base_dir. Возвращает число удалённых файлов
+static func delete_files(items: Array, base_dir: String) -> int:
+	var n := 0
+	for it in items:
+		var path: String = it["path"]
+		if not path.begins_with(base_dir) or path.contains(".."):
+			continue
+		if FileAccess.file_exists(path) and DirAccess.remove_absolute(path) == OK:
+			n += 1
+		if FileAccess.file_exists(path + ".import"):
+			DirAccess.remove_absolute(path + ".import")
+	return n
