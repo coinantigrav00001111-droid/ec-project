@@ -129,8 +129,8 @@ static func generate(spec: Dictionary) -> ArrayMesh:
 			n = n.normalized()
 			if n.dot(expected) < 0.0:
 				n = -n
-			var l0 := (p0[j] - p0[i]).length()
-			var l1 := (p1[j] - p1[i]).length()
+			var l0 = (p0[j] - p0[i]).length()
+			var l1 = (p1[j] - p1[i]).length()
 			TrackMeshBuilder.quad(st, [a0, a1, b1, b0], [n, n, n, n], [
 				_uv(x0, per0[i], rot), _uv(x1, per1[i], rot), _uv(x1, per1[i] + l1, rot), _uv(x0, per0[i] + l0, rot)])
 
@@ -200,7 +200,7 @@ static func _interp(pts: Array, x: float) -> float:
 		var a: Array = pts[i]
 		var b: Array = pts[i + 1]
 		if x >= a[0] and x <= b[0]:
-			var t := 0.0 if is_equal_approx(a[0], b[0]) else (x - a[0]) / (b[0] - a[0])
+			var t = 0.0 if is_equal_approx(a[0], b[0]) else (x - a[0]) / (b[0] - a[0])
 			return lerpf(a[1], b[1], t)
 	return 0.0
 
