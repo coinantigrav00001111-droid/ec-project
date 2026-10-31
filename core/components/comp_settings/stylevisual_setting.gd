@@ -17,10 +17,7 @@ class_name StyleVisualSetting extends ComponentSettings
 func create_component(entity: Entity) -> Component:
 	# 1. Путь: нужен ПЕРЕД визуалом (визуал строит геометрию по его кривой в on_entity_ready)
 	var path := C_Path.new()
-	var identity := entity.get_comp(C_Identity) as C_Identity
-	if identity:
-		path.radius = identity.get_config('radius', 0.0)
-		path.deg = identity.get_config('deg', 0.0)
+	PathSetting.apply_passport(path, entity)   # radius, deg, rise, height, allow_underground из паспорта
 	path.centered = true   # как у обычных жёстких траков: origin в середине кривой
 	path.name = 'C_Path'
 	entity.add_component(path)

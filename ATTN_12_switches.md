@@ -132,7 +132,14 @@ Socket, PowerTrack, TrackSupport, **Switch**. Объекты: `data/tracks/objec
 `SwitchSettings`, `SwitchShapeSettings`, `CrossingShapeSettings`, `BufferStopSettings` без своих полей. Значения, раньше лежавшие в `SwitchSettings`
 (`power_routing` у `switch_r`, `frog` у `switch_wl_wood`), перенесены в паспорта этих `.tres`.
 `C_Identity.get_config` устаревает: работает как раньше, но один раз предупреждает об имени, которого нет в конфиге.
-Переход по семействам: стрелка, кросс, упор (сделано), затем треки и визуал, затем поезда; в конце функция удаляется.
+Переход по семействам: стрелка, кросс, упор (S8), путь трака (S9, ниже), затем террейн и поезда; в конце функция удаляется.
+
+**Путь трака (S9).** `PathSetting.apply_passport(path, entity)` единственное место, где путь читает паспорт (`TrackConfig`: `radius`, `deg`,
+`rise`, `height`, `allow_underground`). Им пользуются `PathSetting`, `FlexVisualSetting`, `StyleVisualSetting`. `C_Path` паспорт не читает:
+поля `has_passport`, `track_height`, `allow_underground` и прежние `radius/deg/rise` задает адаптер. Без паспорта `TrackConfig` путь не
+строится (`push_error`), как и раньше молча. Поля `radius/deg` в `PathSetting` удалены: паспорт всегда имел приоритет (поле в `TrackConfig`
+существует), поэтому поведение не меняется. В `.tres` у `g15`, `g119`, `g231`, `g239*`, `r1*`..`r4` остались лишние строки `radius`/`deg` в
+блоке `PathSetting`: они безвредны, редактор уберет их при следующем сохранении файла.
 
 **Вкладка «Стрелка»** (отладка, `info_panel.gd`, строится кодом): состояние, замок, контур, положение крестовины; кнопка «Переложить»
 в обход рычага (`source = force`, замок под вагоном остается), управление Manual/Remote, галка power routing, тип крестовины.

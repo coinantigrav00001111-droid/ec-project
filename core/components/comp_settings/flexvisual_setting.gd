@@ -19,10 +19,7 @@ func create_component(entity: Entity) -> Component:
 
 	# 2. Путь: origin в начале кривой
 	var path := C_Path.new()
-	var identity := entity.get_comp(C_Identity) as C_Identity
-	if identity:
-		path.radius = identity.get_config('radius', 10.0)
-		path.deg = identity.get_config('deg', 0.0)
+	PathSetting.apply_passport(path, entity)   # radius, deg, rise, height, allow_underground из паспорта
 	path.centered = false
 	path.name = 'C_Path'
 	entity.add_component(path)

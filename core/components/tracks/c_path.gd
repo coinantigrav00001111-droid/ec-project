@@ -25,6 +25,14 @@ var head_node : StaticBody3D #  Статик нода рельсов
 
 var pivot_offset := Vector3.ZERO 
 
+# Параметры из паспорта (TrackConfig). Задает PathSetting.apply_passport при создании, компонент паспорт не читает
+## false: у сущности нет паспорта TrackConfig, путь не строится
+var has_passport := false
+## Высота поверхности катания из паспорта. < 0: не задана, берем номинал из Global.settings
+var track_height := -1.0
+## Трак тоннельный по паспорту (.tres)
+var allow_underground := false
+
 # XX claude-terra --- пандус и подготовка к Flex ---
 var rise := 0.0       # подъем вдоль трака (ю), только прямые
 var pitch := 0.0      # угол наклона инстанса, рад
@@ -42,9 +50,7 @@ var _head_h := -1.0   # < 0: не задана, берём из конфига �
 ## Высота поверхности катания над origin пути, ю. Все, кто ездит по траку или садится на него, читают только это.
 func head_height() -> float:
 	if _head_h < 0.0:
-		var nominal: float = Global.settings.get_track_height()
-		var identity := get_comp(C_Identity) as C_Identity
-		_head_h = float(identity.get_config('height', nominal)) if identity else nominal
+		_head_h = track_height if track_height >= 0.0 else Global.settings.get_track_height()
 	return _head_h
 
 
@@ -64,14 +70,10 @@ func on_entity_ready() -> void:
 	call_deferred("_sync_track_shadows")
 	if is_instance_valid(GFX) and not GFX.track_shadows_changed.is_connected(_on_track_shadows_changed):
 		GFX.track_shadows_changed.connect(_on_track_shadows_changed)
-	var identity = get_comp(C_Identity) as C_Identity
-	if not identity or not identity.setting:
+	if not has_passport:
 		return
 
-	radius = identity.get_config('radius', 0.0)
-	deg = identity.get_config('deg', 0.0)
-	# XX claude-terra
-	rise = identity.get_config('rise', 0.0)
+	# radius, deg, rise уже заданы адаптером (PathSetting.apply_passport)
 	# Защита от нулевой длины: radius у прямой это её длина (flex стартует прямой 10)
 	if absf(deg) < 0.01 and radius < 0.49:
 		radius =0.5
@@ -99,7 +101,7 @@ func on_entity_ready() -> void:
 		#push_warning("%s: head_height %.2f != номинал %.2f" % [entity.name, head_height(), Global.settings.get_track_height()])
 		pass
 	# XX claude-terra T6: трак тоннельный по конфигу (.tres)
-	if bool(identity.get_config('allow_underground', false)) and not has_comp(C_Tunnel):
+	if allow_underground and not has_comp(C_Tunnel):
 		entity.add_component(C_Tunnel.new())
 	
 
