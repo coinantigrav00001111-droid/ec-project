@@ -12,14 +12,18 @@ class_name C_PowerTrack extends IPowerable
 
 # XX claude-switch: лучи (legs). У обычного трака и стрелки один луч, контур и полярность одни на всю сущность.
 # У кросса с раздельными цепями два луча (по одному на путь): каждый запитывается и разворачивается независимо.
-# contour_id и is_flipped всегда луч 0, поэтому весь старый код работает как раньше. Тележка на кроссе
+# net_id (бывший contour_id) и is_flipped всегда луч 0, поэтому весь старый код работает как раньше. Тележка на кроссе
 # спрашивает свой луч: contour_of(bogie.route), flip_of(bogie.route). Номер за пределами лучей = последний луч
 var legs: int = 1
 var _contours: Array[int] = [0]
 var _flips: Array[bool] = [false]
 
-# Контур питания. 0 -не подключен к клипу (луч 0)
-var contour_id :int:
+## Авария на траке: противоречие полярности (КЗ реверсивной петли) или перепутанные провода клипа.
+## Выставляет RailNetBuilder при пересчете сети, в сейв не пишется (считается заново)
+var fault: bool = false
+
+# Цепь питания (раньше contour_id). 0 - не подключен к клипу (луч 0)
+var net_id :int:
 	get:
 		return _contours[0]
 	set(val):
@@ -117,7 +121,8 @@ func save_data() -> Dictionary:
 		'comp_path':get_script().resource_path, #  "res://core/components/c_power_clip.gd"
 		# не исп, для наглядности в сейве
 		'comp_name':get_script().resource_path.get_file().get_basename(), # "c_power_clip"
-		"contour_id": contour_id,
+		"net_id": net_id,
+		"contour_id": net_id,   # старый ключ: сейв читается и старыми версиями
 		#"voltage": voltage,
 		"is_flipped": is_flipped,
 		"leg_contours": _contours.duplicate(),   # XX claude-switch: все лучи
@@ -127,8 +132,11 @@ func save_data() -> Dictionary:
 
 
 func load_data(_data: Dictionary) -> void:
-	if _data.has("contour_id"):
-		contour_id = _data.contour_id
+	# net_id новый ключ, contour_id из старых сейвов
+	if _data.has("net_id"):
+		net_id = _data.net_id
+	elif _data.has("contour_id"):
+		net_id = _data.contour_id
 	#if _data.has("voltage"):
 		#voltage = _data.voltage
 	if _data.has("is_flipped"):

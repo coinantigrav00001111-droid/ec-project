@@ -22,8 +22,10 @@ var is_power_view_active: bool = false
 #var power_shader: Shader = preload("res://core/visual/materials/shader_power_track.gdshader") 
 # Индекс слота металла. Обычно это 0 или 1, в зависимости от порядка материалов в Blender.
 var rail_surface_index :int = 1
-# Кэш материалов: ключ - contour_id, значение - ShaderMaterial
+# Кэш материалов: ключ "<цепь>_<полярность>_<масштаб полос>", значение - ShaderMaterial
 static var power_materials_cache: Dictionary = {}
+## Материал аварии (КЗ полярности): красные сплошные рельсы. Один на все траки
+static var power_fault_material: ShaderMaterial
 # stripe_density по умолчанию в shader_power_track.gdshader
 const POWER_STRIPE_DENSITY := 4.0
 # Палитра цветов для контуров (0 - ошибка/нейтралка, 1..MAX - рабочие)
@@ -161,12 +163,12 @@ func _set_power_view():
 	if is_inside_tree(): 
 		await get_tree().physics_frame
 	
-	var cid = power_comp.contour_id
+	var cid = power_comp.net_id
 	#var _volt = power_comp.voltage # вольтаж
 	
-	var _volt = PGM.power_pwm[cid].voltage if cid != 0 else 0# вольтаж
+	var _volt = PGM.power_pwm[cid].voltage if (cid != 0 and PGM.power_pwm.has(cid)) else 0# вольтаж
 	var is_flipped = power_comp.is_flipped
-	var mat = _get_or_create_power_material(cid, _volt,  is_flipped)
+	var mat = _fault_material() if power_comp.fault else _get_or_create_power_material(cid, _volt,  is_flipped)
 	
 	for mesh in mesh_nodes:
 	# Проверяем, есть ли у ноды сам ресурс mesh и хватает ли в нем слотов
@@ -221,3 +223,14 @@ func _get_or_create_power_material(cid: int, _volt: float, is_flipped: bool) -> 
 ## Визуалы со стилем переопределяют, null = рельс с UV по умолчанию
 func _power_style() -> TrackStyle:
 	return null
+
+
+## Красный материал аварии (КЗ полярности). Создается один раз, виден и без напряжения
+func _fault_material() -> ShaderMaterial:
+	if power_fault_material == null:
+		power_fault_material = ShaderMaterial.new()
+		power_fault_material.shader = visual_settings.power_shader
+		power_fault_material.set_shader_parameter("contour_color", Color(1.0, 0.1, 0.08))
+		power_fault_material.set_shader_parameter("is_solid", true)
+		power_fault_material.set_shader_parameter("scroll_speed", 0.0)
+	return power_fault_material

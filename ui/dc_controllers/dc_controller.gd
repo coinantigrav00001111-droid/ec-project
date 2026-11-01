@@ -70,6 +70,8 @@ signal onoff_power_pwm(onoff)
 
 func _ready() -> void:
 	PGM.dc_controller = self
+	# Новая или загруженная партия: напряжения в сети обнулены, ручка встает в ноль (ATTN_10 P5)
+	PGM.state_reset.connect(reset_handle)
 	
 	# Имя контроллера на корпусе
 	var _model_index = 'B' if rotation_with_direction else 'A'
@@ -92,6 +94,17 @@ func _ready() -> void:
 	#XX подключаемся к powercontroller
 	#change_power_pwm.connect(PC.on_change_power_dc)
 	#onoff_power_pwm.connect(PC.on_onoff_power_dc)
+
+
+
+## Ручка и слайдер в нулевое положение после сброса сети (PGM.state_reset). Сеть уже обнулена, ручка только догоняет
+func reset_handle() -> void:
+	power_changing = false
+	if rotation_with_direction:
+		%HandlePower.rotation_degrees = float(handle_max_angle) / 2
+	else:
+		%HandlePower.rotation_degrees = 0
+	current_power_local()
 
 
 

@@ -10,6 +10,12 @@ class_name C_Socket extends ISnappable
 
 var sockets: Array[Dictionary] = []
 
+## Изостыки (ATTN_10 D1): индекс сокета -> true. Электрический стык рвется, если изостык у любого из двух
+## сокетов стыка. Механически трак сцеплен как раньше (снап, вагоны проезжают)
+var gaps: Dictionary = {}
+## Накладки изостыков (MeshInstance3D на Area3D сокета, владелец этот компонент): индекс сокета -> узел
+var _gap_markers: Dictionary = {}
+
 ## Массив ссылок на валидные соседние сущности (для графа сети)
 var connected_entities: Array[Entity] = []
 
@@ -53,6 +59,7 @@ func _parse_paths():
 		var curves = path_comp.all_curves()
 		for i in curves.size():
 			_parse_curve(curves[i], path_comp.path_node, i if split else 0)
+		_refresh_gap_markers()   # изостыки могли прийти из сейва раньше сокетов
 
 
 
@@ -335,6 +342,77 @@ func set_socket_live(i: int, live: bool) -> void:
 
 func is_socket_live(i: int) -> bool:
 	return bool(sockets[i].get("live", true)) if i >= 0 and i < sockets.size() else true
+
+
+## ---- ИЗОСТЫКИ (ATTN_10 §10.5.4) ----
+
+func is_gap(i: int) -> bool:
+	return bool(gaps.get(i, false))
+
+
+## Поставить или снять изостык на сокете i. Сеть питания пересчитывается
+func set_gap(i: int, on: bool) -> void:
+	if i < 0 or i >= sockets.size() or is_gap(i) == on:
+		return
+	if on:
+		gaps[i] = true
+	else:
+		gaps.erase(i)
+	_refresh_gap_markers()
+	if entity and not entity.has_comp(C_Ghost):
+		PGM.request_recalculate()
+
+
+## Подпись сокета для UI: начало или конец маршрута
+func socket_label(i: int) -> String:
+	if i < 0 or i >= sockets.size():
+		return ""
+	return "начало" if bool(sockets[i].get("start", i == 0)) else "конец"
+
+
+## Белая накладка на стыке у сокетов с изостыком
+func _refresh_gap_markers() -> void:
+	for i in sockets.size():
+		var has: bool = _gap_markers.has(i) and is_instance_valid(_gap_markers[i])
+		if is_gap(i) and not has:
+			var area := sockets[i].socket as Area3D
+			if area == null:
+				continue
+			var m := MeshInstance3D.new()
+			var box := BoxMesh.new()
+			box.size = Vector3(2.6, 0.5, 0.4)   # поперек пути, тонкая пластина
+			m.mesh = box
+			var mat := StandardMaterial3D.new()
+			mat.albedo_color = Color(0.95, 0.95, 0.9)
+			m.material_override = mat
+			m.position = Vector3(0.0, 0.15, 0.25)   # чуть внутрь трака (+Z сокета смотрит внутрь)
+			m.name = "GapMarker"
+			area.add_child(m)
+			_gap_markers[i] = m
+		elif not is_gap(i) and has:
+			(_gap_markers[i] as Node).queue_free()
+			_gap_markers.erase(i)
+
+
+
+#------SAVE\LOAD----
+
+## Только изостыки. Без них пусто и в сейв компонент не попадает (старые сейвы не меняются)
+func save_data() -> Dictionary:
+	if gaps.is_empty():
+		return {}
+	return {
+		'comp_path': get_script().resource_path,
+		'comp_name': get_script().resource_path.get_file().get_basename(),
+		'gaps': gaps.keys(),
+	}
+
+
+func load_data(data: Dictionary) -> void:
+	gaps.clear()
+	for k in data.get("gaps", []):
+		gaps[int(k)] = true
+	_refresh_gap_markers()
 
 
 

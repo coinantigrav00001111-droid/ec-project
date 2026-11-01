@@ -281,8 +281,8 @@ func _set_power_view():
 			continue
 		var leg := mini(i, pc.legs - 1)
 		var cid := pc.contour_of(leg)
-		var volt: float = PGM.power_pwm[cid].voltage if cid != 0 else 0.0
-		var mat := _get_or_create_power_material(cid, volt, pc.flip_of(leg))
+		var volt: float = PGM.power_pwm[cid].voltage if (cid != 0 and PGM.power_pwm.has(cid)) else 0.0
+		var mat: ShaderMaterial = _fault_material() if pc.fault else _get_or_create_power_material(cid, volt, pc.flip_of(leg))
 		m.set_surface_override_material(rail_surface_index, mat)
 
 

@@ -9,7 +9,8 @@ extends Node
 ##   ветка 0: F=1, SW=1, S=1, D=0         ветка 1: F=1, SW=1, S=0, D=1
 ## Сценарий 2 (на D свой клип контура 2). Ожидается:
 ##   ветка 0: S=1, D=2 (тупик питается сам, стрелка его не трогает)
-##   ветка 1: в консоли "Столкновение контуров: 1 и 2" (выбранная ветка соединила две цепи), клип-агрессор снимается
+##   ветка 1: выбранная ветка соединила две цепи. D1 (ATTN_10): питает клип с меньшим номером (контур 1), клип D НЕ снимается
+##   и помечается conflict = "label" (в Output строка «клип D: на месте, conflict=label»). Раньше клип-агрессор снимался
 
 const TOE_Z := 11.95
 
@@ -70,6 +71,12 @@ func scenario(title: String, clip_on_d: bool) -> void:
 	for i in 8:
 		await get_tree().physics_frame
 	state("ветка 1", ents)
+	if clip_on_d:
+		var cd := d.get_comp(C_PowerClip) as C_PowerClip
+		if cd == null:
+			print("  клип D: СНЯТ (ошибка: с D1 клипы не снимаются)")
+		else:
+			print("  клип D: на месте, conflict=%s" % ("нет" if cd.conflict == "" else cd.conflict))
 	swc.request(0, &"force")
 	for i in 8:
 		await get_tree().physics_frame

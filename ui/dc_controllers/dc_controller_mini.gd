@@ -10,6 +10,7 @@ extends DCController
 
 func _ready() -> void:
 	PGM.dc_controller = self
+	PGM.state_reset.connect(reset_handle)
 	# начальное значение кнопки видимости 
 	%ShowControllerButton.button_pressed = true
 	# реакция на кнопку dc контроллера (в редакторе он виден по умолчанию)
@@ -35,6 +36,13 @@ func current_power_local() -> void:
 	# Подача сигнала с питание в контур. -1 - во все 
 
 	PGM.set_power_pwm(active_contour, power_local)
+
+
+
+## Сброс сети (PGM.state_reset): слайдер в ноль. Родительская ручка в этом дизайне не используется
+func reset_handle() -> void:
+	power_slider.value = 0
+	current_power_local()
 
 
 

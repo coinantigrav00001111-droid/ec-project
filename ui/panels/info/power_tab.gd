@@ -5,15 +5,54 @@ class_name InfoPowerTab extends InfoTab
 ###########################
 ## Узлы в info_panel.tscn (PowerTab). Трак обновляется по сигналам PGM (update_tab, on_power_track_updated),
 ## поезд живыми значениями в refresh().
+## D1 (ATTN_10): блок «PowerExtras» строится кодом под таблицей трака: состояние цепи и конфликт клипа,
+## «Поменять полярность» (клип), «Изостыки» (чекбокс на каждый сокет трака, доступны и без клипа).
+
+var _extra: VBoxContainer
+var _state_label: Label
+var _rev_box: CheckBox
+var _gap_title: Label
+var _gap_row: HFlowContainer
+var _gap_boxes: Array[CheckBox] = []
+## Для какой сущности построены чекбоксы изостыков
+var _gap_for: Entity
 
 
 func _setup() -> void:
 	_n("PowerClipButton").pressed.connect(_on_power_clip_button_pressed)
 	_n("ClipContourIDButton").item_selected.connect(_on_contour_id_item_selected)
+	_build_extras()
 
 
 func _on_bind() -> void:
+	_gap_for = null
 	update_tab()
+
+
+## Блок D1 под таблицей трака (в info_panel.tscn не правится)
+func _build_extras() -> void:
+	var host := _n("PowerTrackTab") as VBoxContainer
+	if host == null:
+		return
+	_extra = VBoxContainer.new()
+	_extra.name = "PowerExtras"
+	host.add_child(_extra)
+
+	_state_label = Label.new()
+	_state_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_state_label.custom_minimum_size = Vector2(260, 0)
+	_extra.add_child(_state_label)
+
+	_rev_box = CheckBox.new()
+	_rev_box.text = "Поменять полярность (провода клипа)"
+	_rev_box.toggled.connect(_on_reversed_toggled)
+	_extra.add_child(_rev_box)
+
+	_gap_title = Label.new()
+	_gap_title.text = "Изостыки (разрыв цепи на стыке):"
+	_extra.add_child(_gap_title)
+	_gap_row = HFlowContainer.new()
+	_extra.add_child(_gap_row)
 
 
 func update_tab() -> void:
@@ -30,25 +69,14 @@ func update_tab() -> void:
 			_n("PowerTrainTab").hide()
 		
 			var _power_comp = target.get_comp(C_PowerTrack) as C_PowerTrack
-			var _power_clip = target.get_comp(C_PowerClip)
-			var _socket_comp = target.get_comp(C_Socket)
+			var _power_clip = target.get_comp(C_PowerClip) as C_PowerClip
 			var _path = target.get_comp(C_Path)
 			if _path:
 				_n("RadiusLabel").text = str(_path.radius) + ' u/sm'
 				_n("DegLabel").text = str(_path.deg) + '°'
 				_n("LengthLabel").text = str(_path.get_length()) + ' u/sm'
-			if _power_comp: # Если Power трак
-				_n("PowerClipButton").disabled = false
-				_n("PowerClipButton").button_pressed = false
-				_n("ClipContourIDButton").disabled = true  # запрещаем менять контур
-				# Трак
-				# XX claude-switch: у кросса с раздельными цепями "1 | 2" (по лучу на путь)
-				_n("TrackContourLabel").text = _power_comp.contour_text()
-				_n("TrackVoltageLabel").text = _power_comp.voltage_text()
-				_n("FlippedLabel").text = _power_comp.flip_text()
-
-		
-			else: # Если трака нет, то в дефолт все
+			_update_extras(_power_comp, _power_clip)
+			if not _power_comp: # Если трака нет, то в дефолт все
 				_n("PowerClipButton").disabled = true
 				_n("PowerClipButton").button_pressed = false
 				_n("ClipContourIDButton").disabled = true  # запрещаем менять контур
@@ -56,26 +84,26 @@ func update_tab() -> void:
 				_n("TrackVoltageLabel").text = str(0)
 				_n("FlippedLabel").text = str(0) 
 				return
-			
-			# Power Clip
-			if _power_clip: # Если клип есть, то он определяет
-				_n("PowerClipButton").disabled = false
-				_n("PowerClipButton").button_pressed = true
-				_n("ClipContourIDButton").disabled = false # разрешаем менять контур
-				_power_comp = _power_clip # Переключаемся на клип
-				
-			if _power_comp.contour_id != 0 and !_power_clip:
-					_n("PowerClipButton").button_pressed = false
-					_n("PowerClipButton").disabled = true
-					_n("ClipContourIDButton").disabled = true # не менять контур
-					
+
+			# Трак
+			# XX claude-switch: у кросса с раздельными цепями "1 | 2" (по лучу на путь)
+			_n("TrackContourLabel").text = _power_comp.contour_text()
+			_n("TrackVoltageLabel").text = _power_comp.voltage_text()
+			_n("FlippedLabel").text = _power_comp.flip_text()
+
+			# Power Clip. D1: клип можно поставить на любой трак, в том числе уже питаемый (второй фидер цепи)
+			_n("PowerClipButton").disabled = false
+			_n("PowerClipButton").button_pressed = _power_clip != null
+			_n("ClipContourIDButton").disabled = _power_clip == null  # номер меняется только у клипа
+			var _net_id: int = _power_clip.net_id if _power_clip else _power_comp.net_id
+
 			# 💡-option_button- Делаем селектор контура-
-			_fill_clip_contour_button(_power_comp.contour_id)
+			_fill_clip_contour_button(_net_id)
 
 			# Цвета 
-			if  PGM.get_power(_power_comp.contour_id) > 0:
+			if  PGM.get_power(_net_id) > 0:
 				_n("TrackVoltageLabel").modulate = Color(0.0, 0.824, 0.0, 1.0)
-			elif PGM.get_power(_power_comp.contour_id) < 0:
+			elif PGM.get_power(_net_id) < 0:
 				_n("TrackVoltageLabel").modulate = Color(1.0, 0.302, 0.043, 1.0)
 			else:
 				_n("TrackVoltageLabel").modulate = Color(1.0, 1.0, 1.0, 1.0)
@@ -95,7 +123,7 @@ func refresh() -> void:
 	var _chassis_comp = target.get_comp(C_Chassis) as C_Chassis
 	if not _engine_comp or not _chassis_comp: return
 
-	_n("EngineContourLabel").text = str(_engine_comp.power.contour_id)
+	_n("EngineContourLabel").text = str(_engine_comp.power.net_id)
 	_n("TrainVoltageLabel").text = str(_engine_comp.power.voltage)
 
 	var _spd = _chassis_comp.current_speed
@@ -104,7 +132,7 @@ func refresh() -> void:
 	_n("CentrifugalForceLabel").text = tr( "%0.2f" % [_c_force] if abs(_c_force) > 0.05 else '0.0' )
 
 	# Цвета
-	var _pw: float = PGM.get_power(_engine_comp.power.contour_id)
+	var _pw: float = PGM.get_power(_engine_comp.power.net_id)
 	if _pw > 0:
 		_n("TrainVoltageLabel").modulate = Color(0.0, 0.824, 0.0, 1.0)
 		_n("SpeedLabel").modulate = Color(0.0, 0.824, 0.0, 1.0)
@@ -122,9 +150,9 @@ func on_power_track_updated(_contour : int, _voltage : float) ->void:
 	var _power_comp = target.has_comp(C_PowerTrack)
 	if _power_comp: # Если трак
 		_power_comp = target.get_comp(C_PowerTrack)
-		_n("TrackContourLabel").text = str(_power_comp.contour_id)
-		_n("TrackVoltageLabel").text = str(PGM.get_power(_power_comp.contour_id))
-		_n("FlippedLabel").text = str(_power_comp.is_flipped)
+		_n("TrackContourLabel").text = _power_comp.contour_text()
+		_n("TrackVoltageLabel").text = _power_comp.voltage_text()
+		_n("FlippedLabel").text = _power_comp.flip_text()
 	
 		if  _voltage > 0:
 			_n("TrackVoltageLabel").modulate = Color(0.0, 0.824, 0.0, 1.0)
@@ -147,10 +175,10 @@ func _on_contour_id_item_selected(index: int):
 	var new_contour_id = _n("ClipContourIDButton").get_item_id(index)
 	
 	# Если значение изменилось — обновляем данные компонента
-	if power_clip.contour_id != new_contour_id:
+	if power_clip.net_id != new_contour_id:
 		power_clip.set_contour(new_contour_id)
-		# Вешаем на трак новый контур
-		target.get_comp(C_PowerTrack).contour_id = new_contour_id
+		# Вешаем на трак новый контур (пересчет сети поправит остальные траки)
+		target.get_comp(C_PowerTrack).net_id = new_contour_id
 		
 		#await get_tree().physics_frame
 		
@@ -164,15 +192,17 @@ func _on_power_clip_button_pressed() -> void:
 	if not target or not target.has_comp(C_PowerTrack):
 		return # это powertrack?
 	
-	# Выбор контура 
-	var _contour: int = _n("ClipContourIDButton").selected
-	var _btn_pressed = _n("PowerClipButton").button_pressed
+	var _btn_pressed: bool = _n("PowerClipButton").button_pressed
+	# Выбор контура: трак уже в цепи (второй фидер), иначе номер из списка (0 = первый свободный)
+	var _contour: int = (target.get_comp(C_PowerTrack) as C_PowerTrack).net_id
+	if _contour == 0:
+		var _btn := _n("ClipContourIDButton") as OptionButton
+		_contour = _btn.get_item_id(_btn.selected) if _btn.selected >= 0 else 0
 	
-	# Менеджер проверит и создаст 
+	# Менеджер проверит и создаст (0 если свободных номеров нет)
 	_contour = PGM.create_power_clip(target, _contour, _btn_pressed)
-	
-	# Обновляем UI, чтобы игрок сразу визуально увидел, какой контур ему выдали
-	_n("ClipContourIDButton").selected = _contour
+	if _btn_pressed and _contour == 0:
+		_n("PowerClipButton").button_pressed = false
 	update_tab()
 
 
@@ -187,11 +217,12 @@ func _fill_clip_contour_button(_current_contour_id) -> void:
 	var occupied_contours = PGM.get_occupied_contours()
 	var current_id = _current_contour_id # Текущий контур этого объекта
 
-	# 2. 2️⃣ Динамически наполняем список доступными контурами
+	# 2. 2️⃣ Все номера: у цепи может быть несколько фидеров, занятый номер отмечается, но выбирается
 	for i in range(1, PGM.MAX_CONTOURS + 1):
-		# Контур доступен, если он СВОБОДЕН, ИЛИ если это "родной" контур текущего объекта
-		if i == current_id or not i in occupied_contours:
-			option_button.add_item("Контур " + str(i), i) # Текст и внутренний ID элемента
+		var _text := "Контур " + str(i)
+		if i != current_id and i in occupied_contours:
+			_text += " (занят)"
+		option_button.add_item(_text, i) # Текст и внутренний ID элемента
 	
 	# 3. 3️⃣ Выставляем визуальный фокус на текущий контур объекта
 	# Так как мы передавали реальный ID контура вторым аргументом в add_item,
@@ -200,3 +231,70 @@ func _fill_clip_contour_button(_current_contour_id) -> void:
 		if option_button.get_item_id(idx) == current_id:
 			option_button.select(idx)
 			break
+
+
+## Блок D1: состояние цепи, «Поменять полярность», изостыки
+func _update_extras(power_track: C_PowerTrack, clip: C_PowerClip) -> void:
+	if _extra == null:
+		return
+	_extra.visible = power_track != null
+	if power_track == null:
+		return
+
+	# Состояние: что не так с клипом, треком или цепью
+	var lines: PackedStringArray = []
+	if clip and clip.conflict_text() != "":
+		lines.append(clip.conflict_text())
+	if power_track.fault:
+		lines.append("КЗ: здесь не сходится полярность (реверсивная петля или перепутанные провода)")
+	var net_id: int = clip.net_id if clip else power_track.net_id
+	if net_id != 0 and PGM.shorted_nets.has(net_id):
+		lines.append("Цепь %d в КЗ полярности: защита отключает напряжение (сброс: аварийный стоп или reset)" % net_id)
+	_state_label.text = "\n".join(lines)
+	_state_label.visible = not lines.is_empty()
+	_state_label.modulate = Color(1.0, 0.45, 0.2, 1.0)
+
+	# Полярность подключения клипа
+	_rev_box.visible = clip != null
+	if clip:
+		_rev_box.set_pressed_no_signal(clip.reversed)
+
+	# Изостыки: чекбокс на каждый сокет (пересобираются при смене цели)
+	var sock := target.get_comp(C_Socket) as C_Socket
+	var count: int = sock.sockets.size() if sock else 0
+	if _gap_for != target or _gap_boxes.size() != count:
+		_rebuild_gap_boxes(sock, count)
+	for i in _gap_boxes.size():
+		_gap_boxes[i].set_pressed_no_signal(sock.is_gap(i))
+	_gap_title.visible = count > 0
+	_gap_row.visible = count > 0
+
+
+func _rebuild_gap_boxes(sock: C_Socket, count: int) -> void:
+	for b in _gap_boxes:
+		if is_instance_valid(b):
+			b.queue_free()
+	_gap_boxes.clear()
+	_gap_for = target
+	for i in count:
+		var box := CheckBox.new()
+		box.text = "%d: %s" % [i, sock.socket_label(i)]
+		box.toggled.connect(_on_gap_toggled.bind(i))
+		_gap_row.add_child(box)
+		_gap_boxes.append(box)
+
+
+func _on_reversed_toggled(on: bool) -> void:
+	if not target:
+		return
+	var clip := target.get_comp(C_PowerClip) as C_PowerClip
+	if clip:
+		clip.set_reversed(on)
+
+
+func _on_gap_toggled(on: bool, socket_index: int) -> void:
+	if not target:
+		return
+	var sock := target.get_comp(C_Socket) as C_Socket
+	if sock:
+		sock.set_gap(socket_index, on)

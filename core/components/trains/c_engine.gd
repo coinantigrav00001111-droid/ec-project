@@ -20,7 +20,7 @@ var speed_multiplier: float = 10.5
 
 # Что в моменте на моторе
 var power = {
-	'contour_id': 0 ,
+	'net_id': 0 ,
 	'voltage': 0.0 ,
 	}
 
@@ -55,7 +55,7 @@ func _physics_process(_delta: float) -> void:
 			#break
 
 	# Обновляем состояние мотора
-	power.contour_id = current_contour
+	power.net_id = current_contour
 	power.voltage = active_voltage
 
 	# Если 0, то выход

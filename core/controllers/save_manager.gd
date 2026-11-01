@@ -124,6 +124,8 @@ func clear_scene() -> void:
 		if clip in PGM.active_clips:
 			PGM.active_clips.erase(clip)
 		child.queue_free()
+	# Сеть питания: напряжения в ноль, защита снята, пульты ставят ручки в ноль (ATTN_10 P5)
+	PGM.reset_state()
 		
 	#INFO ДЕРГАЕМ ПАНЕЛЬ!
 	if tool_controller:
@@ -149,6 +151,8 @@ func load_game(slot_name: String  ='savegame', dir: String = SAVE_DIR) -> void:
 
 	# Ждем, пока Godot гарантированно удалит старые объекты из памяти и физики
 	await get_tree().physics_frame
+	# Сеть питания и пульты: старые напряжения не переживают загрузку (ATTN_10 P5)
+	PGM.reset_state()
 
 	## 0️⃣ 3. СПАВН СУЩНОСТЕЙ С НАКАТЫВАНИЕМ ДАННЫХ
 	for e_data in _saved_game.entities:
