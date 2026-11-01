@@ -56,9 +56,9 @@ script = ExtResource("14_su")
 script = ExtResource("16_es")
 id = 1421
 key = &"track.straight.s239_wood_ballast"
-facets = { "ballast": "yes", "shape": "straight", "sleeper": "wood" }
-name = "S239 Дерево+балласт"
-description = "Прямой 23.9см, стиль «Дерево+балласт» (h=0.85)"
+facets = { "ballast": "yes", "shape": "straight" }
+name = "S239 wood_ballast"
+description = "Прямой 23.9см, стиль «wood_ballast» (h=0.85), тестовый объект Track Studio"
 tag = &"straight"
 icon = ExtResource("15_ic")
 components = Array[ExtResource("1_cs")]([SubResource("Resource_id"), SubResource("Resource_vis"), SubResource("Resource_drag"), SubResource("Resource_piv"), SubResource("Resource_hov"), SubResource("Resource_sel"), SubResource("Resource_blk"), SubResource("Resource_sock"), SubResource("Resource_pwr"), SubResource("Resource_sup")])

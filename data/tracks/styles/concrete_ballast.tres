@@ -2,12 +2,15 @@
 
 [ext_resource type="Material" path="res://data/tracks/materials/ballast_gravel023.tres" id="1_m4wo3"]
 [ext_resource type="Script" path="res://core/components/tracks/track_style.gd" id="1_ts"]
+[ext_resource type="Material" path="res://data/tracks/materials/rail_metal007.tres" id="2_hx7wv"]
 [ext_resource type="Material" path="res://data/tracks/materials/sleeper_concrete030.tres" id="3_hx7wv"]
 
 [resource]
 script = ExtResource("1_ts")
 id = &"concrete_ballast"
 rail_profile = PackedVector2Array(-0.1, 0, -0.1, 0.25, 0.1, 0.25, 0.1, 0)
+rail_material = ExtResource("2_hx7wv")
+rail_uv_tile = Vector2(1, 1)
 sleeper_size = Vector3(3, 0.2, 0.34)
 sleeper_gap = 0.36
 sleeper_material = ExtResource("3_hx7wv")
