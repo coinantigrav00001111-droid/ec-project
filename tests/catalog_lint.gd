@@ -41,6 +41,7 @@ func _check(path: String, res: EntitySetting, seen: Dictionary) -> Array[String]
 	var out: Array[String] = []
 	if res.key == &"":
 		out.append("%s: пустой key (сейчас временный %s)" % [path, res.get_key()])
+	printt(res.get_key())
 	var k := res.get_key()
 	if seen.has(k):
 		out.append("%s: key '%s' уже у %s" % [path, k, seen[k]])

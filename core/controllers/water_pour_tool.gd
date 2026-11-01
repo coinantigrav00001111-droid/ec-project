@@ -225,7 +225,7 @@ func _refresh() -> void:
 	var step: float = Global.settings.terrain_grid_step
 	var level := _level()
 	var seed_cell := WaterFill.cell_of(_cursor, step)
-	var reuse := not _res.is_empty() and _res.get("ok", false) and _res_level == level and _res_ver == _terrain_ver \
+	var reuse = not _res.is_empty() and _res.get("ok", false) and _res_level == level and _res_ver == _terrain_ver \
 			and (_res["cells"] as Dictionary).has(seed_cell)
 	if not reuse:
 		var ly := float(level) * float(Global.settings.layer_height)
