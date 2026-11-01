@@ -39,4 +39,3 @@ func get_tag() -> StringName:
 	if setting and 'tag' in setting:
 		tag = setting.tag 
 	return tag
-
