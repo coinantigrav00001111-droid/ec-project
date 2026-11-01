@@ -172,6 +172,29 @@ func _ready() -> void:
 	check("Г с поперечным вырезом: все куски триангулируются", all_tri)
 	layer2.free()
 
+	# --- 13.3 S5: ступенчатый скос ---
+	var bs := FoamCutter.bevel_steps(Vector2(0, 0), Vector2(10, 0), Vector2(5, 5), 2.0, 3)
+	check("bevel: по полигону на слой", bs.size() == 3, str(bs.size()))
+	check("bevel: слой 0 начинается у гребня", bs.size() == 3 and Geometry2D.is_point_in_polygon(Vector2(5, 0.5), bs[0])
+			and not Geometry2D.is_point_in_polygon(Vector2(5, -0.5), bs[0]))
+	check("bevel: слой 1 сдвинут на ступень (2 ю)", bs.size() == 3 and Geometry2D.is_point_in_polygon(Vector2(5, 2.5), bs[1])
+			and not Geometry2D.is_point_in_polygon(Vector2(5, 1.5), bs[1]))
+	check("bevel: слой 2 сдвинут на 4 ю", bs.size() == 3 and Geometry2D.is_point_in_polygon(Vector2(5, 4.5), bs[2])
+			and not Geometry2D.is_point_in_polygon(Vector2(5, 3.5), bs[2]))
+	var bs2 := FoamCutter.bevel_steps(Vector2(0, 0), Vector2(10, 0), Vector2(5, -5), 1.0, 2)
+	check("bevel: сторона по курсору (вниз)", bs2.size() == 2 and Geometry2D.is_point_in_polygon(Vector2(5, -1.5), bs2[1])
+			and not Geometry2D.is_point_in_polygon(Vector2(5, 0.5), bs2[1]))
+	var bs3 := FoamCutter.bevel_steps(Vector2(0, 0), Vector2(10, 10), Vector2(0, 10), 1.0, 2)   # диагональный гребень
+	var diag := 1.0 / sqrt(2.0)
+	check("bevel: диагональ, слой 1 сдвинут на 1 ю по нормали", bs3.size() == 2
+			and Geometry2D.is_point_in_polygon(Vector2(0, 10) + Vector2(0.0, 0.0), bs3[1])
+			and not Geometry2D.is_point_in_polygon(Vector2(5.0 - diag * 0.5, 5.0 + diag * 0.5), bs3[1]))
+	check("bevel: все полигоны годны", bs.size() == 3 and FoamCutter.check(bs[0]) == "" and FoamCutter.check(bs[2]) == "")
+	check("bevel: курсор на гребне пустой", FoamCutter.bevel_steps(Vector2(0, 0), Vector2(10, 0), Vector2(20, 0), 1.0, 3).is_empty())
+	check("bevel: нулевая ступень пустая", FoamCutter.bevel_steps(Vector2(0, 0), Vector2(10, 0), Vector2(5, 5), 0.0, 3).is_empty())
+	check("bevel: ноль слоёв пустой", FoamCutter.bevel_steps(Vector2(0, 0), Vector2(10, 0), Vector2(5, 5), 1.0, 0).is_empty())
+	check("bevel: a = b пустой", FoamCutter.bevel_steps(Vector2(3, 3), Vector2(3, 3), Vector2(5, 5), 1.0, 3).is_empty())
+
 	# --- 13.3 S4: грани среза ---
 	var outline := poly([Vector2(0, 0), Vector2(10, 0), Vector2(10, 10), Vector2(0, 10)])
 	check("edge_on_outline: ребро на контуре", C_TerrainLayer.edge_on_outline(Vector2(0, 0), Vector2(10, 0), outline))

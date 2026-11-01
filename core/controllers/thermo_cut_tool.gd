@@ -2,7 +2,7 @@ class_name ThermoCutTool extends Node
 
 # XX claude-terra 13.3 S2 (новый файл)
 ##########################
-## Терморезак (ATTN_13 §13.3). Вырезы в листах пенопласта: прямоугольник, полигон, полоса-ущелье, линия-рез.
+## Терморезак (ATTN_13 §13.3). Вырезы в листах пенопласта: прямоугольник, полигон, полоса-ущелье, линия-рез, скос.
 ##########################
 ## Инструмент не создаёт объектов: вырез задаётся в мире (полигон XZ и диапазон высот), а FoamCutter.apply
 ## превращает его в обычные FoamCut каждого листа под ним (стопка листов режется вместе). Формат сейва не меняется.
@@ -13,6 +13,7 @@ class_name ThermoCutTool extends Node
 ## Вершины на мировой сетке terrain_grid_step.
 ## Ввод: ЛКМ угол или вершина, второй клик (прямоугольник) или клик по первой вершине / Enter (полигон) режут,
 ## полоса: ЛКМ точки оси, клик по последней точке или Enter режут, [ и ] ширина (Shift ×5);
+## скос (S5): как линия-рез, но прямая это гребень, глубина (Ctrl+R/F) это высота скоса в слоях, [ и ] шаг ступени;
 ## линия-рез: две точки задают прямую, курсор выбирает сторону, третий клик отсекает эту сторону целиком;
 ## Backspace убрать вершину, ПКМ сбросить (без рисунка выйти в SelectTool), R/F и Shift+R/F, PgUp/PgDn плоскость,
 ## Ctrl+R/F глубина (Shift ×5), End насквозь, Ctrl+Z отменить последний вырез.
@@ -22,8 +23,12 @@ const SHAPE_RECT := &"rect"
 const SHAPE_POLYGON := &"polygon"
 const SHAPE_STRIP := &"strip"
 const SHAPE_LINE := &"line"
-const SHAPES := [SHAPE_RECT, SHAPE_POLYGON, SHAPE_STRIP, SHAPE_LINE]
-const SHAPE_NAMES := {&"rect": "прямоугольник", &"polygon": "полигон", &"strip": "ущелье", &"line": "линия-рез"}
+const SHAPE_BEVEL := &"bevel"
+const SHAPES := [SHAPE_RECT, SHAPE_POLYGON, SHAPE_STRIP, SHAPE_LINE, SHAPE_BEVEL]
+const SHAPE_NAMES := {&"rect": "прямоугольник", &"polygon": "полигон", &"strip": "ущелье", &"line": "линия-рез", &"bevel": "скос"}
+## Шаг ступени скоса (ширина одной ступени), ю
+const RUN_DEFAULT := 1.0
+const RUN_MAX := 10.0
 ## Ширина полосы по умолчанию, ю
 const WIDTH_DEFAULT := 4.0
 
@@ -55,6 +60,8 @@ var _base_y := 0.0                      # высота поверхности п
 var _dy := 0                            # сдвиг плоскости от поверхности, слоёв
 var _depth := 1
 var _width := WIDTH_DEFAULT             # ширина полосы-ущелья, ю
+var _run := RUN_DEFAULT                 # ширина ступени скоса, ю
+var _bevel_polys: Array[PackedVector2Array] = []   # полигоны слоёв скоса для превью и резки
 var _through := false                   # насквозь, до стола
 var _dirty := true
 var _reason := ""                       # почему сейчас нельзя резать ("" - можно или ещё нечего резать)
@@ -97,6 +104,7 @@ func _set_hint_contexts(on: bool) -> void:
 	Hints.set_context(&"cut_polygon", on and shape == SHAPE_POLYGON)
 	Hints.set_context(&"cut_strip", on and shape == SHAPE_STRIP)
 	Hints.set_context(&"cut_line", on and shape == SHAPE_LINE)
+	Hints.set_context(&"cut_bevel", on and shape == SHAPE_BEVEL)
 
 
 ## --- Ввод ---
@@ -136,12 +144,15 @@ func handle_input(event: InputEvent) -> void:
 		_undo_cut()
 		return
 
-	# [ и ] (по физической клавише): ширина полосы, Shift ×5
-	if shape == SHAPE_STRIP and (k.keycode == KEY_BRACKETLEFT or k.physical_keycode == KEY_BRACKETLEFT
+	# [ и ] (по физической клавише): ширина полосы или шаг ступени скоса, Shift ×5
+	if (shape == SHAPE_STRIP or shape == SHAPE_BEVEL) and (k.keycode == KEY_BRACKETLEFT or k.physical_keycode == KEY_BRACKETLEFT
 			or k.keycode == KEY_BRACKETRIGHT or k.physical_keycode == KEY_BRACKETRIGHT):
 		var wstep: float = Global.settings.terrain_grid_step * (5.0 if k.shift_pressed else 1.0)
 		var left := k.keycode == KEY_BRACKETLEFT or k.physical_keycode == KEY_BRACKETLEFT
-		_width = clampf(_width + (-wstep if left else wstep), FoamCutter.STRIP_WIDTH_MIN, FoamCutter.STRIP_WIDTH_MAX)
+		if shape == SHAPE_STRIP:
+			_width = clampf(_width + (-wstep if left else wstep), FoamCutter.STRIP_WIDTH_MIN, FoamCutter.STRIP_WIDTH_MAX)
+		else:
+			_run = clampf(_run + (-wstep if left else wstep), Global.settings.terrain_grid_step, RUN_MAX)
 		_dirty = true
 		return
 
@@ -196,13 +207,15 @@ func _on_click() -> void:
 				var axis := _verts.duplicate()
 				axis.append(_cursor)
 				_add_vertex(FoamCutter.strip_why(axis, _width) if axis.size() >= 2 else "")
-		SHAPE_LINE:
+		SHAPE_LINE, SHAPE_BEVEL:
 			if _verts.size() == 1:
 				if _cursor.is_equal_approx(_verts[0]):
 					_say("Точки совпали")
 				else:
 					_verts.append(_cursor)
 					_dirty = true
+			elif shape == SHAPE_BEVEL:
+				_commit_bevel()
 			else:
 				var hp := FoamCutter.half_plane(_verts[0], _verts[1], _cursor)
 				_try_commit(hp, "Курсор на линии: выберите сторону")
@@ -223,7 +236,7 @@ func _add_vertex(why: String) -> void:
 func _undo_vertex() -> void:
 	if not _drawing:
 		return
-	if (shape == SHAPE_POLYGON or shape == SHAPE_STRIP or shape == SHAPE_LINE) and _verts.size() > 1:
+	if shape != SHAPE_RECT and _verts.size() > 1:
 		_verts.remove_at(_verts.size() - 1)
 	else:
 		_drawing = false
@@ -265,7 +278,24 @@ func _try_commit(poly: PackedVector2Array, empty_why: String = "Нулевой �
 	if why != "":
 		_say(why)
 		return
-	var recs := FoamCutter.apply(poly, _y_low(), _plane_y())
+	_finish(FoamCutter.apply(poly, _y_low(), _plane_y()))
+
+
+## Скос по двум точкам гребня и стороне курсора: высота = глубина (слоёв), ступень = _run
+func _commit_bevel() -> void:
+	var polys := FoamCutter.bevel_steps(_verts[0], _verts[1], _cursor, _run, _depth)
+	if polys.is_empty():
+		_say("Курсор на линии: выберите сторону")
+		return
+	var why := FoamCutter.check(polys[0])
+	if why != "":
+		_say(why)
+		return
+	_finish(FoamCutter.apply_bevel(polys, _plane_y()))
+
+
+## Записи FoamCutter.apply или apply_bevel в историю. Пустые: резать было нечего
+func _finish(recs: Array[Dictionary]) -> void:
 	if recs.is_empty():
 		_say("Здесь нет пенопласта на этих слоях")
 		return
@@ -343,6 +373,7 @@ func _refresh() -> void:
 	_reason = ""
 	_hits = 0
 	_closing = false
+	_bevel_polys = []
 	var poly := PackedVector2Array()
 	var step: float = Global.settings.terrain_grid_step
 	if _drawing and _has_cursor:
@@ -371,11 +402,28 @@ func _refresh() -> void:
 				if _verts.size() >= 2:
 					poly = FoamCutter.half_plane(_verts[0], _verts[1], _cursor)
 					_reason = "Курсор на линии: выберите сторону" if poly.is_empty() else FoamCutter.check(poly)
+			SHAPE_BEVEL:
+				if _verts.size() >= 2:
+					_bevel_polys = FoamCutter.bevel_steps(_verts[0], _verts[1], _cursor, _run, _depth)
+					if _bevel_polys.is_empty():
+						_reason = "Курсор на линии: выберите сторону"
+					else:
+						poly = _bevel_polys[0]
+						_reason = FoamCutter.check(poly)
 			_:
 				poly = FoamCutter.rect(_verts[0], _cursor)
 				_reason = "Нулевой размер" if poly.is_empty() else FoamCutter.check(poly)
 	if not poly.is_empty() and _reason == "":
-		_hits = FoamCutter.affected(poly, _y_low(), _plane_y()).size()
+		if shape == SHAPE_BEVEL:   # листы, задетые любой ступенью
+			var T: float = Global.settings.layer_height
+			var seen := {}
+			for k in _bevel_polys.size():
+				var yt := _plane_y() - float(k) * T
+				for l in FoamCutter.affected(_bevel_polys[k], yt - T, yt):
+					seen[l] = true
+			_hits = seen.size()
+		else:
+			_hits = FoamCutter.affected(poly, _y_low(), _plane_y()).size()
 		if _hits == 0:
 			_reason = "Здесь нет пенопласта на этих слоях"
 	_redraw(poly)
@@ -449,7 +497,19 @@ func _redraw(poly: PackedVector2Array) -> void:
 	_line(Vector3(_cursor.x - arm, top, _cursor.y), Vector3(_cursor.x + arm, top, _cursor.y), COL_CURSOR)
 	_line(Vector3(_cursor.x, top, _cursor.y - arm), Vector3(_cursor.x, top, _cursor.y + arm), COL_CURSOR)
 	if _drawing:
-		if not poly.is_empty():
+		if shape == SHAPE_BEVEL and not _bevel_polys.is_empty():
+			# каждая ступень на своём слое: контур сверху и снизу слоя, обрезанный по габариту листов
+			var T: float = Global.settings.layer_height
+			var win := _preview_window()
+			for k in _bevel_polys.size():
+				var yt := top - float(k) * T
+				var yb := maxf(yt - T, 0.0)
+				for pc in FoamCutter.clip_to_window(_bevel_polys[k], win):
+					_ring(pc, yt, col)
+					_ring(pc, yb, col)
+					for v in pc:
+						_line(Vector3(v.x, yt, v.y), Vector3(v.x, yb, v.y), col)
+		elif not poly.is_empty():
 			var pieces: Array[PackedVector2Array] = [poly]
 			if shape == SHAPE_LINE:   # полуплоскость огромна: рисуем только часть в окне листов
 				pieces = FoamCutter.clip_to_window(poly, _preview_window())
@@ -458,7 +518,7 @@ func _redraw(poly: PackedVector2Array) -> void:
 				_ring(pc, bottom, col)
 				for v in pc:
 					_line(Vector3(v.x, top, v.y), Vector3(v.x, bottom, v.y), col)
-		elif shape == SHAPE_LINE and _verts.size() == 1:
+		elif (shape == SHAPE_LINE or shape == SHAPE_BEVEL) and _verts.size() == 1:
 			_line(Vector3(_verts[0].x, top, _verts[0].y), Vector3(_cursor.x, top, _cursor.y), COL_CHAIN)
 		elif shape == SHAPE_POLYGON or shape == SHAPE_STRIP:
 			# незамкнутая ломаная: готовые рёбра и ребро к курсору
@@ -508,6 +568,11 @@ func _update_note() -> void:
 		"Плоскость: ур. %d · %s" % [roundi(_plane_y() / T), depth_text]]
 	if shape == SHAPE_STRIP:
 		lines[1] += " · ширина %.0f" % _width
+	elif shape == SHAPE_BEVEL:
+		var deg := rad_to_deg(atan2(T, _run))
+		lines[1] = "Гребень: ур. %d · высота %d · ступень %.0f ю (%.0f°)" % [roundi(_plane_y() / T), _depth, _run, deg]
+		if _drawing:
+			lines.append("Гребень A-B, курсор выбирает сторону среза" if _verts.size() >= 2 else "Вторая точка гребня")
 	elif shape == SHAPE_LINE and _drawing:
 		lines.append("Точка A и B задают прямую, курсор выбирает сторону" if _verts.size() >= 2 else "Вторая точка прямой")
 	var col := Color.WHITE

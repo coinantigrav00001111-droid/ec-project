@@ -107,6 +107,41 @@ static func half_plane(a: Vector2, b: Vector2, side: Vector2, reach: float = REA
 	return res
 
 
+## 13.3 S5. Ступенчатый скос. Прямая a-b это гребень (верх скоса), сторона side та, где пенопласт убирается.
+## Слой k (k = 0 верхний) вырезается там, где расстояние от гребня не меньше k * run: получается лестница из count
+## ступеней, каждая шириной run. Возвращает по одному полигону на слой (индекс = k), пустой массив: a и b совпали,
+## side лежит на прямой, run <= 0 или count < 1. Вырезы по слоям это обычные FoamCut: модель и сейв не меняются
+static func bevel_steps(a: Vector2, b: Vector2, side: Vector2, run: float, count: int, reach: float = REACH) -> Array[PackedVector2Array]:
+	var res: Array[PackedVector2Array] = []
+	if run <= 0.0 or count < 1:
+		return res
+	var d := b - a
+	if d.length() < C_Contour.EPS:
+		return res
+	d = d.normalized()
+	var n := Vector2(-d.y, d.x)
+	var s := n.dot(side - a)
+	if absf(s) < C_Contour.EPS:
+		return res
+	if s < 0.0:
+		n = -n
+	for k in count:
+		var shift := n * (float(k) * run)
+		res.append(half_plane(a + shift, b + shift, side + shift, reach))
+	return res
+
+
+## Вырезать скос: polys из bevel_steps, y_top = верх скоса (плоскость). Слой k режется в диапазоне
+## [y_top - (k + 1) * T, y_top - k * T). Записи для revert() общие на весь скос
+static func apply_bevel(polys: Array[PackedVector2Array], y_top: float) -> Array[Dictionary]:
+	var res: Array[Dictionary] = []
+	var T: float = Global.settings.layer_height
+	for k in polys.size():
+		var yt := y_top - float(k) * T
+		res.append_array(apply(polys[k], yt - T, yt))
+	return res
+
+
 ## Годен ли вырез: причина отказа или "". Те же правила, что у контура листа (D3): без самопересечений,
 ## ребро не короче шага сетки, площадь не меньше 1 ю², вершин не больше MAX_POINTS
 static func check(poly: PackedVector2Array) -> String:
