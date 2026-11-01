@@ -39,8 +39,9 @@ class_name EntitySetting extends Resource
 # XX claude-terra 13.2: DRAW_POLYGON - лист пенопласта произвольной формы: вершины контура ставятся кликами (C_PolygonDraw)
 # 13.2 B5: DRAW_STRIP - лист-полоса: клики ставят точки оси, ширина [ и ], контур = ось, смещённая на полширины
 # 13.3 S2: CUT_TOOL - не объект, а инструмент: кнопка включает ThermoCutTool (терморезак), форма выреза в facet "shape" (rect, polygon)
+# 13.5 G3: PLASTER_TOOL - инструмент «Гипсовый бинт» (PlasterTool), тоже не объект
 # 13.4 W3: WATER_TOOL - инструмент «Налить воду» (WaterPourTool), тоже не объект
-enum BuildBehavior { GHOST_PLACE, SPAWN_AND_DRAG, PLACE_THEN_STRETCH, DRAW_POLYGON, DRAW_STRIP, CUT_TOOL, WATER_TOOL }
+enum BuildBehavior { GHOST_PLACE, SPAWN_AND_DRAG, PLACE_THEN_STRETCH, DRAW_POLYGON, DRAW_STRIP, CUT_TOOL, WATER_TOOL, PLASTER_TOOL }
 
 ## Как BuildTool ставит объект: гост + клик, или сразу спавн в драг
 @export var build_behavior: BuildBehavior = BuildBehavior.GHOST_PLACE
@@ -73,7 +74,7 @@ func _base_pick_layers() -> Array:
 		return [&'ground']   # трак ставится на уровень над землей, а не на другие траки
 	if category == &'terrain':
 		return [&'ground']   # лист пенопласта ставится на стол или на верх другого листа
-	return [&'ground', &'tracks', &'trains']
+	return [&'ground', &'tracks', &'trains', &'plaster']   # 13.5: здания и декор встают на оболочку гипсового бинта
 
 
 ## Ключ объекта. Пустой `key` заменяется ключом из категории, тега и имени файла

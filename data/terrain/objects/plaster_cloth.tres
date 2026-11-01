@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="EntitySetting" format=3]
+
+[ext_resource type="Script" uid="uid://do5hjkm3r2pdg" path="res://core/entity_setting.gd" id="1_es"]
+[ext_resource type="Texture2D" uid="uid://dj7cifetaf6ho" path="res://ui/icons/tool/paint-brush.svg" id="2_ic"]
+
+[resource]
+script = ExtResource("1_es")
+key = &"terrain.plaster.cloth"
+id = 6030
+name = "Гипсовый бинт"
+description = "Гладкая оболочка поверх ступеней пенопласта: ЛКМ весь холм, Shift+ЛКМ лист, Ctrl+ЛКМ снять, [ ] ступень"
+category = &"terrain"
+tag = &"plaster"
+icon = ExtResource("2_ic")
+build_behavior = 7

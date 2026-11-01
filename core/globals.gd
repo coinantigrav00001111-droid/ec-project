@@ -87,5 +87,7 @@ func active_layers(data:Array) -> int:
 			'ghost'  : i = i | 1 << 10
 			# XX claude-terra 13.4: поверхность воды (C_Water). Не в PROBE_LAYERS: вагон воду не замечает; ищут только инструмент и плавающие
 			'water'  : i = i | 1 << 11
+			# XX claude-terra 13.5: оболочка гипсового бинта (PlasterSkin). Не в PROBE_LAYERS и не в лучах листов и траков: её видит только постановка зданий и декора
+			'plaster': i = i | 1 << 12
 			## Контуры Outline это visual layers 15-20 (cull_mask), к физике не относятся
 	return i

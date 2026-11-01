@@ -21,10 +21,33 @@ const GROUP := &'terrain_layer'
 const WATER_GROUP := &'water_body'
 ## water_level_at: воды над точкой нет
 const NO_WATER := -INF
+## 13.5. Оболочка гипсового бинта (PlasterSkin), один узел на макет
+var skin: PlasterSkin
+
 ## Допуск по высоте, ю: касание верха одного листа с низом другого не считается пересечением
 const EPS := 0.001
 ## Пересечение меньше этой площади (ю²) считаем касанием по ребру, а не наложением
 const MIN_OVERLAP_AREA := 0.01
+
+
+func _ready() -> void:
+	skin = PlasterSkin.new()
+	add_child(skin)
+	terrain_changed.connect(_on_terrain_changed_plaster)
+
+
+## XX claude-terra 13.5. Оболочку пересчитываем, если изменилась область под ней (или её ещё нет)
+func _on_terrain_changed_plaster(aabb: AABB) -> void:
+	if not skin.has_content:
+		skin.request()   # дешёво: без листов с smooth > 0 rebuild выходит сразу
+		return
+	if skin.region.grow(2.0).intersects(Rect2(aabb.position.x, aabb.position.z, aabb.size.x, aabb.size.z), true):
+		skin.request()
+
+
+## Сила или стадия листа с гипсовым бинтом поменялась, или бинт снят
+func plaster_dirty() -> void:
+	skin.request()
 
 
 ## Живые листы: без призраков, без листов в драге (они на слое ghost и землей не являются)

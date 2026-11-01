@@ -31,6 +31,10 @@ const MAX_LEVELS := 16
 ## Толщина в слоях (GlobalSetting.layer_height). Целое, минимум 1
 var levels := 1
 
+## XX claude-terra 13.5. Гипсовый бинт: ширина пандуса на слой в ю (0 = нет оболочки). Оболочку строит TGM.skin (PlasterSkin)
+const PLASTER_MAX_RUN := 4
+var smooth := 0
+
 ## Вырезы (локальные полигоны + диапазон слоев). Менять через add_cut / remove_last_cut / clear_cuts
 var cuts: Array[FoamCut] = []
 
@@ -740,11 +744,22 @@ func _apply_stage(mesh: ArrayMesh) -> void:
 
 
 ## Сменить стадию материала (InfoPanel). Геометрия и физика не трогаются
+## Включить или выключить оболочку (run 0..PLASTER_MAX_RUN). Сама оболочка считается в PlasterSkin
+func set_smooth(run: int) -> void:
+	run = clampi(run, 0, PLASTER_MAX_RUN)
+	if run == smooth:
+		return
+	smooth = run
+	TGM.plaster_dirty()
+
+
 func set_stage(new_stage: int) -> void:
 	new_stage = clampi(new_stage, 0, FoamStage.size() - 1)
 	if new_stage == stage:
 		return
 	stage = new_stage
+	if smooth > 0:
+		TGM.plaster_dirty()   # 13.5: материал оболочки по стадии
 	if mesh_node:
 		_apply_stage(mesh_node.mesh as ArrayMesh)
 	entity.send_event("on_terrain_stage_changed", {"stage": stage})
@@ -910,7 +925,7 @@ func save_data() -> Dictionary:
 	var arr: Array = []
 	for c in cuts:
 		arr.append(c.to_dict())
-	return {"levels": levels, "cuts": arr, "stage": stage}
+	return {"levels": levels, "cuts": arr, "stage": stage, "smooth": smooth}
 
 
 func load_data(data: Dictionary) -> void:
@@ -919,4 +934,7 @@ func load_data(data: Dictionary) -> void:
 	cuts.clear()
 	for d in data.get("cuts", []):
 		cuts.append(FoamCut.from_dict(d))
+	smooth = clampi(int(data.get("smooth", 0)), 0, PLASTER_MAX_RUN)
 	_rebuild()
+	if smooth > 0:
+		TGM.plaster_dirty()

@@ -23,6 +23,7 @@ class_name ToolController extends Node3D
 # XX claude-terra 13.3 S2: терморезак. Узел создаётся кодом в _ready (game_root.tscn не правим)
 var cut_tool: ThermoCutTool
 var water_tool: WaterPourTool   # XX claude-terra 13.4 W3
+var plaster_tool: PlasterTool   # XX claude-terra 13.5 G3
 #@onready var save_controller: SaveManager = %SaveManager
 
 
@@ -63,6 +64,9 @@ func _ready() -> void:
 	water_tool = WaterPourTool.new()
 	water_tool.name = &"WaterPourTool"
 	%Tools.add_child(water_tool)
+	plaster_tool = PlasterTool.new()
+	plaster_tool.name = &"PlasterTool"
+	%Tools.add_child(plaster_tool)
 
 	# Инициализируем инструменты, передав им ссылку на себя
 	for tool in %Tools.get_children():
@@ -152,6 +156,10 @@ func select_build_object(setting: EntitySetting) -> void:
 	if setting.build_behavior == EntitySetting.BuildBehavior.WATER_TOOL:
 		switch_tool(water_tool)
 		return
+	# XX claude-terra 13.5 G3: кнопка «Гипсовый бинт» включает PlasterTool
+	if setting.build_behavior == EntitySetting.BuildBehavior.PLASTER_TOOL:
+		switch_tool(plaster_tool)
+		return
 
 	build_tool.ghost_setting = setting
 	# переключение в build_tool
@@ -185,7 +193,7 @@ func get_mouse_ray(mask: int = -1) -> Dictionary:
 	var hit := get_world_3d().direct_space_state.intersect_ray(query)
 	# Боковая грань и кромка стола (слой ground) не поверхность: иначе трак или вагон встанет ниже столешницы
 	if not hit.is_empty() and hit.collider is CollisionObject3D \
-			and (hit.collider.collision_layer & Global.active_layers(['ground', 'water'])) != 0 \
+			and (hit.collider.collision_layer & Global.active_layers(['ground', 'water', 'plaster'])) != 0 \
 			and hit.normal.y < 0.7:   # XX claude-terra 13.4: бок воды тоже не поверхность
 		return {}
 	return hit
