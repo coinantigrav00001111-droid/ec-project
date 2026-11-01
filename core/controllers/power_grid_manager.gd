@@ -112,19 +112,19 @@ func get_power(_cid: int) -> float:
 
 # ---Хелпер для связи с C_TrackVisual---
 func _update_shader_voltage(cid: int, voltage: float) -> void:
-	# Ищем оба варианта материала в кэше (прямой и перевернутый)
-	var key_normal = str(cid) + "_false"
-	var key_flipped = str(cid) + "_true"
-	
-	if C_TrackVisual.power_materials_cache.has(key_normal):
-		var mat: ShaderMaterial = C_TrackVisual.power_materials_cache[key_normal]
-		# Передаем напряжение в шейдер 
-		mat.set_shader_parameter("scroll_speed", voltage * 0.01) 
-
-	if C_TrackVisual.power_materials_cache.has(key_flipped):
-		var mat_flip: ShaderMaterial = C_TrackVisual.power_materials_cache[key_flipped]
-		# Для перевернутых траков инвертируем скорость/направление
-		mat_flip.set_shader_parameter("scroll_speed", -voltage * 0.01)
+	# Материалы контура в кэше: "<cid>_false" / "<cid>_true", у рельсов с нестандартным UV (Track Studio, ATTN_20)
+	# с суффиксом "_<scale>_<swap>". Обновляем все варианты по префиксу
+	var prefix_normal := str(cid) + "_false"
+	var prefix_flipped := str(cid) + "_true"
+	for key in C_TrackVisual.power_materials_cache.keys():
+		var k := String(key)
+		var mat: ShaderMaterial = C_TrackVisual.power_materials_cache[key]
+		if k.begins_with(prefix_normal):
+			# Передаем напряжение в шейдер
+			mat.set_shader_parameter("scroll_speed", voltage * 0.01)
+		elif k.begins_with(prefix_flipped):
+			# Для перевернутых траков инвертируем скорость/направление
+			mat.set_shader_parameter("scroll_speed", -voltage * 0.01)
 
 
 

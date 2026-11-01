@@ -191,7 +191,10 @@ func _get_or_create_power_material(cid: int, _volt: float, is_flipped: bool) -> 
 	var pst := _power_style()
 	var stripe_scale := pst.power_stripe_scale() if pst else 1.0
 	var swap_uv := pst != null and pst.rail_uv_rotate
-	var cache_key = str(cid) + "_" + str(is_flipped) + "_" + str(stripe_scale) + "_" + str(swap_uv)
+	# Ключ "<cid>_<flip>" как раньше (его ищет PGM); у рельса с нестандартным UV добавляется "_<scale>_<swap>"
+	var cache_key = str(cid) + "_" + str(is_flipped)
+	if not is_equal_approx(stripe_scale, 1.0) or swap_uv:
+		cache_key += "_" + str(stripe_scale) + "_" + str(swap_uv)
 	#Если материал для такого состояния уже есть — возвращаем его
 	if power_materials_cache.has(cache_key):
 		return power_materials_cache[cache_key] 
