@@ -85,5 +85,7 @@ func active_layers(data:Array) -> int:
 			'handles' : i = i | 1 << 6   # ручки flex
 			'room'   : i = i | 1 << 7    # пол, стены, мебель комнаты (Observe)
 			'ghost'  : i = i | 1 << 10
+			# XX claude-terra 13.4: поверхность воды (C_Water). Не в PROBE_LAYERS: вагон воду не замечает; ищут только инструмент и плавающие
+			'water'  : i = i | 1 << 11
 			## Контуры Outline это visual layers 15-20 (cull_mask), к физике не относятся
 	return i

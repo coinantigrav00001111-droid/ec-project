@@ -39,7 +39,8 @@ class_name EntitySetting extends Resource
 # XX claude-terra 13.2: DRAW_POLYGON - лист пенопласта произвольной формы: вершины контура ставятся кликами (C_PolygonDraw)
 # 13.2 B5: DRAW_STRIP - лист-полоса: клики ставят точки оси, ширина [ и ], контур = ось, смещённая на полширины
 # 13.3 S2: CUT_TOOL - не объект, а инструмент: кнопка включает ThermoCutTool (терморезак), форма выреза в facet "shape" (rect, polygon)
-enum BuildBehavior { GHOST_PLACE, SPAWN_AND_DRAG, PLACE_THEN_STRETCH, DRAW_POLYGON, DRAW_STRIP, CUT_TOOL }
+# 13.4 W3: WATER_TOOL - инструмент «Налить воду» (WaterPourTool), тоже не объект
+enum BuildBehavior { GHOST_PLACE, SPAWN_AND_DRAG, PLACE_THEN_STRETCH, DRAW_POLYGON, DRAW_STRIP, CUT_TOOL, WATER_TOOL }
 
 ## Как BuildTool ставит объект: гост + клик, или сразу спавн в драг
 @export var build_behavior: BuildBehavior = BuildBehavior.GHOST_PLACE

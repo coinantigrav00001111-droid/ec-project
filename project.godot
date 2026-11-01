@@ -450,6 +450,7 @@ key_ctrl_s={
 3d_physics/layer_8="room"
 3d_physics/layer_9="supports"
 3d_physics/layer_11="ghost"
+3d_physics/layer_12="water"
 
 [physics]
 

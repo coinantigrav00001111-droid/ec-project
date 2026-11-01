@@ -22,6 +22,7 @@ class_name ToolController extends Node3D
 @onready var observe_tool = get_node_or_null('%ObserveTool')
 # XX claude-terra 13.3 S2: терморезак. Узел создаётся кодом в _ready (game_root.tscn не правим)
 var cut_tool: ThermoCutTool
+var water_tool: WaterPourTool   # XX claude-terra 13.4 W3
 #@onready var save_controller: SaveManager = %SaveManager
 
 
@@ -59,6 +60,9 @@ func _ready() -> void:
 	cut_tool = ThermoCutTool.new()
 	cut_tool.name = &"ThermoCutTool"
 	%Tools.add_child(cut_tool)
+	water_tool = WaterPourTool.new()
+	water_tool.name = &"WaterPourTool"
+	%Tools.add_child(water_tool)
 
 	# Инициализируем инструменты, передав им ссылку на себя
 	for tool in %Tools.get_children():
@@ -142,6 +146,11 @@ func select_build_object(setting: EntitySetting) -> void:
 	if setting.build_behavior == EntitySetting.BuildBehavior.CUT_TOOL:
 		cut_tool.shape = StringName(setting.get_facet(&"shape")) if setting.get_facet(&"shape") != "" else ThermoCutTool.SHAPE_RECT
 		switch_tool(cut_tool)
+		return
+
+	# XX claude-terra 13.4 W3: кнопка «Налить воду» включает WaterPourTool
+	if setting.build_behavior == EntitySetting.BuildBehavior.WATER_TOOL:
+		switch_tool(water_tool)
 		return
 
 	build_tool.ghost_setting = setting

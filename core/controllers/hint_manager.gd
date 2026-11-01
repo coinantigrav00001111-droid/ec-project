@@ -34,6 +34,7 @@ const HINTS := {
 	"cut_strip": [["ЛКМ", "точка оси"], ["ЛКМ по последней точке / Enter", "вырезать"], ["[ ]", "ширина (Shift ×5)"], ["Backspace", "убрать точку"], ["ПКМ", "сбросить / выйти"], ["R/F", "плоскость (Shift ×5)"], ["Ctrl+R/F", "глубина (Shift ×5)"], ["End", "насквозь"], ["Ctrl+Z", "отменить вырез"]],
 	"cut_line": [["ЛКМ", "две точки прямой, третий клик отсекает сторону курсора"], ["Backspace", "убрать точку"], ["ПКМ", "сбросить / выйти"], ["R/F", "плоскость (Shift ×5)"], ["Ctrl+R/F", "глубина (Shift ×5)"], ["End", "насквозь"], ["Ctrl+Z", "отменить вырез"]],
 	"cut_bevel": [["ЛКМ", "две точки гребня, третий клик режет скос в сторону курсора"], ["[ ]", "ступень (Shift ×5)"], ["Ctrl+R/F", "высота скоса, слоёв"], ["R/F", "плоскость (Shift ×5)"], ["Backspace", "убрать точку"], ["ПКМ", "сбросить / выйти"], ["Ctrl+Z", "отменить скос"]],
+	"water_pour": [["ЛКМ", "налить воду (область видна до клика)"], ["Shift+ЛКМ", "осушить"], ["R/F", "глубина воды (Shift ×5)"], ["PgUp/PgDn", "глубина ±5"], ["Ctrl+Z", "отменить налив"], ["ПКМ", "выйти"]],
 	"drag": [["Отпустить ЛКМ", "поставить"], ["ПКМ", "отмена"], ["Q/E", "поворот 45° (Shift: 5°)"], ["R/F", "уровень"], ["Shift+R/F, PgUp/PgDn", "уровень ×5"], ["Home", "сброс"]],
 	"library": [["Режим в разработке", ""]],
 	"observe": [["ЛКМ по вагону", "камера Follow"], ["1-5", "перейти к закладке (пустая: сохранить)"], ["Ctrl+1-5 или Shift+карточка", "перезаписать закладку"], ["H", "скрыть UI"], ["P", "снимок"]],
@@ -126,6 +127,8 @@ func _context_key() -> String:
 	match tool:
 		&"DragTool":
 			return "drag"
+		&"WaterPourTool":   # XX claude-terra 13.4 W3: налить воду
+			return "water_pour"
 		&"ThermoCutTool":   # XX claude-terra 13.3 S2: терморезак (контекст ставит сам инструмент)
 			if _ctx.get(&"cut_polygon", false):
 				return "cut_polygon"
@@ -153,7 +156,7 @@ func _compose() -> String:
 		return ""
 	var text := _format(items)
 	# Вторая строка про камеру: когда ею управляет игрок (не Follow, POV, Orbit и не фоторежим)
-	var own_camera := key in ["select_none", "select_sel", "build", "build_polygon", "build_strip", "cut_rect", "cut_polygon", "cut_strip", "cut_line", "cut_bevel", "drag", "observe"]
+	var own_camera := key in ["select_none", "select_sel", "build", "build_polygon", "build_strip", "cut_rect", "cut_polygon", "cut_strip", "cut_line", "cut_bevel", "water_pour", "drag", "observe"]
 	if own_camera:
 		text += "\n[color=%s]%s[/color]" % [DIM_COLOR, _format(CAMERA_LINE, false)]
 	return "[center]" + text + "[/center]"

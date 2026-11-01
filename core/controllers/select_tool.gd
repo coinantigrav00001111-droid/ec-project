@@ -112,10 +112,26 @@ func _get_entity_under_mouse() -> Entity:
 	# Слой земли(1), траков(3), трейна(5), селектеда(11)- 11 это гост!
 	
 	#var hit = controller.get_mouse_ray((1 << 0) | (1 << 2) |(1 << 4)| (1 << 10)) 
-	var hit = controller.get_mouse_ray(Global.active_layers(['ground','tracks','trains','ghost'])) 
+	var hit = _pick_ray()
 	if hit and hit.collider:
 		return _find_entity(hit.collider)
 	return null
+
+
+## XX claude-terra 13.4. Луч выбора: как раньше, плюс вода. Трак и вагон выбираются сквозь воду;
+## воду берём, если она ближе земли (стола, листа) под ней или земли нет
+func _pick_ray() -> Dictionary:
+	var hit: Dictionary = controller.get_mouse_ray(Global.active_layers(['ground','tracks','trains','ghost']))
+	if not hit.is_empty() and hit.collider is CollisionObject3D \
+			and (hit.collider.collision_layer & Global.active_layers(['ground'])) == 0:
+		return hit
+	var w: Dictionary = controller.get_mouse_ray(Global.active_layers(['water']))
+	if w.is_empty():
+		return hit
+	var cam := get_viewport().get_camera_3d()
+	if hit.is_empty() or (cam != null and cam.global_position.distance_squared_to(w.position) < cam.global_position.distance_squared_to(hit.position)):
+		return w
+	return hit
 
 
 
@@ -154,7 +170,7 @@ func _update_hover():
 	# Курсор над панелью UI: объект за ней не подсвечиваем
 	var result = {}
 	if not UIPointer.is_over_ui(get_viewport()):
-		result = controller.get_mouse_ray(Global.active_layers(['ground','tracks','trains','ghost']))
+		result = _pick_ray()
 	var new_hover = null
 	
 

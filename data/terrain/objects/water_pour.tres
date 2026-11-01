@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="EntitySetting" format=3]
+
+[ext_resource type="Script" uid="uid://do5hjkm3r2pdg" path="res://core/entity_setting.gd" id="1_es"]
+[ext_resource type="Texture2D" uid="uid://5honpbgrnlug" path="res://ui/icons/tool/paint-bucket.svg" id="2_ic"]
+
+[resource]
+script = ExtResource("1_es")
+key = &"terrain.water.pour"
+id = 6020
+name = "Налить воду"
+description = "Залить водой выемку или край стола: область видна до клика, R/F глубина, Shift+ЛКМ осушить"
+category = &"terrain"
+tag = &"water"
+icon = ExtResource("2_ic")
+build_behavior = 6

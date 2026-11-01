@@ -35,7 +35,7 @@ const TAGS := {
 	&"train": [&"loco", &"boxcar"],
 	&"track": [&"straight", &"curve", &"switch", &"flex", &"crossing", &"buffer", &"rulette"],
 	&"building": [&"house"],
-	&"terrain": [&"foam", &"cut"],
+	&"terrain": [&"foam", &"cut", &"water"],
 	&"dc_controller": [&"2d", &"3d"],
 }
 
