@@ -17,6 +17,10 @@ extends Node
 signal terrain_changed(aabb: AABB)
 
 const GROUP := &'terrain_layer'
+## XX claude-terra 13.4 W4. Водные участки (Entity с C_Water)
+const WATER_GROUP := &'water_body'
+## water_level_at: воды над точкой нет
+const NO_WATER := -INF
 ## Допуск по высоте, ю: касание верха одного листа с низом другого не считается пересечением
 const EPS := 0.001
 ## Пересечение меньше этой площади (ю²) считаем касанием по ребру, а не наложением
@@ -90,6 +94,32 @@ func table_rect() -> Rect2:
 		else:
 			size = RoomConfig.new().table_top
 	return Rect2(-size * 0.5, size)
+
+
+## Живые водные участки: без призраков и удаляемых
+func get_waters() -> Array[C_Water]:
+	var res: Array[C_Water] = []
+	if not is_inside_tree():
+		return res
+	for n in get_tree().get_nodes_in_group(WATER_GROUP):
+		var e := n as Entity
+		if e == null or not e.is_inside_tree() or e.is_queued_for_deletion() or e.has_comp(C_Ghost):
+			continue
+		var w := e.get_comp(C_Water) as C_Water
+		if w != null:
+			res.append(w)
+	return res
+
+
+## Высота поверхности воды над точкой (x, z): самая высокая из вод, накрывающих точку. NO_WATER, если воды нет.
+## Для плавающих сущностей: y = water_level_at, а при NO_WATER они стоят на surface_y как обычные
+func water_level_at(x: float, z: float) -> float:
+	var best := NO_WATER
+	var pt := Vector2(x, z)
+	for w in get_waters():
+		if w.has_water_at(pt):
+			best = maxf(best, w.surface_y())
+	return best
 
 
 ## --- Аналитические запросы ---

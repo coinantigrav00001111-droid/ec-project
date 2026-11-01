@@ -53,8 +53,20 @@ enum BuildBehavior { GHOST_PLACE, SPAWN_AND_DRAG, PLACE_THEN_STRETCH, DRAW_POLYG
 ## Пусто = значение по умолчанию из категории (см. get_pick_layers)
 @export var pick_layers: Array[StringName] = []
 
+## XX claude-terra 13.4 W4. Плавающая сущность: над водой встаёт на её поверхность, без воды на землю (как обычно).
+## Утопления нет: остальные сущности ставятся на дно и воду не замечают. Включает в луч слой `water`
+@export var floats: bool = false
+
 # XX claude-terra
 func get_pick_layers() -> Array:
+	var base := _base_pick_layers()
+	if floats and not base.has(&'water'):
+		base = base.duplicate()
+		base.append(&'water')
+	return base
+
+
+func _base_pick_layers() -> Array:
 	if not pick_layers.is_empty():
 		return pick_layers
 	if category == &'track':

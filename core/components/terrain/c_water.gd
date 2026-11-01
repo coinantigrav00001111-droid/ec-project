@@ -53,6 +53,7 @@ func on_added() -> void:
 
 
 func on_entity_ready() -> void:
+	entity.add_to_group(TGM.WATER_GROUP)
 	update_visual()
 	TGM.terrain_changed.connect(_on_terrain_changed)
 	if domain.size != Vector2.ZERO:   # загрузка сейва: level и domain уже в load_data

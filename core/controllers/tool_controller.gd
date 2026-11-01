@@ -185,8 +185,8 @@ func get_mouse_ray(mask: int = -1) -> Dictionary:
 	var hit := get_world_3d().direct_space_state.intersect_ray(query)
 	# Боковая грань и кромка стола (слой ground) не поверхность: иначе трак или вагон встанет ниже столешницы
 	if not hit.is_empty() and hit.collider is CollisionObject3D \
-			and (hit.collider.collision_layer & Global.active_layers(['ground'])) != 0 \
-			and hit.normal.y < 0.7:
+			and (hit.collider.collision_layer & Global.active_layers(['ground', 'water'])) != 0 \
+			and hit.normal.y < 0.7:   # XX claude-terra 13.4: бок воды тоже не поверхность
 		return {}
 	return hit
 

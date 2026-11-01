@@ -70,4 +70,20 @@ func _ready() -> void:
 	check("edge_walls: периметр стола 2 * (20 + 10) = 60 граней", w.size() == 60, str(w.size()))
 	check("edge_walls: водоём внутри без стенок", WaterFill.edge_walls(pond["cells"], pond["dom"], 1.0).is_empty())
 
+	# плавающие сущности: рейкаст видит воду (W4)
+	var plain := EntitySetting.new()
+	plain.category = &"building"
+	var boat := EntitySetting.new()
+	boat.category = &"building"
+	boat.floats = true
+	check("floats: обычный объект воду не видит", not plain.get_pick_layers().has(&"water"))
+	check("floats: плавающий видит воду и землю", boat.get_pick_layers().has(&"water") and boat.get_pick_layers().has(&"ground"))
+	var tboat := EntitySetting.new()
+	tboat.category = &"terrain"
+	tboat.floats = true
+	check("floats: у категории с одним слоем ground добавляется water", tboat.get_pick_layers() == [&"ground", &"water"], str(tboat.get_pick_layers()))
+	tboat.floats = false
+	check("floats: выключили, слоёв категории water нет", not tboat.get_pick_layers().has(&"water"))
+	check("water_level_at: без воды NO_WATER", TGM.water_level_at(0.0, 0.0) == TGM.NO_WATER)
+
 	print("ИТОГО: ", "всё PASS" if _fails == 0 else "FAIL: %d" % _fails)
