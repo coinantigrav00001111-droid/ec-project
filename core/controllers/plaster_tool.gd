@@ -204,7 +204,10 @@ func process_tick(delta: float) -> void:
 	if found != _hover or key != _mode_key:
 		_hover = found
 		_mode_key = key
-		_cluster = _cluster_of(_hover) if _hover != null else []
+		if _hover != null:
+			_cluster = _cluster_of(_hover)
+		else:
+			_cluster = []
 		_dirty = true
 	if _dirty:
 		_dirty = false

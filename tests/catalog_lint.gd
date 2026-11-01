@@ -18,6 +18,10 @@ const DIRS := [
 
 
 func _run() -> void:
+	# EntitySetting должен быть @tool: иначе в редакторе ресурсы это заглушки без методов (get_key, get_facet) и проверка молча врёт
+	if not EntitySetting.new().has_method("get_key"):
+		print("ОШИБКА: у EntitySetting нет методов в редакторе (нужен @tool в core/entity_setting.gd). Проверка не выполнена")
+		return
 	var problems: Array[String] = []
 	var seen := {}
 	var total := 0
