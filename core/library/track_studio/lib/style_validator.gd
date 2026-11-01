@@ -127,8 +127,32 @@ static func numbers(style: TrackStyle) -> Array:
 		out.append(["Треугольников на шпалу", str(_tris(style.sleeper_mesh))])
 	else:
 		out.append(["Треугольников на шпалу", "12 (BoxMesh)"])
+	var b := budget(style)
+	if not b.is_empty():
+		out.append(["Треугольников на 10 ю: меш / шпалы / всего", "%d / %d (≈%d шп.) / %d" % [b["mesh"], b["sleepers"], b["sleeper_count"], b["total"]]])
 	out.append(["Точек профиля: рельс / балласт", "%d / %d" % [style.rail_profile.size(), style.ballast_profile.size() if style.ballast_enabled else 0]])
 	return out
+
+
+## Бюджет геометрии на 10 ю прямого трака: {mesh, sleepers, sleeper_count, per_sleeper, total}.
+## Меш строится тем же TrackMeshBuilder, что в игре; число шпал приблизительное (10 / шаг)
+@warning_ignore("integer_division")
+static func budget(style: TrackStyle) -> Dictionary:
+	if not can_build(style):
+		return {}
+	var curve := Curve3D.new()
+	curve.add_point(Vector3.ZERO)
+	curve.add_point(Vector3(0.0, 0.0, -10.0))
+	var am := TrackMeshBuilder.build_mesh(style, curve, 10.0, false)
+	var mesh_tris := 0
+	for i in am.get_surface_count():
+		var arrays := am.surface_get_arrays(i)
+		var idx = arrays[Mesh.ARRAY_INDEX]
+		mesh_tris += (idx.size() if idx != null else (arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array).size()) / 3
+	var step := style.sleeper_step()
+	var count := int(ceil(10.0 / step)) if step > 0.0 else 0
+	var per := _tris(style.sleeper_mesh) if style.sleeper_mesh else 12
+	return {"mesh": mesh_tris, "sleepers": count * per, "sleeper_count": count, "per_sleeper": per, "total": mesh_tris + count * per}
 
 
 # ==========================================

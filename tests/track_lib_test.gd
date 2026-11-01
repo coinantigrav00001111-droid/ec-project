@@ -20,6 +20,8 @@ func _ready() -> void:
 	_test_dx_to_gl()
 	_test_generator()
 	_test_normalize()
+	_test_test_object()
+	_test_budget()
 	print("TrackLib: %d/%d" % [_ok, _all])
 	get_tree().quit(0 if _ok == _all else 1)
 
@@ -227,6 +229,31 @@ func _test_normalize() -> void:
 	_check("normalize: в отчёте есть заметка о повороте", (res["report"]["notes"] as PackedStringArray).size() >= 1)
 	var merged := TrackSleeperFactory.normalize([{"mesh": TrackSleeperFactory.generate({"profile": "trapezoid", "pads": true}), "xform": Transform3D.IDENTITY}], {"merge": true})
 	_check("normalize: слияние даёт одну поверхность", (merged["mesh"] as ArrayMesh).get_surface_count() == 1)
+
+
+func _test_test_object() -> void:
+	var template := FileAccess.get_file_as_string(TrackTestObject.TEMPLATE)
+	_check("тестовый объект: шаблон читается", template.contains("id = ") and template.contains(TrackTestObject.TEMPLATE_STYLE))
+	var text := TrackTestObject.build_text(template, "res://data/tracks/styles/my_style.tres", "my_style", false, 0.85, 1901)
+	_check("тестовый объект: путь стиля, id, ключ, имя подставлены",
+		text.contains("res://data/tracks/styles/my_style.tres") and not text.contains("styles/wood_ballast.tres")
+		and text.contains("id = 1901") and not text.contains("id = 1421")
+		and text.contains("track.straight.s239_my_style") and text.contains("S239 my_style"))
+	_check("тестовый объект: грани без балласта", text.contains("\"ballast\": \"no\"") and not text.contains("\"sleeper\""))
+	var used := TrackTestObject.used_ids()
+	var nid := TrackTestObject.next_id(used)
+	_check("тестовый объект: следующий id не меньше 1900 и свободен", nid >= TrackTestObject.ID_FROM and not used.has(nid))
+	_check("тестовый объект: id шаблона 1421 найден среди занятых", used.has(1421))
+
+
+func _test_budget() -> void:
+	var b := TrackStyleValidator.budget(TrackStyle.new())
+	_check("бюджет: меш, шпалы и всего считаются", not b.is_empty() and b["mesh"] > 0 and b["sleepers"] > 0 and b["total"] == b["mesh"] + b["sleepers"])
+	_check("бюджет: шпал на 10 ю порядка 10/0.7", b["sleeper_count"] >= 13 and b["sleeper_count"] <= 16)
+	var st := TrackStyle.new()
+	st.sleeper_mesh = TrackSleeperFactory.generate({})
+	var b2 := TrackStyleValidator.budget(st)
+	_check("бюджет: у меша шпалы 32 треугольника на штуку", b2["per_sleeper"] == 32)
 
 
 func _near(a: Vector3, b: Vector3) -> bool:

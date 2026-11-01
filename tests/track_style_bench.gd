@@ -36,6 +36,20 @@ var _sun: DirectionalLight3D
 var _rows: Array[String] = []
 
 
+## SUITES плюс набор «стиль из Track Studio», если студия создала тестовый объект (user://track_studio_last_object.txt:
+## строка 1 имя файла в data/tracks/objects, строка 2 id стиля). Эталон бюджета тот же, что в первом наборе
+func _suites() -> Array:
+	var suites: Array = SUITES.duplicate(true)
+	var path := "user://track_studio_last_object.txt"
+	if FileAccess.file_exists(path):
+		var lines := FileAccess.get_file_as_string(path).split("\n")
+		if lines.size() >= 2 and FileAccess.file_exists(OBJ + lines[0]):
+			suites.append(["стиль из Track Studio", Vector2(4.0, 24.0), [
+				["бюджет G239 (Blender)", "g239.tres"],
+				["стиль " + lines[1].strip_edges(), lines[0]]]])
+	return suites
+
+
 func _ready() -> void:
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	Engine.max_fps = 0
@@ -51,7 +65,7 @@ func _ready() -> void:
 
 	_rows.append("| набор | вариант | траков | создание, мс | узлов | коллизий | обзор, тени: мс / фпс / отрис. | обзор, без теней | план, тени | план, без теней | план: тени есть, трак НЕ отбрасывает | обзор: рендер CPU / GPU, мс | план: рендер CPU / GPU, мс | объектов в обзоре | треуг. в обзоре, тыс | process мс | physics мс (ср / макс) / тиков в сек (цель: см. project.godot) | видеопамять, МБ |")
 	_rows.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
-	for suite in SUITES:
+	for suite in _suites():
 		for item in suite[2]:
 			for n in COUNTS:
 				await _run(suite[0], suite[1], item[0], OBJ + item[1], n)

@@ -12,6 +12,7 @@ const StudioSettings := preload("res://core/library/icon_studio/studio_settings.
 const StudioView := preload("res://core/library/track_studio/studio_view.gd")
 const MaterialPanel := preload("res://core/library/track_studio/material_panel.gd")
 const SleeperPanel := preload("res://core/library/track_studio/sleeper_panel.gd")
+const ProfilePanel := preload("res://core/library/track_studio/profile_panel.gd")
 
 const SETTINGS_PATH := "user://track_studio.cfg"
 const REFRESH_DELAY := 0.12
@@ -69,9 +70,7 @@ var _pass_nums: RichTextLabel
 var _pass_msgs: RichTextLabel
 var _ctrls := {}                     # ключ поля -> Control или Array[SpinBox] или Dictionary (res)
 var _syncing := false
-var _rail_text: TextEdit
-var _ballast_text: TextEdit
-var _prof_status: Label
+var _profiles: ProfilePanel
 var _materials: MaterialPanel
 var _sleepers: SleeperPanel
 var _shape_opt: OptionButton
@@ -187,6 +186,9 @@ func _build_left_panel() -> void:
 	lv.add_child(r2)
 	_add_button(r2, "Сохранить", _on_save).tooltip_text = "Ctrl+S"
 	_add_button(r2, "Сохранить как…", _open_save_as)
+	var r3 := HBoxContainer.new()
+	lv.add_child(r3)
+	_add_button(r3, "Тестовый объект в каталог", _on_make_object).tooltip_text = "Создаёт data/tracks/objects/s239_<id стиля>.tres: прямая 23.9 с этим стилем, чтобы поставить её в игре. Стиль должен быть сохранён."
 
 	_file_label = Label.new()
 	_file_label.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY
@@ -348,19 +350,11 @@ func _build_right_panel() -> void:
 	for spec in PROPS:
 		_build_prop(pv, spec)
 
-	# --- Профили ---
-	var prof := VBoxContainer.new()
-	prof.name = "Профили"
-	tabs.add_child(prof)
-	var ph := Label.new()
-	ph.text = "Одна точка на строку: «x y». Обход слева направо поверх, низ профиля на y = 0.\nРельс: x от оси рельса, y от подошвы. Балласт: x от оси трака, y от origin пути. Пока текстом, графический редактор в шаге T4."
-	ph.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	prof.add_child(ph)
-	_rail_text = _profile_editor(prof, "Профиль рельса", "rail_profile")
-	_ballast_text = _profile_editor(prof, "Профиль балласта", "ballast_profile")
-	_prof_status = Label.new()
-	_prof_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	prof.add_child(_prof_status)
+	# --- Профили (T4) ---
+	_profiles = ProfilePanel.new()
+	_profiles.name = "Профили"
+	tabs.add_child(_profiles)
+	_profiles.setup(self)
 
 	# --- Материалы (T2) и Шпала (T3) ---
 	_materials = MaterialPanel.new()
@@ -371,21 +365,6 @@ func _build_right_panel() -> void:
 	_sleepers.name = "Шпала"
 	tabs.add_child(_sleepers)
 	_sleepers.setup(self)
-
-
-func _profile_editor(parent: Control, title: String, key: String) -> TextEdit:
-	var l := Label.new()
-	l.text = title
-	parent.add_child(l)
-	var te := TextEdit.new()
-	te.custom_minimum_size = Vector2(0, 150)
-	te.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	parent.add_child(te)
-	var h := HBoxContainer.new()
-	parent.add_child(h)
-	_add_button(h, "Применить", func(): _apply_profile(key, te))
-	_add_button(h, "Вернуть", func(): _fill_profile_text(key, te))
-	return te
 
 
 func _build_prop(parent: Control, spec: Dictionary) -> void:
@@ -594,6 +573,7 @@ func _open_style(style: TrackStyle, path: String, dirty: bool) -> void:
 	_dirty = dirty
 	_sync_controls()
 	_materials.refresh_from_style()
+	_profiles.refresh_from_style()
 	_sleepers.refresh_from_style()
 	view.set_style(_style)
 	view.fit()
@@ -625,7 +605,7 @@ func _on_duplicate() -> void:
 # ПРАВКА ПОЛЕЙ
 # ==========================================
 
-func _sync_controls(include_profiles := true) -> void:
+func _sync_controls() -> void:
 	_syncing = true
 	for spec in PROPS:
 		if spec.has("sec"):
@@ -648,10 +628,6 @@ func _sync_controls(include_profiles := true) -> void:
 			"res":
 				(c as Label).text = TrackStyleIO.describe(v)
 	_syncing = false
-	if include_profiles:
-		_fill_profile_text("rail_profile", _rail_text)
-		_fill_profile_text("ballast_profile", _ballast_text)
-		_prof_status.text = ""
 
 
 # --- интерфейс для вкладок материалов и шпал ---
@@ -665,7 +641,7 @@ func set_field(key: String, value: Variant) -> void:
 	if _style == null:
 		return
 	_style.set(key, value)
-	_sync_controls(false)
+	_sync_controls()
 	_mark_dirty()
 
 
@@ -708,22 +684,19 @@ func _rebuild_view(refit: bool) -> void:
 		view.fit()
 
 
-# --- профили текстом ---
+# --- тестовый объект для игры (T5) ---
 
-func _fill_profile_text(key: String, te: TextEdit) -> void:
-	te.text = TrackStyleIO.profile_to_text(_style.get(key))
-
-
-func _apply_profile(key: String, te: TextEdit) -> void:
-	var r := TrackStyleIO.parse_profile(te.text)
-	if not r["ok"]:
-		_prof_status.text = "%s: %s" % [key, r["error"]]
-		_prof_status.modulate = Color(1.0, 0.5, 0.5)
+func _on_make_object() -> void:
+	if _style == null:
 		return
-	_style.set(key, r["points"])
-	_prof_status.text = "%s: применено, точек %d" % [key, (r["points"] as PackedVector2Array).size()]
-	_prof_status.modulate = Color(0.6, 0.9, 0.6)
-	_mark_dirty()
+	if _current_path.is_empty() or _dirty:
+		_say("Сначала сохраните стиль (Ctrl+S): объект ссылается на файл стиля", true)
+		return
+	var r := TrackTestObject.create(_style, _current_path)
+	if not r["ok"]:
+		_say(String(r["error"]), true)
+		return
+	_say("Объект записан: %s (id %d). Вернитесь в редактор, запустите игру: в каталоге траков появится «S239 %s». Замер: tests/track_style_bench.tscn." % [r["path"], r["id"], String(_style.id)])
 
 
 # --- выбор ресурса ---
