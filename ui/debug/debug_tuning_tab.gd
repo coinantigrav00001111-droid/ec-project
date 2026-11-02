@@ -52,13 +52,18 @@ func _init() -> void:
 
 func _add_row(p: Dictionary) -> void:
 	var grid: GridContainer = _groups[p.group].grid
+	# Ячейка подписи: название и, мелко, имя переменной (показывается кнопкой в заголовке панели)
+	var cell := VBoxContainer.new()
+	cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	cell.mouse_filter = Control.MOUSE_FILTER_PASS   # без этого тултип на подписи не покажется
+	cell.add_theme_constant_override(&"separation", -2)
+	if p.has("tip"):
+		cell.tooltip_text = p.tip
 	var label := Label.new()
 	label.text = p.label
-	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	label.mouse_filter = Control.MOUSE_FILTER_PASS   # без этого тултип на подписи не покажется
-	if p.has("tip"):
-		label.tooltip_text = p.tip
-	grid.add_child(label)
+	cell.add_child(label)
+	cell.add_child(make_var_label(WagonTuning.var_name(p.key)))
+	grid.add_child(cell)
 
 	var key: String = p.key
 	var control: Control
@@ -80,7 +85,7 @@ func _add_row(p: Dictionary) -> void:
 	reset.pressed.connect(func() -> void: _reset_one(key))
 	grid.add_child(reset)
 
-	_rows[key] = {"control": control, "kind": p.kind, "nodes": [label, control, reset], "group": p.group}
+	_rows[key] = {"control": control, "kind": p.kind, "nodes": [cell, control, reset], "group": p.group}
 
 
 func _on_bind() -> void:

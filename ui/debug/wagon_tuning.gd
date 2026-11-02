@@ -158,6 +158,19 @@ static func write(entity: Entity, key: String, value: Variant) -> void:
 		"max_theoretical_speed": engine.max_theoretical_speed = float(value)
 
 
+## Где в коде лежит параметр (для режима «Переменные» в DebugPanel)
+static func var_name(key: String) -> String:
+	if key in _CHASSIS_KEYS:
+		return "C_Chassis." + key
+	if key in _KINEMATICS_KEYS:
+		return "C_Kinematics." + key + (" (+ rb.mass)" if key == "mass" else "")
+	if key in _ENGINE_KEYS:
+		return "C_Engine." + key
+	if key == "friction":
+		return "rb.physics_material_override.friction"
+	return "rb." + key
+
+
 ## Значения всех доступных цели ручек: key -> значение. Для кнопки «сбросить»
 static func snapshot(entity: Entity) -> Dictionary:
 	var snap := {}

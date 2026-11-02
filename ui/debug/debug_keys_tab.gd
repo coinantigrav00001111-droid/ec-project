@@ -12,7 +12,7 @@ class_name DebugKeysTab extends DebugTab
 const KEYS: Array[Dictionary] = [
 	{"key": "F3", "text": "Эта панель", "code": KEY_NONE},
 	{"key": "F7", "text": "Печатает surface_y под курсором. С выбранным листом террейна: ниша; Shift: окно; Alt: тоннель; Ctrl: убрать последний вырез", "code": KEY_NONE},
-	{"key": "F8", "text": "V-Sync вкл/выкл", "code": KEY_F8},
+	{"key": "F8", "text": "V-Sync вкл/выкл. В редакторе Godot F8 это «Остановить игру» и до игры не доходит: кнопка «Нажать» или галочка V-Sync на вкладке Toggles", "code": KEY_F8},
 	{"key": "F9", "text": "Загрузить эталонную диораму (заменяет макет)", "code": KEY_F9},
 	{"key": "F10", "text": "Сохранить встроенные Look и Time в .tres", "code": KEY_F10},
 	{"key": "I", "text": "У выбранного вагона: свет вкл/выкл; Shift+I: метки источников и размеры кузова в Output", "code": KEY_NONE},

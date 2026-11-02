@@ -17,24 +17,24 @@ var _confirm: ConfirmationDialog
 func _init() -> void:
 	name = &"Toggles"
 	add_child(make_header("Маркеры и рельсы"))
-	_add_toggle("Маркеры (куб над Entity, сокеты)", "Global.debug_markers. Рисуются у объектов, созданных после включения",
+	_add_toggle("Маркеры (куб над Entity, сокеты)", "Рисуются у объектов, созданных после включения", "Global.debug_markers",
 			func() -> bool: return Global.debug_markers,
 			func(on: bool) -> void: Global.debug_markers = on)
-	_add_toggle("Лимиты flex (L)", "Global.flex_limits. Применяется к тракам при следующем пересчете",
+	_add_toggle("Лимиты flex (L)", "Применяется к тракам при следующем пересчете", "Global.flex_limits",
 			func() -> bool: return Global.flex_limits,
 			func(on: bool) -> void: Global.flex_limits = on)
-	_add_toggle("Зоны проблем flex (Z)", "Global.flex_zones",
+	_add_toggle("Зоны проблем flex (Z)", "Зоны проблем flex цветной полосой над рельсами", "Global.flex_zones",
 			func() -> bool: return Global.flex_zones,
 			func(on: bool) -> void: Global.flex_zones = on)
-	_add_toggle("Препятствия по ходу вагона", "Global.rail_obstacles. Выключатель на случай просадки производительности",
+	_add_toggle("Препятствия по ходу вагона", "Выключатель на случай просадки производительности", "Global.rail_obstacles",
 			func() -> bool: return Global.rail_obstacles,
 			func(on: bool) -> void: Global.rail_obstacles = on)
-	_add_toggle("Физика вагона при драге", "Global.drag_physics. Включено: вагон догоняет курсор и его можно бросить",
+	_add_toggle("Физика вагона при драге", "Включено: вагон догоняет курсор и его можно бросить", "Global.drag_physics",
 			func() -> bool: return Global.drag_physics,
 			func(on: bool) -> void: Global.drag_physics = on)
 
 	add_child(make_header("Экран"))
-	_add_toggle("V-Sync (F8)", "Окно. Без V-Sync fps не упирается в частоту монитора",
+	_add_toggle("V-Sync", "Без V-Sync fps не упирается в частоту монитора. Клавиша F8 в редакторе Godot занята (стоп игры)", "DisplayServer.window_set_vsync_mode",
 			func() -> bool: return DisplayServer.window_get_vsync_mode() != DisplayServer.VSYNC_DISABLED,
 			_set_vsync)
 
@@ -53,13 +53,18 @@ func setup(save_manager: SaveManager) -> void:
 	_save_manager = save_manager
 
 
-func _add_toggle(text: String, tip: String, getter: Callable, setter: Callable) -> void:
+func _add_toggle(text: String, tip: String, var_name: String, getter: Callable, setter: Callable) -> void:
+	var cell := VBoxContainer.new()
+	cell.add_theme_constant_override(&"separation", -4)
+	add_child(cell)
 	var cb := CheckBox.new()
 	cb.text = text
 	cb.tooltip_text = tip
 	cb.set_pressed_no_signal(getter.call())
 	cb.toggled.connect(func(on: bool) -> void: setter.call(on))
-	add_child(cb)
+	cell.add_child(cb)
+	var vl := make_var_label(var_name)
+	cell.add_child(vl)
 	_toggles.append({"check": cb, "get": getter})
 
 

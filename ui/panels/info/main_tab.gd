@@ -15,6 +15,21 @@ func _setup() -> void:
 	_lvl_label = _add_track_row(grid, "Level: ")
 	_rise_label = _add_track_row(grid, "Rise: ")
 	_slope_label = _add_track_row(grid, "Slope: ")
+	_n("WagonCameraButton").pressed.connect(_on_wagon_camera_button_pressed)
+
+
+## Камера вагона включена: следующий клик по пустоте или другому объекту только выключает ее (см. InfoPanel.set_target)
+func wagon_camera_active() -> bool:
+	return _n("WagonCameraButton").button_pressed
+
+
+func release_wagon_camera() -> void:
+	_n("WagonCameraButton").press()
+
+
+func _on_wagon_camera_button_pressed() -> void:
+	if target:
+		target.send_event('on_wagon_camera_selected', {'selected': _n("WagonCameraButton").button_pressed})
 
 
 func _add_track_row(grid: GridContainer, title: String) -> Label:
@@ -65,6 +80,8 @@ func refresh() -> void:
 
 func _on_bind() -> void:
 	var identity = target.get_comp(C_Identity)
+	# Кнопка камеры только у вагонов (категория train)
+	_n("WagonCameraButton").visible = identity != null and identity.get_category() == &'train'
 	if identity:
 		_n("CategoryLabel").text = identity.get_category()
 		_n("TagLabel").text =  identity.get_tag()

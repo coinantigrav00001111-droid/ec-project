@@ -5,7 +5,7 @@ class_name InfoTab extends RefCounted
 ###########################
 ## Вкладка получает цель (bind), решает, показываться ли ей у этой цели (can_show), и обновляет свои значения
 ## в refresh(): InfoPanel зовет его 10 раз в секунду и только у активной вкладки.
-## Вкладки сцены (Main, Power, Transform, Debug) находят свои узлы по имени (_n), код-вкладки (Механизмы,
+## Вкладки сцены (Main, Power, Transform) находят свои узлы по имени (_n), код-вкладки (Механизмы,
 ## Материал, Стрелка) создают контролы сами (make_page).
 
 var panel: InfoPanel
@@ -86,9 +86,3 @@ static func set_spin(spin: SpinBox, value: float) -> void:
 	if spin.get_line_edit().has_focus():
 		return
 	spin.set_value_no_signal(value)
-
-
-## Ставит параметр вагона: подвеска, сцепление, масса. Без нужных компонентов ничего не делает.
-## Таблица параметров и доступ к ним в WagonTuning (U14), там же их использует DebugPanel
-func set_tuning(key: String, value: Variant) -> void:
-	WagonTuning.write(target, key, value)

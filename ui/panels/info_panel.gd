@@ -20,8 +20,7 @@ signal s_select_entity( sel_entity:Variant, spdmetr_on: bool, vert :bool)
 
 var _tabs: Array[InfoTab] = []
 var _power: InfoPowerTab
-var _transform: InfoTransformTab
-var _debug: InfoDebugTab
+var _main: InfoMainTab
 var _acc := 0.0
 
 
@@ -34,13 +33,11 @@ func _ready() -> void:
 		_tc.selection_changed.connect(set_target)
 
 	_power = InfoPowerTab.new()
-	_transform = InfoTransformTab.new()
-	_debug = InfoDebugTab.new()
+	_main = InfoMainTab.new()
 	# Вкладки из сцены, в порядке сцены; затем вкладки, создаваемые кодом
-	_add_tab(InfoMainTab.new(), tab_container.get_node("MainTab"))
+	_add_tab(_main, tab_container.get_node("MainTab"))
 	_add_tab(_power, tab_container.get_node("PowerTab"))
-	_add_tab(_transform, tab_container.get_node("TransformTab"))
-	_add_tab(_debug, tab_container.get_node("DebugTab"))
+	_add_tab(InfoTransformTab.new(), tab_container.get_node("TransformTab"))
 	_add_tab(InfoMechTab.new())
 	_add_tab(InfoTerrainTab.new())
 	_add_tab(InfoSwitchTab.new())
@@ -73,8 +70,8 @@ func _process(delta: float) -> void:
 ## Вызывается ToolController (selection_changed), когда выбор сменился
 func set_target(entity: Entity) -> void:
 	# Камера вагона включена: этот клик ее только выключает
-	if _debug.wagon_camera_active():
-		_debug.release_wagon_camera()
+	if _main.wagon_camera_active():
+		_main.release_wagon_camera()
 		return
 
 	# 1. Отписываемся от старого объекта
@@ -96,9 +93,8 @@ func set_target(entity: Entity) -> void:
 	current_target.component_added.connect(_on_components_changed)
 	current_target.component_removed.connect(_on_components_changed)
 
-	# INFO Панель спидометра: его переключатели живут на вкладке «Положение»
-	var spd := _transform.speedometer_state()
-	s_select_entity.emit(current_target, spd[0], spd[1])
+	# Спидометр: галочки в панели нет (убрана в U14c), он выключен до переписывания в U23
+	s_select_entity.emit(current_target, false, false)
 
 	show()
 

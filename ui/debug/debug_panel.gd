@@ -13,6 +13,7 @@ class_name DebugPanel extends PanelContainer
 const ACTION := &"debug_panel_toggle"
 const SETTINGS_SECTION := "debug"
 const POS_KEY := "panel_pos"
+const VARS_KEY := "show_vars"
 ## Частота обновления живых значений открытой вкладки, раз в секунду
 const REFRESH_HZ := 10.0
 const DEFAULT_POS := Vector2(16.0, 56.0)
@@ -24,6 +25,7 @@ var _tabs: TabContainer
 ## Вкладки по их оболочке в TabContainer (ScrollContainer): оболочка -> DebugTab
 var _tab_by_scroll: Dictionary = {}
 var _target: Entity
+var _vars_check: CheckBox
 var _acc := 0.0
 var _dragging := false
 var _drag_offset := Vector2.ZERO
@@ -48,6 +50,7 @@ func _ready() -> void:
 	_add_tab(DebugTogglesTab.new())
 	_add_tab(DebugKeysTab.new())
 
+	_set_show_vars(bool(Settings.get_value(SETTINGS_SECTION, VARS_KEY, false)))
 	position = Settings.get_value(SETTINGS_SECTION, POS_KEY, DEFAULT_POS)
 	get_viewport().size_changed.connect(_clamp_to_screen)
 	_clamp_to_screen.call_deferred()
@@ -148,6 +151,12 @@ func _make_header() -> Control:
 	title.text = "Debug (F3)"
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
+	_vars_check = CheckBox.new()
+	_vars_check.text = "Переменные"
+	_vars_check.tooltip_text = "Показать имена переменных мелким шрифтом под названием параметра"
+	_vars_check.focus_mode = Control.FOCUS_NONE
+	_vars_check.toggled.connect(_on_vars_toggled)
+	header.add_child(_vars_check)
 	var close := Button.new()
 	close.text = "X"
 	close.flat = true
@@ -155,6 +164,18 @@ func _make_header() -> Control:
 	close.pressed.connect(toggle)
 	header.add_child(close)
 	return header
+
+
+func _on_vars_toggled(on: bool) -> void:
+	_set_show_vars(on)
+	Settings.set_value(SETTINGS_SECTION, VARS_KEY, on)
+
+
+## Показ имен переменных на всех вкладках и состояние кнопки в заголовке
+func _set_show_vars(on: bool) -> void:
+	_vars_check.set_pressed_no_signal(on)
+	for tab in _tab_by_scroll.values():
+		(tab as DebugTab).set_show_vars(on)
 
 
 func _on_header_input(event: InputEvent) -> void:

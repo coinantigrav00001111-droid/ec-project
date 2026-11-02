@@ -10,6 +10,10 @@ class_name DebugTab extends VBoxContainer
 
 ## Объект, выбранный в игре (null: ничего не выбрано)
 var target: Entity
+## Показывать имена переменных мелким шрифтом под подписью параметра (кнопка в заголовке DebugPanel)
+var show_vars := false
+## Подписи с именами переменных, их показывает и прячет set_show_vars
+var _var_labels: Array[Label] = []
 
 
 ## Выбор в игре сменился. Зовется и при открытии панели
@@ -28,8 +32,26 @@ func opened() -> void:
 	refresh()
 
 
+## Включает и выключает показ имен переменных у всех подписей, созданных через make_var_label
+func set_show_vars(on: bool) -> void:
+	show_vars = on
+	for l in _var_labels:
+		l.visible = on
+
+
 func _on_bind() -> void:
 	pass
+
+
+## Подпись с именем переменной: мелкий серый шрифт, скрыта, пока не включен показ имен
+func make_var_label(text: String) -> Label:
+	var l := Label.new()
+	l.text = text
+	l.add_theme_font_size_override(&"font_size", 10)
+	l.add_theme_color_override(&"font_color", Color(0.55, 0.65, 0.8))
+	l.visible = show_vars
+	_var_labels.append(l)
+	return l
 
 
 ## Строка-заголовок группы
