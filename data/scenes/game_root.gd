@@ -39,8 +39,15 @@ class_name GameRoot
 
 
 func _ready() -> void:
+	# DebugPanel (U14) только в debug: в релизе узла нет
+	if Global.debug_mode:
+		_create_debug_panel()
 
-	pass
+
+func _create_debug_panel() -> void:
+	var panel := (load("res://ui/debug/debug_panel.tscn") as PackedScene).instantiate() as DebugPanel
+	$Debug.add_child(panel)
+	panel.setup($ToolController, $SaveManager)
 
 
 func _process(_delta: float) -> void:

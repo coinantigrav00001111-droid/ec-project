@@ -88,26 +88,7 @@ static func set_spin(spin: SpinBox, value: float) -> void:
 	spin.set_value_no_signal(value)
 
 
-## Ставит параметр вагона: подвеска, сцепление, масса. Без нужных компонентов ничего не делает
+## Ставит параметр вагона: подвеска, сцепление, масса. Без нужных компонентов ничего не делает.
+## Таблица параметров и доступ к ним в WagonTuning (U14), там же их использует DebugPanel
 func set_tuning(key: String, value: Variant) -> void:
-	if target == null:
-		return
-	var chassis := target.get_comp(C_Chassis) as C_Chassis
-	var kinemat := target.get_comp(C_Kinematics) as C_Kinematics
-	match key:
-		'enable_suspension': if chassis: chassis.enable_suspension = value
-		'debug_susp_vertical': if chassis: chassis.debug_susp_vertical = value
-		'debug_susp_pitch': if chassis: chassis.debug_susp_pitch = value
-		'debug_susp_roll': if chassis: chassis.debug_susp_roll = value
-		'debug_susp_lateral': if chassis: chassis.debug_susp_lateral = value
-		'effect_multiplier': if chassis: chassis.effect_multiplier = value
-		'longitudinal_grip': if kinemat: kinemat.longitudinal_grip = value
-		'min_curve_radius': if kinemat: kinemat.min_curve_radius = value
-		'max_yaw_deg': if kinemat: kinemat.max_yaw_deg = value
-		'yaw_spring': if kinemat: kinemat.yaw_spring = value
-		'roll_resistance': if kinemat: kinemat.roll_resistance = value
-		'mass': if kinemat: kinemat.mass = value
-		'max_grip': if kinemat: kinemat.max_grip = value
-		'friction': if kinemat: kinemat.rb.physics_material_override.friction = value
-		'linear_damp': if kinemat: kinemat.rb.linear_damp = value
-		'angular_damp': if kinemat: kinemat.rb.angular_damp = value
+	WagonTuning.write(target, key, value)
