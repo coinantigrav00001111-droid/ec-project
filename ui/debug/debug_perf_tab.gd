@@ -29,19 +29,19 @@ func _init() -> void:
 
 
 func refresh() -> void:
-	_set("FPS", str(Engine.get_frames_per_second()))
-	_set("Кадр (process), мс", "%.2f" % (Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0))
-	_set("Физика (physics), мс", "%.2f" % (Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0))
-	_set("Вызовы отрисовки", str(int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))))
-	_set("Объекты в кадре", str(int(Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME))))
-	_set("Примитивы в кадре", str(int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME))))
-	_set("Активные тела физики", str(int(Performance.get_monitor(Performance.PHYSICS_3D_ACTIVE_OBJECTS))))
-	_set("Пары столкновений", str(int(Performance.get_monitor(Performance.PHYSICS_3D_COLLISION_PAIRS))))
-	_set("Острова физики", str(int(Performance.get_monitor(Performance.PHYSICS_3D_ISLAND_COUNT))))
-	_set("Узлов в дереве", str(int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT))))
-	_set("Видеопамять, МБ", "%.1f" % (Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0))
-	_set("V-Sync", "вкл" if DisplayServer.window_get_vsync_mode() != DisplayServer.VSYNC_DISABLED else "выкл")
+	_put("FPS", str(Engine.get_frames_per_second()))
+	_put("Кадр (process), мс", "%.2f" % (Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0))
+	_put("Физика (physics), мс", "%.2f" % (Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0))
+	_put("Вызовы отрисовки", str(int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))))
+	_put("Объекты в кадре", str(int(Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME))))
+	_put("Примитивы в кадре", str(int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME))))
+	_put("Активные тела физики", str(int(Performance.get_monitor(Performance.PHYSICS_3D_ACTIVE_OBJECTS))))
+	_put("Пары столкновений", str(int(Performance.get_monitor(Performance.PHYSICS_3D_COLLISION_PAIRS))))
+	_put("Острова физики", str(int(Performance.get_monitor(Performance.PHYSICS_3D_ISLAND_COUNT))))
+	_put("Узлов в дереве", str(int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT))))
+	_put("Видеопамять, МБ", "%.1f" % (Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0))
+	_put("V-Sync", "вкл" if DisplayServer.window_get_vsync_mode() != DisplayServer.VSYNC_DISABLED else "выкл")
 
 
-func _set(title: String, value: String) -> void:
+func _put(title: String, value: String) -> void:
 	(_values[title] as Label).text = value
