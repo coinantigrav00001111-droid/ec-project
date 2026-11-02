@@ -326,7 +326,7 @@ extends Resource
 | 4 | Flex | [решено] нужна «змейка» (S-образный flex), §18.4 I2 |
 | 5 | Путь вывода | [решено] `res://core/library/icon_studio/icons/` |
 | 6 | Расположение | [решено] `res://core/library/icon_studio/`, прототип режима Library |
-| 7 | Название Library | [открыто] возможно `model_studio`, решается после прототипа |
+| 7 | Название Library | **[решено]** режим «Library», экран мастерской «Model Studio» ([ATTN_22](ATTN_22_library.md) §22.0); `icon_studio` остаётся |
 
 ---
 
