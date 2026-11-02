@@ -12,7 +12,6 @@
 [ext_resource type="Script" uid="uid://dninmf7u7bdkm" path="res://core/controllers/save_manager.gd" id="8_bc160"]
 [ext_resource type="Script" uid="uid://di5kuetyise5i" path="res://core/controllers/select_tool.gd" id="9_7cj6n"]
 [ext_resource type="PackedScene" uid="uid://57xnplsftgls" path="res://ui/ui.tscn" id="9_jy1t0"]
-[ext_resource type="PackedScene" uid="uid://b6bt6i4wh1nk2" path="res://ui/debug/entity_debugger.tscn" id="10_4pdep"]
 [ext_resource type="PackedScene" uid="uid://0gxfmn122rg4" path="res://data/tools/speedometer_h.tscn" id="12_4pdep"]
 [ext_resource type="PackedScene" uid="uid://b5a0jw0b12rtr" path="res://data/tools/rulette.tscn" id="13_bc160"]
 [ext_resource type="Script" uid="uid://bcb1ssgahu3n4" path="res://core/graphics/environment_root.gd" id="15_35vuu"]
@@ -88,15 +87,6 @@ script = ExtResource("8_5flo5")
 script = ExtResource("7_jy1t0")
 
 [node name="Debug" type="CanvasLayer" parent="." unique_id=1812429807]
-
-[node name="EntityDebugger" parent="Debug" unique_id=2068043770 instance=ExtResource("10_4pdep")]
-visible = false
-offset_left = 14.0
-offset_top = 277.0
-offset_right = 135.0
-offset_bottom = 576.0
-size_flags_vertical = 0
-mouse_filter = 0
 
 [node name="DebugLabel" type="Label" parent="Debug" unique_id=798010373]
 unique_name_in_owner = true
