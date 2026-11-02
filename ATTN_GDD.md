@@ -171,3 +171,4 @@ Build UI, Operate UI, InfoPanel, Power Layer, диагностические п�
 - [ATTN_19_game_flow.md](ATTN_19_game_flow.md) — Цикл игры и экраны
 - [ATTN_20_track_studio.md](ATTN_20_track_studio.md) — Track Studio
 - [ATTN_22_library.md](ATTN_22_library.md) — Library (Model Studio): коллекция, кастомизация, сборка и генерация зданий
+- [ATTN_23_layout_table.md](ATTN_23_layout_table.md) — Подмакетник (Layout Table): кастомизация, модули, задник, подстольный слой

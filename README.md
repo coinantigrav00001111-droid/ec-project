@@ -18,3 +18,4 @@
 - [ATTN_20_track_studio.md](ATTN_20_track_studio.md) — Track Studio: редактор стилей траков и ресурсов для них (материалы из PBR-наборов, шпалы, профили, хоткеи).
 - [0_ATTN_21_dcc.md](0_ATTN_21_dcc.md) — DCC (заглушка).
 - [ATTN_22_library.md](ATTN_22_library.md) — Library (Model Studio): коллекция, кастомизация, сборка и генерация зданий, план L0–L12.
+- [ATTN_23_layout_table.md](ATTN_23_layout_table.md) — Подмакетник (Layout Table): кастомизация, модули, крепление, задник, подстольный слой, план T0–T10.
