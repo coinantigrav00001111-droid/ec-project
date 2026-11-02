@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="TimeOfDayPreset" format=3]
+
+[ext_resource type="Script" path="res://core/graphics/time_of_day_preset.gd" id="1_ixg5p"]
+
+[resource]
+script = ExtResource("1_ixg5p")
+id = &"day"
+title = "День"
+sun_azimuth = 5.0

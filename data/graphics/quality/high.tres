@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="QualityPreset" format=3]
+
+[ext_resource type="Script" path="res://core/graphics/quality_preset.gd" id="1_mml2f"]
+
+[resource]
+script = ExtResource("1_mml2f")
+id = &"high"
+title = "High"
+dir_shadow_atlas = 8192
+dir_shadow_splits = 4
+dir_shadow_max_distance = 300.0
+soft_shadow_quality = 4
+positional_shadow_atlas = 4096
+msaa = 2
+ssao = true
+ssao_half_size = false
+ssao_quality = 2
+ssil = true
+contact_shadows = true
+tilt_shift = true
+dof = true
+outlines_all = true
+entity_light_max = 16
+room_detail_lod = 2

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="QualityPreset" format=3]
+
+[ext_resource type="Script" path="res://core/graphics/quality_preset.gd" id="1_oak5y"]
+
+[resource]
+script = ExtResource("1_oak5y")
+id = &"low"
+title = "Low"
+dir_shadow_max_distance = 200.0
+entity_light_max = 3
+entity_light_emissive_only = true

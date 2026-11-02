@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="TimeOfDayPreset" format=3]
+
+[ext_resource type="Script" path="res://core/graphics/time_of_day_preset.gd" id="1_b0udq"]
+
+[resource]
+script = ExtResource("1_b0udq")
+id = &"evening"
+title = "Вечер"
+sun_azimuth = 25.0
+sun_elevation = 16.0
+sun_color = Color(1, 0.6, 0.35, 1)
+sun_energy = 0.6
+ambient_tint = Color(1, 0.82, 0.75, 1)
+ambient_energy_mul = 0.8
+background_tint = Color(1, 0.75, 0.6, 1)
+sky_top = Color(0.35, 0.38, 0.7, 1)
+sky_bottom = Color(1, 0.55, 0.3, 1)

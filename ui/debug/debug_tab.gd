@@ -47,8 +47,8 @@ func _on_bind() -> void:
 func make_var_label(text: String) -> Label:
 	var l := Label.new()
 	l.text = text
-	l.add_theme_font_size_override(&"font_size", 10)
-	l.add_theme_color_override(&"font_color", Color(0.55, 0.65, 0.8))
+	l.add_theme_font_size_override(&"font_size", 12)
+	l.add_theme_color_override(&"font_color", Color(0.75, 0.85, 1.0, 1.0))
 	l.visible = show_vars
 	_var_labels.append(l)
 	return l

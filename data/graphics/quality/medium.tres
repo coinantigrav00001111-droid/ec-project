@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="QualityPreset" format=3]
+
+[ext_resource type="Script" path="res://core/graphics/quality_preset.gd" id="1_07yx6"]
+
+[resource]
+script = ExtResource("1_07yx6")
+id = &"medium"
+title = "Medium"
+dir_shadow_atlas = 4096
+dir_shadow_splits = 2
+soft_shadow_quality = 3
+positional_shadow_atlas = 4096
+msaa = 1
+fxaa = false
+ssao = true
+contact_shadows = true
+tilt_shift = true
+outlines_all = true
+room_detail_lod = 1

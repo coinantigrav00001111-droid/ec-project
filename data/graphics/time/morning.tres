@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="TimeOfDayPreset" format=3]
+
+[ext_resource type="Script" path="res://core/graphics/time_of_day_preset.gd" id="1_kdvra"]
+
+[resource]
+script = ExtResource("1_kdvra")
+id = &"morning"
+title = "Утро"
+sun_azimuth = -25.0
+sun_elevation = 22.0
+sun_color = Color(1, 0.82, 0.62, 1)
+sun_energy = 0.75
+ambient_tint = Color(1, 0.93, 0.88, 1)
+ambient_energy_mul = 0.9
+background_tint = Color(1, 0.9, 0.8, 1)
+sky_top = Color(0.62, 0.74, 0.95, 1)
+sky_bottom = Color(1, 0.82, 0.65, 1)
