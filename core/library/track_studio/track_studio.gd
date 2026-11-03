@@ -193,7 +193,7 @@ func _build_left_panel() -> void:
 	_add_button(r2, "Сохранить как…", _open_save_as)
 	var r3 := HBoxContainer.new()
 	lv.add_child(r3)
-	_add_button(r3, "Тестовый объект в каталог", _on_make_object).tooltip_text = "Создаёт data/tracks/objects/s239_<id стиля>.tres: прямая 23.9 с этим стилем, чтобы поставить её в игре. Стиль должен быть сохранён."
+	_add_button(r3, "Добавить в набор стилей проекта", _on_add_to_set).tooltip_text = "Добавляет сохранённый стиль строкой в setting/track_style_set.tres. После этого он есть в списке стилей на верхней панели игры, новые траки любой формы строятся в нём. Стиль должен быть сохранён (Ctrl+S)."
 
 	_file_label = Label.new()
 	_file_label.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY
@@ -700,19 +700,22 @@ func _rebuild_view(refit: bool) -> void:
 		view.fit()
 
 
-# --- тестовый объект для игры (T5) ---
+# --- набор стилей проекта (ATTN_17 §17.13) ---
 
-func _on_make_object() -> void:
+func _on_add_to_set() -> void:
 	if _style == null:
 		return
 	if _current_path.is_empty() or _dirty:
-		_say("Сначала сохраните стиль (Ctrl+S): объект ссылается на файл стиля", true)
+		_say("Сначала сохраните стиль (Ctrl+S): в набор попадает файл стиля", true)
 		return
-	var r := TrackTestObject.create(_style, _current_path)
+	var r := TrackStyleSetIO.add_to_project(_current_path)
 	if not r["ok"]:
 		_say(String(r["error"]), true)
 		return
-	_say("Объект записан: %s (id %d). Вернитесь в редактор, запустите игру: в каталоге траков появится «S239 %s». Замер: tests/track_style_bench.tscn." % [r["path"], r["id"], String(_style.id)])
+	if r["already"]:
+		_say("Стиль «%s» уже в наборе. Выберите его в списке стилей на верхней панели игры." % String(r["id"]))
+		return
+	_say("Стиль «%s» добавлен в setting/track_style_set.tres. Выберите его в списке стилей на верхней панели: новые траки любой формы встанут в нём. Замер: tests/track_style_bench.tscn." % String(r["id"]))
 
 
 # --- выбор ресурса ---

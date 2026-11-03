@@ -5,7 +5,6 @@
 [ext_resource type="Script" uid="uid://4q7obm3rjyaj" path="res://setting/buffer_stop_config.gd" id="3_cfg"]
 [ext_resource type="Script" uid="uid://mpakwrr6lum8" path="res://core/components/comp_settings/identity_setting.gd" id="4_id"]
 [ext_resource type="Script" uid="uid://b2r1p5dalh514" path="res://core/components/comp_settings/switchvisual_setting.gd" id="5_vis"]
-[ext_resource type="Script" uid="uid://cfpx56q1cgoy5" path="res://core/components/tracks/track_style.gd" id="6_3qy88"]
 [ext_resource type="Script" uid="uid://b1jwuxb32so7e" path="res://core/components/comp_settings/trackdraggable_setting.gd" id="6_drag"]
 [ext_resource type="Script" uid="uid://djbifkyei01t7" path="res://core/components/comp_settings/pivot_setting.gd" id="7_piv"]
 [ext_resource type="Script" uid="uid://cuumo0qj7r7gb" path="res://core/components/comp_settings/hoverable_setting.gd" id="8_hov"]
@@ -20,22 +19,15 @@
 
 [sub_resource type="Resource" id="Resource_cfg"]
 script = ExtResource("3_cfg")
+collision_width = 2.0
 radius = 5.95
 
 [sub_resource type="Resource" id="Resource_id"]
 script = ExtResource("4_id")
 object_config = SubResource("Resource_cfg")
 
-[sub_resource type="Resource" id="Resource_sgoq4"]
-script = ExtResource("6_3qy88")
-rail_profile = null
-ballast_profile = null
-collision_width = 2.0
-metadata/_custom_type_script = "uid://cfpx56q1cgoy5"
-
 [sub_resource type="Resource" id="Resource_vis"]
 script = ExtResource("5_vis")
-style = SubResource("Resource_sgoq4")
 lever = false
 
 [sub_resource type="Resource" id="Resource_drag"]
@@ -70,13 +62,10 @@ script = ExtResource("15_bs")
 
 [resource]
 script = ExtResource("2_es")
-key = &"track.buffer.buffer_stop"
-facets = {
-"shape": "buffer"
-}
-id = 1340
+key = &"track.special.buffer_stop"
 name = "Buffer Stop"
 description = "Упор. Тупиковый трак с буферным брусом на конце. L 11.9. Медленно: отскок на буферах, быстро: сход."
-tag = &"buffer"
+tag = &"special"
+sort_order = 50
 icon = ExtResource("16_ca1yb")
 components = Array[ExtResource("1_cs")]([SubResource("Resource_id"), SubResource("Resource_vis"), SubResource("Resource_drag"), SubResource("Resource_piv"), SubResource("Resource_hov"), SubResource("Resource_sel"), SubResource("Resource_blk"), SubResource("Resource_path"), SubResource("Resource_sock"), SubResource("Resource_pwr"), SubResource("Resource_sup"), SubResource("Resource_bs")])

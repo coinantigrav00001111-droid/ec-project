@@ -100,4 +100,12 @@ func _check(path: String, res: EntitySetting, seen: Dictionary) -> Array[String]
 
 	if not CatalogMeta.CATEGORIES.has(res.category):
 		out.append("%s: категории %s нет в CatalogMeta.CATEGORIES" % [path, res.category])
+	if CatalogMeta.TAGS.has(res.category) and not (CatalogMeta.TAGS[res.category] as Array).has(res.tag):
+		out.append("%s: тега '%s' нет в CatalogMeta.TAGS[%s]" % [path, res.tag, res.category])
+	# Траки: стиль даёт сессия (TSM), во вложенном стиле объекта его не опознать (ATTN_17 §17.13)
+	if res.category == &"track":
+		for comp in res.components:
+			var st = comp.get("style") if comp != null else null
+			if st is TrackStyle and (st.resource_path == "" or st.resource_path.contains("::")):
+				out.append("%s: вложенный стиль в %s: оставьте поле style пустым (стиль сессии) или ссылкой на файл из data/tracks/styles/" % [path, comp.get_script().resource_path.get_file()])
 	return out

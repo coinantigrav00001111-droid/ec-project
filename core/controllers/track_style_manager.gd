@@ -12,6 +12,8 @@ extends Node
 
 ## Активный стиль сменился (id уже из набора)
 signal current_changed(id: StringName)
+## Набор стилей изменился (Track Studio добавил строку): списки стилей в UI пересобираются
+signal set_changed
 
 const SET_PATH := "res://setting/track_style_set.tres"
 
@@ -46,6 +48,23 @@ func get_style(id: StringName) -> TrackStyle:
 
 func current_style() -> TrackStyle:
 	return get_style(current_id)
+
+
+## Стиль для формы без сцены, когда активен стиль-сцена (budget)
+func scene_fallback() -> TrackStyle:
+	return get_style(style_set.scene_fallback_id)
+
+
+## Track Studio: добавить стиль строкой в набор проекта и записать setting/track_style_set.tres.
+## Возвращает код Error. Проверку id и дублей делает TrackStyleSetIO
+func add_style(style: TrackStyle) -> int:
+	style_set.styles.append(style)
+	var err := ResourceSaver.save(style_set, SET_PATH)
+	if err != OK:
+		style_set.styles.pop_back()
+		return err
+	set_changed.emit()
+	return OK
 
 
 ## Сменить активный стиль. Неизвестный id игнорируется с предупреждением. Уже стоящие траки не меняются

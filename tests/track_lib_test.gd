@@ -20,7 +20,7 @@ func _ready() -> void:
 	_test_dx_to_gl()
 	_test_generator()
 	_test_normalize()
-	_test_test_object()
+	_test_style_set_io()
 	_test_budget()
 	print("TrackLib: %d/%d" % [_ok, _all])
 	get_tree().quit(0 if _ok == _all else 1)
@@ -241,19 +241,32 @@ func _test_normalize() -> void:
 	_check("normalize: слияние даёт одну поверхность", (merged["mesh"] as ArrayMesh).get_surface_count() == 1)
 
 
-func _test_test_object() -> void:
-	var template := FileAccess.get_file_as_string(TrackTestObject.TEMPLATE)
-	_check("тестовый объект: шаблон читается", template.contains("id = ") and template.contains(TrackTestObject.TEMPLATE_STYLE))
-	var text := TrackTestObject.build_text(template, "res://data/tracks/styles/my_style.tres", "my_style", false, 0.85, 1901)
-	_check("тестовый объект: путь стиля, id, ключ, имя подставлены",
-		text.contains("res://data/tracks/styles/my_style.tres") and not text.contains("styles/wood_ballast.tres")
-		and text.contains("id = 1901") and not text.contains("id = 1421")
-		and text.contains("track.straight.s239_my_style") and text.contains("S239 my_style"))
-	_check("тестовый объект: грани без балласта", text.contains("\"ballast\": \"no\"") and not text.contains("\"sleeper\""))
-	var used := TrackTestObject.used_ids()
-	var nid := TrackTestObject.next_id(used)
-	_check("тестовый объект: следующий id не меньше 1900 и свободен", nid >= TrackTestObject.ID_FROM and not used.has(nid))
-	_check("тестовый объект: id шаблона 1421 найден среди занятых", used.has(1421))
+func _test_style_set_io() -> void:
+	var set_ := TrackStyleSet.new()
+	var a := TrackStyle.new()
+	a.id = &"zz_test_a"
+	a.take_over_path("res://data/tracks/styles/zz_test_a.tres")   # путь только в памяти, файл не создаётся
+	var b := TrackStyle.new()
+	b.id = &"zz_test_a"   # тот же id, другой файл
+	b.take_over_path("res://data/tracks/styles/zz_test_b.tres")
+	var scene_style := TrackStyle.new()
+	scene_style.id = &"zz_test_scene"
+	scene_style.use_scene = true
+	var r := TrackStyleSetIO.check_add(set_, a, a.resource_path)
+	_check("набор стилей: новый стиль можно добавить", r["ok"] and not r["already"])
+	set_.styles.append(a)
+	r = TrackStyleSetIO.check_add(set_, a, a.resource_path)
+	_check("набор стилей: тот же файл уже в наборе", r["ok"] and r["already"])
+	r = TrackStyleSetIO.check_add(set_, b, b.resource_path)
+	_check("набор стилей: тот же id из другого файла отклонён", not r["ok"] and String(r["error"]).contains("zz_test_a"))
+	r = TrackStyleSetIO.check_add(set_, scene_style, "res://data/tracks/styles/zz_test_scene.tres")
+	_check("набор стилей: стиль-сцена отклонён", not r["ok"])
+	r = TrackStyleSetIO.check_add(set_, a, "")
+	_check("набор стилей: без файла отклонён", not r["ok"])
+	var broken := TrackStyleSet.new()
+	broken.styles.append(a)
+	broken.styles.append(b)
+	_check("набор стилей: проверка находит повтор id", not broken.validate().is_empty())
 
 
 func _test_budget() -> void:

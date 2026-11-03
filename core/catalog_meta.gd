@@ -33,7 +33,7 @@ const CATEGORIES := {
 ## "name" и "icon" необязательны: без них подпись это id тега, иконка у первого объекта
 const TAGS := {
 	&"train": [&"loco", &"boxcar"],
-	&"track": [&"straight", &"curve", &"switch", &"flex", &"crossing", &"buffer", &"rulette"],
+	&"track": [&"straight", &"curve", &"junction", &"special"],
 	&"building": [&"house"],
 	&"terrain": [&"foam", &"cut", &"water", &"plaster"],
 	&"dc_controller": [&"2d", &"3d"],
@@ -41,15 +41,19 @@ const TAGS := {
 
 ## Подписи и иконки тегов (необязательно): {category: {tag: {"name": String, "icon": Texture2D}}}.
 ## Пока пусто: подпись это id тега, иконка у первого объекта тега. Заполнять по мере появления иконок (U18)
-const TAG_META := {}
+const TAG_META := {
+	&"track": {
+		&"straight": {"name": "Прямые"},
+		&"curve": {"name": "Радиусные"},
+		&"junction": {"name": "Стрелки и кроссы"},
+		&"special": {"name": "Прочие"},
+	},
+}
 
 ## Фильтры категории: какие признаки (facets) объектов показывать и с какими значениями.
 ## Интерфейс фильтров делается в U3b, данные нужны уже сейчас для lint и выбора рамкой.
 const FACET_SPECS := {
-	&"track": [
-		{"id": &"ballast", "title": "Балласт", "options": ["yes", "no"], "labels": {"yes": "с балластом", "no": "без балласта"}},
-		{"id": &"sleeper", "title": "Шпалы", "options": ["wood", "concrete"], "labels": {"wood": "дерево", "concrete": "бетон"}},
-	],
+	# У траков фильтров нет: стиль это настройка сессии (TSM), а не признак кнопки (ATTN_17 §17.13)
 }
 
 ## Признаки, допустимые у объекта, но не показываемые фильтрами (нужны для выбора рамкой и сводки на кнопке)
@@ -117,3 +121,20 @@ static func facet_summary(cat: StringName, facets_of: Callable) -> String:
 		if v != "":
 			parts.append(spec.get("labels", {}).get(v, v))
 	return " · ".join(parts)
+
+
+## Сводка из паспорта обычного трака для второй строки кнопки: «36 · 30°», «23.9», «23.9 · уклон 0.5°».
+## Пусто, если паспорта нет или это не обычный трак (стрелка, кросс, упор, flex)
+static func passport_summary(setting: EntitySetting) -> String:
+	for comp in setting.components:
+		if comp is IdentitySetting and comp.object_config != null:
+			var cfg = comp.object_config
+			if cfg.get_script() != TrackConfig or cfg.radius <= 0.0:
+				return ""
+			var out: String = String.num(snappedf(cfg.radius, 0.01))
+			if cfg.deg != 0.0:
+				out += " · %s°" % String.num(snappedf(cfg.deg, 0.01))
+			elif cfg.rise != 0.0:
+				out += " · уклон %s°" % String.num(snappedf(cfg.rise, 0.01))
+			return out
+	return ""

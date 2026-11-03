@@ -21,6 +21,9 @@ class_name TrackStyle extends Resource
 const LEGACY_TILE_ALONG := 10.0
 
 @export var id: StringName = &"ballast"
+## Стиль «бюджет»: трак строится сценой Blender из `budget_scene` формы (StyleVisualSetting), а не процедурно.
+## Остальные поля у такого стиля нужны для высоты рельса (head_height) и стыков. ATTN_17 §17.13, C5, C10
+@export var use_scene := false
 
 @export_category("Rails")
 ## Половина колеи (до оси рельса), ю

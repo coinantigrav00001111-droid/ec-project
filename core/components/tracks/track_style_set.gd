@@ -10,6 +10,8 @@ class_name TrackStyleSet extends Resource
 @export var styles: Array[TrackStyle] = []
 ## Стиль новой игры. Должен быть в `styles`
 @export var default_id: StringName = &"wood_ballast"
+## Стиль для форм без сцены, когда активен стиль-сцена (budget): та же высота рельса, ничего не рвётся
+@export var scene_fallback_id: StringName = &"wood_ballast"
 
 
 func has_style(id: StringName) -> bool:
@@ -52,4 +54,9 @@ func validate() -> PackedStringArray:
 		out.append("TrackStyleSet: набор пуст, траки будут строиться стилем по умолчанию TrackStyle")
 	elif not seen.has(default_id):
 		out.append("TrackStyleSet: default_id '%s' нет в наборе" % default_id)
+	if not styles.is_empty() and not seen.has(scene_fallback_id):
+		out.append("TrackStyleSet: scene_fallback_id '%s' нет в наборе" % scene_fallback_id)
+	for st in styles:
+		if st != null and st.use_scene and st.id == scene_fallback_id:
+			out.append("TrackStyleSet: scene_fallback_id '%s' сам стиль-сцена" % st.id)
 	return out

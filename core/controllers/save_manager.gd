@@ -160,9 +160,12 @@ func load_game(slot_name: String  ='savegame', dir: String = SAVE_DIR) -> void:
 	PGM.reset_state()
 
 	## 0️⃣ 3. СПАВН СУЩНОСТЕЙ С НАКАТЫВАНИЕМ ДАННЫХ
+	var _skipped := {}   # setting_path -> сколько объектов пропущено (файла сеттинга нет)
 	for e_data in _saved_game.entities:
 		var _setting = load(e_data["setting_path"]) as EntitySetting
-		if not _setting: continue
+		if not _setting:
+			_skipped[e_data["setting_path"]] = _skipped.get(e_data["setting_path"], 0) + 1
+			continue
 		
 		## 1️⃣ Базовая сборка сущности: создание инстанса, добавление C_Identity, C_TrackVisual итд
 		# style_id трака из сейва; записи без ключа (старые сейвы) читаются стилем по умолчанию
@@ -191,6 +194,12 @@ func load_game(slot_name: String  ='savegame', dir: String = SAVE_DIR) -> void:
 				if new_comp.has_method("load_data"):
 					new_comp.load_data(comp_data_map[comp_type])
 					new_entity.add_component(new_comp) 
+
+	if not _skipped.is_empty():
+		var _n := 0
+		for _p in _skipped:
+			_n += _skipped[_p]
+		push_warning("SaveManager: пропущено объектов без сеттинга: %d (%s)" % [_n, ", ".join(_skipped.keys())])
 
 	# 4. ВАЖНЕЙШИЙ ТАКТ СИНХРОНИЗАЦИИ ФИЗИКИ (см. Критические нюансы ниже)
 	await get_tree().physics_frame

@@ -66,6 +66,8 @@ static func list_resources(dir: String) -> PackedStringArray:
 func _build_data(objects: Array[EntitySetting]) -> void:
 	_data.clear()
 	for obj in objects:
+		if obj.hide:
+			continue   # скрыт в каталоге (файл остаётся: на него могут ссылаться сейвы и тесты)
 		if not _data.has(obj.category):
 			_data[obj.category] = {}
 		if not _data[obj.category].has(obj.tag):
@@ -94,7 +96,8 @@ func get_tags(category: StringName) -> Array[Dictionary]:
 	if not _data.has(category):
 		return out
 	for tag in CatalogMeta.sort_tags(category, _data[category].keys()):
-		out.append({"id": tag, "name": str(tag), "icon": _tag_icon(category, tag)})
+		var tag_name: String = CatalogMeta.tag_info(category, tag).get("name", str(tag))
+		out.append({"id": tag, "name": tag_name, "icon": _tag_icon(category, tag)})
 	return out
 
 

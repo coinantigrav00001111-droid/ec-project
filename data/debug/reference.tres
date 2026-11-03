@@ -48,6 +48,7 @@ ExtResource("3_iixgs"): {
 }
 },
 "setting_path": "res://data/tracks/objects/r2.tres",
+"style_id": &"budget",
 "transform": Transform3D(0.8714388, 0, -0.4905042, 0, 1, 0, 0.4905042, 0, 0.8714388, -54.59683, 0, -30.248165)
 }, {
 "components": {
@@ -74,6 +75,7 @@ ExtResource("3_iixgs"): {
 }
 },
 "setting_path": "res://data/tracks/objects/r2.tres",
+"style_id": &"budget",
 "transform": Transform3D(0.50943595, 0, -0.86050856, 0, 1, 0, 0.86050856, 0, 0.50943595, -35.7996, 0, -41.376453)
 }, {
 "components": {
@@ -103,6 +105,7 @@ ExtResource("4_cf4qe"): {
 }
 },
 "setting_path": "res://data/tracks/objects/g239_r10.tres",
+"style_id": &"budget",
 "transform": Transform3D(0.0109302765, 0, -0.9999403, 0, 1, 0, 0.9999403, 0, 0.0109302765, -12.954985, 0.4999999, -43.06418)
 }, {
 "components": {
@@ -132,6 +135,7 @@ ExtResource("4_cf4qe"): {
 }
 },
 "setting_path": "res://data/tracks/objects/g239_r10.tres",
+"style_id": &"budget",
 "transform": Transform3D(0.0109302765, 0, -0.9999403, 0, 1, 0, 0.9999403, 0, 0.0109302765, 10.922659, 1.4999999, -43.32518)
 }, {
 "components": {
@@ -158,6 +162,7 @@ ExtResource("3_iixgs"): {
 }
 },
 "setting_path": "res://data/tracks/objects/g239_r10.tres",
+"style_id": &"budget",
 "transform": Transform3D(0.0109302765, 0, -0.9999403, 0, 1, 0, 0.9999403, 0, 0.0109302765, 34.8003, 2.4999998, -43.58618)
 }, {
 "components": {
@@ -184,6 +189,7 @@ ExtResource("3_iixgs"): {
 }
 },
 "setting_path": "res://data/tracks/objects/r2.tres",
+"style_id": &"budget",
 "transform": Transform3D(-1, 0, -1.509958e-07, 0, 1, 0, 1.509958e-07, 0, -1, 89.08583, 0, 17.537659)
 }, {
 "components": {
@@ -218,6 +224,7 @@ ExtResource("4_7t272"): {
 }
 },
 "setting_path": "res://data/tracks/objects/r2.tres",
+"style_id": &"budget",
 "transform": Transform3D(-0.8660254, 0, 0.50000006, 0, 1, 0, -0.50000006, 0, -0.8660254, 78.163666, 0, 36.455402)
 }, {
 "components": {
@@ -325,7 +332,8 @@ ExtResource("4_7t272"): {
 "voltage": 0.0
 }
 },
-"setting_path": "res://data/tracks/objects/s239.tres",
+"setting_path": "res://data/tracks/objects/g239.tres",
+"style_id": &"wood_ballast",
 "transform": Transform3D(-0.0068735415, 0, 0.9999764, 0, 1, 0, -0.9999764, 0, -0.0068735415, 36.37348, 0, 48.733356)
 }, {
 "components": {
@@ -351,7 +359,8 @@ ExtResource("3_iixgs"): {
 "net_id": 1
 }
 },
-"setting_path": "res://data/tracks/objects/sr1_wood.tres",
+"setting_path": "res://data/tracks/objects/r1.tres",
+"style_id": &"wood",
 "transform": Transform3D(0.71060574, 0, 0.70359045, 0, 1, 0, -0.70359045, 0, 0.71060574, -60.457237, 0.40000004, 32.334602)
 }, {
 "components": {
@@ -392,6 +401,7 @@ ExtResource("3_iixgs"): {
 }
 },
 "setting_path": "res://data/tracks/objects/flex_01.tres",
+"style_id": &"wood_ballast",
 "transform": Transform3D(-0.25881854, 0, -0.965926, 0, 1, 0, 0.965926, 0, -0.25881854, -33.874554, 0.40000004, 53.404415)
 }, {
 "components": {
@@ -417,7 +427,8 @@ ExtResource("3_iixgs"): {
 "net_id": 0
 }
 },
-"setting_path": "res://data/tracks/objects/s239.tres",
+"setting_path": "res://data/tracks/objects/g239.tres",
+"style_id": &"wood_ballast",
 "transform": Transform3D(-0.71118236, 0, -0.7030076, 0, 1, 0, 0.7030076, 0, -0.71118236, -267.67755, 0, -353.5802)
 }, {
 "components": {
@@ -444,6 +455,7 @@ ExtResource("3_iixgs"): {
 }
 },
 "setting_path": "res://data/tracks/objects/buffer_stop.tres",
+"style_id": &"wood_ballast",
 "transform": Transform3D(-0.9999551, 0, 0.009477148, 0, 1, 0, -0.009477148, 0, -0.9999551, -50.804356, 0, 23.217066)
 }, {
 "components": {
@@ -484,6 +496,7 @@ ExtResource("3_iixgs"): {
 }
 },
 "setting_path": "res://data/tracks/objects/flex_02.tres",
+"style_id": &"wood_ballast",
 "transform": Transform3D(-0.8660256, 0, 0.4999996, 0, 1, 0, -0.4999996, 0, -0.8660256, -61.207264, 0, -21.435478)
 }, {
 "components": {
@@ -518,7 +531,8 @@ ExtResource("10_ayr6f"): {
 "throw_time": 0.0
 }
 },
-"setting_path": "res://data/tracks/objects/switch_wl_wood.tres",
+"setting_path": "res://data/tracks/objects/switch_l.tres",
+"style_id": &"wood",
 "transform": Transform3D(-0.9999551, 0, 0.009477148, 0, 1, 0, -0.009477148, 0, -0.9999551, -66.92168, 0.40000004, 12.013225)
 }, {
 "components": {
@@ -559,6 +573,7 @@ ExtResource("3_iixgs"): {
 }
 },
 "setting_path": "res://data/tracks/objects/flex_02.tres",
+"style_id": &"wood_ballast",
 "transform": Transform3D(-0.71377647, 0, -0.70037353, 0, 1, 0, 0.70037353, 0, -0.71377647, -54.773224, 0, 39.818733)
 }, {
 "components": {
@@ -677,7 +692,8 @@ ExtResource("4_7t272"): {
 "voltage": 0.0
 }
 },
-"setting_path": "res://data/tracks/objects/s239.tres",
+"setting_path": "res://data/tracks/objects/g239.tres",
+"style_id": &"wood_ballast",
 "transform": Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -77.01089, 0, -5.723503)
 }, {
 "components": {
@@ -703,7 +719,8 @@ ExtResource("3_iixgs"): {
 "net_id": 2
 }
 },
-"setting_path": "res://data/tracks/objects/s239_concrete.tres",
+"setting_path": "res://data/tracks/objects/g239.tres",
+"style_id": &"concrete",
 "transform": Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -77.01089, 0.365, 18.176497)
 }, {
 "components": {
@@ -744,6 +761,7 @@ ExtResource("3_iixgs"): {
 }
 },
 "setting_path": "res://data/tracks/objects/flex_01.tres",
+"style_id": &"wood_ballast",
 "transform": Transform3D(0.0109302765, 0, -0.9999403, 0, 1, 0, 0.9999403, 0, 0.0109302765, 46.739124, 3.3999999, -43.716682)
 }, {
 "components": {
@@ -804,6 +822,7 @@ ExtResource("3_iixgs"): {
 }
 },
 "setting_path": "res://data/tracks/objects/g15.tres",
+"style_id": &"budget",
 "transform": Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -52.84943, -3.8146973e-06, -43.352142)
 }, {
 "components": {
@@ -830,6 +849,7 @@ ExtResource("3_iixgs"): {
 }
 },
 "setting_path": "res://data/tracks/objects/r1.tres",
+"style_id": &"budget",
 "transform": Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -75.78422, 0, -26.990988)
 }, {
 "components": {
@@ -856,6 +876,7 @@ ExtResource("3_iixgs"): {
 }
 },
 "setting_path": "res://data/tracks/objects/r1_75.tres",
+"style_id": &"budget",
 "transform": Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -79.75301, 0, -38.17408)
 }, {
 "components": {
@@ -882,6 +903,7 @@ ExtResource("3_iixgs"): {
 }
 },
 "setting_path": "res://data/tracks/objects/r3.tres",
+"style_id": &"budget",
 "transform": Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -93.0454, -4.7683716e-07, -36.501724)
 }, {
 "components": {
@@ -908,6 +930,7 @@ ExtResource("3_iixgs"): {
 }
 },
 "setting_path": "res://data/tracks/objects/r4.tres",
+"style_id": &"budget",
 "transform": Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -96.36373, 0, -0.26854706)
 }, {
 "components": {
@@ -934,6 +957,7 @@ ExtResource("3_iixgs"): {
 }
 },
 "setting_path": "res://data/tracks/objects/r1_75.tres",
+"style_id": &"budget",
 "transform": Transform3D(0.9659258, 0, 0.25881898, 0, 1, 0, -0.25881898, 0, 0.9659258, -76.26611, 0, 37.95901)
 }, {
 "components": {
@@ -960,6 +984,7 @@ ExtResource("3_iixgs"): {
 }
 },
 "setting_path": "res://data/tracks/objects/r2_75.tres",
+"style_id": &"budget",
 "transform": Transform3D(0.9914449, 0, 0.13052617, 0, 1, 0, -0.13052617, 0, 0.9914449, -76.92053, 0, 32.88651)
 }, {
 "components": {
@@ -1083,6 +1108,7 @@ ExtResource("3_iixgs"): {
 }
 },
 "setting_path": "res://data/tracks/objects/g107.tres",
+"style_id": &"wood_ballast",
 "transform": Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 63.529724, 0, -11.74816)
 }, {
 "components": {
@@ -1228,6 +1254,7 @@ ExtResource("4_7t272"): {
 }
 },
 "setting_path": "res://data/tracks/objects/r2.tres",
+"style_id": &"budget",
 "transform": Transform3D(-0.50000006, 0, 0.8660254, 0, 1, 0, -0.8660254, 0, -0.50000006, 42.272564, -3.8146973e-06, 74.226524)
 }, {
 "components": {
@@ -1261,7 +1288,8 @@ ExtResource("4_7t272"): {
 "voltage": 0.0
 }
 },
-"setting_path": "res://data/tracks/objects/sr2_concrete.tres",
+"setting_path": "res://data/tracks/objects/r2.tres",
+"style_id": &"concrete",
 "transform": Transform3D(-0.8660255, 0, 0.49999982, 0, 1, 0, -0.49999982, 0, -0.8660255, 61.190308, 0.3649962, 63.30436)
 }, {
 "components": {
@@ -1302,6 +1330,7 @@ ExtResource("3_iixgs"): {
 }
 },
 "setting_path": "res://data/tracks/objects/flex_02.tres",
+"style_id": &"wood_ballast",
 "transform": Transform3D(-0.50000006, 0, 0.8660254, 0, 1, 0, -0.8660254, 0, -0.50000006, 69.42376, 0, 43.161766)
 }, {
 "components": {
@@ -1328,6 +1357,7 @@ ExtResource("3_iixgs"): {
 }
 },
 "setting_path": "res://data/tracks/objects/g239.tres",
+"style_id": &"budget",
 "transform": Transform3D(0.9999551, 0, -0.009477235, 0, 1, 0, 0.009477235, 0, 0.9999551, -67.14818, 0, 35.91215)
 }, {
 "components": {
@@ -1363,6 +1393,7 @@ ExtResource("10_ayr6f"): {
 }
 },
 "setting_path": "res://data/tracks/objects/switch_l.tres",
+"style_id": &"wood_ballast",
 "transform": Transform3D(-0.9999551, 0, 0.009477148, 0, 1, 0, -0.009477148, 0, -0.9999551, -67.37468, 0, 59.811077)
 }, {
 "components": {
@@ -1389,6 +1420,7 @@ ExtResource("3_iixgs"): {
 }
 },
 "setting_path": "res://data/tracks/objects/r2.tres",
+"style_id": &"budget",
 "transform": Transform3D(0.2679614, 0, 0.96342963, 0, 1, 0, -0.96342963, 0, 0.2679614, -44.972004, 0, 97.19994)
 }, {
 "components": {
@@ -1414,7 +1446,8 @@ ExtResource("3_iixgs"): {
 "net_id": 1
 }
 },
-"setting_path": "res://data/tracks/objects/sr1_wood_ballast.tres",
+"setting_path": "res://data/tracks/objects/r1.tres",
+"style_id": &"wood_ballast",
 "transform": Transform3D(-0.9999551, 0, 0.009477148, 0, 1, 0, -0.009477148, 0, -0.9999551, -68.80285, 0, 81.06599)
 }, {
 "components": {
@@ -1440,7 +1473,8 @@ ExtResource("3_iixgs"): {
 "net_id": 1
 }
 },
-"setting_path": "res://data/tracks/objects/sr1_wood_ballast.tres",
+"setting_path": "res://data/tracks/objects/r1.tres",
+"style_id": &"wood_ballast",
 "transform": Transform3D(-0.96833533, 0, -0.24965315, 0, 1, 0, 0.24965315, 0, -0.96833533, -63.252037, 0, 80.71934)
 }, {
 "components": {
@@ -1466,7 +1500,8 @@ ExtResource("3_iixgs"): {
 "net_id": 1
 }
 },
-"setting_path": "res://data/tracks/objects/sr1_wood_ballast.tres",
+"setting_path": "res://data/tracks/objects/r1.tres",
+"style_id": &"wood_ballast",
 "transform": Transform3D(-0.861248, 0, 0.5081849, 0, 1, 0, -0.5081849, 0, -0.861248, -78.272865, 0, 97.11532)
 }, {
 "components": {
@@ -1492,7 +1527,8 @@ ExtResource("3_iixgs"): {
 "net_id": 1
 }
 },
-"setting_path": "res://data/tracks/objects/sr1_wood_ballast.tres",
+"setting_path": "res://data/tracks/objects/r1.tres",
+"style_id": &"wood_ballast",
 "transform": Transform3D(-0.49177027, 0, 0.870725, 0, 1, 0, -0.870725, 0, -0.49177027, -94.498795, 0, 106.27944)
 }, {
 "components": {
@@ -1518,7 +1554,8 @@ ExtResource("3_iixgs"): {
 "net_id": 1
 }
 },
-"setting_path": "res://data/tracks/objects/sr1_wood_ballast.tres",
+"setting_path": "res://data/tracks/objects/r1.tres",
+"style_id": &"wood_ballast",
 "transform": Transform3D(0.009476834, 0, 0.9999551, 0, 1, 0, -0.9999551, 0, 0.009476834, -113.13293, 0, 106.10284)
 }, {
 "components": {
@@ -1544,7 +1581,8 @@ ExtResource("3_iixgs"): {
 "net_id": 1
 }
 },
-"setting_path": "res://data/tracks/objects/sr1_wood_ballast.tres",
+"setting_path": "res://data/tracks/objects/r1.tres",
+"style_id": &"wood_ballast",
 "transform": Transform3D(-0.009476802, 0, -0.9999551, 0, 1, 0, 0.9999551, 0, -0.009476802, -130.42902, 0, 98.745766)
 }, {
 "components": {
@@ -1570,7 +1608,8 @@ ExtResource("3_iixgs"): {
 "net_id": 1
 }
 },
-"setting_path": "res://data/tracks/objects/sr1_wood_ballast.tres",
+"setting_path": "res://data/tracks/objects/r1.tres",
+"style_id": &"wood_ballast",
 "transform": Transform3D(0.49177042, 0, -0.8707249, 0, 1, 0, 0.8707249, 0, 0.49177042, -149.06314, 0, 98.56916)
 }, {
 "components": {
@@ -1596,7 +1635,8 @@ ExtResource("3_iixgs"): {
 "net_id": 1
 }
 },
-"setting_path": "res://data/tracks/objects/sr1_wood_ballast.tres",
+"setting_path": "res://data/tracks/objects/r1.tres",
+"style_id": &"wood_ballast",
 "transform": Transform3D(0.8612481, 0, -0.50818473, 0, 1, 0, 0.50818473, 0, 0.8612481, -165.28908, 0, 107.733284)
 }, {
 "components": {
@@ -1622,7 +1662,8 @@ ExtResource("3_iixgs"): {
 "net_id": 1
 }
 },
-"setting_path": "res://data/tracks/objects/sr1_wood_ballast.tres",
+"setting_path": "res://data/tracks/objects/r1.tres",
+"style_id": &"wood_ballast",
 "transform": Transform3D(-0.9634296, 0, 0.2679616, 0, 1, 0, -0.2679616, 0, -0.9634296, -68.24549, 0, 98.67282)
 }, {
 "components": {
@@ -1648,7 +1689,8 @@ ExtResource("3_iixgs"): {
 "net_id": 1
 }
 },
-"setting_path": "res://data/tracks/objects/sr1_wood_ballast.tres",
+"setting_path": "res://data/tracks/objects/r1.tres",
+"style_id": &"wood_ballast",
 "transform": Transform3D(0.9999551, 0, -0.009476878, 0, 1, 0, 0.009476878, 0, 0.9999551, -174.7591, 0, 123.782616)
 }, {
 "components": {
@@ -1674,7 +1716,8 @@ ExtResource("3_iixgs"): {
 "net_id": 1
 }
 },
-"setting_path": "res://data/tracks/objects/sr1_wood_ballast.tres",
+"setting_path": "res://data/tracks/objects/r1.tres",
+"style_id": &"wood_ballast",
 "transform": Transform3D(0.8707249, 0, 0.49177036, 0, 1, 0, -0.49177036, 0, 0.8707249, -174.93568, 0, 142.41675)
 }, {
 "components": {
@@ -1700,7 +1743,8 @@ ExtResource("3_iixgs"): {
 "net_id": 1
 }
 },
-"setting_path": "res://data/tracks/objects/sr1_wood_ballast.tres",
+"setting_path": "res://data/tracks/objects/r1.tres",
+"style_id": &"wood_ballast",
 "transform": Transform3D(0.50818485, 0, 0.861248, 0, 1, 0, -0.861248, 0, 0.50818485, -165.77155, 0, 158.64268)
 }, {
 "components": {
@@ -1726,7 +1770,8 @@ ExtResource("3_iixgs"): {
 "net_id": 1
 }
 },
-"setting_path": "res://data/tracks/objects/sr2_wood_ballast.tres",
+"setting_path": "res://data/tracks/objects/r2.tres",
+"style_id": &"wood_ballast",
 "transform": Transform3D(0.96342963, 0, -0.2679615, 0, 1, 0, 0.2679615, 0, 0.96342963, -80.82586, 0, 114.75007)
 }, {
 "components": {
@@ -1767,6 +1812,7 @@ ExtResource("3_iixgs"): {
 }
 },
 "setting_path": "res://data/tracks/objects/flex_02.tres",
+"style_id": &"wood_ballast",
 "transform": Transform3D(-0.5081848, 0, -0.8612481, 0, 1, 0, 0.8612481, 0, -0.5081848, -158.37025, 0, 164.43416)
 }, {
 "components": {
@@ -1812,5 +1858,6 @@ ExtResource("3_iixgs"): {
 }
 },
 "setting_path": "res://data/tracks/objects/flex_02.tres",
+"style_id": &"wood_ballast",
 "transform": Transform3D(0.6469705, 0, -0.76251507, 0, 1, 0, 0.76251507, 0, 0.6469705, -105.662155, 0, 159.6384)
 }]

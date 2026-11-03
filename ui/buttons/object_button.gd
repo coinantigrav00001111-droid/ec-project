@@ -30,6 +30,8 @@ func config(_obj: Resource) -> void:
 	var summary := ""
 	if _obj is EntitySetting:
 		summary = CatalogMeta.facet_summary(_obj.category, _obj.get_facet)
+		if summary == "":
+			summary = CatalogMeta.passport_summary(_obj)   # у траков: «36 · 30°»
 	$SummaryLabel.text = summary
 	$SummaryLabel.visible = summary != ""
 	# Ключ мелко внизу только в debug

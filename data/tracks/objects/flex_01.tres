@@ -4,7 +4,6 @@
 [ext_resource type="Script" uid="uid://b7ds2l6clrm61" path="res://setting/track_config.gd" id="2_7w4hg"]
 [ext_resource type="Script" uid="uid://mpakwrr6lum8" path="res://core/components/comp_settings/identity_setting.gd" id="3_m67po"]
 [ext_resource type="Script" uid="uid://cfevyekcq7aco" path="res://core/components/comp_settings/flexvisual_setting.gd" id="4_y01i7"]
-[ext_resource type="Script" uid="uid://cfpx56q1cgoy5" path="res://core/components/tracks/track_style.gd" id="6_u6p3o"]
 [ext_resource type="Script" uid="uid://b1jwuxb32so7e" path="res://core/components/comp_settings/trackdraggable_setting.gd" id="7_ajjs4"]
 [ext_resource type="Script" uid="uid://djbifkyei01t7" path="res://core/components/comp_settings/pivot_setting.gd" id="8_vuds4"]
 [ext_resource type="Script" uid="uid://cuumo0qj7r7gb" path="res://core/components/comp_settings/hoverable_setting.gd" id="9_8vra5"]
@@ -24,17 +23,8 @@ collision_width = 1.0
 script = ExtResource("3_m67po")
 object_config = SubResource("Resource_cfg")
 
-[sub_resource type="Resource" id="Resource_moa55"]
-script = ExtResource("6_u6p3o")
-rail_profile = null
-ballast_enabled = false
-ballast_profile = null
-collision_width = 2.5
-metadata/_custom_type_script = "uid://cfpx56q1cgoy5"
-
 [sub_resource type="Resource" id="Resource_flex"]
 script = ExtResource("4_y01i7")
-style = SubResource("Resource_moa55")
 
 [sub_resource type="Resource" id="Resource_drag"]
 script = ExtResource("7_ajjs4")
@@ -62,14 +52,11 @@ script = ExtResource("14_tijak")
 
 [resource]
 script = ExtResource("16_lwvy1")
-key = &"track.flex.flex_01"
-facets = {
-"shape": "flex"
-}
-id = 1310
+key = &"track.special.flex_01"
 name = "Flex"
 description = "Гибкий трак. Клик - начало, второй клик - конец. L 10-90, R от 32."
-tag = &"flex"
+tag = &"special"
+sort_order = 30
 icon = ExtResource("15_b1byy")
 build_behavior = 2
 components = Array[ExtResource("1_b1byy")]([SubResource("Resource_id"), SubResource("Resource_flex"), SubResource("Resource_drag"), SubResource("Resource_piv"), SubResource("Resource_hov"), SubResource("Resource_sel"), SubResource("Resource_blk"), SubResource("Resource_sock"), SubResource("Resource_pwr"), SubResource("Resource_sup")])

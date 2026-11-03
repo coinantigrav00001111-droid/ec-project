@@ -49,19 +49,29 @@ func _build_style_selector() -> void:
 	_style_option = OptionButton.new()
 	_style_option.focus_mode = Control.FOCUS_NONE   # стрелки и пробел остаются инструментам
 	_style_option.tooltip_text = "Стиль траков: новые траки создаются в нём, стоящие не меняются"
+	_fill_style_items()
+	_style_option.item_selected.connect(_on_style_selected)
+	TSM.current_changed.connect(_sync_style_selector)
+	TSM.set_changed.connect(_fill_style_items)   # Track Studio добавил стиль в набор
+	var box := power_schema_check.get_parent()
+	box.add_child(_style_option)
+	box.move_child(_style_option, power_schema_check.get_index())
+
+
+## Строки списка из набора стилей проекта; пересобирается, когда набор изменился
+func _fill_style_items() -> void:
+	_style_option.clear()
 	for st in TSM.style_set.styles:
 		if st == null:
 			continue
 		var i := _style_option.item_count
 		_style_option.add_item(String(st.id))
 		_style_option.set_item_metadata(i, st.id)
-		_style_option.set_item_tooltip(i, "высота рельса %.2f" % st.head_height())
+		var tip := "высота рельса %.2f" % st.head_height()
+		if st.use_scene:
+			tip += ", сцены Blender"
+		_style_option.set_item_tooltip(i, tip)
 	_sync_style_selector(TSM.current_id)
-	_style_option.item_selected.connect(_on_style_selected)
-	TSM.current_changed.connect(_sync_style_selector)
-	var box := power_schema_check.get_parent()
-	box.add_child(_style_option)
-	box.move_child(_style_option, power_schema_check.get_index())
 
 
 func _on_style_selected(index: int) -> void:

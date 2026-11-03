@@ -18,7 +18,9 @@ static func list_paths(dir: String = STYLES_DIR) -> PackedStringArray:
 		if not f.ends_with(".tres"):
 			continue
 		var path := dir.path_join(f)
-		if ResourceLoader.load(path) is TrackStyle:
+		var st := ResourceLoader.load(path) as TrackStyle
+		# Стиль-сцена (budget) в Studio не редактируется: у него нет профилей
+		if st != null and not st.use_scene:
 			out.append(path)
 	out.sort()
 	return out

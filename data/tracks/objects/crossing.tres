@@ -61,13 +61,10 @@ script = ExtResource("14_sup")
 
 [resource]
 script = ExtResource("2_es")
-key = &"track.crossing.crossing"
-facets = {
-"shape": "crossing"
-}
-id = 1350
+key = &"track.junction.crossing"
 name = "Crossing"
 description = "Кросс. Пересечение двух путей под 15°. L 23.9. Электрика: оба пути один контур."
-tag = &"crossing"
+tag = &"junction"
+sort_order = 30
 icon = ExtResource("16_1xdk5")
 components = Array[ExtResource("1_cs")]([SubResource("Resource_id"), SubResource("Resource_vis"), SubResource("Resource_drag"), SubResource("Resource_piv"), SubResource("Resource_hov"), SubResource("Resource_sel"), SubResource("Resource_blk"), SubResource("Resource_path"), SubResource("Resource_bs"), SubResource("Resource_sock"), SubResource("Resource_pwr"), SubResource("Resource_sup")])

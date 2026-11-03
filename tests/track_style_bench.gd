@@ -14,21 +14,22 @@ const SAMPLE_FRAMES := 120
 const SHADOWS := true          # тень от направленного света: она удваивает число отрисовок
 const OBJ := "res://data/tracks/objects/"
 
-## suite: [название, размер ячейки (ширина, глубина), [[метка, файл], ...]]. Первый вариант в наборе = бюджет (эталон)
+## suite: [название, размер ячейки (ширина, глубина), [[метка, файл формы, id стиля], ...]]. Первый вариант в наборе = бюджет (эталон).
+## Форма одна на все стили (ATTN_17 §17.13): стиль задаёт id, он идёт в EntityFactory.create_from_setting
 const SUITES := [
 	["прямые", Vector2(4.0, 24.0), [
-		["бюджет G239 (Blender)", "g239.tres"],
-		["дерево+балласт", "s239_wood_ballast.tres"],
-		["дерево", "s239_wood.tres"],
-		["бетон+балласт", "s239_concrete_ballast.tres"],
-		["бетон", "s239_concrete.tres"]]],
+		["бюджет G239 (Blender)", "g239.tres", &"budget"],
+		["дерево+балласт", "g239.tres", &"wood_ballast"],
+		["дерево", "g239.tres", &"wood"],
+		["бетон+балласт", "g239.tres", &"concrete_ballast"],
+		["бетон", "g239.tres", &"concrete"]]],
 	["дуги R2", Vector2(24.0, 24.0), [
-		["бюджет R2 (Blender)", "r2.tres"],
-		["дерево+балласт", "sr2_wood_ballast.tres"],
-		["бетон", "sr2_concrete.tres"]]],
+		["бюджет R2 (Blender)", "r2.tres", &"budget"],
+		["дерево+балласт", "r2.tres", &"wood_ballast"],
+		["бетон", "r2.tres", &"concrete"]]],
 	["пандусы 0.5", Vector2(4.0, 24.0), [
-		["бюджет G239-05 (Blender)", "g239_r05.tres"],
-		["дерево+балласт", "s239r05_wood_ballast.tres"]]],
+		["бюджет G239-05 (Blender)", "g239_r05.tres", &"budget"],
+		["дерево+балласт", "g239_r05.tres", &"wood_ballast"]]],
 ]
 
 var _cam: Camera3D
@@ -36,17 +37,20 @@ var _sun: DirectionalLight3D
 var _rows: Array[String] = []
 
 
-## SUITES плюс набор «стиль из Track Studio», если студия создала тестовый объект (user://track_studio_last_object.txt:
-## строка 1 имя файла в data/tracks/objects, строка 2 id стиля). Эталон бюджета тот же, что в первом наборе
+## Стили набора проекта (TSM), которых нет в SUITES выше (добавлены в Track Studio), идут отдельным набором.
+## Эталон бюджета тот же, что в первом наборе
+const STANDARD_STYLES := [&"budget", &"wood_ballast", &"wood", &"concrete_ballast", &"concrete"]
+
+
 func _suites() -> Array:
 	var suites: Array = SUITES.duplicate(true)
-	var path := "user://track_studio_last_object.txt"
-	if FileAccess.file_exists(path):
-		var lines := FileAccess.get_file_as_string(path).split("\n")
-		if lines.size() >= 2 and FileAccess.file_exists(OBJ + lines[0]):
-			suites.append(["стиль из Track Studio", Vector2(4.0, 24.0), [
-				["бюджет G239 (Blender)", "g239.tres"],
-				["стиль " + lines[1].strip_edges(), lines[0]]]])
+	var extra: Array = []
+	for id in TSM.style_set.ids():
+		if not STANDARD_STYLES.has(id):
+			extra.append(["стиль " + String(id), "g239.tres", id])
+	if not extra.is_empty():
+		extra.push_front(["бюджет G239 (Blender)", "g239.tres", &"budget"])
+		suites.append(["стили из Track Studio", Vector2(4.0, 24.0), extra])
 	return suites
 
 
@@ -68,7 +72,7 @@ func _ready() -> void:
 	for suite in _suites():
 		for item in suite[2]:
 			for n in COUNTS:
-				await _run(suite[0], suite[1], item[0], OBJ + item[1], n)
+				await _run(suite[0], suite[1], item[0], OBJ + item[1], n, item[2])
 
 	await _sweep()
 	await _physics_probe()
@@ -84,7 +88,7 @@ func _ready() -> void:
 	get_tree().quit()
 
 
-func _run(suite: String, cell: Vector2, label: String, file: String, n: int) -> void:
+func _run(suite: String, cell: Vector2, label: String, file: String, n: int, style_id: StringName) -> void:
 	var setting := load(file) as EntitySetting
 	if setting == null:
 		push_error("нет объекта: " + file)
@@ -102,7 +106,7 @@ func _run(suite: String, cell: Vector2, label: String, file: String, n: int) -> 
 
 	var t0 := Time.get_ticks_usec()
 	for i in n:
-		var e: Entity = factory.create_from_setting(setting)
+		var e: Entity = factory.create_from_setting(setting, style_id)
 		add_child(e)
 		e.global_position = Vector3((i % cols) * cell.x, 0.0, -floori(float(i) / cols) * cell.y)
 		spawned.append(e)
@@ -297,7 +301,8 @@ func _count_nodes() -> Array:
 # Прогон качества и дальности теней (процедурный трак, 500 штук, обзор и крупный план)
 # ==========================================
 
-const SWEEP_FILE := "s239_wood_ballast.tres"
+const SWEEP_FILE := "g239.tres"
+const SWEEP_STYLE := &"wood_ballast"
 const SWEEP_COUNT := 500
 ## label, тени вообще, трак отбрасывает, каскадов (1/2/4), дальность м, фильтр 0..5 (0 жёсткие, 2 Soft Low, 5 ultra), атлас
 const SWEEP := [
@@ -325,7 +330,7 @@ func _sweep() -> void:
 	var cols := maxi(1, ceili(sqrt(SWEEP_COUNT * cell.y / cell.x)))
 	var spawned: Array[Entity] = []
 	for i in SWEEP_COUNT:
-		var e: Entity = factory.create_from_setting(setting)
+		var e: Entity = factory.create_from_setting(setting, SWEEP_STYLE)
 		add_child(e)
 		e.global_position = Vector3((i % cols) * cell.x, 0.0, -floori(float(i) / cols) * cell.y)
 		spawned.append(e)
@@ -338,7 +343,7 @@ func _sweep() -> void:
 	var close_pos := Vector3(center.x, 25.0, center.z)
 
 	_rows.append("")
-	_rows.append("Прогон теней: s239 дерево+балласт x %d. Строка: вариант | обзор: мс / фпс / отрис. | план: мс / фпс / отрис." % SWEEP_COUNT)
+	_rows.append("Прогон теней: G239 дерево+балласт x %d. Строка: вариант | обзор: мс / фпс / отрис. | план: мс / фпс / отрис." % SWEEP_COUNT)
 	_rows.append("| вариант | обзор | план |")
 	_rows.append("|---|---|---|")
 	for cfg in SWEEP:
@@ -372,9 +377,9 @@ func _sweep() -> void:
 # ==========================================
 
 const PROBE := [
-	["пустая сцена, 0 траков", "", 0],
-	["бюджет G239 x500", "g239.tres", 500],
-	["дерево+балласт x500", "s239_wood_ballast.tres", 500],
+	["пустая сцена, 0 траков", "", 0, &""],
+	["бюджет G239 x500", "g239.tres", 500, &"budget"],
+	["дерево+балласт x500", "g239.tres", 500, &"wood_ballast"],
 ]
 const PROBE_HZ := [1, 30, 60, 120]
 
@@ -398,7 +403,7 @@ func _physics_probe() -> void:
 			var factory := EntityFactory.new()
 			var cols := maxi(1, ceili(sqrt(n * cell.y / cell.x)))
 			for i in n:
-				var e: Entity = factory.create_from_setting(setting)
+				var e: Entity = factory.create_from_setting(setting, item[3])
 				add_child(e)
 				e.global_position = Vector3((i % cols) * cell.x, 0.0, -floori(float(i) / cols) * cell.y)
 				spawned.append(e)
