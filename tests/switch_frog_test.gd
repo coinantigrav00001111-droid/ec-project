@@ -89,6 +89,11 @@ func scenario(title: String, frog_mode: int, routing: bool, route: int) -> void:
 
 func _ready() -> void:
 	flex_s = load("res://data/tracks/objects/flex_01.tres")
+	# У flex_01 стиль без балласта (головка 0.45), у стрелки по умолчанию (0.85): ступенька между ними не проводит ток
+	# (ATTN_15 §2.10, C_Socket.get_electric_neighbors). Для теста flex получает стиль по умолчанию, как у стрелки (в памяти, ресурс не сохраняется)
+	for comp in flex_s.components:
+		if comp is FlexVisualSetting:
+			comp.style = TrackStyle.new()
 	wagon_s = load("res://data/trains/objects/wagon_01.tres")
 	sw_s = load("res://data/tracks/objects/switch_r.tres")
 	await scenario("Insulated, ветка 0", 0, false, 0)

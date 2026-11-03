@@ -72,13 +72,17 @@ func solve(tree: SceneTree, clips: Array) -> Dictionary:
 
 	# 3. Клипы по компонентам
 	for c in clips:
+		if not is_instance_valid(c):   # клип мог быть освобожден без on_removed (free сущности): приведение типа упало бы
+			continue
 		var clip := c as C_PowerClip
-		if clip != null and is_instance_valid(clip):
+		if clip != null:
 			clip.conflict = ""
 	var feeders: Dictionary = {}   # корень -> Array[C_PowerClip]
 	for c in clips:
+		if not is_instance_valid(c):
+			continue
 		var clip := c as C_PowerClip
-		if clip == null or not is_instance_valid(clip):
+		if clip == null:
 			continue
 		if clip.net_id == 0 or clip.entity == null or not is_instance_valid(clip.entity):
 			continue

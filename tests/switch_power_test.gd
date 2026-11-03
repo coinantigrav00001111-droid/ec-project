@@ -32,9 +32,31 @@ func state(label: String, ents: Dictionary) -> void:
 	print("  %s: %s" % [label, ", ".join(parts)])
 
 
+## Диагностика стыков (если цепь не дошла до стрелки): соседи, ближайшие сокеты, живость, изостыки, группа
+func diag(f: Entity, sw: Entity, s: Entity, d: Entity) -> void:
+	var names := {f: "F", sw: "SW", s: "S", d: "D"}
+	for e: Entity in [f, sw, s, d]:
+		var sock := e.get_comp(C_Socket) as C_Socket
+		var nb: PackedStringArray = []
+		for n in sock.get_connected_entities():
+			nb.append(names.get(n, str(n.name)))
+		var el: PackedStringArray = []
+		for n in sock.get_electric_neighbors():
+			el.append(names.get(n, str(n.name)))
+		var live: PackedStringArray = []
+		for i in sock.sockets.size():
+			live.append("%d:%s%s" % [i, "жив" if sock.is_socket_live(i) else "МЕРТВ", "+изостык" if sock.is_gap(i) else ""])
+		var hh := (e.get_comp(C_Path) as C_Path).head_height()
+		print("  диаг %s: головка=%.2f, в группе=%s, соседи=%s, электр=%s, сокеты %s" % [names[e], hh, e.is_in_group("power_track"), nb, el, ", ".join(live)])
+	for pair in [[f, sw], [sw, s], [sw, d]]:
+		var j := RailNetBuilder.find_joint(pair[0], pair[1])
+		print("  диаг стык %s-%s: %s" % [names[pair[0]], names[pair[1]], j])
+
+
 func scenario(title: String, clip_on_d: bool) -> void:
 	for c in get_children():
 		c.free()
+	PGM.reset_state()   # клипы освобождены без on_removed: убрать их и старые напряжения
 	await get_tree().physics_frame
 	print("== ", title)
 
@@ -66,6 +88,7 @@ func scenario(title: String, clip_on_d: bool) -> void:
 	await get_tree().physics_frame
 
 	var ents := {"F": f, "SW": sw, "S": s, "D": d}
+	diag(f, sw, s, d)
 	state("ветка 0", ents)
 	swc.request(1, &"force")
 	for i in 8:
@@ -85,6 +108,11 @@ func scenario(title: String, clip_on_d: bool) -> void:
 
 func _ready() -> void:
 	flex_s = load("res://data/tracks/objects/flex_01.tres")
+	# У flex_01 стиль без балласта (головка 0.45), у стрелки по умолчанию (0.85): ступенька между ними не проводит ток
+	# (ATTN_15 §2.10, C_Socket.get_electric_neighbors). Для теста flex получает стиль по умолчанию, как у стрелки (в памяти, ресурс не сохраняется)
+	for comp in flex_s.components:
+		if comp is FlexVisualSetting:
+			comp.style = TrackStyle.new()
 	sw_s = load("res://data/tracks/objects/switch_r.tres")
 	await scenario("Сценарий 1: ток только на выбранную ветку", false)
 	await scenario("Сценарий 2: на ответвлении свой клип", true)

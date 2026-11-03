@@ -308,6 +308,8 @@ func request_recalculate() -> void:
 
 # Пересчет всей сети: граф цепей, лидеры и конфликты клипов, КЗ полярности. Подробно: RailNetBuilder
 func recalculate_grid() -> void:
+	# Освобожденные без on_removed клипы (free сущности, тесты) убираем до расчета
+	active_clips = active_clips.filter(func(c): return is_instance_valid(c))
 	var t0 := Time.get_ticks_usec()
 	var res: Dictionary = _builder.solve(get_tree(), active_clips)
 	last_recalc_usec = Time.get_ticks_usec() - t0
