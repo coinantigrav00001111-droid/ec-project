@@ -436,7 +436,6 @@ key_ctrl_s={
 "script": null
 )]
 }
-
 debug_panel_toggle={
 "deadzone": 0.2,
 "events": [Object(InputEventKey,
