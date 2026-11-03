@@ -3,6 +3,8 @@
 [ext_resource type="Texture2D" uid="uid://bicxye7x3h6pm" path="res://data/import/textures/Image_30.jpg" id="1_eg6rk"]
 [ext_resource type="Texture2D" uid="uid://uhhicqs5w6nl" path="res://data/import/textures/Image_31.jpg" id="2_6v1k7"]
 [ext_resource type="Texture2D" uid="uid://de7ut0bxqg21t" path="res://data/import/textures/Image_32.jpg" id="3_15cda"]
+[ext_resource type="PackedScene" uid="uid://cqo25obbcadoj" path="res://data/import/loco_02-el1.glb" id="4_15cda"]
+[ext_resource type="PackedScene" uid="uid://bl3phoy4uc8i8" path="res://data/import/loco_02.gltf" id="5_tircs"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_ufoa1"]
 friction = 0.02
@@ -180,3 +182,9 @@ mesh = SubResource("SphereMesh_by7bw")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.239355, -0.15607738)
 shape = SubResource("BoxShape3D_3owqy")
 debug_color = Color(0, 0.6, 0.69803923, 1)
+
+[node name="loco_02-el1" parent="." unique_id=1161839388 instance=ExtResource("4_15cda")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.450073, 0, 3.2960205)
+
+[node name="loco_02" parent="." unique_id=1632430237 instance=ExtResource("5_tircs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.839844, 0, -1.5195313)
