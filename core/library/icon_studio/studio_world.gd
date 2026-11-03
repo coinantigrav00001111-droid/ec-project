@@ -326,6 +326,12 @@ func _clear_subject() -> void:
 	subject = null
 
 
+## Убрать объект из мира (Library закрывается: kill_me снимает регистрацию в PGM)  # XX claude-library L1
+func clear_subject() -> void:
+	_token += 1   # идущий set_subject увидит, что запрос устарел
+	_clear_subject()
+
+
 ## Запасной путь: сцена из визуал-компонента (trackvisual) или из object_config (вагон, дом)
 func _scene_of(setting: EntitySetting) -> Node3D:
 	for cs in setting.components:

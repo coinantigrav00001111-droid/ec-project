@@ -7,6 +7,8 @@ extends EditorScript
 ## Ищет: пустые и повторные `key`, key не по схеме `категория.тег.вариант`, объекты без иконки,
 ## неизвестные фасеты и значения (CatalogMeta.FACET_SPECS), категории и теги, которых нет в CatalogMeta.
 ## Итог в Output: список проблем или «OK».
+## Отдельным блоком «Library: ...» (не входит в проблемы): у объектов train и building нет паспорта Library
+## (res://data/library/info/<key>.tres) или паспорт ссылается на несуществующий key (ATTN_22, шаг L0).
 
 const DIRS := [
 	"res://data/tracks/objects/",
@@ -25,6 +27,7 @@ func _run() -> void:
 	var problems: Array[String] = []
 	var seen := {}
 	var total := 0
+	var objects: Array[Dictionary] = []   # XX claude-library L0: для проверки паспортов
 	for dir in DIRS:
 		for path in EntityCatalogProvider.list_resources(dir):
 			var res := load(path) as EntitySetting
@@ -32,13 +35,41 @@ func _run() -> void:
 				continue   # DCControllerSetting и прочее: не объект каталога
 			total += 1
 			problems.append_array(_check(path, res, seen))
+			objects.append({"key": res.get_key(), "category": res.category, "path": path})
 	print("Каталог: проверено объектов %d" % total)
 	if problems.is_empty():
 		print("OK: проблем нет")
-		return
-	print("Проблем: %d" % problems.size())
-	for p in problems:
-		print("  - ", p)
+	else:
+		print("Проблем: %d" % problems.size())
+		for p in problems:
+			print("  - ", p)
+	_report_passports(objects)
+
+
+# XX claude-library L0: паспорта Library (предупреждения, не проблемы каталога)
+const PASSPORT_CATEGORIES := [&"train", &"building"]
+
+
+func _report_passports(objects: Array[Dictionary]) -> void:
+	var warns: Array[String] = []
+	var keys := {}
+	for o in objects:
+		keys[o["key"]] = true
+		if PASSPORT_CATEGORIES.has(o["category"]) and not ResourceLoader.exists(ModelInfo.path_for(o["key"])):
+			warns.append("%s: нет паспорта Library (%s)" % [o["path"], ModelInfo.path_for(o["key"])])
+	var checked := 0
+	for path in EntityCatalogProvider.list_resources(ModelInfo.DIR):
+		checked += 1
+		var info := load(path) as ModelInfo
+		if info == null:
+			warns.append("%s: это не ModelInfo" % path)
+		elif not keys.has(info.key):
+			warns.append("%s: key '%s' нет в каталоге" % [path, info.key])
+		elif path.get_file().get_basename() != String(info.key):
+			warns.append("%s: имя файла не совпадает с key '%s'" % [path, info.key])
+	print("Library: паспортов проверено %d, предупреждений %d" % [checked, warns.size()])
+	for w in warns:
+		print("  - ", w)
 
 
 func _check(path: String, res: EntitySetting, seen: Dictionary) -> Array[String]:

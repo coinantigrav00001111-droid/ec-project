@@ -9,7 +9,8 @@ class_name ModeController extends Node
 ##   hide_mode_ui()                   спрятать панель режима, сбросить выбранную категорию
 ##   debug_open_category(index: int)  необязательно: открыть категорию по номеру (Global.active_ui_category)
 ## Build, Operate и Observe обслуживает ToolbarController (каталог режима регистрирует адаптер).
-## У режима без обработчика (Library, заглушка) показывается простая панель из PLAIN_PANELS.
+## У режима без обработчика показывается простая панель из _plain_panels.
+## Library это экран поверх игры (ATTN_22 §22.5.2), режим HUD не меняется: см. _open_library.
 
 
 @onready var tool_controller: ToolController = $"../../ToolController"
@@ -22,6 +23,11 @@ signal current_mode_changed(_current_mode)
 var _handlers := {}
 ## режим -> панель без обработчика
 var _plain_panels := {}
+
+# XX claude-library L1: экран Library поверх игры
+const LIBRARY_SCREEN := preload("res://core/library/library_screen.tscn")
+var _library_screen: Control
+var _library_prev_mode: StringName = &"build"
 
 
 func _ready() -> void:
@@ -66,6 +72,11 @@ func _ready() -> void:
 
 ##⚡ Сигнал из панели ModePanel. Ставим новый режим
 func on_mode_selected(new_mode: StringName) -> void:
+	# XX claude-library L1: Library открывается экраном поверх игры, режим HUD и Global.current_mode не меняются
+	if new_mode == &"library":
+		_open_library()
+		return
+
 	var current_m := Global.current_mode
 	
 	if new_mode == current_m:	return
@@ -105,3 +116,22 @@ func _hide_mode_ui(mode: StringName) -> void:
 	var handler = _handlers.get(mode)
 	if handler != null:
 		handler.hide_mode_ui()
+
+
+# XX claude-library L1
+## Открыть экран Library поверх игры. Пауза и выключение 3D игры делает сам экран
+func _open_library() -> void:
+	if is_instance_valid(_library_screen):
+		return
+	_library_prev_mode = Global.current_mode
+	_library_screen = LIBRARY_SCREEN.instantiate()
+	_library_screen.closed.connect(_on_library_closed)
+	get_parent().add_child(_library_screen)
+
+
+## Экран закрыт: кнопка режима возвращается на прежний режим (сам режим не менялся)
+func _on_library_closed() -> void:
+	_library_screen = null
+	var btn := %ModePanel.get_node_or_null("VBoxContainer/" + String(_library_prev_mode).capitalize() + "Button") as Button
+	if btn:
+		btn.button_pressed = true
