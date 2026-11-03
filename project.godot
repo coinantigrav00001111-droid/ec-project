@@ -8,6 +8,12 @@
 
 config_version=5
 
+[ResCleaner]
+
+data/ignore_folder=["ui"]
+data/keep_list=Array[String]([])
+data/use_multithreading=false
+
 [application]
 
 config/name="EC_project"
@@ -39,7 +45,7 @@ window/size/viewport_height=900
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/Todo_Manager/plugin.cfg", "res://addons/fancy_folder_colors/plugin.cfg", "res://addons/kanban_tasks/plugin.cfg")
+enabled=PackedStringArray("res://addons/Todo_Manager/plugin.cfg", "res://addons/fancy_folder_colors/plugin.cfg", "res://addons/godotresourcecleaner/plugin.cfg", "res://addons/kanban_tasks/plugin.cfg")
 
 [file_customization]
 
