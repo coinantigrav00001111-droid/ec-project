@@ -7,7 +7,7 @@ class_name LibraryWorkspace extends VBoxContainer
 ## Область это содержимое правой панели экрана: Осмотр, Покраска, Детали, Свет, Стенд, Здания, Сборка, Реставрация.
 ## Выбранный объект, камера и мир общие и принадлежат экрану, область их только использует.
 ## Контракт: enter() при включении, exit() при выключении, can_leave() перед выходом из экрана или областью,
-## on_subject(setting, info) когда объект показан (info как у StudioWorld.set_subject).
+## on_subject(setting, info, ms) когда объект показан (info как у StudioWorld.set_subject), handle_key(event) для клавиш.
 
 var id: StringName = &"workspace"
 var title := ""
@@ -29,6 +29,11 @@ func exit() -> void:
 ## false: у области есть несохранённая работа, выйти нельзя (область сама спросит игрока)
 func can_leave() -> bool:
 	return true
+
+
+## Клавиша экрана (не потреблённая интерфейсом). true: область её обработала
+func handle_key(_event: InputEventKey) -> bool:
+	return false
 
 
 func on_loading(_setting: EntitySetting) -> void:

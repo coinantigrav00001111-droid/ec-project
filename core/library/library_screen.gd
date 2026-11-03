@@ -8,7 +8,7 @@ class_name LibraryScreen extends Control
 ## Два способа запуска:
 ##   - оверлей поверх игры (ModeController): дерево на паузе, 3D главного вьюпорта выключено на время;
 ##   - отдельно (F6 на library_screen.tscn): окно как у студий, без паузы, кнопки «Назад» нет.
-## Объект показывает StudioWorld через EntityFactory (как в игре), в своём World3D.
+## Объект показывает StudioWorld через EntityFactory (как в игре), в своём World3D. Закрытая модель показывается силуэтом.
 ## При закрытии объект убирается через kill_me (снимает регистрацию в PGM), пауза и 3D возвращаются.
 
 signal closed
@@ -23,8 +23,8 @@ const SETTINGS_PATH := "user://library.cfg"
 const SETTLE_FRAMES := 2
 ## Выключать 3D главного вьюпорта, пока открыт экран (в игре под экраном рисовать нечего)
 const DISABLE_GAME_3D := true
-## Что показывает коллекция (порядок категорий). Terrain это инструменты, а не модели
-const COLLECTION_CATEGORIES: Array[StringName] = [&"train", &"building", &"track", &"decor"]
+## Цвет силуэта закрытой модели (ATTN_22 §22.7.1)
+const SILHOUETTE_COLOR := Color(0.13, 0.14, 0.16)
 ## Области экрана: id, название, включена ли (остальные включаются шагами L3 и дальше)
 const WORKSPACE_TABS := [
 	[&"overview", "Осмотр", true],
@@ -36,7 +36,7 @@ const WORKSPACE_TABS := [
 	[&"kit", "Сборка", false],
 	[&"restore", "Реставрация", false],
 ]
-const HINT_TEXT := "ЛКМ: вращать   ·   Shift+ЛКМ, СКМ, ПКМ: сдвиг   ·   колесо: зум   ·   F: вписать   ·   Esc: назад"
+const HINT_TEXT := "ЛКМ: вращать   ·   Shift+ЛКМ, СКМ, ПКМ: сдвиг   ·   колесо: зум   ·   F: вписать   ·   1–6: ракурс (Shift: сохранить)   ·   Esc: назад"
 
 var rules: LibraryRules
 var profile: LibraryProfile
@@ -44,6 +44,7 @@ var settings: StudioSettings
 var world: StudioWorld
 var stage: LibraryStage
 var workspace: LibraryWorkspace
+var catalog: LibraryCatalog
 
 var _embedded := false
 var _prev_paused := false
@@ -51,10 +52,8 @@ var _prev_disable_3d: Variant = false
 var _vp: Viewport
 var _viewport: SubViewport
 var _view_area: PanelContainer
-var _tree: Tree
 var _right_box: VBoxContainer
 var _rules_label: Label
-var _items := {}          # key -> TreeItem
 var _current: EntitySetting
 var _closing := false
 
@@ -77,7 +76,6 @@ func _ready() -> void:
 
 	_build_ui()
 	_build_world()
-	_populate()
 	_set_workspace(Overview.new())
 	_enter_overlay_state()
 
@@ -101,7 +99,9 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	var k := event as InputEventKey
 	if k == null or not k.pressed or k.echo:
 		return
-	if k.keycode == KEY_F:
+	if workspace != null and workspace.handle_key(k):
+		get_viewport().set_input_as_handled()
+	elif k.keycode == KEY_F:
 		world.fit()
 		get_viewport().set_input_as_handled()
 	elif k.keycode == KEY_ESCAPE and _embedded:
@@ -229,17 +229,10 @@ func _build_header() -> Control:
 
 func _build_left() -> Control:
 	var p := PanelContainer.new()
-	p.custom_minimum_size = Vector2(260, 0)
-	var v := VBoxContainer.new()
-	p.add_child(v)
-	var l := Label.new()
-	l.text = "Каталог"
-	v.add_child(l)
-	_tree = Tree.new()
-	_tree.hide_root = true
-	_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_tree.item_selected.connect(_on_item_selected)
-	v.add_child(_tree)
+	p.custom_minimum_size = Vector2(280, 0)
+	catalog = LibraryCatalog.new(rules, profile)
+	catalog.object_selected.connect(_show_object)
+	p.add_child(catalog)
 	return p
 
 
@@ -292,76 +285,17 @@ func _build_world() -> void:
 
 
 # ==========================================
-# КАТАЛОГ
+# КАТАЛОГ И ПОКАЗ ОБЪЕКТА
 # ==========================================
 
-func _populate() -> void:
-	_tree.clear()
-	_items.clear()
-	var root := _tree.create_item()
-	# категория -> тег -> Array[EntitySetting]
-	var by_cat := {}
-	for s in EntityCatalogProvider.load_all():
-		if s.hide or not COLLECTION_CATEGORIES.has(s.category):
-			continue
-		if not by_cat.has(s.category):
-			by_cat[s.category] = {}
-		var tags: Dictionary = by_cat[s.category]
-		if not tags.has(s.tag):
-			tags[s.tag] = []
-		(tags[s.tag] as Array).append(s)
-
-	for cat in COLLECTION_CATEGORIES:
-		if not by_cat.has(cat):
-			continue
-		var cat_item := _tree.create_item(root)
-		cat_item.set_text(0, str((CatalogMeta.CATEGORIES.get(cat, {}) as Dictionary).get("name", cat)))
-		cat_item.set_selectable(0, false)
-		var tags: Dictionary = by_cat[cat]
-		for tag in CatalogMeta.sort_tags(cat, tags.keys()):
-			var tag_item := _tree.create_item(cat_item)
-			tag_item.set_text(0, str(tag))
-			tag_item.set_selectable(0, false)
-			var list: Array = tags[tag]
-			list.sort_custom(_sort_objects)
-			for s in list:
-				var it := _tree.create_item(tag_item)
-				it.set_text(0, _title_of(s))
-				it.set_metadata(0, s)
-				_items[s.get_key()] = it
-
-
-static func _sort_objects(a: EntitySetting, b: EntitySetting) -> bool:
-	if a.sort_order != b.sort_order:
-		return a.sort_order < b.sort_order
-	return a.resource_path.get_file() < b.resource_path.get_file()
-
-
-static func _title_of(s: EntitySetting) -> String:
-	return s.name if s.name != "" else String(s.get_key())
-
-
-func _on_item_selected() -> void:
-	var it := _tree.get_selected()
-	if it == null:
-		return
-	var s := it.get_metadata(0) as EntitySetting
-	if s != null:
-		_show_object(s)
-
-
+## Последний показанный объект (или первый в списке), без повторной загрузки, если он уже выбран
 func _select_last() -> void:
 	var last := str(settings.get_value("state", "last_key", ""))
-	var it: TreeItem = null
-	if last != "" and _items.has(StringName(last)):
-		it = _items[StringName(last)]
-	elif not _items.is_empty():
-		it = _items.values()[0]
-	if it == null:
+	if last != "" and catalog.select_key(StringName(last)):
 		return
-	it.select(0)
-	_tree.scroll_to_item(it)
-	_show_object(it.get_metadata(0) as EntitySetting)
+	var first := catalog.first_visible_key()
+	if first != &"":
+		catalog.select_key(first)
 
 
 func _show_object(s: EntitySetting) -> void:
@@ -377,8 +311,26 @@ func _show_object(s: EntitySetting) -> void:
 		return
 	if info.ok:
 		world.fit()
+		# Закрытая модель: тёмный силуэт без материалов (ATTN_22 §22.7.1)
+		if catalog.is_locked(s.get_key()):
+			_apply_silhouette(world.subject)
 	if workspace != null:
 		workspace.on_subject(s, info, Time.get_ticks_msec() - t0)
+
+
+func _apply_silhouette(root: Node) -> void:
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = SILHOUETTE_COLOR
+	_silhouette_walk(root, mat)
+
+
+func _silhouette_walk(n: Node, mat: Material) -> void:
+	if n is MeshInstance3D:
+		(n as MeshInstance3D).material_override = mat
+		(n as MeshInstance3D).material_overlay = null
+	for c in n.get_children():
+		_silhouette_walk(c, mat)
 
 
 # ==========================================
@@ -402,3 +354,9 @@ func _on_cycle_rules() -> void:
 	_rules_label.text = "Правила: " + rules.label()
 	profile.rules = rules.to_dict()
 	VariantIO.save_profile(profile)
+	# Замки и силуэт зависят от правил: перекрасить список и перезагрузить объект
+	catalog.refresh_locks()
+	if _current != null:
+		var cur := _current
+		_current = null
+		_show_object(cur)

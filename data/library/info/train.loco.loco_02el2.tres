@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ModelInfo" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/library/common/model_info.gd" id="1_info"]
+
+[resource]
+script = ExtResource("1_info")
+key = &"train.loco.loco_02el2"
+title = "loco 2 electro 2"
+unlock = {"kind": "chapter", "id": "chapter_2"}
+; Тестовое условие открытия для проверки замков в шаге L2 (ATTN_22): замените на своё или уберите.

@@ -10,6 +10,8 @@ class_name ModelInfo extends Resource
 ## @tool: нужен линту каталога (tests/catalog_lint.gd), иначе в редакторе поля не читаются.
 
 const DIR := "res://data/library/info/"
+## Ориентир масштаба: 1 ю около 1 м прототипа (масштаб проекта 1:100, ATTN_20 §20.2, ATTN_TDD §9)
+const PROTOTYPE_M_PER_UNIT := 1.0
 
 @export var key: StringName = &""
 ## Название для игрока (может отличаться от EntitySetting.name)
@@ -33,6 +35,10 @@ static func find(model_key: StringName) -> ModelInfo:
 	if not ResourceLoader.exists(path):
 		return null
 	return load(path) as ModelInfo
+
+
+static func prototype_meters(units: float) -> float:
+	return units * PROTOTYPE_M_PER_UNIT
 
 
 func unlock_kind() -> String:
