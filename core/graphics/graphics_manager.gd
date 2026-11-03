@@ -135,9 +135,10 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	# F8 (debug): V-Sync вкл/выкл. По умолчанию V-Sync включён, поэтому fps упирается в частоту монитора
-	if Global.debug_mode and event is InputEventKey and event.pressed and not event.echo \
-			and event.keycode == KEY_F8:
+	# Ctrl+Shift+V (действие debug_vsync_toggle, debug): V-Sync вкл/выкл. По умолчанию V-Sync включён, поэтому fps
+	# упирается в частоту монитора. Раньше был F8, но в редакторе Godot это «Остановить игру»
+	if Global.debug_mode and InputMap.has_action(&"debug_vsync_toggle") \
+			and event.is_action_pressed(&"debug_vsync_toggle") and not event.is_echo():
 		_toggle_vsync()
 	# F10 (debug): сохранить встроенные Look и Time в .tres для правки
 	if Global.debug_mode and event is InputEventKey and event.pressed and not event.echo \

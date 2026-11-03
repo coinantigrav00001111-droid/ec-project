@@ -3,7 +3,7 @@ class_name DebugTogglesTab extends DebugTab
 ###########################
 ## Вкладка «Toggles»: отладочные выключатели и действия (U14)
 ###########################
-## Выключатели читают и пишут флаги Global (и V-Sync окна). Флаги может переключить и клавиша (например, V-Sync на F8),
+## Выключатели читают и пишут флаги Global (и V-Sync окна). Флаги может переключить и клавиша (например, V-Sync на Ctrl+Shift+V),
 ## поэтому refresh() возвращает галочки в синхрон с реальным состоянием.
 ## Старые пункты меню-заглушки: «ничего» (очистка сцены) переехал сюда кнопкой с подтверждением. Пункты «++» и
 ## «jolt profile» ничего не делали (код закомментирован), их переносить нечего: убираются из TopPanel вместе с меню (U10).
@@ -34,7 +34,7 @@ func _init() -> void:
 			func(on: bool) -> void: Global.drag_physics = on)
 
 	add_child(make_header("Экран"))
-	_add_toggle("V-Sync", "Без V-Sync fps не упирается в частоту монитора. Клавиша F8 в редакторе Godot занята (стоп игры)", "DisplayServer.window_set_vsync_mode",
+	_add_toggle("V-Sync (Ctrl+Shift+V)", "Без V-Sync fps не упирается в частоту монитора", "DisplayServer.window_set_vsync_mode",
 			func() -> bool: return DisplayServer.window_get_vsync_mode() != DisplayServer.VSYNC_DISABLED,
 			_set_vsync)
 

@@ -3,16 +3,17 @@ class_name DebugKeysTab extends DebugTab
 ###########################
 ## Вкладка «Keys»: отладочные клавиши (U14)
 ###########################
-## Справочник клавиш, которые работают при Global.debug_mode. Кнопки у F8, F9, F10 посылают нажатие клавиши
+## Справочник клавиш, которые работают при Global.debug_mode. Кнопки у V-Sync, F9, F10 посылают нажатие клавиши
 ## в игру (удобно, когда F-клавиши заняты системой). F7 не посылается: ему нужен курсор над макетом.
-## Список написан по коду: graphics_manager (F8, F10), save_manager (F9), terrain_manager и c_terrain_layer (F7),
+## Список написан по коду: graphics_manager (Ctrl+Shift+V, F10), save_manager (F9), terrain_manager и c_terrain_layer (F7),
 ## c_mechanisms (I), build_tool (L, Z). Появилась новая отладочная клавиша: добавить строку в KEYS.
 
-## key: подпись клавиши; text: что делает; code: клавиша для кнопки (KEY_NONE: кнопки нет)
+## key: подпись клавиши; text: что делает; code: клавиша для кнопки (KEY_NONE: кнопки нет);
+## action: действие InputMap для кнопки (если задано, кнопка шлет его, а не клавишу)
 const KEYS: Array[Dictionary] = [
 	{"key": "F3", "text": "Эта панель", "code": KEY_NONE},
 	{"key": "F7", "text": "Печатает surface_y под курсором. С выбранным листом террейна: ниша; Shift: окно; Alt: тоннель; Ctrl: убрать последний вырез", "code": KEY_NONE},
-	{"key": "F8", "text": "V-Sync вкл/выкл. В редакторе Godot F8 это «Остановить игру» и до игры не доходит: кнопка «Нажать» или галочка V-Sync на вкладке Toggles", "code": KEY_F8},
+	{"key": "Ctrl+Shift+V", "text": "V-Sync вкл/выкл (действие debug_vsync_toggle, переназначается в Project Settings). Раньше был F8, но в редакторе Godot это «Остановить игру»", "code": KEY_NONE, "action": &"debug_vsync_toggle"},
 	{"key": "F9", "text": "Загрузить эталонную диораму (заменяет макет)", "code": KEY_F9},
 	{"key": "F10", "text": "Сохранить встроенные Look и Time в .tres", "code": KEY_F10},
 	{"key": "I", "text": "У выбранного вагона: свет вкл/выкл; Shift+I: метки источников и размеры кузова в Output", "code": KEY_NONE},
@@ -37,7 +38,13 @@ func _init() -> void:
 		var text := make_note(k.text)
 		text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		grid.add_child(text)
-		if k.code == KEY_NONE:
+		if k.has("action"):
+			var send_a := Button.new()
+			send_a.text = "Нажать"
+			var action: StringName = k.action
+			send_a.pressed.connect(func() -> void: _press_action(action))
+			grid.add_child(send_a)
+		elif k.code == KEY_NONE:
 			grid.add_child(Control.new())
 		else:
 			var send := Button.new()
@@ -45,6 +52,15 @@ func _init() -> void:
 			var code: Key = k.code
 			send.pressed.connect(func() -> void: _press(code))
 			grid.add_child(send)
+
+
+## Шлет действие InputMap (нажатие и отпускание)
+func _press_action(action: StringName) -> void:
+	for pressed in [true, false]:
+		var e := InputEventAction.new()
+		e.action = action
+		e.pressed = pressed
+		Input.parse_input_event(e)
 
 
 ## Шлет нажатие и отпускание клавиши как будто нажали на клавиатуре

@@ -6,7 +6,8 @@ class_name DebugTuningTab extends DebugTab
 ## Строки строятся один раз по WagonTuning.PARAMS. При выборе показываются только те, что есть у цели
 ## (у вагона без мотора нет группы «Мотор»). Кнопка «R» у строки и «Вернуть все» возвращают значения на момент
 ## выбора вагона: так можно крутить ручки и вернуться, не перезагружая макет.
-## Значения живут в компонентах вагона и не сохраняются в макет: это отладка, а не настройка паспорта.
+## Значения живут в компонентах вагона и не сохраняются в макет. Чтобы оставить подобранное, кнопка «В паспорт»
+## записывает отличия в WagonConfig типа вагона (.tres): новые вагоны этого типа возьмут значения оттуда.
 
 ## Строки: key -> {control, kind, nodes: Array[Control], group}
 var _rows: Dictionary = {}
@@ -18,6 +19,10 @@ var _baseline: Dictionary = {}
 var _title: Label
 var _hint: Label
 var _body: VBoxContainer
+var _passport_btn: Button
+var _copy_btn: Button
+var _status: Label
+var _confirm: ConfirmationDialog
 
 
 func _init() -> void:
@@ -35,6 +40,27 @@ func _init() -> void:
 	reset_all.text = "Вернуть все (как при выборе)"
 	reset_all.pressed.connect(_reset_all)
 	_body.add_child(reset_all)
+
+	var passport_row := HBoxContainer.new()
+	_body.add_child(passport_row)
+	_passport_btn = Button.new()
+	_passport_btn.text = "В паспорт..."
+	_passport_btn.pressed.connect(_ask_passport)
+	passport_row.add_child(_passport_btn)
+	_copy_btn = Button.new()
+	_copy_btn.text = "Копировать"
+	_copy_btn.tooltip_text = "Скопировать отличия от паспорта текстом «поле = значение»"
+	_copy_btn.pressed.connect(_copy_diff)
+	passport_row.add_child(_copy_btn)
+	_status = make_note("")
+	_status.hide()
+	_body.add_child(_status)
+	_confirm = ConfirmationDialog.new()
+	_confirm.title = "В паспорт"
+	_confirm.ok_button_text = "Записать"
+	_confirm.dialog_autowrap = true
+	_confirm.confirmed.connect(_write_passport)
+	add_child(_confirm)
 
 	for g in WagonTuning.GROUPS:
 		var header := make_header(g.title)
@@ -90,6 +116,7 @@ func _add_row(p: Dictionary) -> void:
 
 func _on_bind() -> void:
 	_baseline.clear()
+	_status.hide()
 	var wagon := WagonTuning.is_wagon(target)
 	_body.visible = wagon
 	_hint.visible = not wagon
@@ -137,6 +164,47 @@ func _fill_controls(force: bool) -> void:
 			(row.control as SpinBox).set_value_no_signal(float(v))
 		else:
 			set_spin(row.control as SpinBox, float(v))
+	_update_passport_buttons()
+
+
+## Кнопки паспорта доступны, когда вагон чем-то отличается от паспорта и паспорт есть куда записать
+func _update_passport_buttons() -> void:
+	var changed := not WagonTuning.passport_diff(target).is_empty()
+	var can_write := WagonTuning.passport_path(target) != ""
+	_passport_btn.disabled = not (changed and can_write)
+	_passport_btn.tooltip_text = "Записать отличия в паспорт типа вагона (.tres)" if can_write \
+			else "Паспорт не лежит в отдельном .tres, записывать некуда"
+	_copy_btn.disabled = not changed
+
+
+func _ask_passport() -> void:
+	var diff := WagonTuning.passport_diff(target)
+	if diff.is_empty():
+		return
+	var text := "Записать в паспорт типа вагона?\n%s\n\n" % WagonTuning.passport_path(target)
+	for d in diff:
+		text += "%s: %s -> %s\n" % [d.key, String.num(d.old, 4), String.num(d.value, 4)]
+	text += "\nПаспорт общий для всех вагонов этого типа. Уже стоящие вагоны не изменятся, новые будут с этими значениями. Подвеска, трение и демпфирование в паспорт не входят."
+	_confirm.dialog_text = text
+	_confirm.popup_centered(Vector2i(480, 0))
+
+
+func _write_passport() -> void:
+	var result := WagonTuning.save_to_passport(target)
+	_status.text = result.message
+	_status.add_theme_color_override(&"font_color", Color(0.4, 1.0, 0.5) if result.ok else Color(1.0, 0.5, 0.4))
+	_status.show()
+	if result.ok:
+		# «Вернуть все» теперь возвращает к записанному, а не к значениям до записи
+		_baseline = WagonTuning.snapshot(target)
+	_update_passport_buttons()
+
+
+func _copy_diff() -> void:
+	DisplayServer.clipboard_set(WagonTuning.passport_diff_text(target))
+	_status.text = "Отличия от паспорта скопированы в буфер."
+	_status.add_theme_color_override(&"font_color", Color(0.7, 0.7, 0.7))
+	_status.show()
 
 
 func _reset_one(key: String) -> void:

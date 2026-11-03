@@ -197,3 +197,81 @@ static func _body(entity: Entity) -> RigidBody3D:
 	if kin == null or not is_instance_valid(kin.rb):
 		return null
 	return kin.rb
+
+
+# --- Паспорт (WagonConfig в .tres типа вагона) ---
+
+## Параметры, которые живут и в паспорте (WagonConfig с теми же именами полей). Остальные ручки (подвеска, трение,
+## демпфирование тела) в паспорте не хранятся и остаются только на этом вагоне
+const PASSPORT_KEYS: Array[String] = ["mass", "max_grip", "roll_resistance", "longitudinal_grip", "min_curve_radius",
+		"max_yaw_deg", "yaw_spring", "slide_friction", "locked_wheel_friction", "max_tractive_force",
+		"max_theoretical_speed"]
+
+
+## Паспорт вагона (общий для всех вагонов этого типа) или null
+static func passport(entity: Entity) -> WagonConfig:
+	if not is_instance_valid(entity):
+		return null
+	return WagonConfig.from_entity(entity)
+
+
+## Путь .tres, в котором лежит паспорт (EntitySetting типа вагона). Пусто, если записать некуда
+static func passport_path(entity: Entity) -> String:
+	var idc := entity.get_comp(C_Identity) as C_Identity if is_instance_valid(entity) else null
+	if idc == null or idc.setting == null:
+		return ""
+	var path := idc.setting.resource_path
+	# «файл::Resource_id» это вложенный ресурс, отдельно его не сохранить
+	return path if path.ends_with(".tres") and not path.contains("::") else ""
+
+
+## Чем вагон отличается от паспорта: [{key, old, value}] только по ключам паспорта (мотор только у вагона с C_Engine)
+static func passport_diff(entity: Entity) -> Array[Dictionary]:
+	var diff: Array[Dictionary] = []
+	var cfg := passport(entity)
+	if cfg == null:
+		return diff
+	for key in PASSPORT_KEYS:
+		var now: Variant = read(entity, key)
+		if now == null:
+			continue
+		var old: Variant = cfg.get(key)
+		if not is_equal_approx(float(old), float(now)):
+			diff.append({"key": key, "old": float(old), "value": float(now)})
+	return diff
+
+
+## Пишет отличия в паспорт и сохраняет .tres. Возвращает {ok: bool, message: String}.
+## Уже стоящие вагоны этого типа не меняются (значения копируются в компоненты при создании), новые берут новые значения.
+## Работает там, где res:// доступен для записи (запуск из редактора); в собранной игре вернет ошибку записи
+static func save_to_passport(entity: Entity) -> Dictionary:
+	var cfg := passport(entity)
+	var path := passport_path(entity)
+	if cfg == null:
+		return {"ok": false, "message": "У вагона нет паспорта (WagonConfig)."}
+	if path == "":
+		return {"ok": false, "message": "Паспорт не лежит в отдельном .tres, записывать некуда."}
+	var diff := passport_diff(entity)
+	if diff.is_empty():
+		return {"ok": true, "message": "Паспорт уже совпадает с вагоном."}
+	for d in diff:
+		cfg.set(d.key, d.value)
+	var setting := (entity.get_comp(C_Identity) as C_Identity).setting
+	var err := ResourceSaver.save(setting, path)
+	if err != OK:
+		for d in diff:   # не оставляем в памяти значения, которых нет в файле
+			cfg.set(d.key, d.old)
+		return {"ok": false, "message": "Не записано в %s: %s." % [path, error_string(err)]}
+	return {"ok": true, "message": "Записано в %s: %d знач." % [path, diff.size()]}
+
+
+## Отличия текстом «поле = значение» (для буфера обмена: вставить в инспектор паспорта руками)
+static func passport_diff_text(entity: Entity) -> String:
+	var lines: PackedStringArray = []
+	for d in passport_diff(entity):
+		lines.append("%s = %s" % [d.key, _num(d.value)])
+	return "\n".join(lines)
+
+
+static func _num(v: float) -> String:
+	return String.num(v, 4)
