@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="TrackStyleSet" format=3]
+
+[ext_resource type="Script" path="res://core/components/tracks/track_style_set.gd" id="1_set"]
+[ext_resource type="Script" path="res://core/components/tracks/track_style.gd" id="2_ts"]
+[ext_resource type="Resource" path="res://data/tracks/styles/wood.tres" id="3_wood"]
+[ext_resource type="Resource" path="res://data/tracks/styles/wood_ballast.tres" id="4_wb"]
+[ext_resource type="Resource" path="res://data/tracks/styles/concrete.tres" id="5_conc"]
+[ext_resource type="Resource" path="res://data/tracks/styles/concrete_ballast.tres" id="6_cb"]
+
+[resource]
+script = ExtResource("1_set")
+styles = Array[ExtResource("2_ts")]([ExtResource("4_wb"), ExtResource("3_wood"), ExtResource("6_cb"), ExtResource("5_conc")])
+default_id = &"wood_ballast"

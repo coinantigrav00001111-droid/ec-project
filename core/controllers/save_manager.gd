@@ -92,6 +92,9 @@ func save_game(slot_name: String ='savegame') -> void:
 	#}
 
 
+	# Активный стиль траков макета (ATTN_17 §17.13)
+	_saved_game.track_style = TSM.current_id
+
 	# 2️⃣ Собираем все сущности на столе
 	var root_node = get_node_or_null(world_entities_root)
 	if root_node:
@@ -144,6 +147,8 @@ func load_game(slot_name: String  ='savegame', dir: String = SAVE_DIR) -> void:
 	# 1️⃣ загружаем камеру вызывая ее метод
 	$"/root/GameRoot/Gimbal".load_global_state(_saved_game.gimbal)
 	var root_node = get_node(world_entities_root)
+	# Активный стиль траков макета; в старом сейве его нет, тогда стиль по умолчанию
+	TSM.set_current_from_save(_saved_game.track_style)
 	
 	# 1. ПОЛНАЯ ОЧИСТКА СТАРОГО МАКЕТА
 	for child in root_node.get_children():
@@ -160,7 +165,9 @@ func load_game(slot_name: String  ='savegame', dir: String = SAVE_DIR) -> void:
 		if not _setting: continue
 		
 		## 1️⃣ Базовая сборка сущности: создание инстанса, добавление C_Identity, C_TrackVisual итд
-		var new_entity = entity_factory.create_from_setting(_setting)
+		# style_id трака из сейва; записи без ключа (старые сейвы) читаются стилем по умолчанию
+		var _style_id := StringName(e_data.get("style_id", TSM.default_id))
+		var new_entity = entity_factory.create_from_setting(_setting, _style_id)
 		new_entity.name = _setting.name # имя ентити 
 		# Восстанавливаем трансформацию ДО добавления в дерево
 		new_entity.global_transform = e_data["transform"]

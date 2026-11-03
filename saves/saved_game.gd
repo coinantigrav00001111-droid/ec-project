@@ -16,6 +16,8 @@ class_name SavedGame extends Resource
 	"camera": Transform3D.IDENTITY,
 }
 @export var entities: Array = []
+## Активный стиль траков макета (TSM.current_id). Пусто = стиль по умолчанию из набора
+@export var track_style: StringName = &""
 
 ### массив в GM контуры питания
 #@export var clip_numbers		:Array[int] = []

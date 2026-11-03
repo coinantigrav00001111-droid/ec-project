@@ -3,7 +3,8 @@ class_name SwitchVisualSettings extends ComponentSettings
 # XX claude-switch (новый файл)
 ## Визуал стрелки: процедурный, как у flex. Первым после Identity в массиве компонентов .tres
 
-## Рельсы, шпалы, балласт. Пусто = TrackStyle по умолчанию (как у flex)
+## Рельсы, шпалы, балласт. Пусто = «следовать сессии»: стиль берётся у TSM (как у flex, ATTN_17 §17.13).
+## Непусто = стиль зафиксирован в объекте
 @export var style: TrackStyle
 ## Рычаг у носка. Выключить у траков без переключения (например, упор)
 @export var lever := true
@@ -11,7 +12,7 @@ class_name SwitchVisualSettings extends ComponentSettings
 
 func create_component(entity: Entity) -> Component:
 	var vis := C_SwitchVisual.new()
-	vis.style = style
+	vis.style = TSM.resolve_for(entity, style)
 	vis.with_lever = lever
 	# Ширина коллизии из паспорта (любое семейство траков: TrackConfig)
 	var idc := entity.get_comp(C_Identity) as C_Identity

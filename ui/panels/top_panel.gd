@@ -36,7 +36,44 @@ func _ready() -> void:
 	popup.add_separator()
 	popup.add_check_item("Подсказки", HINTS_MENU_ID)
 	popup.set_item_checked(popup.get_item_index(HINTS_MENU_ID), Hints.enabled)
+	_build_style_selector()
 
+
+
+## Временный выбор стиля траков сессии (ATTN_17 §17.13, U3c). Место в ToolDock решается в U7a.
+## Список строится из набора стилей проекта (TSM), собирается кодом, чтобы не трогать сцену
+var _style_option: OptionButton
+
+
+func _build_style_selector() -> void:
+	_style_option = OptionButton.new()
+	_style_option.focus_mode = Control.FOCUS_NONE   # стрелки и пробел остаются инструментам
+	_style_option.tooltip_text = "Стиль траков: новые траки создаются в нём, стоящие не меняются"
+	for st in TSM.style_set.styles:
+		if st == null:
+			continue
+		var i := _style_option.item_count
+		_style_option.add_item(String(st.id))
+		_style_option.set_item_metadata(i, st.id)
+		_style_option.set_item_tooltip(i, "высота рельса %.2f" % st.head_height())
+	_sync_style_selector(TSM.current_id)
+	_style_option.item_selected.connect(_on_style_selected)
+	TSM.current_changed.connect(_sync_style_selector)
+	var box := power_schema_check.get_parent()
+	box.add_child(_style_option)
+	box.move_child(_style_option, power_schema_check.get_index())
+
+
+func _on_style_selected(index: int) -> void:
+	TSM.set_current(_style_option.get_item_metadata(index))
+
+
+## Список показывает активный стиль, в том числе после загрузки сейва
+func _sync_style_selector(id: StringName) -> void:
+	for i in _style_option.item_count:
+		if _style_option.get_item_metadata(i) == id:
+			_style_option.select(i)
+			return
 
 
 ## Обработка сигнала от попап меню сейв\лоад. Принимает ToolController

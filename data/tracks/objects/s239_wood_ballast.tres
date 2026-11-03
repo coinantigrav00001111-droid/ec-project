@@ -26,7 +26,6 @@ object_config = SubResource("Resource_cfg")
 
 [sub_resource type="Resource" id="Resource_vis"]
 script = ExtResource("4_sv")
-style = ExtResource("6_st")
 
 [sub_resource type="Resource" id="Resource_drag"]
 script = ExtResource("7_dr")

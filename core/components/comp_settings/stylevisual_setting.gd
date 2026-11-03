@@ -10,7 +10,8 @@ class_name StyleVisualSetting extends ComponentSettings
 ## Selectable, Blockable, Socket, PowerTrack, TrackSupport. radius/deg/rise берутся из
 ## TrackConfig (Identity), как и для сцен из Blender.
 
-## Рельсы, шпалы, балласт. Пусто = TrackStyle по умолчанию (балласт, головка рельса 0.85)
+## Рельсы, шпалы, балласт. Пусто = «следовать сессии»: стиль берётся у TSM (активный стиль или стиль из
+## сейва, ATTN_17 §17.13). Непусто = стиль зафиксирован в объекте
 @export var style: TrackStyle
 
 
@@ -24,7 +25,7 @@ func create_component(entity: Entity) -> Component:
 
 	# 2. Визуал: строит каркас сразу (on_added), геометрию по кривой - в on_entity_ready
 	var vis := C_StyleVisual.new()
-	vis.style = style
+	vis.style = TSM.resolve_for(entity, style)
 	vis.name = 'C_StyleVisual'
 	entity.add_component(vis)
 

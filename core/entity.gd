@@ -18,6 +18,12 @@ class_name Entity extends Node3D
 signal component_added(type: Script)
 signal component_removed(type: Script)
 
+## Стиль трака из набора проекта (TSM). Пусто: у объекта нет стиля из набора (не трак) или стиль
+## зафиксирован в сеттинге. Записывает TSM.resolve_for при сборке визуала, уходит в сейв
+var style_id: StringName = &""
+## Запрос стиля от фабрики (создание из сейва или призрак): пусто = активный стиль сессии. В сейв не идёт
+var style_request: StringName = &""
+
 
 
 func _ready():
@@ -127,6 +133,9 @@ func save_entity() -> Dictionary:
 		# Список данных от компонентов
 		"components": components_dict 
 	}
+	# Стиль трака из набора проекта (ATTN_17 §17.13): ключа нет у объектов без стиля из набора
+	if style_id != &"":
+		save_data["style_id"] = style_id
 	
 	return save_data
 

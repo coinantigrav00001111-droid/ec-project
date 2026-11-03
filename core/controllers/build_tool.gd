@@ -39,6 +39,9 @@ func enter():
 	preshaped = false   # XX claude-terra 13.1.4
 	if ghost: ghost.queue_free()
 	ghost = controller.entity_factory.create_from_setting(ghost_setting)
+	# Стиль сессии сменили, пока призрак в руке: перестроить в новом стиле (ATTN_17 §17.13)
+	if not TSM.current_changed.is_connected(_on_track_style_changed):
+		TSM.current_changed.connect(_on_track_style_changed)
 
 	match ghost_setting.build_behavior:
 		EntitySetting.BuildBehavior.GHOST_PLACE:
@@ -178,8 +181,9 @@ func _place_real_object() -> Entity:
 	if ghost.has_comp(C_Blocked):# Не строим, если гост красный
 		return null
 		
-	# Запрашиваем у фабрики создание реального объекта на основе настроек госта
-	var real_entity = controller.entity_factory.create_from_setting(ghost_setting)
+	# Запрашиваем у фабрики создание реального объекта на основе настроек госта.
+	# style_id госта: объект встанет в том же стиле, что показывал призрак
+	var real_entity = controller.entity_factory.create_from_setting(ghost_setting, ghost.style_id)
 	
 	# Ставим реальный объект точно в ту же позицию и поворот, где сейчас гост
 	real_entity.global_transform = ghost.global_transform
@@ -301,6 +305,20 @@ func can_duplicate() -> bool:
 	return last_setting != null
 
 
+## ⚡Сигнал TSM: стиль сессии сменился. Призрак трака, следующий сессии, пересобирается в новом стиле
+## с тем же состоянием (поворот, уровень). Не трогаем призрак, который уже тянут (flex), с готовой формой
+## и рисуемый полигон: он поставится в прежнем стиле (стиль берётся у призрака, а не у сессии)
+func _on_track_style_changed(id: StringName) -> void:
+	if ghost == null or ghost_setting == null or ghost.style_id == &"" or ghost.style_id == id:
+		return
+	if stretch_phase != 0 or preshaped or _draw_active():
+		return
+	var old := ghost
+	enter()   # старый призрак освобождается внутри, новый строится в активном стиле
+	if ghost != null and is_instance_valid(old):
+		old.send_event("on_clone_state_to", {"target": ghost})
+
+
 ## Новый призрак того же объекта с тем же состоянием (поворот, уровень, форма flex). Работает из SelectTool
 ## и из BuildTool. Источник состояния - сам последний объект (его on_clone_state_to работает так же, как у призрака).
 ## Если его уже удалили, получится обычный свежий призрак той же настройки
@@ -359,6 +377,8 @@ func process_tick(_delta):
 
 ## Выполняется при выходе из инстр.
 func exit(_to_drag : bool = false):
+	if TSM.current_changed.is_connected(_on_track_style_changed):
+		TSM.current_changed.disconnect(_on_track_style_changed)
 	Hints.set_context(&"polygon", false)   # XX claude-terra 13.2 B2
 	Hints.set_context(&"strip", false)
 	if ghost:

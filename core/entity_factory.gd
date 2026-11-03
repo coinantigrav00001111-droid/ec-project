@@ -5,8 +5,11 @@ class_name EntityFactory extends Node
 ##############################
 ## Вызывается в build_tool при создании госта(нажали на кнопку) и реал объекта(клон госта по лкм)
 
-func create_from_setting(_setting: EntitySetting) -> Entity:
+## style_id: стиль трака (из сейва или у призрака). Пусто = активный стиль сессии (TSM). Влияет только на
+## визуалы с пустым `style` в сеттинге
+func create_from_setting(_setting: EntitySetting, style_id: StringName = &"") -> Entity:
 	var entity = Entity.new()
+	entity.style_request = style_id
 	
 	## 1. Автоматически уже не вешаем C_Identity, потому что object_config вешается в инспекторе
 	#var identity = C_Identity.new()

@@ -5,14 +5,15 @@ class_name FlexVisualSetting extends ComponentSettings
 ## Порядок в массиве компонентов .tres: Identity, FlexSetting, Draggable, Pivot, Hoverable, Selectable,
 ## Blockable, Socket, PowerTrack, TrackSupport. Identity: TrackConfig с radius = 10 (начальная прямая).
 
-## Рельсы, шпалы, балласт. Пусто = TrackStyle по умолчанию (балласт, головка рельса 0.85)
+## Рельсы, шпалы, балласт. Пусто = «следовать сессии»: стиль берётся у TSM (ATTN_17 §17.13).
+## Непусто = стиль зафиксирован в объекте
 @export var style: TrackStyle
 
 
 func create_component(entity: Entity) -> Component:
 	# 1. Визуал (строит ноды Ballast / HeadStaticBody3D в коде)
 	var vis := C_FlexVisual.new()
-	vis.style = style
+	vis.style = TSM.resolve_for(entity, style)
 
 	vis.name = 'C_FlexVisual'
 	entity.add_component(vis)
