@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://vpmqs2xgb2uo"
-path="res://.godot/imported/bogie_p01.glb-5f3ec2a91c70df167bb4563840091321.scn"
+uid="uid://cf0te5k8t17gl"
+path="res://.godot/imported/bogie_04.glb-8cfabdd790ad521f9757ff30c3218010.scn"
 
 [deps]
 
-source_file="res://data/import/bogie_p01.glb"
-dest_files=["res://.godot/imported/bogie_p01.glb-5f3ec2a91c70df167bb4563840091321.scn"]
+source_file="res://data/import/bogie_04.glb"
+dest_files=["res://.godot/imported/bogie_04.glb-8cfabdd790ad521f9757ff30c3218010.scn"]
 
 [params]
 

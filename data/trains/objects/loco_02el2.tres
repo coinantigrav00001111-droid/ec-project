@@ -1,41 +1,44 @@
-[gd_resource type="Resource" script_class="EntitySetting" format=3]
+[gd_resource type="Resource" script_class="EntitySetting" format=3 uid="uid://cjhhbecf3mcsn"]
 
-[ext_resource type="Script" path="res://core/component_setting.gd" id="1_pmufr"]
-[ext_resource type="Script" path="res://setting/bogie_config.gd" id="2_6yohu"]
-[ext_resource type="PackedScene" path="res://data/trains/default_bogie.tscn" id="3_h513y"]
-[ext_resource type="PackedScene" path="res://data/trains/wheel_pair_p01.tscn" id="4_rhav7"]
-[ext_resource type="PackedScene" path="res://data/trains/wheel_pair_01.tscn" id="5_m5bea"]
-[ext_resource type="Script" path="res://setting/light_config.gd" id="6_j35uc"]
-[ext_resource type="Script" path="res://setting/glow_rect.gd" id="7_5t3hj"]
-[ext_resource type="Script" path="res://setting/mechanism_config.gd" id="8_6ymtu"]
-[ext_resource type="PackedScene" path="res://data/trains/loco_02_el2.tscn" id="9_pmufr"]
-[ext_resource type="Script" path="res://setting/wagon_config.gd" id="10_13mfl"]
-[ext_resource type="Script" path="res://setting/suspension_config.gd" id="11_qtkt1"]
-[ext_resource type="Script" path="res://core/components/comp_settings/identity_setting.gd" id="12_1220g"]
-[ext_resource type="Script" path="res://core/components/comp_settings/trainvisual_setting.gd" id="13_obpa6"]
-[ext_resource type="Script" path="res://core/components/comp_settings/traindraggable_setting.gd" id="14_do21s"]
-[ext_resource type="Script" path="res://core/components/comp_settings/hoverable_setting.gd" id="15_1ho4m"]
-[ext_resource type="Script" path="res://core/components/comp_settings/selectable_setting.gd" id="16_eveul"]
-[ext_resource type="Script" path="res://core/components/comp_settings/blockable_setting.gd" id="17_au54g"]
-[ext_resource type="Script" path="res://core/components/comp_settings/chassis_setting.gd" id="18_ii8ja"]
-[ext_resource type="Script" path="res://core/components/comp_settings/kinematics_setting.gd" id="19_xr032"]
-[ext_resource type="Script" path="res://core/components/comp_settings/bogie_setting.gd" id="20_id3yp"]
-[ext_resource type="Script" path="res://core/components/comp_settings/engine_setting.gd" id="21_uri2n"]
-[ext_resource type="Script" path="res://core/components/comp_settings/camera_target_setting.gd" id="22_qvhpj"]
-[ext_resource type="Script" path="res://core/components/comp_settings/coupler_setting.gd" id="23_6tcq6"]
-[ext_resource type="Script" path="res://core/components/comp_settings/mechanisms_setting.gd" id="24_qe3ts"]
-[ext_resource type="Texture2D" path="res://ui/icons/transport/steam-locomotive.svg" id="25_ios48"]
-[ext_resource type="Script" path="res://core/entity_setting.gd" id="26_3icle"]
+[ext_resource type="Script" uid="uid://m4g5jbfwmaa0" path="res://core/component_setting.gd" id="1_pmufr"]
+[ext_resource type="Script" uid="uid://7vuxuiiysiji" path="res://setting/bogie_config.gd" id="2_6yohu"]
+[ext_resource type="PackedScene" uid="uid://1chyerumo2ep" path="res://data/trains/bogie_04.tscn" id="3_a00e3"]
+[ext_resource type="PackedScene" uid="uid://bmv82l3n2edms" path="res://data/trains/wheel_pair_04.tscn" id="4_pmufr"]
+[ext_resource type="Script" uid="uid://daeylhso0elsx" path="res://setting/light_config.gd" id="6_j35uc"]
+[ext_resource type="Script" uid="uid://cteud8ws67l53" path="res://setting/glow_rect.gd" id="7_5t3hj"]
+[ext_resource type="Script" uid="uid://gv2lrhu17dtf" path="res://setting/mechanism_config.gd" id="8_6ymtu"]
+[ext_resource type="PackedScene" uid="uid://c35wq1i3pnu5x" path="res://data/trains/loco_02_el2.tscn" id="9_pmufr"]
+[ext_resource type="Script" uid="uid://bicjny5dv1h3s" path="res://setting/wagon_config.gd" id="10_13mfl"]
+[ext_resource type="Script" uid="uid://bwaluvayi2o8k" path="res://setting/suspension_config.gd" id="11_qtkt1"]
+[ext_resource type="Script" uid="uid://mpakwrr6lum8" path="res://core/components/comp_settings/identity_setting.gd" id="12_1220g"]
+[ext_resource type="Script" uid="uid://b830vi2lx3hl5" path="res://core/components/comp_settings/trainvisual_setting.gd" id="13_obpa6"]
+[ext_resource type="Script" uid="uid://bkdny7eq5jthn" path="res://core/components/comp_settings/traindraggable_setting.gd" id="14_do21s"]
+[ext_resource type="Script" uid="uid://cuumo0qj7r7gb" path="res://core/components/comp_settings/hoverable_setting.gd" id="15_1ho4m"]
+[ext_resource type="Script" uid="uid://deljgsmo4bpow" path="res://core/components/comp_settings/selectable_setting.gd" id="16_eveul"]
+[ext_resource type="Script" uid="uid://chprgtlxn3aub" path="res://core/components/comp_settings/blockable_setting.gd" id="17_au54g"]
+[ext_resource type="Script" uid="uid://bhvk4o3qrvslv" path="res://core/components/comp_settings/chassis_setting.gd" id="18_ii8ja"]
+[ext_resource type="Script" uid="uid://cpuhrycuvnuar" path="res://core/components/comp_settings/kinematics_setting.gd" id="19_xr032"]
+[ext_resource type="Script" uid="uid://b5kx0oyxhiaux" path="res://core/components/comp_settings/bogie_setting.gd" id="20_id3yp"]
+[ext_resource type="Script" uid="uid://x3e5f07xbe1r" path="res://core/components/comp_settings/engine_setting.gd" id="21_uri2n"]
+[ext_resource type="Script" uid="uid://d4advxi3tkwvc" path="res://core/components/comp_settings/camera_target_setting.gd" id="22_qvhpj"]
+[ext_resource type="Script" uid="uid://mqrnwkjfweqr" path="res://core/components/comp_settings/coupler_setting.gd" id="23_6tcq6"]
+[ext_resource type="Script" uid="uid://brbladjp7pfki" path="res://core/components/comp_settings/mechanisms_setting.gd" id="24_qe3ts"]
+[ext_resource type="Texture2D" uid="uid://ccglkaaxdcb5b" path="res://ui/icons/transport/steam-locomotive.svg" id="25_ios48"]
+[ext_resource type="Script" uid="uid://do5hjkm3r2pdg" path="res://core/entity_setting.gd" id="26_3icle"]
 
 [sub_resource type="Resource" id="Resource_m448q"]
 script = ExtResource("2_6yohu")
-wheel_pair_scene = ExtResource("4_rhav7")
-wheel_pair_position = Vector3(0, 0.765, 1.5)
+scene = ExtResource("3_a00e3")
+wheel_pair_scene = ExtResource("4_pmufr")
+wheel_pair_position = Vector3(0, 0.62, 0)
 metadata/_custom_type_script = "uid://7vuxuiiysiji"
 
 [sub_resource type="Resource" id="Resource_ibl0p"]
 script = ExtResource("2_6yohu")
 b_offset_z = 2.43
+scene = ExtResource("3_a00e3")
+wheel_pair_scene = ExtResource("4_pmufr")
+wheel_pair_position = Vector3(0, 0.62, 0)
 metadata/_custom_type_script = "uid://7vuxuiiysiji"
 
 [sub_resource type="Resource" id="Resource_lt_front"]
@@ -43,8 +46,6 @@ script = ExtResource("6_j35uc")
 title = "Фара передняя"
 kind = 1
 rule = 2
-night_times = PackedStringArray("evening", "night")
-anchor_aliases = PackedStringArray()
 position = Vector3(0, 3, -4.8)
 rotation_deg = Vector3(-6, 0, 0)
 light_range = 40.0
@@ -61,8 +62,6 @@ title = "Фара задняя"
 kind = 1
 rule = 2
 dir_end = 1
-night_times = PackedStringArray("evening", "night")
-anchor_aliases = PackedStringArray()
 position = Vector3(0, 3, 4.4)
 rotation_deg = Vector3(-6, 180, 0)
 color = Color(1, 0.15, 0.1, 1)
@@ -77,8 +76,6 @@ id = &"cab_light"
 title = "Кабина"
 kind = 1
 rule = 1
-night_times = PackedStringArray("evening", "night")
-anchor_aliases = PackedStringArray()
 position = Vector3(0, 4, 1.5)
 color = Color(1, 0.85, 0.6, 1)
 energy = 1.5
@@ -96,7 +93,7 @@ suspension = SubResource("Resource_0p1ic")
 has_engine = true
 max_theoretical_speed = 50.0
 scene = ExtResource("9_pmufr")
-offset_mesh_y = 1.66
+offset_mesh_y = 1.8
 bogie_configs = Array[ExtResource("2_6yohu")]([SubResource("Resource_m448q"), SubResource("Resource_ibl0p")])
 coupler_offset = 5.5
 coupler_travel = 0.05
