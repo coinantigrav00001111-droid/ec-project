@@ -97,7 +97,7 @@ func get_tags(category: StringName) -> Array[Dictionary]:
 		return out
 	for tag in CatalogMeta.sort_tags(category, _data[category].keys()):
 		var tag_name: String = CatalogMeta.tag_info(category, tag).get("name", str(tag))
-		out.append({"id": tag, "name": tag_name, "icon": _tag_icon(category, tag)})
+		out.append({"id": tag, "name": tag_name, "icon": _tag_icon(category, tag), "tooltip": CatalogMeta.tag_info(category, tag).get("tooltip", "")})
 	return out
 
 

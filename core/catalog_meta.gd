@@ -45,7 +45,7 @@ const TAG_META := {
 	&"track": {
 		&"straight": {"name": "Прямые"},
 		&"curve": {"name": "Радиусные"},
-		&"junction": {"name": "Стрелки и кроссы"},
+		&"junction": {"name": "Стрелки", "tooltip": "Стрелки и кроссы"},
 		&"special": {"name": "Прочие"},
 	},
 }

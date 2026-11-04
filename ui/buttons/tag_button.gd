@@ -23,6 +23,8 @@ func config(_tag) -> void:
 	self.tag = _tag['id']
 	self.text = str(_tag['name']) # или локализация
 	self.icon = _tag['icon']
+	# Полное название, если на кнопке оно сокращено (CatalogMeta.TAG_META[...][tag].tooltip)
+	self.tooltip_text = str(_tag.get('tooltip', ''))
 
 
 func select_as_default() -> void:

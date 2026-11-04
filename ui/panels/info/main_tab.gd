@@ -8,6 +8,7 @@ class_name InfoMainTab extends InfoTab
 var _lvl_label: Label
 var _rise_label: Label
 var _slope_label: Label
+var _style_label: Label
 
 
 func _setup() -> void:
@@ -15,6 +16,7 @@ func _setup() -> void:
 	_lvl_label = _add_track_row(grid, "Level: ")
 	_rise_label = _add_track_row(grid, "Rise: ")
 	_slope_label = _add_track_row(grid, "Slope: ")
+	_style_label = _add_track_row(grid, "Style: ")
 	_n("WagonCameraButton").pressed.connect(_on_wagon_camera_button_pressed)
 
 
@@ -78,6 +80,20 @@ func refresh() -> void:
 	_slope_label.text = "%.2f%% (%.1f°)" % [slope_pct, slope_deg] if slope_pct > 0.0 else "0"
 
 
+## Стиль трака (ATTN_17 §17.13): style_id из набора проекта. Стиль-сцена budget у формы без сцены строится
+## запасным стилем, об этом сказано в строке. Стиль, зафиксированный в самом объекте, id в набор не пишет
+func _style_text() -> String:
+	var vis := target.get_comp(C_StyleVisual) as C_StyleVisual
+	if target.style_id != &"":
+		var st := TSM.get_style(target.style_id)
+		if vis != null and vis.style != null and st != null and st.use_scene:
+			return "%s (нет сцены, как %s)" % [target.style_id, vis.style.id]
+		return String(target.style_id)
+	if vis != null and vis.style != null:
+		return "%s (в объекте)" % vis.style.id
+	return "-"
+
+
 func _on_bind() -> void:
 	var identity = target.get_comp(C_Identity)
 	# Кнопка камеры только у вагонов (категория train)
@@ -99,6 +115,7 @@ func _on_bind() -> void:
 					_n("RadiusLabel").text = str(_path.radius) + ' u/sm'
 					_n("DegLabel").text = str(_path.deg) + '°'
 					_n("LengthLabel").text = str(_path.get_length()) + ' u/sm'
+				_style_label.text = _style_text()
 				refresh()   # XX claude-terra 13.1.7
 			&'terrain':
 				_n("TrackContainer").hide()
