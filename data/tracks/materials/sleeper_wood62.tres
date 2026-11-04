@@ -1,0 +1,38 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://data/textures/track/Wood062_1K-JPG/Wood062_1K-JPG_Color.jpg" id="1_x105m"]
+[ext_resource type="Texture2D" path="res://data/textures/track/Wood062_1K-JPG/Wood062_1K-JPG_AmbientOcclusion.jpg" id="2_gual1"]
+[ext_resource type="Texture2D" path="res://data/textures/track/Wood062_1K-JPG/Wood062_1K-JPG_NormalGL.jpg" id="3_ut5yc"]
+[ext_resource type="Texture2D" path="res://data/textures/track/Wood062_1K-JPG/Wood062_1K-JPG_Roughness.jpg" id="4_r6on5"]
+
+[resource]
+vertex_color_use_as_albedo = true
+vertex_color_is_srgb = true
+albedo_color = Color(0.734375, 0.73150635, 0.73150635, 1)
+albedo_texture = ExtResource("1_x105m")
+roughness_texture = ExtResource("4_r6on5")
+roughness_texture_channel = 4
+normal_enabled = true
+normal_texture = ExtResource("3_ut5yc")
+ao_enabled = true
+ao_texture = ExtResource("2_gual1")
+ao_texture_channel = 4
+uv1_scale = Vector3(0.30769232, 0.4, 0.30769232)
+uv1_triplanar = true
+texture_filter = 5
+metadata/track_role = "sleeper"
+metadata/track_source = "res://data/textures/track/Wood062_1K-JPG"
+metadata/track_params = {
+"ao_light_affect": 0.0,
+"height_scale": 0.0,
+"mesh_uv_units": false,
+"metallic": -1.0,
+"normal_scale": 1.0,
+"roughness": 1.0,
+"tile": Vector2(3.25, 2.5),
+"tint": Color(0.734375, 0.73150635, 0.73150635, 1),
+"triplanar": true,
+"use_ao": true,
+"use_height": false,
+"vertex_color": true
+}

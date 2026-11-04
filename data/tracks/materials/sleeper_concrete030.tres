@@ -1,32 +1,36 @@
 [gd_resource type="StandardMaterial3D" format=3]
 
 [ext_resource type="Texture2D" path="res://data/textures/track/Concrete030_1K-JPG/Concrete030_1K-JPG_Color.jpg" id="1_jod3l"]
-[ext_resource type="Texture2D" path="res://data/textures/track/Concrete030_1K-JPG/Concrete030_1K-JPG_AmbientOcclusion.jpg" id="2_khdnu"]
+[ext_resource type="Texture2D" path="res://data/textures/track/Concrete030_1K-JPG/Concrete030_1K-JPG_ORM.png" id="2_oqagw"]
 [ext_resource type="Texture2D" path="res://data/textures/track/Concrete030_1K-JPG/Concrete030_1K-JPG_NormalGL.jpg" id="3_roclh"]
-[ext_resource type="Texture2D" path="res://data/textures/track/Concrete030_1K-JPG/Concrete030_1K-JPG_Roughness.jpg" id="4_e8agh"]
 
 [resource]
+vertex_color_use_as_albedo = true
+vertex_color_is_srgb = true
+albedo_color = Color(0.734375, 0.73150635, 0.73150635, 1)
 albedo_texture = ExtResource("1_jod3l")
-roughness_texture = ExtResource("4_e8agh")
-roughness_texture_channel = 4
+metallic = 1.0
+metallic_texture = ExtResource("2_oqagw")
+metallic_texture_channel = 2
+roughness_texture = ExtResource("2_oqagw")
+roughness_texture_channel = 1
 normal_enabled = true
 normal_texture = ExtResource("3_roclh")
-ao_enabled = true
-ao_texture = ExtResource("2_khdnu")
-ao_texture_channel = 4
+uv1_scale = Vector3(0.6060606, 1, 1)
 texture_filter = 5
 metadata/track_role = "sleeper"
 metadata/track_source = "res://data/textures/track/Concrete030_1K-JPG"
 metadata/track_params = {
 "ao_light_affect": 0.0,
-"height_scale": 0.05,
+"height_scale": 0.0,
 "mesh_uv_units": true,
 "metallic": -1.0,
 "normal_scale": 1.0,
 "roughness": 1.0,
-"tile": Vector2(1, 1),
-"tint": Color(1, 1, 1, 1),
+"tile": Vector2(1.65, 1),
+"tint": Color(0.734375, 0.73150635, 0.73150635, 1),
 "triplanar": false,
-"use_ao": true,
-"use_height": false
+"use_ao": false,
+"use_height": false,
+"vertex_color": true
 }

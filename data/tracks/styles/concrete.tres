@@ -1,19 +1,83 @@
-[gd_resource type="Resource" script_class="TrackStyle" format=3 uid="uid://ccshvdiu0c4os"]
+[gd_resource type="Resource" script_class="TrackStyle" format=3]
 
-[ext_resource type="Material" path="res://data/tracks/materials/rail_metal007.tres" id="1_crynw"]
-[ext_resource type="Script" uid="uid://cfpx56q1cgoy5" path="res://core/components/tracks/track_style.gd" id="1_ts"]
-[ext_resource type="ArrayMesh" path="res://data/tracks/meshes/concrete_test.res" id="2_0b8au"]
-[ext_resource type="Material" path="res://data/tracks/materials/sleeper_concrete030.tres" id="3_q0qrn"]
+[ext_resource type="Texture2D" path="res://data/textures/track/Metal007_1K-JPG/Metal007_1K-JPG_Color.jpg" id="1_q0qrn"]
+[ext_resource type="Script" path="res://core/components/tracks/track_style.gd" id="1_ts"]
+[ext_resource type="Texture2D" path="res://data/textures/track/Metal007_1K-JPG/Metal007_1K-JPG_ORM.png" id="2_3xiyu"]
+[ext_resource type="Texture2D" path="res://data/textures/track/Metal007_1K-JPG/Metal007_1K-JPG_NormalGL.jpg" id="3_huhu6"]
+[ext_resource type="Texture2D" path="res://data/textures/track/Concrete030_1K-JPG/Concrete030_1K-JPG_Color.jpg" id="5_n0uv7"]
+[ext_resource type="Texture2D" path="res://data/textures/track/Concrete030_1K-JPG/Concrete030_1K-JPG_ORM.png" id="6_2xriv"]
+[ext_resource type="Texture2D" path="res://data/textures/track/Concrete030_1K-JPG/Concrete030_1K-JPG_NormalGL.jpg" id="7_6t7op"]
+[ext_resource type="ArrayMesh" path="res://data/tracks/meshes/sleeper_concrete_01.res" id="8_n0uv7"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_n0uv7"]
+albedo_texture = ExtResource("1_q0qrn")
+metallic = 1.0
+metallic_texture = ExtResource("2_3xiyu")
+metallic_texture_channel = 2
+roughness_texture = ExtResource("2_3xiyu")
+roughness_texture_channel = 1
+normal_enabled = true
+normal_texture = ExtResource("3_huhu6")
+ao_enabled = true
+ao_texture = ExtResource("2_3xiyu")
+texture_filter = 5
+metadata/track_role = "rail"
+metadata/track_source = "res://data/textures/track/Metal007_1K-JPG"
+metadata/track_params = {
+"ao_light_affect": 0.0,
+"height_scale": 0.05,
+"mesh_uv_units": false,
+"metallic": 1.0,
+"normal_scale": 1.0,
+"roughness": 1.0,
+"tile": Vector2(1, 1),
+"tint": Color(1, 1, 1, 1),
+"triplanar": false,
+"use_ao": true,
+"use_height": false,
+"vertex_color": false
+}
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5rtvx"]
+vertex_color_use_as_albedo = true
+vertex_color_is_srgb = true
+albedo_color = Color(0.734375, 0.73150635, 0.73150635, 1)
+albedo_texture = ExtResource("5_n0uv7")
+metallic = 1.0
+metallic_texture = ExtResource("6_2xriv")
+metallic_texture_channel = 2
+roughness_texture = ExtResource("6_2xriv")
+roughness_texture_channel = 1
+normal_enabled = true
+normal_texture = ExtResource("7_6t7op")
+texture_filter = 5
+metadata/track_role = "sleeper"
+metadata/track_source = "res://data/textures/track/Concrete030_1K-JPG"
+metadata/track_params = {
+"ao_light_affect": 0.0,
+"height_scale": 0.0,
+"mesh_uv_units": false,
+"metallic": -1.0,
+"normal_scale": 1.0,
+"roughness": 1.0,
+"tile": Vector2(1.65, 1),
+"tint": Color(0.734375, 0.73150635, 0.73150635, 1),
+"triplanar": false,
+"use_ao": false,
+"use_height": false,
+"vertex_color": true
+}
 
 [resource]
 script = ExtResource("1_ts")
 id = &"concrete"
-rail_profile = null
-rail_material = ExtResource("1_crynw")
-sleeper_mesh = ExtResource("2_0b8au")
+rail_profile = PackedVector2Array(-0.1, 0, -0.0175, 0.048, -0.06, 0.194, -0.06, 0.2325, -0.04, 0.25, 0.04, 0.25, 0.06, 0.2325, 0.06, 0.194, 0.0175, 0.048, 0.1, 0)
+rail_material = SubResource("StandardMaterial3D_n0uv7")
+rail_uv_tile = Vector2(1, 1)
+sleeper_mesh = ExtResource("8_n0uv7")
 sleeper_size = Vector3(3, 0.2, 0.34)
 sleeper_gap = 0.36
-sleeper_material = ExtResource("3_q0qrn")
+sleeper_material = SubResource("StandardMaterial3D_5rtvx")
 ballast_enabled = false
-ballast_profile = null
+ballast_profile = PackedVector2Array(-1.6, 0, -1.1, 0.5, 1.1, 0.5, 1.6, 0)
 collision_width = 3.0

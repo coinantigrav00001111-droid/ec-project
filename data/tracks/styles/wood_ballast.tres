@@ -1,48 +1,46 @@
 [gd_resource type="Resource" script_class="TrackStyle" format=3]
 
-[ext_resource type="Material" path="res://data/tracks/materials/sleeper_wood062.tres" id="1_kjvm8"]
 [ext_resource type="Script" path="res://core/components/tracks/track_style.gd" id="1_ts"]
-[ext_resource type="Material" path="res://data/tracks/materials/rail_metal007.tres" id="2_uv7ai"]
-[ext_resource type="Texture2D" path="res://data/textures/track/Wood062_1K-JPG/Wood062_1K-JPG_Color.jpg" id="4_8kkxo"]
-[ext_resource type="Texture2D" path="res://data/textures/track/Wood062_1K-JPG/Wood062_1K-JPG_AmbientOcclusion.jpg" id="5_16t54"]
-[ext_resource type="Texture2D" path="res://data/textures/track/Wood062_1K-JPG/Wood062_1K-JPG_NormalGL.jpg" id="6_lj3fm"]
-[ext_resource type="Texture2D" path="res://data/textures/track/Wood062_1K-JPG/Wood062_1K-JPG_Roughness.jpg" id="7_3khnx"]
+[ext_resource type="Texture2D" path="res://data/textures/track/Gravel018_1K-JPG/Gravel018_1K-JPG_Color.jpg" id="1_uv7ai"]
+[ext_resource type="Texture2D" path="res://data/textures/track/Gravel018_1K-JPG/Gravel018_1K-JPG_ORM.png" id="2_8kkxo"]
+[ext_resource type="Texture2D" path="res://data/textures/track/Gravel018_1K-JPG/Gravel018_1K-JPG_NormalGL.jpg" id="3_16t54"]
+[ext_resource type="Material" path="res://data/tracks/materials/sleeper_wood62.tres" id="5_ph0xt"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dgupd"]
-albedo_texture = ExtResource("4_8kkxo")
-roughness_texture = ExtResource("7_3khnx")
-roughness_texture_channel = 4
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_lj3fm"]
+albedo_texture = ExtResource("1_uv7ai")
+metallic = 1.0
+metallic_texture = ExtResource("2_8kkxo")
+metallic_texture_channel = 2
+roughness_texture = ExtResource("2_8kkxo")
+roughness_texture_channel = 1
 normal_enabled = true
-normal_texture = ExtResource("6_lj3fm")
+normal_texture = ExtResource("3_16t54")
 ao_enabled = true
-ao_texture = ExtResource("5_16t54")
-ao_texture_channel = 4
-uv1_scale = Vector3(0.5, 0.5, 0.5)
-uv1_triplanar = true
+ao_texture = ExtResource("2_8kkxo")
 texture_filter = 5
-metadata/track_role = "sleeper"
-metadata/track_source = "res://data/textures/track/Wood062_1K-JPG"
+metadata/track_role = "ballast"
+metadata/track_source = "res://data/textures/track/Gravel018_1K-JPG"
 metadata/track_params = {
 "ao_light_affect": 0.0,
-"height_scale": 0.0,
+"height_scale": 0.05,
 "mesh_uv_units": false,
 "metallic": -1.0,
 "normal_scale": 1.0,
 "roughness": 1.0,
-"tile": Vector2(2, 2),
+"tile": Vector2(10, 10),
 "tint": Color(1, 1, 1, 1),
-"triplanar": true,
+"triplanar": false,
 "use_ao": true,
-"use_height": false
+"use_height": false,
+"vertex_color": false
 }
 
 [resource]
 script = ExtResource("1_ts")
 id = &"wood_ballast"
 rail_profile = PackedVector2Array(-0.1, 0, -0.1, 0.25, 0.1, 0.25, 0.1, 0)
-rail_material = ExtResource("2_uv7ai")
 rail_uv_tile = Vector2(10, 10)
-sleeper_material = SubResource("StandardMaterial3D_dgupd")
+sleeper_material = ExtResource("5_ph0xt")
 ballast_profile = PackedVector2Array(-1.6, 0, -1.1, 0.5, 1.1, 0.5, 1.6, 0)
-ballast_material = ExtResource("1_kjvm8")
+ballast_material = SubResource("StandardMaterial3D_lj3fm")
 ballast_uv_tile = Vector2(10, 10)
