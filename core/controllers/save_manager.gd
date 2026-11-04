@@ -72,7 +72,8 @@ func _notification(what):
 
 #-------SAVE----------
 
-func save_game(slot_name: String ='savegame') -> void:
+## Возвращает true, если файл записан
+func save_game(slot_name: String ='savegame') -> bool:
 
 	## 💡 Данные для сохранения НЕ СУЩНОСТЕЙ
 	
@@ -115,8 +116,9 @@ func save_game(slot_name: String ='savegame') -> void:
 	var _err := ResourceSaver.save(_saved_game, _save_path)
 	if _err != OK:
 		push_error("Не удалось сохранить игру: %s (код %d)" % [_save_path, _err])
-		return
+		return false
 	print("Игра успешно сохранена в: ", _save_path)
+	return true
 
 
 
@@ -138,8 +140,36 @@ func clear_scene() -> void:
 		tool_controller.publish_selection(null) # Очищаем панель на всякий случай
 
 
+#-------СТИЛЬ ВСЕХ ТРАКОВ----------
+var _style_apply_busy := false
+
+
+## Этап 3 (ATTN_17 §17.13): пересобрать ВСЕ траки на столе в активном стиле сессии (TSM.current_id).
+## Макет пишется в автосейв и тут же загружается с подменой style_id: сокеты, питание, стрелки, flex,
+## опоры и вагоны восстанавливает обычная загрузка. До следующего сохранения автосейв хранит макет
+## до смены стиля (откат: load_game('autosave') делать нельзя после повторного сохранения).
+## Возвращает true, если макет пересобран
+func apply_session_style_to_all() -> bool:
+	if _style_apply_busy:
+		return false
+	_style_apply_busy = true
+	if tool_controller:
+		tool_controller.switch_tool(tool_controller.select_tool)   # призрак и перетаскивание не переживут очистку
+		tool_controller.publish_selection(null)
+	var saved: bool = await save_game('autosave')
+	if not saved:
+		push_error("Смена стиля отменена: автосейв не записан")
+		_style_apply_busy = false
+		return false
+	await load_game('autosave', SAVE_DIR, TSM.current_id)
+	_style_apply_busy = false
+	return true
+
+
 #-------LOAD----------
-func load_game(slot_name: String  ='savegame', dir: String = SAVE_DIR) -> void:
+## style_override: подменить style_id у траков, у которых он записан в сейве (стиль «следовать сессии»).
+## Пусто = стили из сейва как есть. Нужен для apply_session_style_to_all
+func load_game(slot_name: String  ='savegame', dir: String = SAVE_DIR, style_override: StringName = &"") -> void:
 	var save_path = dir + slot_name + ".tres"
 	if not FileAccess.file_exists(save_path):
 		return
@@ -173,6 +203,8 @@ func load_game(slot_name: String  ='savegame', dir: String = SAVE_DIR) -> void:
 		## 1️⃣ Базовая сборка сущности: создание инстанса, добавление C_Identity, C_TrackVisual итд
 		# style_id трака из сейва; записи без ключа (старые сейвы) читаются стилем по умолчанию
 		var _style_id := StringName(e_data.get("style_id", TSM.default_id))
+		if style_override != &"" and e_data.has("style_id"):
+			_style_id = style_override   # трак без style_id (зафиксирован в объекте, не трак) не трогаем
 		var new_entity = entity_factory.create_from_setting(_setting, _style_id)
 		new_entity.name = _setting.name # имя ентити 
 		# Восстанавливаем трансформацию ДО добавления в дерево
