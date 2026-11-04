@@ -5,7 +5,7 @@ class_name DebugKeysTab extends DebugTab
 ###########################
 ## Справочник клавиш, которые работают при Global.debug_mode. Кнопки у V-Sync, F9, F10 посылают нажатие клавиши
 ## в игру (удобно, когда F-клавиши заняты системой). F7 не посылается: ему нужен курсор над макетом.
-## Список написан по коду: graphics_manager (Ctrl+Shift+V, F10), save_manager (F9), terrain_manager и c_terrain_layer (F7),
+## Список написан по коду: graphics_manager (Ctrl+Shift+V, F10), look_lab (Ctrl+Shift+L), save_manager (F9), terrain_manager и c_terrain_layer (F7),
 ## c_mechanisms (I), build_tool (L, Z). Появилась новая отладочная клавиша: добавить строку в KEYS.
 
 ## key: подпись клавиши; text: что делает; code: клавиша для кнопки (KEY_NONE: кнопки нет);
@@ -16,6 +16,7 @@ const KEYS: Array[Dictionary] = [
 	{"key": "Ctrl+Shift+V", "text": "V-Sync вкл/выкл (действие debug_vsync_toggle, переназначается в Project Settings). Раньше был F8, но в редакторе Godot это «Остановить игру»", "code": KEY_NONE, "action": &"debug_vsync_toggle"},
 	{"key": "F9", "text": "Загрузить эталонную диораму (заменяет макет)", "code": KEY_F9},
 	{"key": "F10", "text": "Сохранить встроенные Look и Time в .tres", "code": KEY_F10},
+	{"key": "Ctrl+Shift+L", "text": "Look Lab: прогон вариантов Clean + Day по закладкам 1-5, снимки и метрики в user://look_lab/ (лучше в Observe, во время прогона ничего не трогать)", "code": KEY_NONE, "action": &"debug_look_lab"},
 	{"key": "I", "text": "У выбранного вагона: свет вкл/выкл; Shift+I: метки источников и размеры кузова в Output", "code": KEY_NONE},
 	{"key": "L", "text": "Лимиты flex (в Build)", "code": KEY_NONE},
 	{"key": "Z", "text": "Зоны проблем flex", "code": KEY_NONE},

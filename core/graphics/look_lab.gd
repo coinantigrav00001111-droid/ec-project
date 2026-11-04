@@ -3,7 +3,7 @@ class_name LookLab extends Node
 ########################
 ## Look Lab (debug): прогон вариантов картинки одним заходом (ATTN_14 §14.13).
 ########################
-## Ctrl+Shift+L: для каждого варианта из VARIANTS применяет его поверх Look `clean` + Time `day`,
+## Ctrl+Shift+L (любая раскладка) или кнопка на вкладке Keys панели F3: для каждого варианта из VARIANTS применяет его поверх Look `clean` + Time `day`,
 ## переезжает по закладкам камеры 1-5 (Settings camera/bookmarks; нет закладок: снимает текущий вид),
 ## снимает кадр без UI на качестве High и пишет в user://look_lab/<время>/:
 ##   <вариант>_b<N>.png, metrics.csv, variants.txt (параметры прогона).
@@ -67,15 +67,29 @@ const VARIANTS := [
 			"volumetric_fog_length": 600.0, "volumetric_fog_albedo": Color(1.0, 0.96, 0.88), "volumetric_fog_anisotropy": 0.6}},
 ]
 
+## Действие InputMap. Клавиша по physical_keycode: работает на любой раскладке (на русской keycode у L другой)
+const ACTION := &"debug_look_lab"
+
 var _busy := false
+
+
+func _ready() -> void:
+	if not InputMap.has_action(ACTION):
+		InputMap.add_action(ACTION)
+		var ev := InputEventKey.new()
+		ev.physical_keycode = KEY_L
+		ev.ctrl_pressed = true
+		ev.shift_pressed = true
+		InputMap.action_add_event(ACTION, ev)
+	print("[LookLab] готов: Ctrl+Shift+L (любая раскладка) или кнопка «Нажать» на вкладке Keys панели F3")
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not Global.debug_mode:
 		return
-	if event is InputEventKey and event.pressed and not event.echo \
-			and event.keycode == KEY_L and event.ctrl_pressed and event.shift_pressed:
+	if event.is_action_pressed(ACTION) and not event.is_echo():
 		get_viewport().set_input_as_handled()
+		print("[LookLab] запуск")
 		run()
 
 
