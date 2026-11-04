@@ -1,8 +1,8 @@
-[gd_resource type="StandardMaterial3D" format=3]
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://vg75ddgwda4j"]
 
-[ext_resource type="Texture2D" path="res://data/textures/track/Gravel018_1K-JPG/Gravel018_1K-JPG_Color.jpg" id="1_r2p0s"]
-[ext_resource type="Texture2D" path="res://data/textures/track/Gravel018_1K-JPG/Gravel018_1K-JPG_ORM.png" id="2_2ab06"]
-[ext_resource type="Texture2D" path="res://data/textures/track/Gravel018_1K-JPG/Gravel018_1K-JPG_NormalGL.jpg" id="3_kya5n"]
+[ext_resource type="Texture2D" uid="uid://bka5ak6f8quoh" path="res://data/textures/track/Gravel018_1K-JPG/Gravel018_1K-JPG_Color.jpg" id="1_r2p0s"]
+[ext_resource type="Texture2D" uid="uid://by1xsxshpxqud" path="res://data/textures/track/Gravel018_1K-JPG/Gravel018_1K-JPG_ORM.png" id="2_2ab06"]
+[ext_resource type="Texture2D" uid="uid://csoc0u1k8fpkw" path="res://data/textures/track/Gravel018_1K-JPG/Gravel018_1K-JPG_NormalGL.jpg" id="3_kya5n"]
 
 [resource]
 albedo_texture = ExtResource("1_r2p0s")

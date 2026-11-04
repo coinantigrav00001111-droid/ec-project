@@ -22,6 +22,7 @@
 script = ExtResource("3_cfg")
 power_routing = true
 radius = 23.9
+collision_width = 2.8
 
 [sub_resource type="Resource" id="Resource_id"]
 script = ExtResource("4_id")
@@ -66,9 +67,9 @@ script = ExtResource("16_sw")
 [resource]
 script = ExtResource("2_es")
 key = &"track.junction.switch_r"
+sort_order = 20
 name = "Switch R"
 description = "Стрелка правая. Ручная: клик по рычагу у носка. L 23.9, ответвление 15°."
 tag = &"junction"
-sort_order = 20
 icon = ExtResource("17_sgoq4")
 components = Array[ExtResource("1_cs")]([SubResource("Resource_id"), SubResource("Resource_vis"), SubResource("Resource_drag"), SubResource("Resource_piv"), SubResource("Resource_hov"), SubResource("Resource_sel"), SubResource("Resource_blk"), SubResource("Resource_path"), SubResource("Resource_shape"), SubResource("Resource_sock"), SubResource("Resource_pwr"), SubResource("Resource_sup"), SubResource("Resource_sw")])

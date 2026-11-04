@@ -20,10 +20,10 @@
 
 [sub_resource type="Resource" id="Resource_cfg"]
 script = ExtResource("3_cfg")
-collision_width = 2.5
 diverge_radius = 90.8
 hand = -1
 radius = 23.9
+collision_width = 2.8
 
 [sub_resource type="Resource" id="Resource_id"]
 script = ExtResource("4_id")
@@ -68,9 +68,9 @@ script = ExtResource("16_sw")
 [resource]
 script = ExtResource("2_es")
 key = &"track.junction.switch_l"
+sort_order = 10
 name = "Switch WL"
 description = "Стрелка левая. G239 + R9(r=90.8 d=15°). Ручная: клик по рычагу у носка. L 23.9, ответвление 15°."
 tag = &"junction"
-sort_order = 10
 icon = ExtResource("18_3stpo")
 components = Array[ExtResource("1_cs")]([SubResource("Resource_id"), SubResource("Resource_vis"), SubResource("Resource_drag"), SubResource("Resource_piv"), SubResource("Resource_hov"), SubResource("Resource_sel"), SubResource("Resource_blk"), SubResource("Resource_path"), SubResource("Resource_shape"), SubResource("Resource_sock"), SubResource("Resource_pwr"), SubResource("Resource_sup"), SubResource("Resource_sw")])

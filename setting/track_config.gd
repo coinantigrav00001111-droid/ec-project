@@ -18,7 +18,7 @@ class_name TrackConfig extends ObjectConfig
 ## Трак тоннельный сразу при постановке (C_Tunnel): может уходить под листы пенопласта. Обычно включается клавишей U
 @export var allow_underground := false
 # XX claude-switch
-## Ширина коллизии основания (балласт, шпалы), ю. 0 = из TrackStyle (по умолчанию 3.2).
+## Ширина коллизии основания (балласт, шпалы), ю. 0 = из TrackStyle (по умолчанию 3.0).
 ## Читают стрелка, кросс и упор (C_SwitchVisual). Нужна, когда соседние траки стоят близко: у стрелки и кросса
 ## от нее зависит, на какое расстояние разойдутся концы (см. auto_fit в SwitchConfig и CrossingConfig)
 @export var collision_width := 0.0
