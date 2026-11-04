@@ -36,7 +36,7 @@ func on_subject(setting: EntitySetting, info: Dictionary, ms: int) -> void:
 	var heading := setting.name
 	if passport != null and passport.title != "":
 		heading = passport.title
-	lines.append("%s (id %d)" % [heading, setting.id])
+	lines.append(heading)
 	lines.append("key: %s" % setting.get_key())
 	lines.append("%s / %s" % [setting.category, setting.tag])
 	if passport != null and passport.prototype_line() != "":

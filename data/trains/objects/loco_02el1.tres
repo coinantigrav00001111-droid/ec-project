@@ -160,7 +160,6 @@ metadata/_custom_type_script = "uid://brbladjp7pfki"
 [resource]
 script = ExtResource("26_366el")
 key = &"train.loco.loco_02el1"
-id = 2510
 name = "loco 2 electro 1"
 description = "локо 2 вариант 1"
 category = &"train"

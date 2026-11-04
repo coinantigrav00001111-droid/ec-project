@@ -33,7 +33,7 @@ script = ExtResource("8_sl")
 
 [resource]
 script = ExtResource("2_es")
-id = 6008
+key = &"terrain.foam.foam_polygon"
 name = "foam_polygon"
 description = "Лист пенопласта произвольной формы: вершины контура ставятся кликами"
 category = &"terrain"

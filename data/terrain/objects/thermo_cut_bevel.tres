@@ -10,7 +10,6 @@ facets = {
 "shape": "bevel"
 }
 sort_order = 4
-id = 6014
 name = "Терморезак: скос"
 description = "Ступенчатый скос: две точки гребня, [ ] шаг ступени, Ctrl+R/F высота, третий клик режет в сторону курсора"
 category = &"terrain"

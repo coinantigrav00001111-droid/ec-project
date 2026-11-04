@@ -10,7 +10,6 @@ facets = {
 "shape": "strip"
 }
 sort_order = 2
-id = 6012
 name = "Терморезак: ущелье"
 description = "Вырез полосой вдоль ломаной: клики точек оси, [ ] ширина, Enter или клик по последней точке режет"
 category = &"terrain"

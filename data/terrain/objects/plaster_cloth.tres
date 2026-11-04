@@ -6,7 +6,6 @@
 [resource]
 script = ExtResource("1_es")
 key = &"terrain.plaster.cloth"
-id = 6030
 name = "Гипсовый бинт"
 description = "Гладкая оболочка поверх ступеней пенопласта: ЛКМ весь холм, Shift+ЛКМ лист, Ctrl+ЛКМ снять, [ ] ступень"
 category = &"terrain"

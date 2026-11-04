@@ -6,7 +6,6 @@
 [resource]
 script = ExtResource("1_es")
 key = &"terrain.water.pour"
-id = 6020
 name = "Налить воду"
 description = "Залить водой выемку или край стола: область видна до клика, R/F глубина, Shift+ЛКМ осушить"
 category = &"terrain"

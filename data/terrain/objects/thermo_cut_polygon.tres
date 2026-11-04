@@ -10,7 +10,6 @@ facets = {
 "shape": "polygon"
 }
 sort_order = 1
-id = 6011
 name = "Терморезак: полигон"
 description = "Вырез по вершинам: клики, Enter или клик по первой вершине режет. Ctrl+Z отменяет"
 category = &"terrain"

@@ -39,7 +39,6 @@ metadata/_custom_type_script = "uid://deljgsmo4bpow"
 
 [resource]
 script = ExtResource("17_eas87")
-id = 5010
 key = &"track.special.rulette_01"
 facets = { "shape": "rulette" }
 name = "rulette_01"

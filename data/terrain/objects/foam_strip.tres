@@ -33,7 +33,7 @@ script = ExtResource("8_sl")
 
 [resource]
 script = ExtResource("2_es")
-id = 6009
+key = &"terrain.foam.foam_strip"
 name = "foam_strip"
 description = "Лист-полоса пенопласта по ломаной: точки оси кликами, ширина [ и ]"
 category = &"terrain"

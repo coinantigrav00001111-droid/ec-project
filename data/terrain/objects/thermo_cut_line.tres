@@ -10,7 +10,6 @@ facets = {
 "shape": "line"
 }
 sort_order = 3
-id = 6013
 name = "Терморезак: линия"
 description = "Отсекает край по прямой: две точки, курсор выбирает сторону, третий клик режет"
 category = &"terrain"

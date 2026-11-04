@@ -10,7 +10,6 @@ facets = {
 "shape": "rect"
 }
 sort_order = 0
-id = 6010
 name = "Терморезак: прямоугольник"
 description = "Вырез прямоугольником: два клика, глубина и плоскость R/F, Ctrl+R/F. Ctrl+Z отменяет"
 category = &"terrain"

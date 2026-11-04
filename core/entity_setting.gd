@@ -20,12 +20,9 @@ class_name EntitySetting extends Resource
 @export var facets :Dictionary = {}
 
 ## Порядок кнопки в своем теге (меньше = левее). Равные (в том числе все нули) идут по имени файла ресурса,
-## как было до U3a. Прежний `id` порядок не задает
+## как было до U3a
 @export var sort_order :int = 0
 
-## УСТАРЕЛО: прежний числовой id. Читается как раньше (подпись на кнопке в debug), но ничего не решает.
-## Заменен на key. Удалим, когда все .tres и сейвы перейдут
-@export var id :int = 0
 @export var name :String = ''
 @export var description :String = 'Прямой трак 1,5см'
 

@@ -94,7 +94,6 @@ metadata/_custom_type_script = "uid://mqrnwkjfweqr"
 
 [resource]
 script = ExtResource("19_v5rfl")
-id = 2020
 key = &"train.boxcar.wagon_02"
 name = "wagon_02"
 description = "крытый 02"

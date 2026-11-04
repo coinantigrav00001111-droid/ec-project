@@ -790,7 +790,10 @@ func _load_objects() -> void:
 			return String(a.category) < String(b.category)
 		if a.tag != b.tag:
 			return String(a.tag) < String(b.tag)
-		return a.id < b.id)
+		# как в каталоге: порядок в теге, затем имя файла (числового id больше нет)
+		if a.sort_order != b.sort_order:
+			return a.sort_order < b.sort_order
+		return a.resource_path < b.resource_path)
 
 
 func _rebuild_tree() -> void:
@@ -881,7 +884,7 @@ func _show_object(s: EntitySetting, force := false) -> void:
 
 func _show_info(s: EntitySetting, info: Dictionary, ms: int) -> void:
 	var lines: Array[String] = []
-	lines.append("%s (id %d)" % [s.name, s.id])
+	lines.append("%s (%s)" % [s.name, s.get_key()])
 	lines.append("%s / %s" % [s.category, s.tag])
 	lines.append("Источник: %s, %d мс" % [info.via, ms])
 	if info.ok:

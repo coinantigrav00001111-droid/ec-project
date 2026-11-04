@@ -100,6 +100,11 @@ func _check(path: String, res: EntitySetting, seen: Dictionary) -> Array[String]
 
 	if not CatalogMeta.CATEGORIES.has(res.category):
 		out.append("%s: категории %s нет в CatalogMeta.CATEGORIES" % [path, res.category])
+	# Числовой id удалён (ATTN_17 §17.13, C14): в основном ресурсе .tres объекта строки `id = N` быть не должно
+	var _text := FileAccess.get_file_as_string(path)
+	var _main := _text.rfind("[resource]")
+	if _main >= 0 and RegEx.create_from_string("(?m)^id = \d+").search(_text, _main) != null:
+		out.append("%s: осталась строка id = N, числового id больше нет: объект узнают по key" % path)
 	if CatalogMeta.TAGS.has(res.category) and not (CatalogMeta.TAGS[res.category] as Array).has(res.tag):
 		out.append("%s: тега '%s' нет в CatalogMeta.TAGS[%s]" % [path, res.tag, res.category])
 	# Траки: стиль даёт сессия (TSM), во вложенном стиле объекта его не опознать (ATTN_17 §17.13)
