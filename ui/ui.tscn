@@ -8,7 +8,7 @@
 [ext_resource type="Texture2D" uid="uid://bykn7sk7nse02" path="res://ui/icons/electric/joystick.svg" id="4_gycre"]
 [ext_resource type="Script" uid="uid://daixlawn7cjwi" path="res://ui/observe_controller.gd" id="4_ju45i"]
 [ext_resource type="Script" uid="uid://bm2guc8626oc2" path="res://ui/operate_controller.gd" id="4_mf2ns"]
-[ext_resource type="Script" path="res://ui/toolbar/toolbar_controller.gd" id="4_tbc"]
+[ext_resource type="Script" uid="uid://clkuxy8sfhdwm" path="res://ui/toolbar/toolbar_controller.gd" id="4_tbc"]
 [ext_resource type="Texture2D" uid="uid://djywpcxpy5ypw" path="res://ui/icons/tool/tinker.svg" id="5_pa1oa"]
 [ext_resource type="PackedScene" uid="uid://boj0kanwn0n0e" path="res://ui/panels/info_panel.tscn" id="10_ay4pc"]
 [ext_resource type="PackedScene" uid="uid://d8t1asbj2c3s" path="res://ui/panels/top_panel.tscn" id="12_hrmpd"]
