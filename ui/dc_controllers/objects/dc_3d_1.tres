@@ -6,12 +6,12 @@
 
 [resource]
 script = ExtResource("3_s3m3s")
-id = 523
 key = &"dc_controller.3d.dc_3d_1"
 name = "DC test"
 description = "первый"
 category = &"dc_controller"
 tag = &"3d"
+hide = true
 icon = ExtResource("2_ll16b")
 components = Array[ExtResource("1_8euqj")]([null])
 metadata/_custom_type_script = "uid://do5hjkm3r2pdg"

@@ -6,7 +6,8 @@
 
 [resource]
 script = ExtResource("3_gcsjs")
-id = 2
+key = &"dc_controller.2d.dc_2d_1b"
+sort_order = 2
 name = "DC 1B"
 scene = ExtResource("2_3b0u0")
 icon = ExtResource("1_3cwgm")

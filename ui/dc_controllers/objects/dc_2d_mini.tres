@@ -6,6 +6,7 @@
 
 [resource]
 script = ExtResource("3_iw0p0")
+key = &"dc_controller.2d.dc_2d_mini"
 name = "DC mini"
 description = "Мини DC контроллер"
 scene = ExtResource("2_iw0p0")

@@ -130,7 +130,19 @@ func refresh() -> void:
 	if out != null:
 		_bar.max_value = out.i_max * 2.0
 		_bar.value = out.current
-		_bar_label.text = "Вывод %d: %.2f А из %.1f А%s" % [out.label, out.current, out.i_max, ("  · " + out.state_text() if out.state != PowerOutput.State.OK else "")]
+		var total := 0.0
+		for o in source.outputs:
+			total += o.current
+		var txt := "Вывод %d: %.2f А из %.1f А" % [out.label, out.current, out.i_max]
+		if source.outputs.size() > 1:
+			txt += "\nВсего по источнику: %.2f А" % total
+		if source.needs_supply():
+			txt += "\nСеть: %.1f Вт из %.0f Вт" % [PGM.mains.load_w, PGM.mains.capacity_w]
+			if PGM.mains.overloaded:
+				txt += " · перегрузка сети"
+		if out.state != PowerOutput.State.OK:
+			txt += "\nСостояние: " + out.state_text()
+		_bar_label.text = txt
 	_mains_btn.visible = needs
 	_mains_btn.set_pressed_no_signal(PGM.mains.on)
 	_reset_btn.disabled = not any_tripped

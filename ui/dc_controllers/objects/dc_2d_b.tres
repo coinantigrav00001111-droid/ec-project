@@ -6,7 +6,8 @@
 
 [resource]
 script = ExtResource("3_u33bi")
-id = 1
+key = &"dc_controller.2d.dc_2d_b"
+sort_order = 1
 name = "DC B"
 description = "Базовый DC контроллер"
 scene = ExtResource("2_d7ex6")
