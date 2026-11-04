@@ -1,9 +1,9 @@
-[gd_resource type="Resource" script_class="EntitySetting" format=3]
+[gd_resource type="Resource" script_class="EntitySetting" format=3 uid="uid://bh8eyw6f1k37m"]
 
 [ext_resource type="Script" uid="uid://m4g5jbfwmaa0" path="res://core/component_setting.gd" id="1_cs"]
 [ext_resource type="Script" uid="uid://b7ds2l6clrm61" path="res://setting/track_config.gd" id="2_tc"]
 [ext_resource type="Script" uid="uid://mpakwrr6lum8" path="res://core/components/comp_settings/identity_setting.gd" id="3_id"]
-[ext_resource type="Script" path="res://core/components/comp_settings/stylevisual_setting.gd" id="4_sv"]
+[ext_resource type="Script" uid="uid://1xmvhthiwc64" path="res://core/components/comp_settings/stylevisual_setting.gd" id="4_sv"]
 [ext_resource type="PackedScene" uid="uid://b03li0uhnrr08" path="res://data/tracks/R4.tscn" id="5_sc"]
 [ext_resource type="Script" uid="uid://b1jwuxb32so7e" path="res://core/components/comp_settings/trackdraggable_setting.gd" id="7_dr"]
 [ext_resource type="Script" uid="uid://djbifkyei01t7" path="res://core/components/comp_settings/pivot_setting.gd" id="8_pv"]
@@ -56,10 +56,10 @@ script = ExtResource("14_su")
 [resource]
 script = ExtResource("16_es")
 key = &"track.curve.r4"
+sort_order = 60
 name = "R4"
 description = "Радиусный 54.6 см, 30°"
 tag = &"curve"
-sort_order = 60
 icon = ExtResource("15_ic")
 components = Array[ExtResource("1_cs")]([SubResource("Resource_id"), SubResource("Resource_vis"), SubResource("Resource_drag"), SubResource("Resource_piv"), SubResource("Resource_hov"), SubResource("Resource_sel"), SubResource("Resource_blk"), SubResource("Resource_sock"), SubResource("Resource_pwr"), SubResource("Resource_sup")])
 metadata/_custom_type_script = "uid://do5hjkm3r2pdg"
