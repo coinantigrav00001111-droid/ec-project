@@ -41,6 +41,5 @@ func current_power_local() -> void:
 	%PowerLabel.text = str(power_local) + '%'
 	%ContourLabel.text = 'C: ' + str(active_contour)
 	
-	# Подача сигнала с питание в контур. 0 - во все 
-	#change_power_pwm.emit(power_local, active_contour)
-	PGM.set_power_pwm(active_contour, power_local)
+	# Подача сигнала с питание в контур. -1 - во все выводы источника
+	_send_power()

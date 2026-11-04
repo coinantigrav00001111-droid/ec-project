@@ -19,6 +19,10 @@ class_name SavedGame extends Resource
 ## Активный стиль траков макета (TSM.current_id). Пусто = стиль по умолчанию из набора
 @export var track_style: StringName = &""
 
+## Состояние источников питания и сети (PGM.save_state, ATTN_10 D2): модели, выводы, команды, estop, защита.
+## Пусто в сейвах до D2: после загрузки питание 0
+@export var power_state: Dictionary = {}
+
 ### массив в GM контуры питания
 #@export var clip_numbers		:Array[int] = []
 #@export var power_pwm 			:Dictionary[int, int] = {}

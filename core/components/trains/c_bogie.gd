@@ -300,6 +300,44 @@ func _assist_update_calc_global_pos(bogie: BogieData) -> void:
 				
 
 ## ===============================
+## Питание под тележками: одно решение для мотора и света (ATTN_10 §10.5.6, D3).
+## Берется тележка с наибольшим |V|. Ведущая тележка меняется, только если другая сильнее больше чем на `SUPPLY_HYSTERESIS`:
+## на изостыке со встречным питанием направление не дергается туда-сюда.
+## Возвращает {"net": метка цепи (0 нет питания), "voltage": % со знаком, "bogie": индекс или -1}
+const SUPPLY_HYSTERESIS := 0.5
+var _supply_idx := -1
+
+func best_supply() -> Dictionary:
+	var volts: Array[float] = []
+	var nets: Array[int] = []
+	var best := -1
+	var best_abs := 0.0
+	for i in bogies_data.size():
+		var bogie := bogies_data[i]
+		var net := 0
+		var v := 0.0
+		if is_instance_valid(bogie.current_track):
+			var pt := bogie.current_track.get_comp(C_PowerTrack) as C_PowerTrack
+			if pt != null:
+				net = pt.contour_of(bogie.route)
+				if net != 0:
+					v = PGM.get_power(net)
+		nets.append(net)
+		volts.append(v)
+		# при равенстве побеждает меньшая метка цепи, затем меньший индекс: результат не зависит от порядка обхода
+		if absf(v) > best_abs + 0.001 or (best >= 0 and absf(absf(v) - best_abs) <= 0.001 and v != 0.0 and net < nets[best]):
+			best = i
+			best_abs = absf(v)
+	if best < 0:
+		_supply_idx = -1
+		return {"net": 0, "voltage": 0.0, "bogie": -1}
+	if _supply_idx >= 0 and _supply_idx < volts.size() and nets[_supply_idx] != 0 and volts[_supply_idx] != 0.0:
+		if best_abs <= absf(volts[_supply_idx]) + SUPPLY_HYSTERESIS:
+			best = _supply_idx
+	_supply_idx = best
+	return {"net": nets[best], "voltage": volts[best], "bogie": best}
+
+
 func _physics_process(delta: float) -> void:
 	wheel_rotate(delta)
 	

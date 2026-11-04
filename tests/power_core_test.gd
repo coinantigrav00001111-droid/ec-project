@@ -12,6 +12,8 @@ extends Node
 ## S6 клипы на концах цепочки с одной цепью: согласовано; «поменять полярность» у одного: КЗ, цепь отключена защитой
 ## S7 изостык между 2 и 3 траками: хвост без цепи, клип на хвосте даёт свою цепь; изостык переживает save/load
 ## S8 сброс сети (PGM.reset_state): напряжения 0, сигнал state_reset
+## S10 D3, политика TRIP: два клипа с разными выводами в одной цепи отключают оба вывода (SHORT, причина "conflict"); MERGE так не делает
+## S11 D2: клип с выводом 11 второго источника питается от него, метка в списке «Вывод 11»
 ## S9 P1 (исправлен в main отдельным коммитом): PGM крутит полосы материалов цепи по ключам кэша "<цепь>_<полярность>" и "<цепь>_<полярность>_<масштаб>_<swap>"
 
 var _fails := 0
@@ -213,6 +215,44 @@ func _ready() -> void:
 	for key in keys:
 		C_TrackVisual.power_materials_cache.erase(key)
 
+	# --- S10 ---
+	await fresh()
+	var c10 := chain(3)
+	await settle()
+	PGM.create_power_clip(c10[0], 1, true)
+	PGM.create_power_clip(c10[2], 2, true)
+	PGM.set_command(1, 50)
+	PGM.set_command(2, 40)
+	await settle()
+	check("S10 MERGE: конфликт помечен, но выводы работают", (c10[2].get_comp(C_PowerClip) as C_PowerClip).conflict == "label" and not PGM.get_output(1).tripped and not PGM.get_output(2).tripped)
+	check("S10 MERGE: клип знает лидера", (c10[2].get_comp(C_PowerClip) as C_PowerClip).conflict_with == 1)
+	PGM.conflict_policy = PGM.ConflictPolicy.TRIP
+	PGM.recalculate_grid()
+	check("S10 TRIP: оба вывода отключены", PGM.get_output(1).tripped and PGM.get_output(2).tripped, "%s %s" % [PGM.get_output(1).tripped, PGM.get_output(2).tripped])
+	check("S10 TRIP: состояние SHORT, причина conflict", PGM.get_output(1).state == PowerOutput.State.SHORT and PGM.get_output(2).trip_reason == "conflict")
+	check("S10 TRIP: напряжение 0", PGM.get_power(1) == 0.0 and PGM.get_power(2) == 0.0)
+	PGM.conflict_policy = PGM.ConflictPolicy.MERGE
+	PGM.recalculate_grid()
+	PGM.reset_protection()
+	check("S10 после MERGE и сброса питание вернулось", PGM.get_power(1) == 50.0 and PGM.get_power(2) == 40.0)
+
+	# --- S11 ---
+	await fresh()
+	var panel2 := Node.new()
+	var src2 := PGM.register_source(PowerModels.MULTI, panel2)
+	var src3 := PGM.register_source(PowerModels.MULTI, self)
+	var c11 := chain(2)
+	await settle()
+	PGM.create_power_clip(c11[0], 11, true)
+	PGM.set_command(11, 60)
+	await settle()
+	check("S11 цепь 11 питает оба трака", net(c11[0]) == 11 and net(c11[1]) == 11, nets_text(c11))
+	check("S11 напряжение цепи 11", PGM.get_power(11) == 60.0)
+	check("S11 подпись вывода", PGM.label_text(11) == "Вывод 11", PGM.label_text(11))
+	check("S11 первый свободный вывод это 1, не 11", PGM.get_free_contour_id() == 1, str(PGM.get_free_contour_id()))
+	PGM.unregister_source(src2)
+	PGM.unregister_source(src3)
+	panel2.free()
 	await fresh()
 	print("--------")
 	print("power_core_test: ", "PASS" if _fails == 0 else "FAIL (%d)" % _fails)

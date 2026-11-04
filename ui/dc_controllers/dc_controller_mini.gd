@@ -9,8 +9,7 @@ extends DCController
 ## Наследует контроллер_р но упрощает его функции за счет дефолтных нод управления
 
 func _ready() -> void:
-	PGM.dc_controller = self
-	PGM.state_reset.connect(reset_handle)
+	_attach_source()
 	# начальное значение кнопки видимости 
 	%ShowControllerButton.button_pressed = true
 	# реакция на кнопку dc контроллера (в редакторе он виден по умолчанию)
@@ -23,8 +22,8 @@ func _ready() -> void:
 	#change_power_pwm.connect(PGM.on_change_power_dc)
 	#onoff_power_pwm.connect(PGM.on_onoff_power_dc)
 
-	## сразу питание в сеть как в слайдере (для дебага)
-	#current_power_local()
+	## слайдер по состоянию источника (смена дизайна панели, загрузка)
+	sync_from_source()
 
 
 
@@ -33,16 +32,14 @@ func current_power_local() -> void:
 	var value = $PowerSlider.value
 	power_local = int(value * power_mult)
 	%PowerLabel.text = str(power_local) + '%'
-	# Подача сигнала с питание в контур. -1 - во все 
-
-	PGM.set_power_pwm(active_contour, power_local)
-
+	# Подача сигнала с питание в контур. -1 - во все выводы источника
+	_send_power()
 
 
-## Сброс сети (PGM.state_reset): слайдер в ноль. Родительская ручка в этом дизайне не используется
-func reset_handle() -> void:
-	power_slider.value = 0
-	current_power_local()
+
+## Мини-дизайн: слайдер вместо ручки
+func _apply_command_to_controls(p: int) -> void:
+	power_slider.set_value_no_signal(p)
 
 
 

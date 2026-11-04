@@ -95,6 +95,9 @@ func save_game(slot_name: String ='savegame') -> void:
 	# Активный стиль траков макета (ATTN_17 §17.13)
 	_saved_game.track_style = TSM.current_id
 
+	# Источники питания и сеть: команды пультов, estop, защита (ATTN_10 D2)
+	_saved_game.power_state = PGM.save_state()
+
 	# 2️⃣ Собираем все сущности на столе
 	var root_node = get_node_or_null(world_entities_root)
 	if root_node:
@@ -200,6 +203,9 @@ func load_game(slot_name: String  ='savegame', dir: String = SAVE_DIR) -> void:
 		for _p in _skipped:
 			_n += _skipped[_p]
 		push_warning("SaveManager: пропущено объектов без сеттинга: %d (%s)" % [_n, ", ".join(_skipped.keys())])
+
+	# Источники питания: команды и защита из сейва, пульты ставят ручки (старый сейв: словарь пуст, остаются нули)
+	PGM.load_state(_saved_game.power_state)
 
 	# 4. ВАЖНЕЙШИЙ ТАКТ СИНХРОНИЗАЦИИ ФИЗИКИ (см. Критические нюансы ниже)
 	await get_tree().physics_frame

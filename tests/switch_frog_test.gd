@@ -33,7 +33,7 @@ func clear_all() -> void:
 		if clip:
 			PGM.unregister_clip(clip)
 		c.free()
-	PGM.emergency_stop(false)
+	PGM.reset_protection()
 	await get_tree().physics_frame
 
 

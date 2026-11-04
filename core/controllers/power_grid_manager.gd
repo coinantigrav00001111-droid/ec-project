@@ -1,27 +1,35 @@
 extends Node
 # class_name PowerGridManager название класса отменяем, так как теперь это синглтон PGM
 ###########################
-##💡 PGM - Системный сервис(autoload), контроль енергосети
+##💡 PGM - Системный сервис(autoload), контроль енергосети (фасад DCS)
 ############################
 ##
-## Хранит массив состояний всех доступных цепей
+## Пульт (2D панель или 3D сущность) это устройство ввода: он владеет `PowerSource` и шлёт команды `set_command`.
+## PGM хранит источники, питающую сеть, порты потребителей, считает цепи (RailNetBuilder, D1) и нагрузку (PowerSolver, D3).
 ##
-## Пульт (UI Panel или 3D Entity): Выступает просто устройством ввода. Когда игрок дергает ручку, пульт лишь передает команду в PGM: "Обнови target_voltage в цепи №2 на 60".
-##
-## Подключает распределяет питание по тракам
-## Подача питания  в цепь осуществляет поверклип компонент, который можно подключить на некоторые типы траков.
-##
-## power_pwm - Словарь, в котором есть все контуры и питание на них, и останов
-##
-## D1 (ATTN_10): топологию цепей считает RailNetBuilder (граф с чётностью), а не обход в ширину от каждого клипа.
-## Клипы не удаляются при конфликте, КЗ полярности это состояние цепи.
-@onready var dc_controller: Panel #= $"/root/GameRoot/UI/DCControlPanel" #$"/root/GameRoot/Gimbal"
-# Максимальное количество контуров в сети. Не связано с DCC контроллером, там отдельно регулировать слайдер
-const MAX_CONTOURS = 10
+## D2 (ATTN_10): состояние пульта живёт в `PowerSource` и `PowerOutput`; метка вывода это номер цепи у фидеров.
+## `power_pwm` остался производным представлением для сторонних читателей (тесты): {"voltage": команда, "is_stopped": стоп или защита}.
+## Напряжение на рельсах: `get_power(метка)`, состояние вывода: `get_output(метка)`.
+## D3: решатель нагрузки с шагом 10 Гц, защита (перегрузка, КЗ), питающая сеть `mains`, порты `PowerPort`.
 
-# pwm - принцип ШИМ. словарь контуров заполняется нулями на старте
-# текущее питание в цепи ключ - net_id (номер контура), значение - словарь:
-#power_pwm {"voltage": 0, "is_stopped": false}
+## Политика конфликта фидеров с разными выводами в одной цепи (ATTN_10 §10.5.4, Q7)
+enum ConflictPolicy { MERGE, TRIP }
+
+## Шаг решателя нагрузки, с
+const SOLVER_STEP := 0.1
+
+## Источники питания (пульты). Один свободный `multi` создаётся на старте, панель забирает его (register_source)
+var sources: Array[PowerSource] = []
+## Питающая сеть макета (розетка). Источники с `needs_supply` без неё мертвы
+var mains := PowerSupply.new()
+## Порты потребителей (моторы локо)
+var ports: Array[PowerPort] = []
+## MERGE: ведёт фидер с наименьшим номером, остальные подсвечены. TRIP: конфликт отключает оба вывода (правила режима D7)
+var conflict_policy: ConflictPolicy = ConflictPolicy.MERGE
+## Свет вагонов нагружает вывод (правило режима D7, по умолчанию нет)
+var load_for_lights := false
+
+## Производное представление (метка -> {"voltage": команда, "is_stopped": стоп или защита}). Источник правды это PowerOutput
 var power_pwm : Dictionary = {}
 
 # Список всех активных КЛИПОВ на столе
@@ -35,12 +43,19 @@ var _recalc_pending: bool = false
 
 ## Строит граф цепей (хранит список виденных траков между пересчетами)
 var _builder := RailNetBuilder.new()
+var _solver := PowerSolver.new()
+var _solver_acc := 0.0
+var _next_source_id := 1
+## метка -> [источник, вывод]
+var _label_index: Dictionary = {}
 
 ## Сводка по цепям после последнего пересчета: net_id -> {feeders, tracks, conflicts, short}
 var net_info: Dictionary = {}
 
 ## Цепи, которые сейчас в КЗ полярности (net_id -> true). При подаче напряжения такая цепь отключается защитой
 var shorted_nets: Dictionary = {}
+## Метки в конфликте выводов при политике TRIP (метка -> true)
+var conflict_nets: Dictionary = {}
 
 ## Время последнего пересчета сети, мкс (замер для бюджета, ATTN_10 §10.5.1)
 var last_recalc_usec: int = 0
@@ -55,92 +70,247 @@ signal power_layer_toggled(is_active: bool)
 @warning_ignore("unused_signal")
 signal power_tab_updated()  # вся панель обновляется
 signal power_updated(contour_id: int, new_voltage: float) # Обновл. данные трака по ручке
-# XX claude-switch: контур отключен защитой (КЗ на крестовине стрелки или полярности). Сброс: emergency_stop(false) или reset_contour
+# XX claude-switch: контур отключен защитой (КЗ на крестовине стрелки или полярности, перегрузка). Сброс: reset_output
 signal contour_tripped(contour_id: int, reason: String)
-## ⚡Состояние сети сброшено (новая или загруженная партия): пульты ставят ручки в ноль
+## ⚡Состояние сети сброшено (новая партия): пульты обновляют ручки
 signal state_reset()
+## ⚡Состояние сети загружено из сейва: пульты обновляют ручки
+signal state_loaded()
+## ⚡Набор источников изменился (создан, удалён)
+signal sources_changed()
+## ⚡Шаг решателя (10 Гц): токи и состояния выводов обновлены. Индикаторы пультов читают их по этому сигналу
+signal solver_stepped()
+## ⚡Событие защиты вывода: kind "overload", "clear" или "trip"
+signal output_event(label: int, kind: String, reason: String)
 
 
 
 func _ready() -> void:
-	# Преаллокация при старте игры
-	_fill_channels()
+	_ensure_default_source()
+	set_physics_process(true)
 
 
-func _fill_channels() -> void:
-	power_pwm.clear()
-	for i in range(1, MAX_CONTOURS + 1):
-		power_pwm[i] = {
-			"voltage": 0,
-			"is_stopped": false # Для аварийного тормоза
-		}
+func _physics_process(delta: float) -> void:
+	_solver_acc += delta
+	if _solver_acc < SOLVER_STEP:
+		return
+	var dt := _solver_acc
+	_solver_acc = 0.0
+	_step_solver(dt)
 
 
-## Сброс состояния сети: напряжения 0, защита снята, мертвые клипы убраны. Зовут на новой и загруженной партии,
-## иначе в сессии остаются старые значения, а ручка пульта стоит в нуле (ATTN_10 P5)
-func reset_state() -> void:
-	_fill_channels()
-	shorted_nets.clear()
-	net_info.clear()
-	var alive: Array[C_PowerClip] = []
-	for clip in active_clips:
-		if is_instance_valid(clip) and is_instance_valid(clip.entity) and not clip.entity.is_queued_for_deletion():
-			alive.append(clip)
-	active_clips = alive
-	state_reset.emit()
+## Шаг решателя: токи, защита, нагрузка сети. События защиты разбираются здесь
+func _step_solver(dt: float) -> void:
+	if sources.is_empty():
+		return
+	var events := _solver.step(sources, ports, mains, dt, load_for_lights)
+	for ev in events:
+		var out := get_output(int(ev.label))
+		if out == null:
+			continue
+		match String(ev.kind):
+			"trip":
+				_apply_output(out)
+				power_updated.emit(out.label, 0.0)
+				contour_tripped.emit(out.label, String(ev.reason))
+				print("⚡ Перегрузка: вывод ", out.label, " отключен защитой")
+			_:
+				_refresh_clips()
+		output_event.emit(out.label, String(ev.kind), String(ev.reason))
+	_refresh_clip_labels()
+	solver_stepped.emit()
+
+
+# --- ИСТОЧНИКИ ---
+
+## Создать свободный источник `multi`, если источников нет (старт игры, тесты без панели, сброс)
+func _ensure_default_source() -> void:
+	if sources.is_empty():
+		_create_source(PowerModels.MULTI)
+
+
+## Метки по порядку с 1, не занятые другими источниками
+func _alloc_labels(n: int) -> Array[int]:
+	var res: Array[int] = []
+	var l := 1
+	while res.size() < n:
+		if not _label_index.has(l):
+			res.append(l)
+		l += 1
+	return res
+
+
+func _create_source(model_id: StringName, forced_labels: Array = []) -> PowerSource:
+	var md := PowerModels.get_model(model_id)
+	var s := PowerSource.new()
+	s.id = _next_source_id
+	_next_source_id += 1
+	s.model = model_id
+	var labels: Array = forced_labels if not forced_labels.is_empty() else _alloc_labels(int(md.outputs))
+	var suffix: Array = md.suffix
+	for i in labels.size():
+		var o := PowerOutput.new()
+		o.label = int(labels[i])
+		o.v_max = float(md.v_max)
+		o.i_max = float(md.i_max)
+		o.suffix = String(suffix[i]) if i < suffix.size() else ""
+		s.outputs.append(o)
+	sources.append(s)
+	_rebuild_index()
+	_sync_view()
+	sources_changed.emit()
+	return s
+
+
+func _rebuild_index() -> void:
+	_label_index.clear()
+	for s in sources:
+		for o in s.outputs:
+			_label_index[o.label] = [s, o]
+
+
+## Зарегистрировать источник за владельцем (панель или сущность). Свободный источник той же модели забирается
+## (старт с одной панелью, смена дизайна панели: питание не пропадает и не дублируется), иначе создаётся новый
+func register_source(model_id: StringName, owner: Object = null) -> PowerSource:
+	if not PowerModels.has_model(model_id):
+		model_id = PowerModels.MULTI
+	for s in sources:
+		if s.model == model_id and s.is_free():
+			s.owner = owner
+			return s
+	var src := _create_source(model_id)
+	src.owner = owner
+	return src
+
+
+## Владелец отпускает источник (панель закрыта). Источник остаётся на столе со своими командами: это «виртуальный
+## пульт стола игрока». Следующая панель той же модели его заберёт. Полное удаление: remove_source (3D, D4)
+func unregister_source(src: PowerSource) -> void:
+	if src != null:
+		src.owner = null
+
+
+func remove_source(src: PowerSource) -> void:
+	if src == null or not sources.has(src):
+		return
+	sources.erase(src)
+	_rebuild_index()
+	_sync_view()
+	_refresh_all()
+	sources_changed.emit()
+
+
+func get_output(label: int) -> PowerOutput:
+	return _label_index[label][1] if _label_index.has(label) else null
+
+
+func get_source_of(label: int) -> PowerSource:
+	return _label_index[label][0] if _label_index.has(label) else null
+
+
+## Все метки выводов по порядку
+func all_labels() -> Array[int]:
+	var res: Array[int] = []
+	for k in _label_index.keys():
+		res.append(int(k))
+	res.sort()
+	return res
+
+
+## Подпись вывода для списков: «Вывод 3», «Вывод 11 · A»
+func label_text(label: int) -> String:
+	var o := get_output(label)
+	if o == null:
+		return "Вывод %d" % label
+	return "Вывод %d" % label + (" · " + o.suffix if o.suffix != "" else "")
 
 
 # --- ИНТЕРФЕЙС ДЛЯ ПУЛЬТА (UI или 3D Entity) ---
 
-# передача питания во все в контуры, если _contour == -1
-# передача питания в никуда, если _contour == 0
-func set_power_pwm( _cid: int = 0, _voltage :int = 0) -> void:
-	if _cid == 0:
+## Команда на вывод. label = -1: все выводы источника `source` (или все источники, если null), 0: никуда
+func set_command(label: int, value: int, source: PowerSource = null) -> void:
+	if label == 0:
 		return # Нейтралка
-
-	if _cid == -1: # передача питания во все в контуры
-		# 1. Записываем в память сети и обновляем шейдеры по ключам контуров
-		for cid in power_pwm.keys():
-			power_pwm[cid]["voltage"] = _voltage
-			#обновляем визуал (анимацию шейдера) для этого контура
-			_update_shader_voltage(cid, _voltage) # Используем реальный ID контура!
-
-		# 2. Обновляем данные во всех клипах на столе
-		for clip in active_clips:
-			if is_instance_valid(clip):
-				clip.set_power(clip.net_id, _voltage)
-
-	elif _cid != 0: # если указан номер != 0
-		# 1. Записываем в память сети
-		if power_pwm.has(_cid):
-			power_pwm[_cid]["voltage"] = _voltage
-
-			# 2. Записываем вольтаж в клип
-			for clip in active_clips:
-				if is_instance_valid(clip) and clip.net_id == _cid:
-					clip.set_power(_cid, _voltage)
-					# break если в будущем вешать 2 клипа на 1 контур, то брек не нужен
-
-		# 3. ИЗ КЕША Visual МГНОВЕННО обновляем визуал (анимацию шейдера) для этого контура
-		_update_shader_voltage(_cid, _voltage)
+	var outs: Array[PowerOutput] = []
+	if label == -1:
+		for s in sources:
+			if source == null or s == source:
+				outs.append_array(s.outputs)
+	else:
+		var o := get_output(label)
+		if o != null and (source == null or get_source_of(label) == source):
+			outs.append(o)
+	for o in outs:
+		o.command = clampi(value, -int(o.v_max), int(o.v_max))
+	for o in outs:
+		_apply_output(o)
 
 	# ⚡Сигнал для UI
-	power_updated.emit(_cid, _voltage)
+	power_updated.emit(label, value)
 
-	# Подали напряжение в цепь, где КЗ полярности: защита отключает контур
-	if _voltage != 0:
-		if _cid == -1:
-			_retrip_shorted()
-		elif shorted_nets.has(_cid):
-			trip_contour(_cid, "polarity")
+	# Подали напряжение в цепь с КЗ или конфликтом: защита отключает вывод
+	if value != 0:
+		for o in outs:
+			_retrip_output(o)
 
 
+## Совместимость: команда на вывод по метке. -1: все выводы всех источников
+func set_power_pwm( _cid: int = 0, _voltage :int = 0) -> void:
+	set_command(_cid, _voltage)
 
+
+## Напряжение на рельсах для метки, % команды со знаком (с учётом аварийного стопа, защиты, сети)
 func get_power(_cid: int) -> float:
-	if power_pwm.has(_cid) and not power_pwm[_cid]["is_stopped"]:
-		return power_pwm[_cid]["voltage"]
-	return 0.0
+	if not _label_index.has(_cid):
+		return 0.0
+	return PowerSolver.voltage_of(_label_index[_cid][0], _label_index[_cid][1], mains)
 
+
+## Вывод остановлен: аварийный стоп, защита, источник выключен или нет сети
+func is_output_stopped(_cid: int) -> bool:
+	if not _label_index.has(_cid):
+		return false
+	var s: PowerSource = _label_index[_cid][0]
+	var o: PowerOutput = _label_index[_cid][1]
+	return s.estop or not s.enabled or o.tripped or (s.needs_supply() and not mains.on)
+
+
+## Производное представление, клипы, шейдер полос: всё, что зависит от состояния вывода
+func _apply_output(o: PowerOutput) -> void:
+	_sync_view()
+	var v := get_power(o.label)
+	for clip in active_clips:
+		if is_instance_valid(clip) and clip.net_id == o.label:
+			clip.set_power(o.label, v)
+	_update_shader_voltage(o.label, v)
+
+
+func _sync_view() -> void:
+	power_pwm.clear()
+	for k in _label_index.keys():
+		var o: PowerOutput = _label_index[k][1]
+		power_pwm[k] = {"voltage": o.command, "is_stopped": is_output_stopped(int(k))}
+
+
+## Все выводы: клипы, шейдер, представление (после загрузки, сброса, смены сети)
+func _refresh_all() -> void:
+	_sync_view()
+	for k in _label_index.keys():
+		_update_shader_voltage(int(k), get_power(int(k)))
+	_refresh_clips()
+
+
+func _refresh_clips() -> void:
+	for clip in active_clips:
+		if is_instance_valid(clip):
+			clip.set_power(clip.net_id, get_power(clip.net_id))
+
+
+## Метки клипов показывают ток: обновляем с шагом решателя
+func _refresh_clip_labels() -> void:
+	for clip in active_clips:
+		if is_instance_valid(clip):
+			clip._change_clip_label()
 
 
 # ---Хелпер для связи с C_TrackVisual---
@@ -160,69 +330,211 @@ func _update_shader_voltage(cid: int, voltage: float) -> void:
 			mat.set_shader_parameter("scroll_speed", -voltage * 0.01)
 
 
+# --- СТОП, ЗАЩИТА, СЕТЬ ---
 
-# ⚡Сигнал выключения питания
-func emergency_stop(_stop : bool) -> void:
-	for cid in power_pwm.keys():
-		power_pwm[cid]["is_stopped"] = _stop
-
-		# 1. Высчитываем эффективное напряжение для отображения
-		var _effective_voltage = 0.0 if _stop else power_pwm[cid]['voltage']
-
-		# 2. Передача напряжения в UI панели
-		power_updated.emit(cid, _effective_voltage)
-
-		# 3. Обновляем метки (Label3D) на физических клипах на столе
-		for clip in active_clips:
-			if is_instance_valid(clip) and clip.net_id == cid:
-				clip.set_power(cid, _effective_voltage)
-
-		# 4. Останавливаем (или запускаем) анимацию шейдеров тока на рельсах
-		_update_shader_voltage(cid, _effective_voltage)
-	
-	# Сняли стоп, а КЗ полярности в цепи осталось: защита отключает контур снова
+## ⚡Аварийный стоп рукой: источник `source` (null: все) без напряжения, команды сохраняются. На защиту не влияет (Q8)
+func emergency_stop(_stop : bool, source: PowerSource = null) -> void:
+	for s in sources:
+		if source != null and s != source:
+			continue
+		s.estop = _stop
+		for o in s.outputs:
+			_apply_output(o)
+			power_updated.emit(o.label, get_power(o.label))
+	# Сняли стоп, а КЗ в цепи осталось: защита отключает вывод снова
 	if not _stop:
 		_retrip_shorted()
 
 
-
-# XX claude-switch. Отключает контур защитой по КЗ (как аварийный стоп, но для одного контура).
-# Сброс: reset_contour(cid) или emergency_stop(false) (кнопка аварийного стопа: включить и выключить)
-func trip_contour(_cid: int, reason: String = "") -> void:
-	if not power_pwm.has(_cid) or power_pwm[_cid]["is_stopped"]:
+## Включить или выключить питающую сеть (кнопка «Сеть» на панели)
+func set_mains(on: bool) -> void:
+	if mains.on == on:
 		return
-	power_pwm[_cid]["is_stopped"] = true
-	for clip in active_clips:
-		if is_instance_valid(clip) and clip.net_id == _cid:
-			clip.set_power(_cid, 0.0)
-	_update_shader_voltage(_cid, 0.0)
+	mains.on = on
+	_refresh_all()
+	for l in all_labels():
+		power_updated.emit(l, get_power(l))
+	if on:
+		_retrip_shorted()
+
+
+# XX claude-switch. Отключает вывод защитой (КЗ полярности, крестовина, конфликт, перегрузка).
+# Сброс: reset_output(метка) или reset_protection()
+func trip_contour(_cid: int, reason: String = "") -> void:
+	var o := get_output(_cid)
+	if o == null or o.tripped:
+		return
+	PowerSolver.trip(o, reason)
+	_apply_output(o)
 	power_updated.emit(_cid, 0.0)
 	contour_tripped.emit(_cid, reason)
+	output_event.emit(_cid, "trip", reason)
 	print("⚡ КЗ (", reason, "): контур ", _cid, " отключен")
 
 
-## Вернуть питание контура после отключения защитой
-func reset_contour(_cid: int) -> void:
-	if not power_pwm.has(_cid) or not power_pwm[_cid]["is_stopped"]:
+## Вернуть питание вывода после отключения защитой. Если причина не устранена, защита сработает снова
+func reset_output(_cid: int) -> void:
+	var o := get_output(_cid)
+	if o == null or not o.tripped:
 		return
-	power_pwm[_cid]["is_stopped"] = false
-	var v: float = power_pwm[_cid]["voltage"]
-	for clip in active_clips:
-		if is_instance_valid(clip) and clip.net_id == _cid:
-			clip.set_power(_cid, v)
-	_update_shader_voltage(_cid, v)
-	power_updated.emit(_cid, v)
-	# КЗ полярности не устранено: защита сработает снова
-	if shorted_nets.has(_cid) and v != 0.0:
-		trip_contour(_cid, "polarity")
+	PowerSolver.reset(o)
+	_apply_output(o)
+	power_updated.emit(_cid, get_power(_cid))
+	output_event.emit(_cid, "clear", "")
+	if o.command != 0:
+		_retrip_output(o)
 
 
-## Контуры с КЗ полярности и поданным напряжением отключаются защитой
+## Прежнее имя
+func reset_contour(_cid: int) -> void:
+	reset_output(_cid)
+
+
+## Сбросить защиту всех выводов источника `source` (null: всех источников)
+func reset_protection(source: PowerSource = null) -> void:
+	for s in sources:
+		if source != null and s != source:
+			continue
+		for o in s.outputs:
+			reset_output(o.label)
+
+
+## Причина не устранена: КЗ полярности или конфликт выводов (политика TRIP)
+func _retrip_output(o: PowerOutput) -> void:
+	if o.command == 0 or o.tripped:
+		return
+	if shorted_nets.has(o.label):
+		trip_contour(o.label, "polarity")
+	elif conflict_nets.has(o.label):
+		trip_contour(o.label, "conflict")
+
+
+## Выводы с КЗ или конфликтом и поданной командой отключаются защитой
 func _retrip_shorted() -> void:
 	for cid in shorted_nets.keys():
-		if power_pwm.has(cid) and power_pwm[cid]["voltage"] != 0:
-			trip_contour(cid, "polarity")
+		var o := get_output(int(cid))
+		if o != null:
+			_retrip_output(o)
+	for cid in conflict_nets.keys():
+		var o := get_output(int(cid))
+		if o != null:
+			_retrip_output(o)
 
+
+# --- ПОРТЫ ПОТРЕБИТЕЛЕЙ ---
+
+func register_port(port: PowerPort) -> void:
+	if port != null and not ports.has(port):
+		ports.append(port)
+
+
+func unregister_port(port: PowerPort) -> void:
+	ports.erase(port)
+
+
+# --- СБРОС И СЕЙВ ---
+
+## Сброс состояния сети: команды 0, аварийный стоп и защита сняты, сеть включена, мертвые клипы убраны.
+## Зовут на новой и загруженной партии, иначе в сессии остаются старые значения (ATTN_10 P5)
+func reset_state() -> void:
+	for s in sources:
+		s.estop = false
+		s.enabled = true
+		s.selected = -1
+		for o in s.outputs:
+			o.command = 0
+			o.current = 0.0
+			PowerSolver.reset(o)
+	mains.on = true
+	shorted_nets.clear()
+	conflict_nets.clear()
+	net_info.clear()
+	var alive: Array[C_PowerClip] = []
+	for clip in active_clips:
+		if is_instance_valid(clip) and is_instance_valid(clip.entity) and not clip.entity.is_queued_for_deletion():
+			alive.append(clip)
+	active_clips = alive
+	_ensure_default_source()
+	_refresh_all()
+	state_reset.emit()
+
+
+## Состояние источников и сети для сейва (SavedGame.power_state)
+func save_state() -> Dictionary:
+	var arr: Array = []
+	for s in sources:
+		arr.append(s.save_data())
+	return {"version": 1, "sources": arr, "mains": mains.save_data(), "next_id": _next_source_id}
+
+
+## Загрузка состояния. Пустой словарь (сейв до D2): остаются нули после reset_state.
+## Источники с тем же id и моделью обновляются на месте (панель держит ссылку), остальные создаются
+func load_state(d: Dictionary) -> void:
+	if d.is_empty():
+		return
+	mains.load_data(d.get("mains", {}))
+	var saved: Array = d.get("sources", [])
+	var kept: Array[PowerSource] = []
+	for sd: Dictionary in saved:
+		var model := StringName(sd.get("model", "multi"))
+		if not PowerModels.has_model(model):
+			model = PowerModels.MULTI
+		var labels: Array = []
+		for od: Dictionary in sd.get("outputs", []):
+			labels.append(int(od.get("label", 0)))
+		var src: PowerSource = null
+		for e in sources:
+			if e.id == int(sd.get("id", -1)) and e.model == model and not kept.has(e) and e.outputs.size() == labels.size():
+				src = e
+				break
+		if src == null:
+			# нет подходящего: перекладываем метки на первый свободный источник той же модели или создаём новый
+			for e in sources:
+				if e.model == model and not kept.has(e) and e.outputs.size() == labels.size():
+					src = e
+					break
+		if src == null:
+			# метки заняты чужими источниками: освобождаем их в индексе перед созданием
+			src = _create_source(model, labels)
+		else:
+			for i in src.outputs.size():
+				src.outputs[i].label = int(labels[i])
+		src.id = int(sd.get("id", src.id))
+		src.enabled = bool(sd.get("enabled", true))
+		src.estop = bool(sd.get("estop", false))
+		src.selected = int(sd.get("selected", -1))
+		var outs: Array = sd.get("outputs", [])
+		for i in src.outputs.size():
+			src.outputs[i].load_data(outs[i])
+		kept.append(src)
+	# источники без пары в сейве: свободные удаляются, с панелью обнуляются
+	for s in sources.duplicate():
+		if kept.has(s):
+			continue
+		if s.is_free():
+			sources.erase(s)
+		else:
+			s.estop = false
+			for o in s.outputs:
+				o.command = 0
+				PowerSolver.reset(o)
+	_next_source_id = maxi(int(d.get("next_id", 1)), _max_source_id() + 1)
+	_ensure_default_source()
+	_rebuild_index()
+	_refresh_all()
+	request_recalculate()
+	sources_changed.emit()
+	state_loaded.emit()
+
+
+func _max_source_id() -> int:
+	var m := 0
+	for s in sources:
+		m = maxi(m, s.id)
+	return m
+
+
+# --- КЛИПЫ И ЦЕПИ ---
 
 # Создает клип на траке по кнопке инфопанели
 func create_power_clip(_entity: Entity, _cid: int, _pressed: bool) -> int:
@@ -242,7 +554,7 @@ func create_power_clip(_entity: Entity, _cid: int, _pressed: bool) -> int:
 		_entity.add_component(power_clip)
 
 		# Задает электрику в клип из пгм
-		power_clip.set_power(_cid, PGM.power_pwm[_cid].voltage)
+		power_clip.set_power(_cid, get_power(_cid))
 
 		# Вешаем на трак контур
 		_entity.get_comp(C_PowerTrack).net_id = _cid
@@ -282,11 +594,10 @@ func get_occupied_contours() -> Array[int]:
 
 
 
-## Возвращает первый свободный ID контура в диапазоне от 1 до MAX_CONTOURS.
-## Если все контуры заняты, возвращает 0.
+## Возвращает первую метку вывода, не занятую клипами. Если все заняты, возвращает 0.
 func get_free_contour_id() -> int:
 	var occupied = get_occupied_contours()
-	for id in range(1, MAX_CONTOURS + 1):
+	for id in all_labels():
 		if not id in occupied:
 			return id
 	return 0
@@ -329,6 +640,13 @@ func recalculate_grid() -> void:
 	shorted_nets.clear()
 	for cid in res.shorts:
 		shorted_nets[cid] = true
+	# Политика TRIP (Q7): конфликт выводов на одной цепи отключает оба вывода, как КЗ между пультами
+	conflict_nets.clear()
+	if conflict_policy == ConflictPolicy.TRIP:
+		for clip in active_clips:
+			if is_instance_valid(clip) and clip.conflict == "label":
+				conflict_nets[clip.net_id] = true
+				conflict_nets[clip.conflict_with] = true
 	_retrip_shorted()
 
 	if log_recalc and Global.debug_mode:

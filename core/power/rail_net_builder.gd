@@ -77,6 +77,7 @@ func solve(tree: SceneTree, clips: Array) -> Dictionary:
 		var clip := c as C_PowerClip
 		if clip != null:
 			clip.conflict = ""
+			clip.conflict_with = 0
 	var feeders: Dictionary = {}   # корень -> Array[C_PowerClip]
 	for c in clips:
 		if not is_instance_valid(c):
@@ -116,6 +117,7 @@ func solve(tree: SceneTree, clips: Array) -> Dictionary:
 			var clip: C_PowerClip = arr[k]
 			if clip.net_id != leader.net_id:
 				clip.conflict = "label"
+				clip.conflict_with = leader.net_id
 				net_conflicts[root] = int(net_conflicts.get(root, 0)) + 1
 				continue
 			var node: int = first_node[index_of[clip.entity]]

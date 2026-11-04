@@ -35,6 +35,12 @@ var power_mult : float = 1.0
 ## Активный контур, в который передается питание. 0 - во все
 var active_contour : int = -1
 
+## Источник питания панели (PowerSource в PGM): команды, аварийный стоп и защита живут в нём, панель только ввод
+var source: PowerSource
+## Идет синхронизация ручки с источником (загрузка, смена панели): команды в сеть не шлются
+var _syncing := false
+var _indicators: DCIndicators
+
 ## Mаксимальный угол поворота ручки, чем меньше, тем надежней блокровка на крайних значениях
 @export var handle_max_angle : int = 330
 ## Вращение ручки в обе стороны вместо переключателя полярности
@@ -69,9 +75,7 @@ signal onoff_power_pwm(onoff)
 ########################
 
 func _ready() -> void:
-	PGM.dc_controller = self
-	# Новая или загруженная партия: напряжения в сети обнулены, ручка встает в ноль (ATTN_10 P5)
-	PGM.state_reset.connect(reset_handle)
+	_attach_source()
 	
 	# Имя контроллера на корпусе
 	var _model_index = 'B' if rotation_with_direction else 'A'
@@ -91,20 +95,100 @@ func _ready() -> void:
 		%HandlePower.rotation_degrees = 0 
 	$HandlePower/Handle_texture.rotation_degrees = - float(handle_max_angle) / 2
 
-	#XX подключаемся к powercontroller
-	#change_power_pwm.connect(PC.on_change_power_dc)
-	#onoff_power_pwm.connect(PC.on_onoff_power_dc)
+	# Ручка по состоянию источника (смена дизайна панели, загрузка): питание не теряется
+	sync_from_source()
 
 
 
-## Ручка и слайдер в нулевое положение после сброса сети (PGM.state_reset). Сеть уже обнулена, ручка только догоняет
-func reset_handle() -> void:
+## Берем источник из PGM (свободный той же модели забираем, иначе создаем), строим индикаторы.
+## Вызывается в начале _ready каждого дизайна
+func _attach_source() -> void:
+	var model: StringName = setting.model_id if setting != null else PowerModels.MULTI
+	source = PGM.register_source(model, self)
+	# Новая или загруженная партия: ручка встает по источнику (ATTN_10 P5, D2)
+	PGM.state_reset.connect(reset_handle)
+	PGM.state_loaded.connect(sync_from_source)
+	_indicators = DCIndicators.new()
+	add_child(_indicators)
+	_indicators.position = Vector2(0, size.y + 2)
+	_indicators.setup(source, size.x)
+
+
+func _exit_tree() -> void:
+	# Панель закрыта: источник остается на столе со своими командами, следующая панель его заберет
+	PGM.unregister_source(source)
+
+
+## Метка вывода по значению слайдера контура: -1 все, 0 никуда, дальше порядковый номер вывода источника
+func _slider_to_label(v: int) -> int:
+	if v <= 0 or source == null:
+		return v
+	return source.outputs[v - 1].label if v <= source.outputs.size() else v
+
+
+func _label_to_slider(l: int) -> int:
+	if l <= 0 or source == null:
+		return l
+	for i in source.outputs.size():
+		if source.outputs[i].label == l:
+			return i + 1
+	return -1
+
+
+## Команда, которую показывает ручка: у выбранного вывода, при «все» у первого с командой
+func _shown_command() -> int:
+	if source == null:
+		return 0
+	if source.selected > 0:
+		var o := source.output_by_label(source.selected)
+		if o != null:
+			return o.command
+	for o in source.outputs:
+		if o.command != 0:
+			return o.command
+	return 0
+
+
+## Ручка, слайдеры и кнопка по состоянию источника. Команды в сеть не шлются
+func sync_from_source() -> void:
+	if source == null:
+		return
+	_syncing = true
 	power_changing = false
-	if rotation_with_direction:
-		%HandlePower.rotation_degrees = float(handle_max_angle) / 2
-	else:
-		%HandlePower.rotation_degrees = 0
+	if _indicators:
+		_indicators.refresh()
+	var slider_v := _label_to_slider(source.selected)
+	if %ContourSlider.max_value >= slider_v:
+		%ContourSlider.set_value_no_signal(slider_v)
+	%PowerButton.set_pressed_no_signal(not source.estop)
+	active_contour = 0 if source.estop else _slider_to_label(int(%ContourSlider.value))
+	_apply_command_to_controls(_shown_command())
 	current_power_local()
+	_syncing = false
+
+
+## Положение ручки (или слайдера) по команде в процентах со знаком
+func _apply_command_to_controls(p: int) -> void:
+	var angle: float
+	if rotation_with_direction:
+		angle = (float(p) / 2.0 + 50.0) / 100.0 * float(handle_max_angle)
+	else:
+		sign_power = -1 if p < 0 else 1
+		$DirectionSlider.set_value_no_signal(sign_power)
+		angle = absf(float(p)) / 100.0 * float(handle_max_angle)
+	%HandlePower.rotation_degrees = angle
+
+
+## Сброс сети (PGM.state_reset): команды в источниках уже 0, ручка догоняет
+func reset_handle() -> void:
+	sync_from_source()
+
+
+## Единственная точка отправки команды в сеть. При синхронизации молчит
+func _send_power() -> void:
+	if _syncing or source == null:
+		return
+	PGM.set_command(active_contour, power_local, source)
 
 
 
@@ -164,9 +248,8 @@ func current_power_local() -> void:
 	%PowerProgressBar.value = abs(power_local)
 	%ContourLabel.text = 'C: ' + str(active_contour)
 
-	# Подача сигнала с питание в контур. 0 - во все 
-	#change_power_pwm.emit(power_local, active_contour)
-	PGM.set_power_pwm(active_contour, power_local)
+	# Подача сигнала с питание в контур. -1 - во все выводы источника
+	_send_power()
 
 
 ## Обработка вращения ручки
@@ -309,8 +392,12 @@ func _on_handle_texture_gui_input(_event: InputEvent) -> void:
 
 ## Слайдер для активного контура. -1 - питает все контуры
 func _on_contour_slider_value_changed(value: float) -> void:
-	active_contour = int(value)
+	active_contour = _slider_to_label(int(value))
+	if source != null:
+		source.selected = active_contour
 	%ContourLabel.text = 'C: ' + str(active_contour)
+	if _indicators:
+		_indicators.refresh()
 
 
 
@@ -323,10 +410,11 @@ func _on_power_button_pressed() -> void:
 
 	else: # Вкл
 		#power_mult = 1
-		active_contour = %ContourSlider.value
+		active_contour = _slider_to_label(int(%ContourSlider.value))
 		#onoff_power_pwm.emit(pwr_on) # восстановит все из мемори
 		current_power_local() # обновляем питание по ручке
 	
-	PGM.emergency_stop(!pwr_on)
+	# Аварийный стоп только этого источника; команды сохраняются, защиту не трогает (Q8)
+	PGM.emergency_stop(!pwr_on, source)
 
 	

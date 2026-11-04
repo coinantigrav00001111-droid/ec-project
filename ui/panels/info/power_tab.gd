@@ -11,6 +11,7 @@ class_name InfoPowerTab extends InfoTab
 var _extra: VBoxContainer
 var _state_label: Label
 var _rev_box: CheckBox
+var _reset_btn: Button
 var _gap_title: Label
 var _gap_row: HFlowContainer
 var _gap_boxes: Array[CheckBox] = []
@@ -42,6 +43,11 @@ func _build_extras() -> void:
 	_state_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_state_label.custom_minimum_size = Vector2(260, 0)
 	_extra.add_child(_state_label)
+
+	_reset_btn = Button.new()
+	_reset_btn.text = "Сбросить защиту вывода"
+	_reset_btn.pressed.connect(_on_reset_pressed)
+	_extra.add_child(_reset_btn)
 
 	_rev_box = CheckBox.new()
 	_rev_box.text = "Поменять полярность (провода клипа)"
@@ -218,10 +224,13 @@ func _fill_clip_contour_button(_current_contour_id) -> void:
 	var current_id = _current_contour_id # Текущий контур этого объекта
 
 	# 2. 2️⃣ Все номера: у цепи может быть несколько фидеров, занятый номер отмечается, но выбирается
-	for i in range(1, PGM.MAX_CONTOURS + 1):
-		var _text := "Контур " + str(i)
+	# D2: список выводов всех источников («Вывод 3», у dual «Вывод 11 · A»), не только 10 первых
+	for i in PGM.all_labels():
+		var _text := PGM.label_text(i)
 		if i != current_id and i in occupied_contours:
 			_text += " (занят)"
+		else:
+			_text += " (свободен)"
 		option_button.add_item(_text, i) # Текст и внутренний ID элемента
 	
 	# 3. 3️⃣ Выставляем визуальный фокус на текущий контур объекта
@@ -249,7 +258,13 @@ func _update_extras(power_track: C_PowerTrack, clip: C_PowerClip) -> void:
 		lines.append("КЗ: здесь не сходится полярность (реверсивная петля или перепутанные провода)")
 	var net_id: int = clip.net_id if clip else power_track.net_id
 	if net_id != 0 and PGM.shorted_nets.has(net_id):
-		lines.append("Цепь %d в КЗ полярности: защита отключает напряжение (сброс: аварийный стоп или reset)" % net_id)
+		lines.append("Цепь %d в КЗ полярности: защита отключает напряжение (сброс: кнопка ниже после устранения причины)" % net_id)
+	var out: PowerOutput = PGM.get_output(net_id) if net_id != 0 else null
+	if out != null and out.tripped:
+		lines.append("Вывод %d отключен защитой: %s" % [net_id, out.state_text()])
+	elif out != null and out.state == PowerOutput.State.OVERLOAD:
+		lines.append("Перегрузка вывода %d: %.2f А при лимите %.2f А" % [net_id, out.current, out.i_max])
+	_reset_btn.visible = out != null and out.tripped
 	_state_label.text = "\n".join(lines)
 	_state_label.visible = not lines.is_empty()
 	_state_label.modulate = Color(1.0, 0.45, 0.2, 1.0)
@@ -298,3 +313,15 @@ func _on_gap_toggled(on: bool, socket_index: int) -> void:
 	var sock := target.get_comp(C_Socket) as C_Socket
 	if sock:
 		sock.set_gap(socket_index, on)
+
+
+## Сброс защиты вывода этого фидера. Если причина не устранена, защита сработает снова
+func _on_reset_pressed() -> void:
+	if not target:
+		return
+	var clip := target.get_comp(C_PowerClip) as C_PowerClip
+	var pt := target.get_comp(C_PowerTrack) as C_PowerTrack
+	var net_id: int = clip.net_id if clip else (pt.net_id if pt else 0)
+	if net_id != 0:
+		PGM.reset_output(net_id)
+	update_tab()

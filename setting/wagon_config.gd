@@ -44,6 +44,12 @@ class_name WagonConfig extends ObjectConfig
 @export var has_engine: bool = false # Флаг, локомотив ли это # TODO лишний?
 @export var max_tractive_force: float = 400.0 # Макс. стартовая тяга мотора в Ньютонах
 @export var max_theoretical_speed: float = 40.0 # Макс. скорость мотора без нагрузки (KV)
+## Порог страгивания, % напряжения: ниже мотор не тянет (сила 0), питание «есть» (ATTN_10 Q10)
+@export var start_voltage: float = 6.0
+## Ток мотора на холостом ходу, А
+@export var motor_current_idle: float = 0.15
+## Стопорный ток мотора (полная сила, разгон, затор), А. Выше лимита вывода `multi` (1.0 А): затор при высоком напряжении отключает вывод. Подбирать по ощущению
+@export var motor_current_stall: float = 1.2
 
 @export_category("Visuals & Layout")
 @export var scene = preload("res://data/trains/default_wagon.tscn")

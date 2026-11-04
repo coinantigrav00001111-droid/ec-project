@@ -11,6 +11,9 @@ func create_component(entity) -> Component:
 	else:
 		comp.max_tractive_force = cfg.max_tractive_force
 		comp.max_theoretical_speed = cfg.max_theoretical_speed
+		comp.start_voltage = cfg.start_voltage
+		comp.motor_current_idle = cfg.motor_current_idle
+		comp.motor_current_stall = cfg.motor_current_stall
 
 	comp.name = 'C_Engine'
 	entity.add_component(comp) # Добавили комп к объекту

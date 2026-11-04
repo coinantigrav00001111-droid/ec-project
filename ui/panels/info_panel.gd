@@ -46,6 +46,7 @@ func _ready() -> void:
 	# Трак питания обновляется по сигналам менеджера, поезд живыми значениями вкладки
 	PGM.power_tab_updated.connect(_power.update_tab)
 	PGM.power_updated.connect(_power.on_power_track_updated)
+	PGM.output_event.connect(func(_l: int, _k: String, _r: String) -> void: _power.update_tab())
 
 
 func _add_tab(tab: InfoTab, scene_control: Control = null) -> void:

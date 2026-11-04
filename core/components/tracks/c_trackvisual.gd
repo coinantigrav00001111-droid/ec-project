@@ -166,7 +166,7 @@ func _set_power_view():
 	var cid = power_comp.net_id
 	#var _volt = power_comp.voltage # вольтаж
 	
-	var _volt = PGM.power_pwm[cid].voltage if (cid != 0 and PGM.power_pwm.has(cid)) else 0# вольтаж
+	var _volt = PGM.get_power(cid) if cid != 0 else 0.0 # вольтаж на рельсах (с учетом стопа и защиты)
 	var is_flipped = power_comp.is_flipped
 	var mat = _fault_material() if power_comp.fault else _get_or_create_power_material(cid, _volt,  is_flipped)
 	

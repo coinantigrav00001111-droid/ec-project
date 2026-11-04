@@ -23,6 +23,8 @@ var reversed: bool = false
 ## Результат расчёта сети (RailNetBuilder), в сейв не пишется:
 ## "" нет конфликта; "label" цепь уже питает клип с меньшим номером контура; "polarity" полярность не сходится с цепью (КЗ)
 var conflict: String = ""
+## Номер цепи клипа-лидера при conflict == "label" (0 если конфликта нет). Ставит RailNetBuilder
+var conflict_with: int = 0
 
 
 # Entity запускает это при создании компонента
@@ -103,16 +105,22 @@ func _change_clip_label():
 	var _clip_label = visual.instance.get_node_or_null('PowerClip/ContourLabel')
 	if _clip_label == null: # нода клипа
 		return
-	var _known: bool = net_id != 0 and PGM.power_pwm.has(net_id)
-	var _is_stopped: bool = PGM.power_pwm[net_id]["is_stopped"] if _known else false
-	var _voltage = PGM.power_pwm[net_id]['voltage'] if (_known and not _is_stopped) else 0
+	var _out: PowerOutput = PGM.get_output(net_id) if net_id != 0 else null
+	var _voltage := int(PGM.get_power(net_id)) if net_id != 0 else 0
+	var _tripped: bool = _out != null and _out.tripped
 
 	var _text := ("−" if reversed else "") + str(net_id) + ':  ' + str(_voltage) + '%'
+	if _out != null and not _tripped and _voltage != 0:
+		_text += "  %.2fA" % _out.current
+	if _tripped:
+		_text += "  ⚡"
 	if conflict != "":
 		_text += "  (!)"
 	_clip_label.text = _text
 
-	if conflict != "":
+	if _tripped:
+		_clip_label.modulate = Color(1.0, 0.15, 0.15, 1.0)   # красный: вывод отключен защитой
+	elif conflict != "":
 		_clip_label.modulate = Color(1.0, 0.85, 0.15, 1.0)   # желтый: конфликт клипа
 	elif _voltage >= 0:
 		_clip_label.modulate = Color(0.0, 0.824, 0.0, 1.0)
@@ -124,7 +132,7 @@ func _change_clip_label():
 func conflict_text() -> String:
 	match conflict:
 		"label":
-			return "Конфликт: цепь уже питает клип с меньшим номером контура, этот клип не ведёт цепь"
+			return "Конфликт: цепь уже питает вывод %d (меньший номер), этот клип не ведёт цепь" % conflict_with
 		"polarity":
 			return "КЗ: полярность клипа не сходится с цепью (поменяйте полярность)"
 	return ""

@@ -15,3 +15,5 @@ class_name DCControllerSetting
 @export var icon :Texture2D
 @export var rotation_with_direction :bool = true # Вращение ручки в обе стороны вместо переключателя полярности
 @export var handle_max_angle :int = 270 # Максимальный угол поворота ручки
+## Модель источника питания (PowerModels): сколько выводов, лимит тока, нужна ли сеть
+@export var model_id :StringName = &"multi"

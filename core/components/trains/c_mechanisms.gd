@@ -399,34 +399,21 @@ func _physics_process(_delta: float) -> void:
 
 func _uses_track(cfg: LightConfig) -> bool:
 	match cfg.power_source:
-		LightConfig.PowerSource.TRACK:
+		LightConfig.LightSupply.TRACK:
 			return true
-		LightConfig.PowerSource.AUTO:
+		LightConfig.LightSupply.AUTO:
 			return has_comp(C_Bogie)
 	return false
 
 
-## Напряжение под сущностью: тележки, стоящие на траке с контуром (как у C_Engine), берём наибольшее по модулю.
+## Напряжение под сущностью: ведущее питание тележек (C_Bogie.best_supply, то же, что у мотора).
 ## Не на рельсах или контур без питания: 0
 func _track_voltage() -> float:
 	var chassis := get_comp(C_Chassis) as C_Chassis
 	var bogie_comp := get_comp(C_Bogie) as C_Bogie
 	if chassis == null or bogie_comp == null or not chassis.is_on_rails:
 		return 0.0
-	var v := 0.0
-	for bogie in bogie_comp.bogies_data:
-		if not is_instance_valid(bogie.current_track):
-			continue
-		var power_track := bogie.current_track.get_comp(C_PowerTrack) as C_PowerTrack
-		if power_track == null:
-			continue
-		var cid := power_track.contour_of(bogie.route)
-		if cid == 0:
-			continue
-		var raw := PGM.get_power(cid)
-		if absf(raw) > absf(v):
-			v = raw
-	return v
+	return float(bogie_comp.best_supply().voltage)
 
 
 func _update_power() -> void:
