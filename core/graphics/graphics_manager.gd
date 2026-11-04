@@ -132,6 +132,8 @@ func _ready() -> void:
 		_apply_all(0.0)
 	_connect_observe()
 	_debug_perf()
+	if Global.debug_mode:
+		add_child(LookLab.new())   # Ctrl+Shift+L: прогон вариантов картинки (ATTN_14 §14.13)
 
 
 func _unhandled_input(event: InputEvent) -> void:
