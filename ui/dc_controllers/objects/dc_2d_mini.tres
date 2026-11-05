@@ -1,14 +1,17 @@
 [gd_resource type="Resource" script_class="DCControllerSetting" format=3 uid="uid://brxfpdah3v2gg"]
 
+[ext_resource type="Script" uid="uid://m4g5jbfwmaa0" path="res://core/component_setting.gd" id="1_iw0p0"]
 [ext_resource type="Texture2D" uid="uid://djjdggcw1dwh5" path="res://ui/dc_controllers/i_controller_mini.webp" id="1_ujps1"]
 [ext_resource type="PackedScene" uid="uid://dcnqkqoa46nif" path="res://ui/dc_controllers/dc_controller_mini.tscn" id="2_iw0p0"]
 [ext_resource type="Script" uid="uid://d3qtfreanh8j6" path="res://ui/dc_controllers/controller_setting.gd" id="3_iw0p0"]
 
 [resource]
 script = ExtResource("3_iw0p0")
+scene = ExtResource("2_iw0p0")
 key = &"dc_controller.2d.dc_2d_mini"
 name = "DC mini"
 description = "Мини DC контроллер"
-scene = ExtResource("2_iw0p0")
+category = &"dc_controller"
+tag = &"2d"
 icon = ExtResource("1_ujps1")
 metadata/_custom_type_script = "uid://d3qtfreanh8j6"
