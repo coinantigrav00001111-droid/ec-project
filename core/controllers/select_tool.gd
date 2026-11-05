@@ -213,7 +213,7 @@ func _try_press_lever() -> bool:
 	if hit.is_empty():
 		return false
 	var e = _find_entity(hit.collider)
-	if e == null or not (e.has_comp(C_Switch) or e.has_comp(C_PowerSource)):   # D4: ручки и кнопки 3D-пульта
+	if e == null or not (e.has_comp(C_Switch) or e.has_comp(C_PowerSource) or e.has_comp(C_PowerDevice)):   # D4, D5: ручки и кнопки пульта, тумблеры коммутаторов
 		return false
 	var data := {"collider": hit.collider, "consumed": false, "drag": false, "ray": controller.get_mouse_ray_vec()}
 	e.send_event("on_lever_pressed", data)

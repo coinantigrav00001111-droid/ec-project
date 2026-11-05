@@ -16,6 +16,7 @@ const DIRS := [
 	"res://data/buildings/objects/",
 	"res://data/terrain/objects/",
 	"res://ui/dc_controllers/objects/",
+	"res://data/power/objects/",
 ]
 
 

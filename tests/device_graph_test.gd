@@ -11,6 +11,7 @@ extends Node
 ## G6 устройство с внутренней связью и переворотом (реверсор) плюс скрутка: чётность складывается (flip = false)
 ## G7 цепочка устройство -> устройство доходит до источника
 ## G8 источник не проводит дальше: ток не идёт через вывод в другой вывод
+## G10 via: устройства на пути попадают в ответ в порядке от клипа к источнику
 ## G9 PowerTerminal.can_connect / refuse_reason: тип, роль, занятость
 
 var _fails := 0
@@ -103,6 +104,23 @@ func _ready() -> void:
 	g.add_wire(out2, out5, false)   # некорректный провод вывод-вывод: ток через источник не идёт
 	r = g.drive(clip)
 	check("G8 источник не проводит дальше", r.label == 5, str(r))
+
+	# G10
+	g.clear()
+	var dev_a := Node.new()
+	var dev_b := Node.new()
+	_nodes.append(dev_a)
+	_nodes.append(dev_b)
+	d_out.link_fn = func(_t): return [{"terminal": d_in, "flip": false, "via": dev_a}]
+	d2_out.link_fn = func(_t): return [{"terminal": d2_in, "flip": false, "via": dev_b}]
+	g.add_wire(d_out, clip, false)
+	g.add_wire(d2_out, d_in, false)
+	g.add_wire(out5, d2_in, false)
+	r = g.drive(clip)
+	check("G10 via по порядку", r.reachable and r.via.size() == 2 and r.via[0] == dev_a and r.via[1] == dev_b, str(r))
+	g.clear()
+	g.add_wire(out3, clip, false)
+	check("G10 без устройств via пуст", g.drive(clip).via.is_empty())
 
 	# G9
 	var up := term(PowerTerminal.Role.SRC, 1)

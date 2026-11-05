@@ -9,7 +9,8 @@ var object_dirs := [	"res://data/tracks/objects/",
 						"res://data/trains/objects/", 
 						"res://data/buildings/objects/",
 						"res://data/terrain/objects/",
-						"res://ui/dc_controllers/objects/"]
+						"res://ui/dc_controllers/objects/",
+						"res://data/power/objects/"]
 
 # Настройки объектов
 var settings: Resource = preload("res://setting/global_setting.tres")

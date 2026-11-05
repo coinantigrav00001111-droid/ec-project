@@ -82,6 +82,16 @@ func step(sources: Array, ports: Array, mains: PowerSupply, dt: float, light_loa
 	return events
 
 
+## Ток ветки (D5, предохранитель): сумма токов портов, стоящих на перечисленных цепях `nets` (ключи метки вывода)
+static func branch_current(ports: Array, nets: Dictionary, light_load_enabled := false) -> float:
+	var sum := 0.0
+	for p in ports:
+		var port := p as PowerPort
+		if port != null and port.net != 0 and nets.has(port.net) and (port.owner == null or is_instance_valid(port.owner)):
+			sum += port.current(light_load_enabled)
+	return sum
+
+
 func _protect(src: PowerSource, out: PowerOutput, dt: float, events: Array[Dictionary]) -> void:
 	if out.tripped:
 		return

@@ -14,6 +14,7 @@ extends Node
 ## S8 сброс сети (PGM.reset_state): напряжения 0, сигнал state_reset
 ## S10 D3, политика TRIP: два клипа с разными выводами в одной цепи отключают оба вывода (SHORT, причина "conflict"); MERGE так не делает
 ## S11 D2: клип с выводом 11 второго источника питается от него, метка в списке «Вывод 11»
+## S12 D4: физическая проводка: провод от вывода к клипу, wiring_required, скрутка, удаление провода
 ## S9 P1 (исправлен в main отдельным коммитом): PGM крутит полосы материалов цепи по ключам кэша "<цепь>_<полярность>" и "<цепь>_<полярность>_<масштаб>_<swap>"
 
 var _fails := 0
@@ -253,6 +254,39 @@ func _ready() -> void:
 	PGM.unregister_source(src2)
 	PGM.unregister_source(src3)
 	panel2.free()
+
+	# --- S12 ---
+	await fresh()
+	var c12 := chain(2)
+	await settle()
+	PGM.create_power_clip(c12[0], 1, true)
+	PGM.set_command(1, 50)
+	await settle()
+	var clip12 := c12[0].get_comp(C_PowerClip) as C_PowerClip
+	check("S12 без провода: питание по метке", not clip12.wired and clip12.feed_net() == 1 and PGM.get_power(1) == 50.0, "wired=%s feed=%d" % [clip12.wired, clip12.feed_net()])
+	PGM.wiring_required = true
+	PGM.recalculate_grid()
+	check("S12 wiring_required без провода: клип обесточен", clip12.feed_net() == 0, str(clip12.feed_net()))
+	var term12 := PowerTerminal.new()
+	term12.role = PowerTerminal.Role.SRC
+	term12.output_label = 1
+	add_child(term12)
+	var wire12 := C_Wire.create_wire(self, term12, clip12.terminal)
+	check("S12 провод создан", wire12 != null)
+	PGM.recalculate_grid()
+	check("S12 провод к выводу 1: питание вернулось", clip12.wired and clip12.feed_net() == 1 and not clip12.feed_reversed(), "wired=%s feed=%d" % [clip12.wired, clip12.feed_net()])
+	check("S12 цепь траков по проводу", net(c12[1]) == 1, nets_text(c12))
+	if wire12 != null:
+		(wire12.get_comp(C_Wire) as C_Wire).toggle_twist()
+		PGM.recalculate_grid()
+		check("S12 скрутка: полярность клипа обратная", clip12.feed_reversed(), str(clip12.feed_reversed()))
+		wire12.free()
+		await get_tree().physics_frame
+	PGM.recalculate_grid()
+	check("S12 провод удалён: клип без провода и обесточен при wiring_required", not clip12.wired and clip12.feed_net() == 0, "wired=%s feed=%d" % [clip12.wired, clip12.feed_net()])
+	PGM.wiring_required = false
+	PGM.recalculate_grid()
+	check("S12 wiring_required выключен: питание по метке", clip12.feed_net() == 1, str(clip12.feed_net()))
 	await fresh()
 	print("--------")
 	print("power_core_test: ", "PASS" if _fails == 0 else "FAIL (%d)" % _fails)

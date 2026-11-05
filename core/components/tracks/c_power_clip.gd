@@ -27,6 +27,8 @@ var terminal: PowerTerminal
 var wired := false
 var wire_net := 0
 var wire_flip := false
+## Устройства коммутации на пути провода от вывода до клипа (D5, предохранитель считает ток своей ветки)
+var drive_via: Array = []
 
 ## Результат расчёта сети (RailNetBuilder), в сейв не пишется:
 ## "" нет конфликта; "label" цепь уже питает клип с меньшим номером контура; "polarity" полярность не сходится с цепью (КЗ)
@@ -107,6 +109,7 @@ func apply_drive(d: Dictionary) -> bool:
 	wired = w
 	wire_net = n
 	wire_flip = f
+	drive_via = (d.get("via", []) as Array) if n != 0 else []
 	return changed
 
 
