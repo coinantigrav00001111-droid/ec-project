@@ -121,7 +121,7 @@ func _get_entity_under_mouse() -> Entity:
 ## XX claude-terra 13.4. Луч выбора: как раньше, плюс вода. Трак и вагон выбираются сквозь воду;
 ## воду берём, если она ближе земли (стола, листа) под ней или земли нет
 func _pick_ray() -> Dictionary:
-	var hit: Dictionary = controller.get_mouse_ray(Global.active_layers(['ground','tracks','trains','ghost']))
+	var hit: Dictionary = controller.get_mouse_ray(Global.active_layers(['ground','tracks','trains','ghost','power']))
 	if not hit.is_empty() and hit.collider is CollisionObject3D \
 			and (hit.collider.collision_layer & Global.active_layers(['ground'])) == 0:
 		return hit
@@ -213,10 +213,14 @@ func _try_press_lever() -> bool:
 	if hit.is_empty():
 		return false
 	var e = _find_entity(hit.collider)
-	if e == null or not e.has_comp(C_Switch):
+	if e == null or not (e.has_comp(C_Switch) or e.has_comp(C_PowerSource)):   # D4: ручки и кнопки 3D-пульта
 		return false
-	var data := {"collider": hit.collider, "consumed": false}
+	var data := {"collider": hit.collider, "consumed": false, "drag": false, "ray": controller.get_mouse_ray_vec()}
 	e.send_event("on_lever_pressed", data)
+	# Ручка пульта тянется мышью: выбираем пульт и ведем ручку через on_handle_drag, как ручку flex
+	if data.consumed and data.drag:
+		set_selection(e)
+		handle_dragging = true
 	return data.consumed
 
 

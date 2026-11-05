@@ -26,6 +26,9 @@ var mains := PowerSupply.new()
 var ports: Array[PowerPort] = []
 ## MERGE: ведёт фидер с наименьшим номером, остальные подсвечены. TRIP: конфликт отключает оба вывода (правила режима D7)
 var conflict_policy: ConflictPolicy = ConflictPolicy.MERGE
+## Физическая проводка обязательна (D4): клип без провода до вывода обесточен. false: клип без провода питает по метке
+## (виртуальная проводка), клип с проводом питается по проводу
+var wiring_required := false
 ## Свет вагонов нагружает вывод (правило режима D7, по умолчанию нет)
 var load_for_lights := false
 
@@ -200,6 +203,19 @@ func remove_source(src: PowerSource) -> void:
 	sources_changed.emit()
 
 
+## Источнику сущности (3D-пульт) после загрузки возвращают номер и метки из сейва. Источник создан с новыми метками
+## при сборке сущности, загрузка вернёт прежние, и PGM.load_state опознает его по id
+func restore_source_identity(src: PowerSource, id: int, labels: Array) -> void:
+	if src == null or not sources.has(src) or labels.size() != src.outputs.size():
+		return
+	src.id = id
+	for i in labels.size():
+		src.outputs[i].label = int(labels[i])
+	_next_source_id = maxi(_next_source_id, id + 1)
+	_rebuild_index()
+	sources_changed.emit()
+
+
 func get_output(label: int) -> PowerOutput:
 	return _label_index[label][1] if _label_index.has(label) else null
 
@@ -280,8 +296,9 @@ func _apply_output(o: PowerOutput) -> void:
 	_sync_view()
 	var v := get_power(o.label)
 	for clip in active_clips:
-		if is_instance_valid(clip) and clip.net_id == o.label:
-			clip.set_power(o.label, v)
+		if is_instance_valid(clip) and clip.feed_net() == o.label:
+			clip.voltage = v
+			clip._change_clip_label()
 	_update_shader_voltage(o.label, v)
 
 
@@ -303,7 +320,7 @@ func _refresh_all() -> void:
 func _refresh_clips() -> void:
 	for clip in active_clips:
 		if is_instance_valid(clip):
-			clip.set_power(clip.net_id, get_power(clip.net_id))
+			clip.refresh_power()
 
 
 ## Метки клипов показывают ток: обновляем с шагом решателя
@@ -587,9 +604,9 @@ func unregister_clip(_clip):
 func get_occupied_contours() -> Array[int]:
 	var occupied: Array[int] = []
 	for clip in active_clips:
-		if is_instance_valid(clip) and clip.net_id > 0:
-			if not clip.net_id in occupied:
-				occupied.append(clip.net_id)
+		var n: int = clip.feed_net() if is_instance_valid(clip) else 0
+		if n > 0 and not n in occupied:
+			occupied.append(n)
 	return occupied
 
 
@@ -621,6 +638,7 @@ func request_recalculate() -> void:
 func recalculate_grid() -> void:
 	# Освобожденные без on_removed клипы (free сущности, тесты) убираем до расчета
 	active_clips = active_clips.filter(func(c): return is_instance_valid(c))
+	_solve_wiring()
 	var t0 := Time.get_ticks_usec()
 	var res: Dictionary = _builder.solve(get_tree(), active_clips)
 	last_recalc_usec = Time.get_ticks_usec() - t0
@@ -645,7 +663,7 @@ func recalculate_grid() -> void:
 	if conflict_policy == ConflictPolicy.TRIP:
 		for clip in active_clips:
 			if is_instance_valid(clip) and clip.conflict == "label":
-				conflict_nets[clip.net_id] = true
+				conflict_nets[clip.feed_net()] = true
 				conflict_nets[clip.conflict_with] = true
 	_retrip_shorted()
 
@@ -653,6 +671,20 @@ func recalculate_grid() -> void:
 		print("PGM: пересчет сети %d мкс, траков в цепях %d, клипов %d" % [last_recalc_usec, _tracks_in_nets(), active_clips.size()])
 
 	power_tab_updated.emit()
+
+
+## Физическая проводка (DeviceGraph): провода и устройства определяют метку и чётность каждого клипа
+func _solve_wiring() -> void:
+	get_tree().call_group(&"power_device", "sync_terminals")
+	var g := DeviceGraph.new()
+	for w in get_tree().get_nodes_in_group(&"power_wire"):
+		var cw := w as C_Wire
+		if cw != null and cw.is_valid_wire():
+			g.add_wire(cw.a, cw.b, cw.twist)
+	for clip in active_clips:
+		if not is_instance_valid(clip) or clip.terminal == null or not is_instance_valid(clip.terminal):
+			continue
+		clip.apply_drive(g.drive(clip.terminal))
 
 
 func _tracks_in_nets() -> int:

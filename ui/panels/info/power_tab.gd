@@ -256,6 +256,10 @@ func _update_extras(power_track: C_PowerTrack, clip: C_PowerClip) -> void:
 		lines.append(clip.conflict_text())
 	if power_track.fault:
 		lines.append("КЗ: здесь не сходится полярность (реверсивная петля или перепутанные провода)")
+	if clip and clip.wired:
+		lines.append("Питается по проводу от вывода %d%s" % [clip.wire_net, " (скрутка)" if clip.wire_flip else ""] if clip.wire_net != 0 else "Провод подключен, но не доходит до вывода пульта: клип обесточен")
+	elif clip and PGM.wiring_required:
+		lines.append("Проводка обязательна: клипу нужен провод от пульта")
 	var net_id: int = clip.net_id if clip else power_track.net_id
 	if net_id != 0 and PGM.shorted_nets.has(net_id):
 		lines.append("Цепь %d в КЗ полярности: защита отключает напряжение (сброс: кнопка ниже после устранения причины)" % net_id)

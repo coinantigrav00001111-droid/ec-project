@@ -37,8 +37,10 @@ func on_object_selected(setting: Resource) -> void:
 			dc_panel.get_parent().remove_child(dc_panel)
 			dc_panel.queue_free()
 		dc_panel = create_2d_dc_controller(setting)
-	else: # Если не плоский, то entity
-		printt('operate selected 3д entity')
+	elif setting is EntitySetting: # 3D-пульт и инструмент «Провод»: тот же путь, что у стройки (призрак, клик)
+		var tc := get_tree().get_first_node_in_group(&"tool_controller") as ToolController
+		if tc:
+			tc.select_build_object(setting)
 
 
 ## 💡 Создаем контроллер плоский

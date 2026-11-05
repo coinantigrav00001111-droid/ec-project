@@ -20,6 +20,14 @@ var net_id :int = 1
 ## Цепь согласована, если развёрнутость трака относительно эталона цепи равна `reversed`
 var reversed: bool = false
 
+## Клемма клипа (D4): сюда подключают провод. Создаётся вместе с коробочкой клипа
+var terminal: PowerTerminal
+## Физическая проводка (DeviceGraph, считает PGM): к клемме подключен провод; метка и чётность вывода, до которого дошёл провод.
+## Провод, который никуда не ведёт, оставляет клип без питания (wire_net = 0)
+var wired := false
+var wire_net := 0
+var wire_flip := false
+
 ## Результат расчёта сети (RailNetBuilder), в сейв не пишется:
 ## "" нет конфликта; "label" цепь уже питает клип с меньшим номером контура; "polarity" полярность не сходится с цепью (КЗ)
 var conflict: String = ""
@@ -56,6 +64,8 @@ func _add_to_visual():
 	var _clip = scene.instantiate() # Создаем сцену
 	_clip.transform = visual.clip_transform()   # XX claude-terra: у стилизованных траков зависит от стиля и наклона
 	visual.instance.add_child(_clip)
+	# D4: клемма для провода (над коробочкой клипа)
+	terminal = PowerTerminal.create(_clip, entity, PowerTerminal.Kind.TRACK, PowerTerminal.Role.SINK, &"clip", Vector3(-0.11, 1.5, 0.0))
 	_change_clip_label()
 
 
@@ -73,6 +83,37 @@ func on_removed():
 
 		_clip.queue_free()
 
+
+
+## Метка вывода, которым клип питает цепь. Физическая проводка главнее метки; при `PGM.wiring_required`
+## клип без провода обесточен, иначе питает по метке (виртуальная проводка)
+func feed_net() -> int:
+	if wired:
+		return wire_net
+	return 0 if PGM.wiring_required else net_id
+
+
+## Поменяны ли провода относительно эталона: собственный флаг клипа и «скрутки» на пути провода
+func feed_reversed() -> bool:
+	return reversed != (wired and wire_flip)
+
+
+## Результат DeviceGraph.drive от PGM. true, если питание клипа изменилось
+func apply_drive(d: Dictionary) -> bool:
+	var w: bool = bool(d.get("wired", false))
+	var n: int = int(d.get("label", 0)) if bool(d.get("reachable", false)) else 0
+	var f: bool = bool(d.get("flip", false)) if n != 0 else false
+	var changed := (w != wired) or (n != wire_net) or (f != wire_flip)
+	wired = w
+	wire_net = n
+	wire_flip = f
+	return changed
+
+
+## Напряжение и подпись по текущему питанию клипа (PGM зовёт при каждом изменении вывода)
+func refresh_power() -> void:
+	voltage = PGM.get_power(feed_net())
+	_change_clip_label()
 
 
 # Задает электрику в клип
@@ -105,11 +146,12 @@ func _change_clip_label():
 	var _clip_label = visual.instance.get_node_or_null('PowerClip/ContourLabel')
 	if _clip_label == null: # нода клипа
 		return
-	var _out: PowerOutput = PGM.get_output(net_id) if net_id != 0 else null
-	var _voltage := int(PGM.get_power(net_id)) if net_id != 0 else 0
+	var _net := feed_net()
+	var _out: PowerOutput = PGM.get_output(_net) if _net != 0 else null
+	var _voltage := int(PGM.get_power(_net)) if _net != 0 else 0
 	var _tripped: bool = _out != null and _out.tripped
 
-	var _text := ("−" if reversed else "") + str(net_id) + ':  ' + str(_voltage) + '%'
+	var _text := ("−" if feed_reversed() else "") + (str(_net) if _net != 0 else "—") + ("⌁" if wired else "") + ':  ' + str(_voltage) + '%'
 	if _out != null and not _tripped and _voltage != 0:
 		_text += "  %.2fA" % _out.current
 	if _tripped:

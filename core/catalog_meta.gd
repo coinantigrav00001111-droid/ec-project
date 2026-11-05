@@ -36,7 +36,7 @@ const TAGS := {
 	&"track": [&"straight", &"curve", &"junction", &"special"],
 	&"building": [&"house"],
 	&"terrain": [&"foam", &"cut", &"water", &"plaster"],
-	&"dc_controller": [&"2d", &"3d"],
+	&"dc_controller": [&"2d", &"3d", &"wire"],
 }
 
 ## Подписи и иконки тегов (необязательно): {category: {tag: {"name": String, "icon": Texture2D}}}.

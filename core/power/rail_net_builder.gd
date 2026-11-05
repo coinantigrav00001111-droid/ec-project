@@ -9,7 +9,7 @@ class_name RailNetBuilder extends RefCounted
 ##  - лидер цепи: клип с наименьшим номером контура (при равных по `get_instance_id`), он задаёт номер цепи;
 ##  - клип с тем же номером: параллельная подача, не конфликт;
 ##  - клип с другим номером (политика MERGE): цепь питает лидер, клип остаётся, помечается `conflict = "label"`;
-##  - полярность клипа: цепь согласована, если `flip(трак) == clip.reversed`. Иначе у клипа `conflict = "polarity"`
+##  - полярность клипа: цепь согласована, если `flip(трак) == clip.feed_reversed()`. Иначе у клипа `conflict = "polarity"`
 ##    и цепь в КЗ (провода между точками подачи перепутаны);
 ##  - ребро, не сошедшееся по чётности (реверсивная петля без изостыков), тоже КЗ цепи.
 ## Цепь без клипа получает номер 0 (как раньше).
@@ -85,7 +85,7 @@ func solve(tree: SceneTree, clips: Array) -> Dictionary:
 		var clip := c as C_PowerClip
 		if clip == null:
 			continue
-		if clip.net_id == 0 or clip.entity == null or not is_instance_valid(clip.entity):
+		if clip.feed_net() == 0 or clip.entity == null or not is_instance_valid(clip.entity):
 			continue
 		if not index_of.has(clip.entity):
 			continue
@@ -115,13 +115,13 @@ func solve(tree: SceneTree, clips: Array) -> Dictionary:
 		var leader: C_PowerClip = leaders[root]
 		for k in range(1, arr.size()):
 			var clip: C_PowerClip = arr[k]
-			if clip.net_id != leader.net_id:
+			if clip.feed_net() != leader.feed_net():
 				clip.conflict = "label"
-				clip.conflict_with = leader.net_id
+				clip.conflict_with = leader.feed_net()
 				net_conflicts[root] = int(net_conflicts.get(root, 0)) + 1
 				continue
 			var node: int = first_node[index_of[clip.entity]]
-			if _flip_at(graph, leaders[root], leader_nodes[root], node) != clip.reversed:
+			if _flip_at(graph, leaders[root], leader_nodes[root], node) != clip.feed_reversed():
 				clip.conflict = "polarity"
 				short_roots[root] = true
 				fault_nodes[node] = true
@@ -144,7 +144,7 @@ func solve(tree: SceneTree, clips: Array) -> Dictionary:
 			var net := 0
 			var flip := false
 			if leaders.has(root):
-				net = (leaders[root] as C_PowerClip).net_id
+				net = (leaders[root] as C_PowerClip).feed_net()
 				flip = _flip_at(graph, leaders[root], leader_nodes[root], node)
 				tracks_of_root[root] = int(tracks_of_root.get(root, 0)) + 1
 			if pt.contour_of(leg) != net or pt.flip_of(leg) != flip:
@@ -161,7 +161,7 @@ func solve(tree: SceneTree, clips: Array) -> Dictionary:
 
 	# 6. Сводка по цепям
 	for root in leaders:
-		var net_id: int = (leaders[root] as C_PowerClip).net_id
+		var net_id: int = (leaders[root] as C_PowerClip).feed_net()
 		var info: Dictionary = nets.get(net_id, {"feeders": 0, "tracks": 0, "conflicts": 0, "short": false})
 		info["feeders"] += (feeders[root] as Array).size()
 		info["tracks"] += int(tracks_of_root.get(root, 0))
@@ -179,15 +179,15 @@ func solve(tree: SceneTree, clips: Array) -> Dictionary:
 
 ## Порядок клипов в цепи: меньший номер контура первый, при равных меньший instance id
 static func _clip_less(a: C_PowerClip, b: C_PowerClip) -> bool:
-	if a.net_id != b.net_id:
-		return a.net_id < b.net_id
+	if a.feed_net() != b.feed_net():
+		return a.feed_net() < b.feed_net()
 	return a.get_instance_id() < b.get_instance_id()
 
 
 ## Развёрнутость узла относительно эталона цепи: parity(узла) xor parity(узла лидера) xor лидер.reversed.
 ## У самого лидера это его `reversed`: «поменять полярность» на лидере разворачивает всю цепь
 static func _flip_at(graph: RailNetGraph, leader: C_PowerClip, leader_node: int, node: int) -> bool:
-	return (graph.parity_of(node) != graph.parity_of(leader_node)) != leader.reversed
+	return (graph.parity_of(node) != graph.parity_of(leader_node)) != leader.feed_reversed()
 
 
 ## Ребро между двумя траками по их стыку. Стык не проводит, если сокет мёртв (E1) или есть изостык

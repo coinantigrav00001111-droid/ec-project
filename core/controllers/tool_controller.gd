@@ -24,6 +24,7 @@ class_name ToolController extends Node3D
 var cut_tool: ThermoCutTool
 var water_tool: WaterPourTool   # XX claude-terra 13.4 W3
 var plaster_tool: PlasterTool   # XX claude-terra 13.5 G3
+var wire_tool: WireTool   # D4 (ATTN_10): провода между клеммами
 #@onready var save_controller: SaveManager = %SaveManager
 
 
@@ -67,6 +68,9 @@ func _ready() -> void:
 	plaster_tool = PlasterTool.new()
 	plaster_tool.name = &"PlasterTool"
 	%Tools.add_child(plaster_tool)
+	wire_tool = WireTool.new()
+	wire_tool.name = &"WireTool"
+	%Tools.add_child(wire_tool)
 
 	# Инициализируем инструменты, передав им ссылку на себя
 	for tool in %Tools.get_children():
@@ -159,6 +163,11 @@ func select_build_object(setting: EntitySetting) -> void:
 	# XX claude-terra 13.5 G3: кнопка «Гипсовый бинт» включает PlasterTool
 	if setting.build_behavior == EntitySetting.BuildBehavior.PLASTER_TOOL:
 		switch_tool(plaster_tool)
+		return
+
+	# D4: кнопка «Провод» включает WireTool
+	if setting.build_behavior == EntitySetting.BuildBehavior.WIRE_TOOL:
+		switch_tool(wire_tool)
 		return
 
 	build_tool.ghost_setting = setting

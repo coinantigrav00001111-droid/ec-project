@@ -89,5 +89,7 @@ func active_layers(data:Array) -> int:
 			'water'  : i = i | 1 << 11
 			# XX claude-terra 13.5: оболочка гипсового бинта (PlasterSkin). Не в PROBE_LAYERS и не в лучах листов и траков: её видит только постановка зданий и декора
 			'plaster': i = i | 1 << 12
+			# D4 (ATTN_10): корпуса пультов, клеммы и провода. Слой 13 занят гипсом, поэтому 14. Вагон его не проверяет (нет в PROBE_LAYERS)
+			'power'  : i = i | 1 << 13
 			## Контуры Outline это visual layers 15-20 (cull_mask), к физике не относятся
 	return i
